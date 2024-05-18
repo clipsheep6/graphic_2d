@@ -130,40 +130,6 @@ public:
  *                  2. CreateListener<RSCanvasListener>(nullptr) == nullptr
  *                  3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) == nullptr
  */
-
-// HWTEST_F(RSOverdrawControllerTest, CreateListenerDisable, Function | SmallTest | Level2)
-// {
-//     auto &controller = RSOverdrawController::GetInstance();
-//     PART("EnvConditions") {
-//         controller.SetEnable(false);
-//     }
-
-//     PART("CaseDescription") {
-//         std::unique_ptr<Drawing::Canvas> tmpCanvas = std::make_unique<Drawing::Canvas>();
-//         Drawing::Canvas* rawCanvas = tmpCanvas.get(); // 获取原始指针
-
-//         // 使用 MockRSPaintFilterCanvas* 类型的指针
-//         std::shared_ptr<MockRSPaintFilterCanvas> canvas = std::make_shared<MockRSPaintFilterCanvas>(rawCanvas);
-//         RSPaintFilterCanvas* paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas.get()); // 转换为基类指针
-
-//         STEP("1. CreateListener<RSCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
-//             auto listener = controller.CreateListener<RSCanvasListener>(paintFilterCanvas); // 将转换后的指针传递给 CreateListener
-//             STEP_ASSERT_EQ(listener, nullptr);
-//         }
-
-//         STEP("2. CreateListener<RSCanvasListener>(nullptr) == nullptr") {
-//             Drawing::Canvas* nullCanvas = nullptr;
-//             auto listener = controller.CreateListener<RSCanvasListener>(static_cast<RSPaintFilterCanvas*>(nullCanvas)); // 传递空指针给 CreateListener，进行类型转换
-//             STEP_ASSERT_EQ(listener, nullptr);
-//         }
-
-//         STEP("3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
-//             auto listener = controller.CreateListener<RSValidCanvasListener>(paintFilterCanvas); // 将转换后的指针传递给 CreateListener
-//             STEP_ASSERT_EQ(listener, nullptr);
-//         }
-//     }
-// }
-
 HWTEST_F(RSOverdrawControllerTest, CreateListenerDisable, Function | SmallTest | Level2)
 {
     auto &controller = RSOverdrawController::GetInstance();

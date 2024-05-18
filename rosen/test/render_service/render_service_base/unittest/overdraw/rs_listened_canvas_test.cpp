@@ -35,7 +35,18 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+class RSListenedCanvasTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp() override;
+    void TearDown() override;
+};
 
+void RSListenedCanvasTest::SetUpTestCase() {}
+void RSListenedCanvasTest::TearDownTestCase() {}
+void RSListenedCanvasTest::SetUp() {}
+void RSListenedCanvasTest::TearDown() {}
 
 class MockDrawingCanvas : public Drawing::Canvas {
 public:
@@ -45,18 +56,12 @@ public:
 class MockRSPaintFilterCanvas : public RSPaintFilterCanvas {
 public:
     explicit MockRSPaintFilterCanvas(Drawing::Canvas* canvas) : RSPaintFilterCanvas(canvas) {}
-    MOCK_METHOD1(DrawPath, void(const Drawing::Path& path));
-    MOCK_METHOD1(DrawPoint, void(const Drawing::Point& point));
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
-    MOCK_METHOD2(DrawLine, void(const Drawing::Point& startPt, const Drawing::Point& endPt));
     MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
     MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
-    MOCK_METHOD3(DrawArc, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
     MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
-    MOCK_METHOD1(DrawOval, void(const Drawing::Rect& rect));
     MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
     MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
-    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region));
     MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
         const Drawing::scalar x, const Drawing::scalar y));
     MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
@@ -74,19 +79,16 @@ public:
 class MockRSCanvasListener : public RSCanvasListener {
 public:
     explicit MockRSCanvasListener(Drawing::Canvas& canvas) : RSCanvasListener(canvas) {}
-    MOCK_METHOD1(DrawPoint, void(const Drawing::Point& point));
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
-    MOCK_METHOD2(DrawLine, void(const Drawing::Point& startPt, const Drawing::Point& endPt));
     MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
     MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
-    MOCK_METHOD3(DrawArc, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
     MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
-    MOCK_METHOD1(DrawOval, void(const Drawing::Rect& rect));
     MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
-    MOCK_METHOD1(DrawPath, void(const Drawing::Path& path));
     MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
-    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region));
-    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
+        const Drawing::scalar x, const Drawing::scalar y));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
+        const Drawing::scalar px, const Drawing::scalar py));
     MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px,
         const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
     MOCK_METHOD5(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
@@ -96,36 +98,6 @@ public:
     MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
     MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
-class RSListenedCanvasTest : public testing::Test {
-public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() override;
-    void TearDown() override;
-private:
-    std::unique_ptr<MockDrawingCanvas> mockDrawingCanvas;
-    std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas;
-    std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener;
-    std::shared_ptr<RSListenedCanvas> listenedCanvas;
-};
-
-void RSListenedCanvasTest::SetUpTestCase() {}
-void RSListenedCanvasTest::TearDownTestCase() {}
-void RSListenedCanvasTest::SetUp()
-{
-    mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
-    mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
-    mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
-    listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
-    listenedCanvas->SetListener(mockRSCanvasListener);
-}
-void RSListenedCanvasTest::TearDown()
-{
-    mockDrawingCanvas.reset();
-    mockRSPaintFilterCanvas.reset();
-    mockRSCanvasListener.reset();
-    listenedCanvas.reset();
-}
 
 /*
  * Function: request will pass through listened canvas
@@ -166,104 +138,203 @@ HWTEST_F(RSListenedCanvasTest, RequestPassThrough, Function | SmallTest | Level2
     }
 }
 
-void setExpectations(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas,
-                     std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener)
-{
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPoint(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawPoint(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRect(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawRect(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawLine(_, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawLine(_, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPie(_, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawPie(_, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRoundRect(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawRoundRect(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawArc(_, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawArc(_, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawNestedRoundRect(_, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawNestedRoundRect(_, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawOval(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawOval(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawCircle(_, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawCircle(_, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPath(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawPath(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBackground(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawBackground(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRegion(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawRegion(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBitmap(_, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawBitmap(_, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImage(_, _, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawImage(_, _, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPicture(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, DrawPicture(_)).Times(1);
-
-    EXPECT_CALL(*mockRSPaintFilterCanvas, Clear(_)).Times(1);
-    EXPECT_CALL(*mockRSCanvasListener, Clear(_)).Times(1);
-}
-
-void callDrawMethods(std::shared_ptr<RSListenedCanvas>& listenedCanvas)
-{
-    listenedCanvas->DrawPoint(Drawing::Point());
-    listenedCanvas->DrawRect(Drawing::Rect());
-    listenedCanvas->DrawLine(Drawing::Point(), Drawing::Point());
-    listenedCanvas->DrawPie(Drawing::Rect(), 0.0f, 90.0f);
-    listenedCanvas->DrawArc(Drawing::Rect(), 0.0f, 90.0f);
-    listenedCanvas->DrawRoundRect(Drawing::RoundRect());
-    listenedCanvas->DrawNestedRoundRect(Drawing::RoundRect(), Drawing::RoundRect());
-    listenedCanvas->DrawOval(Drawing::Rect());
-    listenedCanvas->DrawCircle(Drawing::Point(), 0.0f);
-    listenedCanvas->DrawPath(Drawing::Path());
-    listenedCanvas->DrawBackground(Drawing::Brush());
-    listenedCanvas->DrawRegion(Drawing::Region());
-    listenedCanvas->DrawBitmap(Drawing::Bitmap(), 0.0f, 0.0f);
-    listenedCanvas->DrawImage(Drawing::Image(), 0.0f, 0.0f, Drawing::SamplingOptions());
-    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(),
-        Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
-    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::SamplingOptions());
-    listenedCanvas->DrawPicture(Drawing::Picture());
-    listenedCanvas->Clear(Drawing::ColorQuad());
-}
-
+/*
+ * Function: request will split to listener
+ * Type: Function
+ * EnvConditions: N/A
+ * CaseDescription: 1. create mock MockRSPaintFilterCanvas
+ *                  2. create mock MockRSCanvasListener
+ *                  3. expect MockRSCanvasListener call drawRect once
+ *                  4. create RSListenedCanvas from MockRSPaintFilterCanvas
+ *                  5. call RSListenedCanvas's drawRect
+ */
 HWTEST_F(RSListenedCanvasTest, RequestSplitToListener, Function | SmallTest | Level2)
 {
-    std::unique_ptr<MockDrawingCanvas> mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
-    std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas =
-        std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
-    //std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas = nullptr;
-    std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener =
-        std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
-    setExpectations(mockRSPaintFilterCanvas, mockRSCanvasListener);
-    // Step 4: Create RSListenedCanvas object
-    std::shared_ptr<RSListenedCanvas> listenedCanvas =
-        std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
-    //std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener = nullptr;
-    //std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
+        auto mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
+        std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas = nullptr;
+        mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
+        std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener = nullptr;
+        mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
+        std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
+        listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
+        listenedCanvas->SetListener(mockRSCanvasListener);
 
-    
-    callDrawMethods(listenedCanvas);
+        PART ("DrawRectTest") {
+            Drawing::Rect rect = Drawing::Rect(1, 2, 4, 6);
+
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRect(rect)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawRect(rect)).Times(1);
+
+            listenedCanvas->DrawRect(rect);
+        }
+
+        PART ("DrawRoundRectTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRoundRect(_)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawRoundRect(_)).Times(1);
+
+            listenedCanvas->DrawRoundRect(Drawing::RoundRect());
+        }
+
+        PART ("DrawNestedRoundRectTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawNestedRoundRect(_, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawNestedRoundRect(_, _)).Times(1);
+
+            listenedCanvas->DrawNestedRoundRect(Drawing::RoundRect(), Drawing::RoundRect());
+        }
+
+        PART ("DrawPieTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPie(_, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawPie(_, _, _)).Times(1);
+
+            listenedCanvas->DrawPie(Drawing::Rect(), 0.0f, 90.0f);
+        }
+
+        PART ("DrawCircleTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawCircle(_, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawCircle(_, _)).Times(1);
+
+            listenedCanvas->DrawCircle(Drawing::Point(), 0.0f);
+        }
+
+        PART ("DrawBackgroundTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBackground(_)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawBackground(_)).Times(1);
+
+            listenedCanvas->DrawBackground(Drawing::Brush());
+        }
+
+        PART ("DrawBitmapTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBitmap(_, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawBitmap(_, _, _)).Times(1);
+
+            listenedCanvas->DrawBitmap(Drawing::Bitmap(), 0.0f, 0.0f);
+        }
+
+        PART ("DrawImageTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImage(_, _, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawImage(_, _, _, _)).Times(1);
+
+            listenedCanvas->DrawImage(Drawing::Image(), 0.0f, 0.0f, Drawing::SamplingOptions());
+        }
+
+        PART ("DrawImageRect1Test") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _, _, _)).Times(1);
+
+            listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(),
+                Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
+        }
+
+        PART ("DrawImageRect2Test") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _)).Times(1);
+
+            listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::SamplingOptions());
+        }
+
+        PART ("DrawPictureTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPicture(_)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawPicture(_)).Times(1);
+
+            listenedCanvas->DrawPicture(Drawing::Picture());
+        }
+
+        PART ("ClearTest") {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, Clear(_)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, Clear(_)).Times(1);
+
+            listenedCanvas->Clear(Drawing::ColorQuad());
+        }
+    }
+}
+
+/**
+ * @tc.name: onDrawOval001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawOval001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Rect rect;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawOval(rect);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawOval(rect);
+}
+
+/**
+ * @tc.name: onDrawArc001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawArc001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Rect rect;
+    Drawing::scalar startAngle = 0.1;
+    Drawing::scalar sweepAngle = 0.2;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawArc(rect, startAngle, sweepAngle);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawArc(rect, startAngle, sweepAngle);
+}
+
+/**
+ * @tc.name: onDrawPath001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawPath001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Path path;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawPath(path);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawPath(path);
+}
+
+/**
+ * @tc.name: onDrawRegion001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawRegion001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Region region;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawRegion(region);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawRegion(region);
+}
+
+/**
+ * @tc.name: onDrawPoints001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawPoints001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::scalar x = 0.1;
+    Drawing::scalar y = 0.2;
+    auto point = Rosen::Drawing::Point(x, y);
+    RSListenedCanvas listenedCanvas(canvas);
+    listenedCanvas.DrawPoint(point);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawPoint(point);
 }
 } // namespace Rosen
 } // namespace OHOS

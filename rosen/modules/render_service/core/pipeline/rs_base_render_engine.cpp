@@ -197,10 +197,6 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     GraphicColorGamut colorGamut)
 {
 #ifdef RS_ENABLE_EGLIMAGE
-    if (!RSBaseRenderUtil::IsBufferValid(buffer)) {
-        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer invalid param!");
-        return nullptr;
-    }
 #if defined(RS_ENABLE_GL)
     if (!RSSystemProperties::IsUseVulkan() && canvas.GetGPUContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
@@ -654,6 +650,10 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 {
     RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::DrawImage(GPU)");
     auto image = std::make_shared<Drawing::Image>();
+    if (!RSBaseRenderUtil::IsBufferValid(params.buffer)) {
+        RS_LOGE("RSBaseRenderUtil::DrawImage invalid param!");
+        return;
+    }
 
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::IsUseVulkan()) {
@@ -696,49 +696,45 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         }
     }
 #endif // RS_ENABLE_GL
-
-
-#ifdef USE_VIDEO_PROCESSING_ENGINE
-    Drawing::Matrix matrix;
-    auto sx = params.dstRect.GetWidth() / params.srcRect.GetWidth();
-    auto sy = params.dstRect.GetHeight() / params.srcRect.GetHeight();
-    auto tx = params.dstRect.GetLeft() - params.srcRect.GetLeft() * sx;
-    auto ty = params.dstRect.GetTop() - params.srcRect.GetTop() * sy;
-    matrix.SetScaleTranslate(sx, sy, tx, ty);
-    Drawing::SamplingOptions samplingOptions;
-    if (!RSSystemProperties::GetUniRenderEnabled()) {
-        samplingOptions = Drawing::SamplingOptions();
-    } else {
-        if (params.isMirror) {
-            samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NEAREST);
-        } else {
-            samplingOptions = !params.useBilinearInterpolation
-                                ? Drawing::SamplingOptions()
-                                : Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
-        }
-    }
-    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
-        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, matrix);
-    if (imageShader == nullptr) {
-        RS_LOGE("RSBaseRenderEngine::DrawImage imageShader is nullptr.");
-    } else {
-        params.paint.SetShaderEffect(imageShader);
-        ColorSpaceConvertor(imageShader, params);
-    }
-#endif // USE_VIDEO_PROCESSING_ENGINE
-
-    canvas.AttachBrush(params.paint);
-#ifndef USE_VIDEO_PROCESSING_ENGINE
-    Drawing::SamplingOptions drawingSamplingOptions;
-    if (!RSSystemProperties::GetUniRenderEnabled()) {
+    if (params.targetColorGamut == GRAPHIC_COLOR_GAMUT_SRGB) {
+        canvas.AttachBrush(params.paint);
         drawingSamplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR);
+        canvas.DrawImageRect(*image.get(), params.srcRect, params.dstRect, drawingSamplingOptions,
+            Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
+        canvas.DetachBrush();
+    } else {
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+        Drawing::Matrix matrix;
+        auto sx = params.dstRect.GetWidth() / params.srcRect.GetWidth();
+        auto sy = params.dstRect.GetHeight() / params.srcRect.GetHeight();
+        auto tx = params.dstRect.GetLeft() - params.srcRect.GetLeft() * sx;
+        auto ty = params.dstRect.GetTop() - params.srcRect.GetTop() * sy;
+        matrix.SetScaleTranslate(sx, sy, tx, ty);
+        Drawing::SamplingOptions samplingOptions;
+        if (!RSSystemProperties::GetUniRenderEnabled()) {
+            samplingOptions = Drawing::SamplingOptions();
+        } else {
+            if (params.isMirror) {
+                samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NEAREST);
+            } else {
+                samplingOptions = !params.useBilinearInterpolation
+                                    ? Drawing::SamplingOptions()
+                                    : Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
+            }
+        }
+        auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, matrix);
+        if (imageShader == nullptr) {
+            RS_LOGE("RSBaseRenderEngine::DrawImage imageShader is nullptr.");
+        } else {
+            params.paint.SetShaderEffect(imageShader);
+            ColorSpaceConvertor(imageShader, params);
+        }
+        canvas.AttachBrush(params.paint);
+        canvas.DrawRect(params.dstRect);
+        canvas.DetachBrush();
+#endif // USE_VIDEO_PROCESSING_ENGINE
     }
-    canvas.DrawImageRect(*image.get(), params.srcRect, params.dstRect, drawingSamplingOptions,
-        Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
-#else
-    canvas.DrawRect(params.dstRect);
-#endif
-    canvas.DetachBrush();
     RS_OPTIONAL_TRACE_END();
 }
 

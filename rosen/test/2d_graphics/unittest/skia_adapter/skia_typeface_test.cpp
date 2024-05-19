@@ -14,16 +14,20 @@
  */
 
 #include <cstddef>
+
 #include "gtest/gtest.h"
 #include "recording/draw_cmd.h"
 #include "skia_adapter/skia_typeface.h"
-#include "text/typeface.h"
+
 #include "text/text_blob.h"
+#include "text/typeface.h"
 
 using namespace testing;
 using namespace testing::ext;
 
-#define HB_TAG(c1,c2,c3,c4) ((uint32_t)((((uint32_t)(c1)&0xFF)<<24)|(((uint32_t)(c2)&0xFF)<<16)|(((uint32_t)(c3)&0xFF)<<8)|((uint32_t)(c4)&0xFF)))
+#define HB_TAG(c1, c2, c3, c4)                                                                                       \
+    ((uint32_t)((((uint32_t)(c1) & 0xFF) << 24) | (((uint32_t)(c2) & 0xFF) << 16) | (((uint32_t)(c3) & 0xFF) << 8) | \
+                ((uint32_t)(c4) & 0xFF)))
 
 namespace OHOS {
 namespace Rosen {
@@ -359,7 +363,7 @@ HWTEST_F(SkiaTypefaceTest, MakeFromStream001, TestSize.Level1)
     std::unique_ptr<MemoryStream> memoryStream = std::make_unique<MemoryStream>();
     uint8_t fontData[] = "Mock font data";
     size_t fontDataSize = sizeof(fontData);
-    memoryStream = std::make_unique<MemoryStream>(reinterpret_cast<const void *>(fontData), fontDataSize, true);
+    memoryStream = std::make_unique<MemoryStream>(reinterpret_cast<const void*>(fontData), fontDataSize, true);
     std::shared_ptr<Typeface> typefaceWithData = SkiaTypeface::MakeFromStream(std::move(memoryStream), 0);
     ASSERT_EQ(typefaceWithData, nullptr);
     std::shared_ptr<Typeface> typefaceEmptyStream = SkiaTypeface::MakeFromStream(std::make_unique<MemoryStream>(), 0);
@@ -393,8 +397,8 @@ HWTEST_F(SkiaTypefaceTest, MakeFromName002, TestSize.Level1)
 HWTEST_F(SkiaTypefaceTest, DeserializeTypeface001, TestSize.Level1)
 {
     constexpr size_t SOME_SIZE = 5; // 5 SOME_SIZE
-    const uint8_t validData[SOME_SIZE] = {0x01, 0x02, 0x03, 0x04, 0x05};
-    const uint8_t *dataPtr = validData;
+    const uint8_t validData[SOME_SIZE] = { 0x01, 0x02, 0x03, 0x04, 0x05 };
+    const uint8_t* dataPtr = validData;
     auto typeface = SkiaTypeface::MakeDefault();
     // 断言typeface不为空
     ASSERT_NE(typeface, nullptr) << "Failed to create default SkiaTypeface";
@@ -405,8 +409,8 @@ HWTEST_F(SkiaTypefaceTest, DeserializeTypeface001, TestSize.Level1)
         return;
     }
     std::cout << "dataPtr not nullptr " << std::endl;
-    ASSERT_TRUE(SkiaTypeface::DeserializeTypeface(reinterpret_cast<const void *>(validData), SOME_SIZE, nullptr) ==
-        nullptr);
+    ASSERT_TRUE(
+        SkiaTypeface::DeserializeTypeface(reinterpret_cast<const void*>(validData), SOME_SIZE, nullptr) == nullptr);
 }
 
 /**
@@ -420,7 +424,7 @@ HWTEST_F(SkiaTypefaceTest, SerializeTypeface002, TestSize.Level1)
     auto skTypeface = SkTypeface::MakeDefault();
     // 创建一个自定义的Typeface上下文
     bool isCustomTypeface = true;
-    DrawTextBlobOpItem::ConstructorHandle *handle = nullptr;
+    DrawTextBlobOpItem::ConstructorHandle* handle = nullptr;
     std::shared_ptr<Drawing::Typeface> typeface = nullptr;
     if (DrawOpItem::customTypefaceQueryfunc_) {
         typeface = DrawOpItem::customTypefaceQueryfunc_(handle->globalUniqueId);
@@ -431,8 +435,8 @@ HWTEST_F(SkiaTypefaceTest, SerializeTypeface002, TestSize.Level1)
     // 序列化后的数据不应为空
     ASSERT_TRUE(serializedData != nullptr);
     // 自定义 Typeface 上下文应已设置 TypeFace
-    ASSERT_TRUE(customContext.GetTypeface() != nullptr) <<
-        "Under normal circumstances, the Typeface context has been set";
+    ASSERT_TRUE(customContext.GetTypeface() != nullptr)
+        << "Under normal circumstances, the Typeface context has been set";
 }
 
 /**
@@ -453,8 +457,8 @@ HWTEST_F(SkiaTypefaceTest, SerializeTypeface003, TestSize.Level1)
     // 序列化空指针时应返回空指针
     ASSERT_TRUE(serializedDataNull == nullptr);
     // 自定义 Typeface 上下文不应被修改
-    ASSERT_TRUE(customContext.GetTypeface() == nullptr) <<
-        "Exception situation Typeface context should not be modified";
+    ASSERT_TRUE(customContext.GetTypeface() == nullptr)
+        << "Exception situation Typeface context should not be modified";
 }
 
 /**
@@ -465,7 +469,7 @@ HWTEST_F(SkiaTypefaceTest, SerializeTypeface003, TestSize.Level1)
  */
 HWTEST_F(SkiaTypefaceTest, Deserialize001, TestSize.Level1)
 {
-    const void *data = reinterpret_cast<const void *>("test_data");
+    const void* data = reinterpret_cast<const void*>("test_data");
     size_t dataSize = sizeof(data);
     auto typeface = SkiaTypeface::MakeDefault();
     ASSERT_NE(typeface, nullptr) << "Failed to create default SkiaTypeface";

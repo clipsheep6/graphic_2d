@@ -14,6 +14,7 @@
  */
 
 #include <cstddef>
+
 #include "gtest/gtest.h"
 #include "skia_adapter/skia_texture_info.h"
 
@@ -72,13 +73,13 @@ HWTEST_F(SkiaTextureInfoTest, ConvertToGrBackendVKTexture001, TestSize.Level1)
  */
 HWTEST_F(SkiaTextureInfoTest, ConvertToTextureInfo001, TestSize.Level1)
 {
-    GrMockTextureInfo mockInfo;  
-    GrBackendTexture texture(1280,720,GrMipmapped::kNo,mockInfo);  
-    TextureInfo textureInfo = SkiaTextureInfo::ConvertToTextureInfo(texture);  
+    GrMockTextureInfo mockInfo;
+    GrBackendTexture texture(1280, 720, GrMipmapped::kNo, mockInfo);
+    TextureInfo textureInfo = SkiaTextureInfo::ConvertToTextureInfo(texture);
 
-    EXPECT_EQ(textureInfo.GetWidth(), 1280); 
-    EXPECT_EQ(textureInfo.GetHeight(), 720); 
-    EXPECT_FALSE(textureInfo.GetIsMipMapped()); 
+    EXPECT_EQ(textureInfo.GetWidth(), 1280);
+    EXPECT_EQ(textureInfo.GetHeight(), 720);
+    EXPECT_FALSE(textureInfo.GetIsMipMapped());
 }
 } // namespace Drawing
 } // namespace Rosen

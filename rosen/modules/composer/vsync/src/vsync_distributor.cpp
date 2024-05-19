@@ -609,6 +609,7 @@ void VSyncDistributor::OnConnsRefreshRateChanged(const std::vector<std::pair<uin
     changingConnsRefreshRates_ = refreshRates;
 }
 
+
 void VSyncDistributor::SubScribeSystemAbility(const std::string& threadName)
 {
     VLOGD("%{public}s", __func__);

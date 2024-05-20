@@ -111,6 +111,19 @@ void RSSystemProperties::SetInstantRecording(bool flag)
     system::SetParameter("debug.graphic.instant.recording.enabled", flag ? "1" : "0");
 }
 
+std::string RSSystemProperties::GetProfilerBetaRecEnabled()
+{
+    static CachedHandle handle = CachedParameterCreate("persist.graphic.profiler.betarecording", "0");
+    int32_t changed = 0;
+    const char* state = CachedParameterGetChanged(handle, &changed);
+    return state == nullptr ? "" : state;
+}
+
+void RSSystemProperties::SetProfilerBetaRecEnabled(const std::string &param)
+{
+    system::SetParameter("persist.graphic.profiler.betarecording", param);
+}
+
 bool RSSystemProperties::GetSaveRDC()
 {
     return (system::GetParameter("debug.graphic.rdcenabled", "0") != "0");

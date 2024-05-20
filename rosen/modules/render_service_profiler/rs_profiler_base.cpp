@@ -97,6 +97,21 @@ uint32_t RSProfiler::GetCommandExecuteCount()
     return count;
 }
 
+void RSProfiler::EnableSharedMemory()
+{
+    RSMarshallingHelper::EndNoSharedMem();
+}
+
+void RSProfiler::DisableSharedMemory()
+{
+    RSMarshallingHelper::BeginNoSharedMem(std::this_thread::get_id());
+}
+
+bool RSProfiler::IsSharedMemoryEnabled()
+{
+    return RSMarshallingHelper::GetUseSharedMem(std::this_thread::get_id());
+}
+
 bool RSProfiler::IsParcelMock(const Parcel& parcel)
 {
     // gcc C++ optimization error (?): this is not working without volatile

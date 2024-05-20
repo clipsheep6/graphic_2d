@@ -23,26 +23,86 @@ namespace OHOS::Rosen {
 std::mutex ImageCache::mutex_;
 std::map<uint64_t, Image> ImageCache::cache_;
 
-// Image
-Image::Image(const uint8_t* data, size_t size, size_t skipBytes) : skipBytes(skipBytes)
+static std::unique_ptr<uint8_t[]> GeneratePlaceholder(
+    const uint8_t* data, size_t size, size_t placeholder, size_t bufferOffset)
 {
-    if (data && (size > 0)) {
-        this->data.insert(this->data.end(), data, data + size);
+    if (placeholder == 0) {
+        return nullptr;
+    }
+
+    const size_t totalSize = bufferOffset + placeholder;
+
+    std::unique_ptr<uint8_t[]> out;
+    out.reset(new uint8_t[totalSize]);
+
+    constexpr size_t astcChannels = 16;
+    if (placeholder == astcChannels) {
+        Utils::Move(out.get(), totalSize, data, totalSize);
+    } else {
+        Utils::Move(out.get(), totalSize, data, bufferOffset);
+
+        const auto pixels = data + bufferOffset;
+
+        const auto pixelCount = static_cast<uint32_t>((size - bufferOffset) / placeholder);
+        const uint32_t sampleCount = 100u;
+
+        std::vector<uint64_t> values(placeholder, 0);
+        for (uint32_t sample = 0; sample < sampleCount; sample++) {
+            for (uint32_t channel = 0; channel < placeholder; channel++) {
+                values[channel] += pixels[(sample * pixelCount / sampleCount) * placeholder + channel];
+            }
+        }
+
+        for (uint32_t i = 0; i < placeholder; i++) {
+            out[i + bufferOffset] = static_cast<uint8_t>(values[i] / sampleCount);
+        }
+    }
+    return out;
+}
+
+// Image
+Image::Image(const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset)
+    : skipBytes(skipBytes), size(size)
+{
+    if (size < 0) {
+        return;
+    }
+    
+    std::unique_ptr<uint8_t[]> imageData;
+    if (placeholder > 0) {
+        imageData = GeneratePlaceholder(data, size, placeholder, bufferOffset);
+        this->placeholder = bufferOffset + placeholder;
+    } else {
+        imageData = std::make_unique<uint8_t[]>(size);
+        if (!Utils::Move(imageData.get(), size, data, size)) {
+            return;
+        }
+        this->placeholder = 0;
+    }
+    if (imageData != nullptr) {
+        this->data = std::move(imageData);
     }
 }
 
-Image::Image(std::vector<uint8_t>&& data, size_t skipBytes) : data(std::move(data)), skipBytes(skipBytes) {}
-
 bool Image::IsValid() const
 {
-    return !data.empty() && (data.size() < maxSize);
+    return (data != nullptr) && (size > 0) && (size < maxSize);
 }
 
 void Image::Serialize(Archive& archive)
 {
-    // cast due to backward compatibility
-    archive.Serialize(reinterpret_cast<uint32_t&>(skipBytes));
-    archive.Serialize(data);
+    archive.Serialize(skipBytes);
+    archive.Serialize(size);
+    archive.Serialize(placeholder);
+
+    uint64_t bufferSize = placeholder > 0 ? placeholder : size;
+    if (data == nullptr) {
+        std::unique_ptr<uint8_t[]> imageBuffer = std::make_unique<uint8_t[]>(bufferSize);
+        archive.Serialize(imageBuffer.get(), bufferSize);
+        data = std::move(imageBuffer);
+    } else {
+        archive.Serialize(data.get(), bufferSize);
+    }
 }
 
 // ImageCache

@@ -16,9 +16,9 @@
 #ifndef RS_PROFILER_MESSAGE_HELPER_H
 #define RS_PROFILER_MESSAGE_HELPER_H
 
-#include <bitset>
-#include <iterator>
 #include <type_traits>
+#include <iterator>
+#include <bitset>
 #include <vector>
 
 #ifndef REPLAY_TOOL_CLIENT
@@ -41,6 +41,7 @@ enum class PackageID {
     RS_PROFILER_RSTREE_PERF_NODE_LIST,
     RS_PROFILER_RSTREE_SINGLE_NODE_PERF,
     RS_PROFILER_MSKP_FILEPATH,
+    RS_PROFILER_BETAREC_FILEPATH,
 };
 class BinaryHelper {
 public:

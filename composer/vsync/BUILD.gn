@@ -1,0 +1,128 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+## Build libvsync.so
+
+config("vsync_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+  ]
+
+  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+    ldflags = [ "-Wl,-Bsymbolic" ]
+  }
+
+  if (graphic_2d_feature_enable_dvsync) {
+    gpu_defines += [ "RS_ENABLE_DVSYNC" ]
+  }
+
+  defines = []
+  defines += gpu_defines
+}
+
+config("vsync_public_config") {
+  include_dirs = [
+    "$graphic_2d_root/interfaces/inner_api/composer",
+    "$graphic_2d_root/rosen/include/common",
+    "$graphic_2d_root/rosen/modules/composer/vsync/include",
+    "$graphic_2d_root/utils/sandbox",
+  ]
+  if (graphic_2d_feature_enable_dvsync) {
+    include_dirs += [ "$graphic_2d_ext_root/dvsync/include" ]
+  }
+}
+
+ohos_shared_library("libvsync") {
+  sources = [
+    "src/vsync_connection_proxy.cpp",
+    "src/vsync_connection_stub.cpp",
+    "src/vsync_controller.cpp",
+    "src/vsync_distributor.cpp",
+    "src/vsync_generator.cpp",
+    "src/vsync_receiver.cpp",
+    "src/vsync_sampler.cpp",
+    "src/vsync_system_ability_listener.cpp",
+  ]
+
+  include_dirs = [
+    "$graphic_2d_root/utils/log",
+    "$graphic_2d_root/interfaces/inner_api/common",
+    "$graphic_2d_root/rosen/modules/composer/vsync/include",
+    "$graphic_2d_root/utils/rs_frame_report_ext/include",
+  ]
+
+  defines = []
+
+  configs = [ ":vsync_config" ]
+
+  public_configs = [ ":vsync_public_config" ]
+
+  deps = [
+    "$graphic_2d_root/utils:rs_frame_report_ext",
+    "$graphic_2d_root/utils:sandbox_utils",
+  ]
+
+  if (graphic_2d_feature_enable_dvsync) {
+    deps += [ "$graphic_2d_ext_root/dvsync:libdvsync" ]
+    include_dirs += [ "$graphic_2d_ext_root/dvsync/include" ]
+  }
+
+  public_deps = [
+    "$graphic_2d_root/utils:scoped_bytrace",
+    "$graphic_2d_root/utils:socketpair",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  public_external_deps = [ "c_utils:utils" ]
+
+  if (defined(graphic_2d_ext_configs.vendor_root)) {
+    include_dirs += graphic_2d_ext_configs.libvsync_ext_include_dirs
+
+    sources += graphic_2d_ext_configs.libvsync_ext_sources
+
+    public_deps += [ "//foundation/graphic/graphic_2d_ext/ohcore/graphic_compat_layer:libgraphic_compat_layer" ]
+  }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "COMPOSER_SCHED_ENABLE" ]
+  }
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Build libvsync.so
+
+group("test") {
+  testonly = true
+
+  deps = [ "test:test" ]
+}

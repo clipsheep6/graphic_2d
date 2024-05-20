@@ -131,7 +131,7 @@ void RSFilterSubThread::PreAddToReleaseQueue(std::shared_ptr<Drawing::Image>&& c
     std::lock_guard<std::mutex> lock(mutex_);
     auto backendTextureMutex = grBackendTextureMutex.lock();
     if (backendTextureMutex != nullptr) {
-        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        std::unique_lock<std::mutex> lockBackendTexture(*backendTextureMutex);
         AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
     } else {
         AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
@@ -153,12 +153,12 @@ void RSFilterSubThread::ReleaseSurface(std::weak_ptr<std::atomic<bool>> waitRele
         auto tmp = tmpSurfaceResources_.front();
         tmpSurfaceResources_.pop();
         if (tmp == nullptr) {
-            ResetWaitRelease(waitRelease);
+            RSFilterSubThread::ResetWaitRelease(waitRelease);
             return;
         }
         tmp = nullptr;
     }
-    ResetWaitRelease(waitRelease);
+    RSFilterSubThread::ResetWaitRelease(waitRelease);
 }
 
 void RSFilterSubThread::ReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
@@ -168,7 +168,7 @@ void RSFilterSubThread::ReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>
         auto tmp = queue.front();
         queue.pop();
         if (tmp == nullptr) {
-            ResetWaitRelease(waitRelease);
+            RSFilterSubThread::ResetWaitRelease(waitRelease);
             return;
         }
         tmp.reset();
@@ -183,7 +183,7 @@ void RSFilterSubThread::PreReleaseImage(std::queue<std::shared_ptr<Drawing::Imag
     std::lock_guard<std::mutex> lock(mutex_);
     auto backendTextureMutex = grBackendTextureMutex.lock();
     if (backendTextureMutex != nullptr) {
-        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        std::unique_lock<std::mutex> lockBackenTexture(*backendTextureMutex);
         ReleaseImage(queue, waitRelease);
     } else {
         ReleaseImage(queue, waitRelease);
@@ -196,9 +196,9 @@ void RSFilterSubThread::ReleaseImageAndSurfaces(std::weak_ptr<std::atomic<bool>>
     ROSEN_LOGD("ReleaseImageAndSurfaces tmpImageResources_.size %{public}d",
         static_cast<int>(tmpImageResources_.size()));
     for (auto& item : tmpImageResources_) {
-        auto& initHandler = handlerMap_[item.first];
         auto& imageQueue = item.second;
         if (imageQueue.size() != 0) {
+            auto& initHandler = handlerMap_[item.first];
             initHandler->PostTask(
                 [this, &imageQueue, waitRelease, grBackendTextureMutex]() {
                     PreReleaseImage(imageQueue, waitRelease, grBackendTextureMutex);
@@ -239,13 +239,14 @@ float RSFilterSubThread::GetAppGpuMemoryInMB()
     return total;
 }
 
+#ifdef RS_ENABLE_GL
 void RSFilterSubThread::CreateShareEglContext()
 {
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr");
         return;
     }
-#ifdef RS_ENABLE_GL
+
     if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
         return;
     }
@@ -258,8 +259,8 @@ void RSFilterSubThread::CreateShareEglContext()
         RS_LOGE("eglMakeCurrent failed");
         return;
     }
-#endif
 }
+#endif
 
 void RSFilterSubThread::DestroyShareEglContext()
 {

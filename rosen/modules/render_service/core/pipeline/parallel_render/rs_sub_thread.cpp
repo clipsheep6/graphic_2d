@@ -262,7 +262,6 @@ bool RSSubThread::RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threa
     if (needNotify) {
         RSSubThreadManager::Instance()->NodeTaskNotify(nodeDrawable->GetId());
     }
-
     return true;
 }
 #endif

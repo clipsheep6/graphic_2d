@@ -62,7 +62,7 @@ private:
     void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
     void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
-        const std::shared_ptr<RSUniRenderVisitor>& visitor, bool& needRequestVsync);
+        const std::shared_ptr<RSUniRenderVisitor>& visitor);
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threadTask,
         const std::shared_ptr<RSUniRenderVisitor>& visitor, std::shared_ptr<RSBaseRenderNode>& nodeDrawable);

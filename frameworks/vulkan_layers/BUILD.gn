@@ -91,10 +91,6 @@ config("VkLayer_Trace3DCaptureLoader_config") {
   cflags_cc = [ "-std=c++17" ]
 }
 
-config("VkLayer_Trace3DCaptureLoader_public_config") {
-  include_dirs = [ "include" ]
-}
-
 ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
   sources = [
     "trace3d/loader/trace3d_loader.cpp",
@@ -105,11 +101,10 @@ ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
 
   configs = [ ":VkLayer_Trace3DCaptureLoader_config" ]
 
-  public_configs = [ ":VkLayer_Trace3DCaptureLoader_public_config" ]
-
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
     "napi:ace_napi",
     "vulkan-headers:vulkan_headers",
   ]
@@ -129,16 +124,11 @@ ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
 
 ## Build libVkLayer_Trace3DCaptureLoader.so  }}}
 
-## Copy VkLayer_Trace3DCaptureLoader.json {{{
-ohos_copy("VkLayer_Trace3DCaptureLoader_json") {
-  sources = [ "trace3d/loader/VkLayer_Trace3DCaptureLoader.json" ]
-  outputs = [
-    "${target_out_dir}/trace3d/loader/VkLayer_Trace3DCaptureLoader.json.bak",
-  ]
+## Build VkLayer_Trace3DCaptureLoader.json {{{
+ohos_prebuilt_etc("VkLayer_Trace3DCaptureLoader_json") {
+  source = "trace3d/loader/VkLayer_Trace3DCaptureLoader.json"
   part_name = "graphic_2d"
   subsystem_name = "graphic"
-  module_type = "etc"
-  prebuilt = true
-  install_enable = true
+  module_install_dir = "etc/vulkan/implicit_layer.d"
 }
-## Copy VkLayer_Trace3DCaptureLoader.json }}}
+## Build VkLayer_Trace3DCaptureLoader.json }}}

@@ -96,7 +96,6 @@ void RSObjAbsGeometry::InitializeAbsMatrix(const Drawing::Matrix* parentMatrix,
 
 void RSObjAbsGeometry::ApplyContextMatrix()
 {
-    // If the absolute matrix of the current view exists, update it with the context matrix and the current matrix
     if (absMatrix_.has_value()) {
         if (contextMatrix_.has_value()) {
             absMatrix_->PreConcat(*contextMatrix_);

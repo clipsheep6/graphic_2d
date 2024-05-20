@@ -150,7 +150,7 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceIfNeeded(RSPaintFilterCanvas& canvas
 #else
     }
 #endif
-    return false;
+    return true;
 }
 
 void RSCanvasDrawingRenderNode::CreateImageSnapshot(RSPaintFilterCanvas& canvas, int width, int height)
@@ -164,8 +164,8 @@ void RSCanvasDrawingRenderNode::CreateImageSnapshot(RSPaintFilterCanvas& canvas,
     isNeedProcess_ = false;
 
     Rosen::Drawing::Matrix mat;
-    if (RSPropertiesPainter::GetGravityMatrix(
-            GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetFrameRect(), width, height, mat)) {
+    if (RSPropertiesPainter::GetGravityMatrix(GetRenderProperties().GetFrameGravity(),
+        GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.ConcatMatrix(mat);
     }
     if (!recordingCanvas_) {

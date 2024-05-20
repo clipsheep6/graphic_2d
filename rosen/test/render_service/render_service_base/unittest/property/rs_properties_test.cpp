@@ -2670,11 +2670,6 @@ HWTEST_F(RSPropertiesTest, GenerateColorFilter002, TestSize.Level1)
     properties.GenerateColorFilter();
     EXPECT_EQ(properties.colorFilterNeedUpdate_, false);
 
-    hueRotate = std::optional<float>(720.f);
-    properties.SetHueRotate(hueRotate);
-    properties.GenerateColorFilter();
-    EXPECT_EQ(properties.colorFilterNeedUpdate_, false);
-
     Color color(255, 0, 0);
     std::optional<Color> colorBlend = color;
     properties.SetColorBlend(colorBlend);

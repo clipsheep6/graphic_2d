@@ -303,6 +303,13 @@ void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>
         return;
     }
 #endif
+
+    CollectSurfaceForSubSurface(node, vec, isUniRender, onlyFirstLevel);
+}
+
+void RSSurfaceRenderNode::CollectSurfaceForSubSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+    std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel)
+{
     auto num = find(vec.begin(), vec.end(), shared_from_this());
     if (num != vec.end()) {
         return;

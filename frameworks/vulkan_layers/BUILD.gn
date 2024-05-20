@@ -79,10 +79,6 @@ config("VkLayer_Trace3DCaptureLoader_config") {
   cflags_cc = [ "-std=c++17" ]
 }
 
-config("VkLayer_Trace3DCaptureLoader_public_config") {
-  include_dirs = [ "include" ]
-}
-
 ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
   sources = [
     "trace3d/loader/trace3d_loader.cpp",
@@ -92,8 +88,6 @@ ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
   ]
 
   configs = [ ":VkLayer_Trace3DCaptureLoader_config" ]
-
-  public_configs = [ ":VkLayer_Trace3DCaptureLoader_public_config" ]
 
   external_deps = [
     "c_utils:utils",

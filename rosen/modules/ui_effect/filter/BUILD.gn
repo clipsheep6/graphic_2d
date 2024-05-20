@@ -18,14 +18,6 @@ import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 config("graphic_napi_filter_config") {
   visibility = [ ":*" ]
-
-  cflags = [
-    "-g3",
-    "-Wno-pointer-arith",
-    "-Wno-non-virtual-dtor",
-    "-Wno-missing-field-initializers",
-    "-Wno-c++11-narrowing",
-  ]
 }
 
 ohos_shared_library("uieffect_filter") {

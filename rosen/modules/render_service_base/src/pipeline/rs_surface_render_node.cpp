@@ -1915,7 +1915,7 @@ bool RSSurfaceRenderNode::CheckParticipateInOcclusion()
     auto nodeParent = GetParent().lock();
     if (nodeParent && nodeParent->IsScale()) {
         isParentScaling_ = true;
-        if (GetDstRectChanged()) {
+        if (GetDstRectChanged() && !isOcclusionInSpecificScenes_) {
             return false;
         }
     }

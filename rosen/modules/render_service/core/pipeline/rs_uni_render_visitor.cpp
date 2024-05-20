@@ -1317,11 +1317,13 @@ void RSUniRenderVisitor::CalculateOcclusion(RSSurfaceRenderNode& node)
     }
     // Update node visibleRegion
     UpdateNodeVisibleRegion(node);
+    auto mainThread = RSMainThread::Instance();
+    node.SetOcclusionInSpecificScenes(mainThread->GetDeviceType() == DeviceType::PC && IsPCThreeFingerScenesListScene());
     // check current surface Participate In Occlusion
     if (node.CheckParticipateInOcclusion()) {
         accumulatedOcclusionRegion_.OrSelf(node.GetOpaqueRegion());
     }
-
+    node.SetOcclusionInSpecificScenes(false);
     // collect surface occlusion visibleLevel
     Occlusion::Region selfDrawRegion { node.GetSurfaceOcclusionRect(true) };
     auto visibleLevel = GetRegionVisibleLevel(node.GetVisibleRegion(), selfDrawRegion);

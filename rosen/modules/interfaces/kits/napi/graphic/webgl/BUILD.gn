@@ -1,0 +1,110 @@
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+config("render_config") {
+  cflags = []
+  cflags_cc = []
+  defines = [ "EGL_EGLEXT_PROTOTYPES" ]
+}
+
+ohos_source_set("webgl_src") {
+  include_dirs = [
+    "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/include",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/common",
+  ]
+
+  sources = [
+    "common/napi/n_class.cpp",
+    "common/napi/n_func_arg.cpp",
+    "common/napi/n_val.cpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "egl:libEGL",
+    "graphic_surface:surface_headers",
+    "hilog:libhilog",
+    "image_framework:image_native",
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
+
+  if (ace_enable_gpu) {
+    sources += [
+      "src/egl_manager.cpp",
+      "src/module.cpp",
+      "src/util.cpp",
+      "src/webgl2_rendering_context.cpp",
+      "src/webgl2_rendering_context_base.cpp",
+      "src/webgl2_rendering_context_impl.cpp",
+      "src/webgl2_rendering_context_override.cpp",
+      "src/webgl_active_info.cpp",
+      "src/webgl_arg.cpp",
+      "src/webgl_buffer.cpp",
+      "src/webgl_framebuffer.cpp",
+      "src/webgl_program.cpp",
+      "src/webgl_query.cpp",
+      "src/webgl_renderbuffer.cpp",
+      "src/webgl_rendering_context.cpp",
+      "src/webgl_rendering_context_base.cpp",
+      "src/webgl_rendering_context_base_impl.cpp",
+      "src/webgl_rendering_context_basic_base.cpp",
+      "src/webgl_rendering_context_common.cpp",
+      "src/webgl_rendering_context_draw.cpp",
+      "src/webgl_rendering_context_ext.cpp",
+      "src/webgl_rendering_context_overloads.cpp",
+      "src/webgl_sampler.cpp",
+      "src/webgl_shader.cpp",
+      "src/webgl_shader_precision_format.cpp",
+      "src/webgl_sync.cpp",
+      "src/webgl_texture.cpp",
+      "src/webgl_transform_feedback.cpp",
+      "src/webgl_uniform_location.cpp",
+      "src/webgl_vertex_array_object.cpp",
+    ]
+
+    deps = [ "$graphic_2d_root:libgl" ]
+    external_deps += [ "bounds_checking_function:libsec_shared" ]
+  }
+
+  cflags = [
+    "-Wall",
+    "-Wno-pointer-arith",
+    "-Wno-non-virtual-dtor",
+    "-Wno-missing-field-initializers",
+    "-Wno-c++11-narrowing",
+  ]
+
+  cflags_cc = [ "-std=c++17" ]
+
+  configs = [ ":render_config" ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_shared_library("libwebglnapi") {
+  external_deps = [ "hilog:libhilog" ]
+  deps = [ ":webgl_src" ]
+  if (ace_enable_gpu) {
+    install_enable = true
+    relative_install_dir = "module"
+  } else {
+    install_enable = false
+  }
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}

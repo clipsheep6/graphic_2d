@@ -1,0 +1,169 @@
+#  Copyright (c) 2022 Huawei Device Co., Ltd.
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+#####################################################
+#     below is the format of defining event         #
+#####################################################
+#domain: domain name.  [Only one domain name can be defined at the top]
+#
+#author: the author name who defined this event.
+#date: the date when this event was defined, format is YYYY-MM-DD.
+#logged: source file which refer to this event.
+#usage: the usage of this event.
+#//Define event name and event properties.
+#@EVENT_NAME: the event definition part begin.
+#  // __BASE is used for defining the basic info of the event.
+#  // "type" optional values are: FAULT, STATISTICS, SECURITY, BEHAVIOR.
+#  // "level" optional values are: CRITICAL, MINOR.
+#  // "tag" set tags with may used by subscriber of this event, multiple tags devided by space.
+#  // "desc" full description of this event.
+#  @PARAMETER: {type: parameter type, arrsize: array length(optional), desc: parameter description}.
+#  // follow the __BASE block, each line defines a parameter of this event.
+#  // "type" optional values are: INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64, FLOAT, DOUBLE, STRING.
+#  // "arrsize" of the parameter is an array, set a non-zero value.
+#  // "desc" full description of this parameter.
+
+#####################################################
+#   Example of some hiviewdfx events definition     #
+#####################################################
+
+domain: GRAPHIC
+
+NO_DRAW:
+  __BASE: {type: FAULT, level: MINOR, desc: graphic no draw}
+  PID: {type: INT32, desc: NO_DRAW the pid of current ability}
+  UID: {type: INT32, desc: NO_DRAW the uid of current ability}
+  ABILITY_NAME: {type: STRING, desc: NO_DRAW ability name}
+  MSG: {type: STRING, desc: NO_DRAW message}
+
+JANK_FRAME_SKIP:
+  __BASE: {type: FAULT, level: MINOR, desc: graphic jank frame skip}
+  PID: {type: INT32, desc: JANK_FRAME_SKIP the pid of current ability}
+  UID: {type: INT32, desc: JANK_FRAME_SKIP the uid of current ability}
+  ABILITY_NAME: {type: STRING, desc: JANK_FRAME_SKIP ability name}
+  MSG: {type: STRING, desc: JANK_FRAME_SKIP message}
+
+RS_COMPOSITION_TIMEOUT:
+  __BASE: {type: STATISTIC, level: MINOR, desc: rs composition timeout}
+  PID: {type: INT32, desc: RS_COMPOSITION_TIMEOUT the pid of current ability}
+  UID: {type: INT32, desc: RS_COMPOSITION_TIMEOUT the uid of current ability}
+  BUNDLE_NAME: {type: STRING, desc: RS_COMPOSITION_TIMEOUT bundle name}
+  ABILITY_NAME: {type: STRING, desc: RS_COMPOSITION_TIMEOUT ability name}
+  MSG: {type: STRING, desc: RS_COMPOSITION_TIMEOUT message}
+
+EPS_LCD_FREQ:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: rs screen refresh rate change}
+  SOURCERATE: {type: INT32, desc: source refresh rate}
+  TARGETRATE: {type: INT32, desc: target refresh rate}
+  WIDTH: {type: INT32, desc: screen resolution width}
+  HEIGHT: {type: INT32, desc: screen resolution height}
+
+JANK_STATS_RS:
+  __BASE: {type: STATISTIC, level: MINOR, tag: performance, desc: jank statistic}
+  STARTTIME: {type: UINT64, desc: begin time since last report}
+  DURATION: {type: UINT64, desc: duration since last report}
+  JANK_STATS: {type: UINT16, desc: jank frame stats}
+  JANK_STATS_VER: {type: UINT32, desc: jank range version}
+
+INTERACTION_RESPONSE_LATENCY:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: performance, desc: interaction response statistics}
+  APP_PID: {type: INT32, desc: app process id}
+  VERSION_CODE: {type: INT32, desc: version code}
+  VERSION_NAME: {type: STRING, desc: version name}
+  BUNDLE_NAME: {type: STRING, desc: package name}
+  ABILITY_NAME: {type: STRING, desc: ability name}
+  PROCESS_NAME: {type: STRING, desc: process name}
+  PAGE_URL: {type: STRING, desc: page url}
+  SCENE_ID: {type: STRING, desc: interation scene id}
+  SOURCE_TYPE: {type: STRING, desc: input source type}
+  NOTE: {type: STRING, desc: extra information}
+  INPUT_TIME: {type: UINT64, desc: input time when multimodel receive from kernel}
+  ANIMATION_START_TIME: {type: UINT64, desc: animation start time of the scene}
+  RENDER_TIME: {type: UINT64, desc: render time of the scene}
+  RESPONSE_LATENCY: {type: UINT64, desc: render time minus input time}
+
+INTERACTION_COMPLETED_LATENCY:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: performance, desc: interaction response statistics}
+  APP_PID: {type: INT32, desc: app process id}
+  VERSION_CODE: {type: INT32, desc: version code}
+  VERSION_NAME: {type: STRING, desc: version name}
+  BUNDLE_NAME: {type: STRING, desc: package name}
+  ABILITY_NAME: {type: STRING, desc: ability name}
+  PROCESS_NAME: {type: STRING, desc: process name}
+  PAGE_URL: {type: STRING, desc: page url}
+  SCENE_ID: {type: STRING, desc: interation scene id}
+  SOURCE_TYPE: {type: STRING, desc: input source type}
+  NOTE: {type: STRING, desc: extra information}
+  INPUT_TIME: {type: UINT64, desc: input time when multimodel receive from kernel}
+  ANIMATION_START_LATENCY: {type: UINT64, desc: animation start time minus input time}
+  ANIMATION_END_LATENCY: {type: UINT64, desc: end time of the scene}
+  E2E_LATENCY: {type: UINT64, desc: end to end time}
+
+INTERACTION_RENDER_JANK:
+  __BASE: {type: STATISTIC, level: MINOR, tag: performance, desc: interaction jank statistics}
+  UNIQUE_ID: {type: INT32, desc: unique id}
+  SCENE_ID: {type: STRING, desc: interation scene id}
+  PROCESS_NAME: {type: STRING, desc: process name}
+  MODULE_NAME: {type: STRING, desc: package name}
+  ABILITY_NAME: {type: STRING, desc: ability name}
+  PAGE_URL: {type: STRING, desc: page url}
+  TOTAL_FRAMES: {type: INT32, desc: total frames}
+  TOTAL_MISSED_FRAMES: {type: INT32, desc: total missed frames during the scene}
+  MAX_FRAMETIME: {type: UINT64, desc: max single frame time during the scene}
+  AVERAGE_FRAMETIME: {type: FLOAT, desc: average frame time during the scene}
+  MAX_SEQ_MISSED_FRAMES: {type: INT32, desc: max successive missed frames during the scene}
+  IS_FOLD_DISP: {type: BOOL, desc: 'default false, set true if fold screen in expand state'}
+  BUNDLE_NAME_EX: {type: STRING, desc: real package name when sceneboard start app}
+  MAX_HITCH_TIME: {type: UINT64, desc: max single frame hitch time during the scene}
+
+INTERACTION_HITCH_TIME_RATIO:
+  __BASE: {type: STATISTIC, level: MINOR, tag: performance, desc: interaction hitch time ratio statistics}
+  UNIQUE_ID: {type: INT32, desc: unique id}
+  SCENE_ID: {type: STRING, desc: interation scene id}
+  PROCESS_NAME: {type: STRING, desc: process name}
+  MODULE_NAME: {type: STRING, desc: package name}
+  ABILITY_NAME: {type: STRING, desc: ability name}
+  PAGE_URL: {type: STRING, desc: page url}
+  UI_START_TIME: {type: UINT64, desc: animation start time of the scene in ArkUI}
+  RS_START_TIME: {type: UINT64, desc: animation start time of the scene in render service}
+  DURATION: {type: UINT64, desc: total animation time during the scene}
+  HITCH_TIME: {type: UINT64, desc: total hitch time during the scene}
+  HITCH_TIME_RATIO: {type: FLOAT, desc: hitch time ratio during the scene}
+  IS_FOLD_DISP: {type: BOOL, desc: 'default false, set true if fold screen in expand state'}
+  BUNDLE_NAME_EX: {type: STRING, desc: real package name when sceneboard start app}
+
+FIRST_FRAME_DRAWN:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: performance, desc: interaction jank statistics}
+  APP_PID: {type: INT32, desc: app process id}
+
+RS_NODE_LIMIT_EXCEEDED:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: performance, desc: rs node limit exceeded statistics}
+  RS_NODE_LIMIT: {type: UINT32, desc: the upper limit of the total number of rs nodes}
+  RS_ACTUAL_NODE: {type: UINT32, desc: current total number of rs nodes}
+  TIMESTAMP: {type: UINT64, desc: current timestamp}
+  RS_APP_WINDOW_TOTAL: {type: UINT32, desc: current total app windows on rs tree}
+  RS_TOP1_APP_NAME: {type: STRING, desc: name of current app with top1 rs nodes}
+  RS_TOP1_APP_NODE: {type: UINT32, desc: number of nodes of current app with top1 rs nodes}
+  RS_TOP2_APP_NAME: {type: STRING, desc: name of current app with top2 rs nodes}
+  RS_TOP2_APP_NODE: {type: UINT32, desc: number of nodes of current app with top2 rs nodes}
+  RS_TOP3_APP_NAME: {type: STRING, desc: name of current app with top3 rs nodes}
+  RS_TOP3_APP_NODE: {type: UINT32, desc: number of nodes of current app with top3 rs nodes}
+
+HGM_VOTER_INFO:
+  __BASE: {type: STATISTIC, level: MINOR, desc: hgm voter info statistics}
+  MSG: {type: STRING, desc: voter info}
+
+GPU_SUBHEALTH_MONITORING:
+  __BASE: {type: STATISTIC, level: MINOR, desc: GPU subhealth monitoring statistics}
+  WAIT_ACQUIRE_FENCE_TIME: {type: UINT64, desc: wait acquire fence time}
+  FRAME_RATE: {type: INT32, desc: real frame rate}

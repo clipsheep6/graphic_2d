@@ -1,0 +1,140 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+## Build bootanimation {{{
+config("bootanimation_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "include",
+    "$graphic_2d_root/utils/log",
+    "${graphic_2d_root}/rosen/modules/render_service_client",
+    "${graphic_2d_root}/rosen/modules/render_service/core",
+    "${graphic_2d_root}/rosen/modules/composer/hdi_backend/include",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+  ]
+
+  defines = []
+  defines += gpu_defines
+  if (player_framework_enable) {
+    defines += [ "PLAYER_FRAMEWORK_ENABLE" ]
+  }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+  }
+}
+
+ohos_executable("bootanimation") {
+  install_enable = true
+
+  sources = [
+    "src/boot_animation_controller.cpp",
+    "src/boot_animation_operation.cpp",
+    "src/boot_animation_strategy.cpp",
+    "src/boot_associative_display_strategy.cpp",
+    "src/boot_compatible_display_strategy.cpp",
+    "src/boot_compile_progress.cpp",
+    "src/boot_independent_display_strategy.cpp",
+    "src/boot_picture_player.cpp",
+    "src/boot_sound_player.cpp",
+    "src/boot_video_player.cpp",
+    "src/main.cpp",
+    "src/util.cpp",
+  ]
+
+  configs = [ ":bootanimation_config" ]
+
+  deps = [
+    "$graphic_2d_root:libbootanimation_utils",
+    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    "$graphic_2d_root/rosen/modules/composer:libcomposer",
+    "$graphic_2d_root/rosen/modules/render_service:librender_service",
+    "$graphic_2d_root/rosen/modules/render_service_base/src/platform:platform",
+    "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
+  ]
+
+  deps += [ "//third_party/skia:skia_ohos" ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    deps += [ "$graphic_2d_root/rosen/modules/render_service_base/src/render_backend:librender_backend" ]
+  }
+
+  external_deps = [
+    "cJSON:cjson_static",
+    "c_utils:utils",
+    "config_policy:configpolicy_util",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "resource_management:global_resmgr",
+    "samgr:samgr_proxy",
+    "zlib:libz",
+  ]
+
+  if (player_framework_enable) {
+    external_deps += [ "player_framework:media_client" ]
+  }
+
+  if (is_standard_system) {
+    external_deps += [ "init:libbegetutil" ]
+  } else {
+    external_deps += [ "startup:syspara" ]
+  }
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Build bootanimation }}}
+
+## Install boot animation resource to /system/etc/graphic/ {{{
+ohos_prebuilt_etc("bootanimation_pics") {
+  source = "data/bootpic.zip"
+  relative_install_dir = "graphic"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_prebuilt_etc("bootanimation_sounds") {
+  source = "data/bootsound.wav"
+  relative_install_dir = "graphic"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_prebuilt_etc("bootanimation_video") {
+  source = "data/bootvideo.mp4"
+  relative_install_dir = "graphic"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Install boot animation resource to /system/etc/graphic/ }}}
+
+## Install boot animation para to /system/etc/param/ {{{
+ohos_prebuilt_etc("bootanimation_para") {
+  source = "etc/bootanimation.para"
+  relative_install_dir = "param"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+## Install boot animation para to /system/etc/param/ }}}

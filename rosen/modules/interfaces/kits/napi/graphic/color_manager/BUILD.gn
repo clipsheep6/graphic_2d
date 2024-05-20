@@ -1,0 +1,208 @@
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+platform = current_os
+if (current_os == "mingw") {
+  platform = "windows"
+}
+
+config("color_space_object_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "$graphic_2d_root/interfaces/inner_api/color_manager",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor",
+    "$graphic_2d_root/utils/color_manager/export",
+  ]
+}
+
+config("color_space_object_convertor_public_config") {
+  include_dirs = [ "color_space_object_convertor" ]
+}
+
+if (current_os == "ohos") {
+  ohos_shared_library("color_space_object_convertor") {
+    public_configs = [ ":color_space_object_convertor_public_config" ]
+    sources = [
+      "color_space_object_convertor/color_space_object_convertor.cpp",
+      "color_space_object_convertor/js_color_space.cpp",
+      "color_space_object_convertor/js_color_space_utils.cpp",
+    ]
+
+    configs = [
+      ":color_space_object_config",
+      "$graphic_2d_root/utils/color_manager:color_manager_public_config",
+    ]
+
+    if (is_arkui_x) {
+      deps = [ "$arkui_root/napi:ace_napi" ]
+      include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    } else {
+      external_deps = [
+        "hilog:libhilog",
+        "napi:ace_napi",
+      ]
+    }
+
+    cflags_cc = [ "-std=c++17" ]
+    innerapi_tags = [ "platformsdk" ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+} else {
+  ohos_source_set("color_space_object_convertor") {
+    sources = [
+      "color_space_object_convertor/color_space_object_convertor.cpp",
+      "color_space_object_convertor/js_color_space.cpp",
+      "color_space_object_convertor/js_color_space_utils.cpp",
+    ]
+
+    include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    configs = [
+      ":color_space_object_config",
+      "$arkui_root/napi:ace_napi_config",
+      "$graphic_2d_root/utils/color_manager:color_manager_public_config",
+    ]
+
+    cflags_cc = [ "-std=c++17" ]
+    deps = [ "$graphic_2d_root/utils/color_manager:color_manager" ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+}
+
+config("color_manager_napi_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "$graphic_2d_root/interfaces/inner_api/color_manager",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/color_manager/colorspacemanager_napi",
+    "$graphic_2d_root/utils/color_manager/export",
+  ]
+}
+
+template("colorspacemanager_napi_source_set") {
+  forward_variables_from(invoker, "*")
+
+  ohos_source_set(target_name) {
+    sources = [
+      "colorspacemanager_napi/color_space_manager_module.cpp",
+      "colorspacemanager_napi/js_color_space_manager.cpp",
+    ]
+
+    configs = [
+      ":color_manager_napi_config",
+      "$graphic_2d_root/utils/color_manager:color_manager_public_config",
+    ]
+
+    if (is_arkui_x) {
+      deps = [ "$arkui_root/napi:ace_napi" ]
+      include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    } else {
+      external_deps = [
+        "hilog:libhilog",
+        "napi:ace_napi",
+      ]
+    }
+
+    cflags_cc = [ "-std=c++17" ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+}
+
+colorspacemanager_napi_source_set("colorspacemanager_napi_source") {
+}
+
+template("sendablecolorspacemanager_napi_source_set") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  forward_variables_from(invoker, "*")
+
+  ohos_source_set(target_name) {
+    sources = [
+      "sendable_colorspacemanager_napi/js_sendable_color_space_manager.cpp",
+      "sendable_colorspacemanager_napi/sendable_color_space_manager_module.cpp",
+    ]
+
+    configs = [
+      ":color_manager_napi_config",
+      "$graphic_2d_root/utils/color_manager:color_manager_public_config",
+    ]
+
+    if (is_arkui_x) {
+      deps = [ "$arkui_root/napi:ace_napi" ]
+      include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    } else {
+      external_deps = [
+        "hilog:libhilog",
+        "napi:ace_napi",
+      ]
+    }
+
+    cflags_cc = [ "-std=c++17" ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+}
+
+sendablecolorspacemanager_napi_source_set(
+    "sendablecolorspacemanager_napi_source") {
+}
+
+if (current_os == "ohos") {
+  ohos_shared_library("colorspacemanager_napi") {
+    public_deps = [ ":colorspacemanager_napi_source" ]
+    deps = [
+      ":color_space_object_convertor",
+      "$graphic_2d_root/utils/color_manager:color_manager",
+    ]
+    relative_install_dir = "module/graphics"
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+  ohos_shared_library("sendablecolorspacemanager_napi") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+
+    public_deps = [ ":sendablecolorspacemanager_napi_source" ]
+    deps = [
+      ":color_space_object_convertor",
+      "$graphic_2d_root/utils/color_manager:color_manager",
+    ]
+    relative_install_dir = "module/graphics"
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+} else {
+  ohos_source_set("colorspacemanager_napi") {
+    public_deps = [ ":colorspacemanager_napi_source" ]
+    deps = [
+      ":color_space_object_convertor",
+      "$graphic_2d_root/utils/color_manager:color_manager",
+    ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+}

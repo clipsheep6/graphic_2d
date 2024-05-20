@@ -65,7 +65,8 @@ private:
         const std::shared_ptr<RSUniRenderVisitor>& visitor);
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threadTask,
-        const std::shared_ptr<RSUniRenderVisitor>& visitor, std::shared_ptr<RSBaseRenderNode>& nodeDrawable);
+        const std::shared_ptr<RSUniRenderVisitor>& visitor, std::shared_ptr<RSBaseRenderNode>& nodeDrawable,
+        bool& needRequestVsync);
 #endif
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

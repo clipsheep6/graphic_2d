@@ -20,7 +20,6 @@ config("graphic_napi_filter_config") {
   visibility = [ ":*" ]
 
   cflags = [
-    "-Wall",
     "-g3",
     "-Wno-pointer-arith",
     "-Wno-non-virtual-dtor",
@@ -50,7 +49,6 @@ ohos_shared_library("uieffect_filter") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
   ]
 
   cflags_cc = [ "-std=c++17" ]

@@ -34,6 +34,7 @@
 #include "property/rs_properties.h"
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
+#include "filter.h"
 
 #include "recording/recording_canvas.h"
 

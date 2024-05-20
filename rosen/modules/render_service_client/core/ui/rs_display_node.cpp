@@ -200,6 +200,22 @@ bool RSDisplayNode::GetBootAnimation() const
     return isBootAnimation_;
 }
 
+void RSDisplayNode::SetScbNodePid(std::vector<int32_t> oldScbPids, int32_t currentScbPid)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSDisplayNodeSetNodePid>(GetId(), oldScbPids, currentScbPid);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+    ROSEN_LOGI("SetScbNodePid NodeId:[%{public}" PRIu64 "] currentScbPid:[%{public}d]", GetId(), currentScbPid);
+    std::ostringstream oldPidsStr;
+    oldPidsStr << "oldScbPids:";
+    for (auto iter = oldScbPids.begin(); iter != oldScbPids.end(); ++iter) {
+        oldPidsStr << *iter << ",";
+    }
+    ROSEN_LOGI("SetScbNodePid oldScbPid: %{public}s", oldPidsStr.str().c_str());
+}
+
 RSDisplayNode::~RSDisplayNode() = default;
 
 } // namespace Rosen

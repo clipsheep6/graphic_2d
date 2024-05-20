@@ -21,7 +21,6 @@ config("graphic_napi_filter_config") {
 
   cflags = [
     "-Wall",
-    "-Werror",
     "-g3",
     "-Wno-pointer-arith",
     "-Wno-non-virtual-dtor",

@@ -173,7 +173,7 @@ void ReceiveFontFeature(napi_env env, napi_value argValue, TextStyle& textStyle)
     if (napi_get_array_length(env, allFeatureValue, &arrayLength) != napi_ok ||
         !arrayLength) {
         ROSEN_LOGE("The parameter of font features is unvaild");
-        return;        
+        return;
     }
     
     for (uint32_t further = 0; further < arrayLength; further++) {
@@ -187,14 +187,14 @@ void ReceiveFontFeature(napi_env env, napi_value argValue, TextStyle& textStyle)
         if (napi_get_named_property(env, singleElementValue, "name", &featureElement) != napi_ok ||
             !ConvertFromJsValue(env, featureElement, name)) {
             ROSEN_LOGE("This time that the name of parameter in font features is unvaild");
-            break;           
+            break;
         }
 
         int value = 0;
         if (napi_get_named_property(env, singleElementValue, "value", &featureElement) != napi_ok ||
             !ConvertFromJsValue(env, featureElement, value)) {
             ROSEN_LOGE("This time that the value of parameter in font features is unvaild");
-            break;      
+            break;
         }
         textStyle.fontFeatures.SetFeature(name, value);
     }

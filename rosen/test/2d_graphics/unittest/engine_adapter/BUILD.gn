@@ -14,20 +14,15 @@
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-module_output_path = "graphic_2d/rosen/modules/2d_graphics/image"
+module_output_path = "graphic_2d/rosen/modules/2d_graphics/engine_adapter"
 
-ohos_unittest("2d_graphics_image_test") {
+ohos_unittest("2d_graphics_engine_adapter_test") {
   module_out_path = module_output_path
 
   sources = [
-    "image_test.cpp",
-    "picture_test.cpp",
-    "gpu_context_test.cpp",
+    "static_factory_test.cpp",
   ]
 
-  if (ace_enable_gpu) {
-    sources += [ "gpu_context_test.cpp" ]
-  }
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
@@ -36,27 +31,20 @@ ohos_unittest("2d_graphics_image_test") {
   ]
 
   deps = [
-    "$graphic_2d_root:libgl",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//third_party/googletest:gtest_main",
   ]
-
-  defines = [ "ROSEN_OHOS" ]
-  if (ace_enable_gpu) {
-    defines += [ "ACE_ENABLE_GPU" ]
-  }
-
+  
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:librender_service_base",
     "hilog:libhilog",
-    "image_framework:image_native",
   ]
 }
 
 group("unittest") {
   testonly = true
 
-  deps = [ ":2d_graphics_image_test" ]
+  deps = [ ":2d_graphics_engine_adapter_test" ]
 }

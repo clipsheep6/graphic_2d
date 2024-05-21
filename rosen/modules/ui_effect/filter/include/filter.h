@@ -31,7 +31,7 @@ public:
         filterParas_.emplace_back(para);
     }
 
-    std::vector<std::shared_ptr<FilterPara>> GetAllPara()
+    std::vector<std::shared_ptr<FilterPara>> GetAllPara() const
     {
         return filterParas_;
     }

@@ -29,6 +29,27 @@ public:
     }
     ~PixelStretchPara() {}
 
+    void SetStretchPercent(Vector4f stretchPercent)
+    {
+        stretchPercent_ = stretchPercent;
+    }
+
+    Vector4f GetStretchPercent() const
+    {
+        return stretchPercent_;
+    }
+
+    void SetTileMode(Drawing::TileMode stretchTileMode)
+    {
+        stretchTileMode_ = stretchTileMode;
+    }
+
+    Drawing::TileMode GetTileMode() const
+    {
+        return stretchTileMode_;
+    }
+
+private:
     Vector4f stretchPercent_;
     Drawing::TileMode stretchTileMode_ = Drawing::TileMode::CLAMP;
 };

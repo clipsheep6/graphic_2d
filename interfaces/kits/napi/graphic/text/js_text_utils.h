@@ -36,7 +36,6 @@ constexpr size_t ARGC_THREE = 3;
 constexpr size_t ARGC_FOUR = 4;
 constexpr size_t ARGC_FIVE = 5;
 constexpr size_t ARGC_SIX = 6;
-
 struct ResourceInfo {
     int32_t resId = 0;
     int32_t type = 0;
@@ -400,6 +399,10 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
 bool GetPlaceholderSpanFromJS(napi_env env, napi_value argValue, PlaceholderSpan& placeholderSpan);
 
 void ParsePartTextStyle(napi_env env, napi_value argValue, TextStyle& textStyle);
+
+void SetTextStyleBaseType(napi_env env, napi_value argValue, TextStyle& textStyle);
+
+void ReceiveFontFeature(napi_env env, napi_value argValue, TextStyle& textStyle);
 
 size_t GetParamLen(napi_env env, napi_value param);
 

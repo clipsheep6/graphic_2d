@@ -257,6 +257,22 @@ std::shared_ptr<Drawing::Image> RSSurfaceRenderNodeDrawable::GetCompletedImage(
 #endif
 }
 
+Vector2f RSSurfaceRenderNode::GetGravityTranslate(float imgWidth, float imgHeight)
+{
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
+    if (!surfaceParams) {
+        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
+        return Vector2f{};
+    }
+    auto gravity = surfaceParams->GetUIFirstFrameGravity();
+    float boundsWidth = surfaceParams->GetCacheSize().x_;
+    float boundsHeight = surfaceParams->GetCacheSize().y_;
+    Drawing::Matrix gravityMatrix;
+    RSPropertiesPainter::GetGravityMatrix(gravity, RectF {0.0f, 0.0f, boundsWidth, boundsHeight},
+        imgWidth, imgHeight, gravityMatrix);
+    return {gravityMatrix.Get(Drawing::Matrix::TRANS_X), gravityMatrix.Get(Drawing::Matrix::TRANS_Y)};
+}
+
 bool RSSurfaceRenderNodeDrawable::DrawCacheSurface(RSPaintFilterCanvas& canvas, const Vector2f& boundSize,
     uint32_t threadIndex, bool isUIFirst)
 {
@@ -285,7 +301,8 @@ bool RSSurfaceRenderNodeDrawable::DrawCacheSurface(RSPaintFilterCanvas& canvas, 
     Drawing::Brush brush;
     canvas.AttachBrush(brush);
     auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
-    canvas.DrawImage(*cacheImage, 0.0, 0.0, samplingOptions);
+    auto gravityTranslate = GetGravityTranslate(cacheImage->GetWidth(), cacheImage->GetHeight());
+    canvas.DrawImage(*cacheImage, gravityTranslate.x_, gravityTranslate.y_, samplingOptions);
     canvas.DetachBrush();
     canvas.Restore();
     return true;

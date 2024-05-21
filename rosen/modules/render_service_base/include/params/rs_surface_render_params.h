@@ -203,6 +203,10 @@ public:
     {
         return uiFirstParentFlag_;
     }
+    void SetUIFirstFrameGravity(Gravity gravity);
+
+    Gravity GetUIFirstFrameGravity() const;
+
     void SetOcclusionVisible(bool visible);
     bool GetOcclusionVisible() const;
 
@@ -295,6 +299,7 @@ private:
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
     bool isSubSurfaceNode_ = false;
+    Gravity uiFirstFrameGravity_ = Gravity::TOP_LEFT;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};

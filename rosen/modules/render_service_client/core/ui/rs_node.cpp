@@ -1289,7 +1289,7 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
             auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
             auto blender = backgroundColorEffectPara->GetBlender();
             auto brightnessBlender = static_cast<BrightnessBlender>(blender);
-            if (BrightnessBlender == nullptr) {
+            if (brightnessBlender == nullptr) {
                 continue;
             }
             SetBgBrightnessParams(

@@ -320,7 +320,7 @@ public:
     void SetLightUpEffectDegree(float LightUpEffectDegree);
 
     void SetPixelStretch(const Vector4f& stretchSize, Drawing::TileMode stretchTileMode = Drawing::TileMode::CLAMP);
-    void SetPixelStretchPercent(const Vector4f& stretchPercent);
+    void SetPixelStretchPercent(const Vector4f& stretchPercent, Drawing::TileMode stretchTileMode);
 
     void SetPaintOrder(bool drawContentLast);
 

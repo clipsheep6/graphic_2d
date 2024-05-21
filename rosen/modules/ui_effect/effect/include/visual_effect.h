@@ -30,7 +30,7 @@ public:
         visualEffectParas_.emplace_back(para);
     }
 
-    std::vector<std::shared_ptr<VisualEffectPara>> GetAllPara()
+    std::vector<std::shared_ptr<VisualEffectPara>> GetAllPara() const
     {
         return visualEffectParas_;
     }

@@ -13,7 +13,6 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
-import("//foundation/multimedia/image_framework/ide/image_decode_config.gni")
 
 ## Build uieffect.so
 
@@ -43,7 +42,7 @@ ohos_shared_library("uieffect") {
     "$graphic_2d_root/rosen/modules/ui_effect/effect/include",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
     "$graphic_2d_root/utils/log",
-    "${image_subsystem}/interfaces/kits/js/common/include",
+    "//foundation/multimedia/image_framework/interfaces/kits/js/common/include",
   ]
 
   include_dirs += [ "//third_party/skia" ]

@@ -28,13 +28,94 @@ public:
     }
     ~BrightnessBlender() {}
 
+    void SetCubicRate(float cubicRate)
+    {
+        cubicRate_ = cubicRate;
+    }
+
+    float GetCubicRate() const
+    {
+        return cubicRate_;
+    }
+
+    void SetQuadRate(float quadRate)
+    {
+        quadRate_ = quadRate;
+    }
+
+    float GetQuadRate() const
+    {
+        return quadRate_;
+    }
+
+    void SetLinearRate(float linearRate)
+    {
+        linearRate_ = linearRate;
+    }
+
+    float GetLinearRate() const
+    {
+        return linearRate_;
+    }
+
+    void SetDegree(float degree)
+    {
+        degree_ = degree;
+    }
+
+    float GetDegree() const
+    {
+        return degree_;
+    }
+
+    void SetSaturation(float saturation)
+    {
+        saturation_ = saturation;
+    }
+
+    float GetSaturation() const
+    {
+        return saturation_;
+    }
+
+    void SetPositiveCoeff(Vector3f positiveCoeff)
+    {
+        positiveCoeff_ = positiveCoeff;
+    }
+
+    Vector3f GetPositiveCoeff() const
+    {
+        return positiveCoeff_;
+    }
+
+    void SetNegativeCoeff(Vector3f negativeCoeff)
+    {
+        negativeCoeff_ = negativeCoeff;
+    }
+
+    Vector3f GetNegativeCoeff() const
+    {
+        return negativeCoeff_;
+    }
+
+    void SetFraction(float fraction)
+    {
+        fraction_ = fraction;
+    }
+
+    float GetFraction() const
+    {
+        return fraction_;
+    }
+
+private:
     float cubicRate_;
     float quadRate_;
     float linearRate_;
     float degree_;
-    float saturation_;
+    float saturation_ = 1.0f;
     Vector3f positiveCoeff_;
-    Vector3f negetiveCoeff_;
+    Vector3f negativeCoeff_;
     float fraction_;
 };
 } // namespace Rosen

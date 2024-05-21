@@ -26,6 +26,18 @@ public:
         this->type_ = FilterPara::ParaType::BLUR;
     }
     ~FilterBlurPara() {}
+    
+    void SetRadius(float radius)
+    {
+        radius_ = radius;
+    }
+
+    float GetRadius() const
+    {
+        return radius_;
+    }
+
+private:
     float radius_ = 0.0f;
 };
 } // namespace Rosen

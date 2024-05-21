@@ -24,9 +24,12 @@
 #include "animation/rs_particle_params.h"
 #include "animation/rs_symbol_node_config.h"
 #include "animation/rs_transition_effect.h"
+#include "background_color_effect_para.h"
 #include "command/rs_animation_command.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
+#include "filter.h"
+#include "filter_pixel_stretch_para.h"
 #include "modifier/rs_modifier_extractor.h"
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_showing_properties_freezer.h"
@@ -34,6 +37,7 @@
 #include "property/rs_properties.h"
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
+#include "visual_effect.h"
 
 #include "recording/recording_canvas.h"
 
@@ -269,6 +273,12 @@ public:
     void SetOutlineWidth(const Vector4f& width);
     void SetOutlineStyle(const Vector4<BorderStyle>& style);
     void SetOutlineRadius(const Vector4f& radius);
+
+    // UIEffect
+    void SetUIBackgroundFilter(const Filter* backgroundFilter);
+    void SetUICompositingFilter(const Filter* compositingFilter);
+    void SetUIForegroundFilter(const Filter* foregroundFilter);
+    void SetVisualEffect(const VisualEffect* visualEffect);
 
     void SetForegroundEffectRadius(const float blurRadius);
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);

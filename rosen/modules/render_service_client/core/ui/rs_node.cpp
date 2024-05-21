@@ -1257,6 +1257,54 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
         RSModifierType::OUTLINE_RADIUS, radius);
 }
 
+void RSNode::SetUIBackgroundFilter(const Filter* backgroundFilter)
+{
+}
+
+void RSNode::SetUICompositingFilter(const Filter* compositingFilter)
+{
+}
+
+void RSNode::SetUIForegroundFilter(const Filter* foregroundFilter)
+{
+    auto filterParas = foregroundFilter->GetAllPara();
+    for (const auto& filterPara : filterParas) {
+        if (filterPara->type_ == FilterPara::PIXEL_STRETCH) {
+            auto pixelStretchPara = std::static_pointer_cast<PixelStretchPara>(filterPara);
+            auto stretchPercent = pixelStretchPara->GetStretchPercent();
+            SetPixelStretchPercent(stretchPercent, pixelStretchPara->GetTileMode());
+        }
+    }
+}
+
+void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
+{
+    auto visualEffectParas = visualEffect->GetAllPara();
+    for (const auto& visualEffectPara : visualEffectParas) {
+        if (visualEffectPara->type_ == VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
+            auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
+            auto blender = backgroundColorEffectPara->GetBlender();
+            auto brightnessBlender = static_cast<BrightnessBlender>(blender);
+            if (BrightnessBlender == nullptr) {
+                continue;
+            }
+            SetBgBrightnessParams(
+                {
+                    brightnessBlender.GetCubicRate(),
+                    brightnessBlender.GetQuadRate(),
+                    brightnessBlender.GetLinearRate(),
+                    brightnessBlender.GetDegree(),
+                    brightnessBlender.GetSaturation(),
+                    brightnessBlender.GetPositiveCoeff(),
+                    brightnessBlender.GetNegativeCoeff()
+                }
+            );
+            auto fraction = brightnessBlender.GetFraction();
+            SetBgBrightnessFract(fraction);
+        }
+    }
+}
+
 void RSNode::SetForegroundEffectRadius(const float blurRadius)
 {
     SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
@@ -1518,10 +1566,12 @@ void RSNode::SetPixelStretch(const Vector4f& stretchSize, Drawing::TileMode stre
         RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
 }
 
-void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent)
+void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent, Drawing::TileMode stretchTileMode)
 {
     SetProperty<RSPixelStretchPercentModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::PIXEL_STRETCH_PERCENT,
         stretchPercent);
+    SetProperty<RSPixelStretchTileModeModifier, RSProperty<int>>(
+        RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
 }
 
 void RSNode::SetFreeze(bool isFreeze)

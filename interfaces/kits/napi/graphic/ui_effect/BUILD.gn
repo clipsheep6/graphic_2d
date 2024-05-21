@@ -57,9 +57,9 @@ ohos_shared_library("uieffect") {
   ]
 
   deps = [
-    "$graphic_2d_root/rosen/modules/ui_effect/filter:uieffect_filter",
-    "$graphic_2d_root/rosen/modules/ui_effect/effect:uieffect_effect",
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    "$graphic_2d_root/rosen/modules/ui_effect/effect:uieffect_effect",
+    "$graphic_2d_root/rosen/modules/ui_effect/filter:uieffect_filter",
   ]
 
   external_deps = [

@@ -330,14 +330,14 @@ void RSSurfaceRenderNode::CollectSurfaceForSubSurface(const std::shared_ptr<RSBa
         }
         for (auto &nodes : node->GetSubSurfaceNodes()) {
             for (auto& node : nodes.second) {
-                CollectSurfacePre(vec, isUniRender, onlyFirstLevel);
+                CollectSurfacePre(vec, node, isUniRender, onlyFirstLevel);
             }
         }
     }
 }
 
 void RSSurfaceRenderNode::CollectSurfacePre(std::vector<RSBaseRenderNode::SharedPtr>& vec,
-    bool isUniRender, bool onlyFirstLevel)
+    const std::shared_ptr<RSBaseRenderNode>& node, bool isUniRender, bool onlyFirstLevel)
 {
     auto surfaceNode = node.lock();
     if (surfaceNode != nullptr) {

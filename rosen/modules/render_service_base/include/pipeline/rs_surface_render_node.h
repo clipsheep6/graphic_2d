@@ -1126,7 +1126,7 @@ private:
     void UpdateRenderParams() override;
     void UpdateChildHardwareEnabledNode(NodeId id, bool isOnTree);
     void CollectSurfacePre(std::vector<RSBaseRenderNode::SharedPtr>& vec,
-        bool isUniRender, bool onlyFirstLevel);
+        const std::shared_ptr<RSBaseRenderNode>& node, bool isUniRender, bool onlyFirstLevel);
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutexClear_;

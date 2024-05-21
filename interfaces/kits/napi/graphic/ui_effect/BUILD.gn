@@ -42,7 +42,7 @@ ohos_shared_library("uieffect") {
     "$graphic_2d_root/rosen/modules/ui_effect/effect/include",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
     "$graphic_2d_root/utils/log",
-    "//foundation/multimedia/image_framework/interfaces/kits/js/common/include",
+    "${image_subsystem}/interfaces/kits/js/common/include",
   ]
 
   include_dirs += [ "//third_party/skia" ]

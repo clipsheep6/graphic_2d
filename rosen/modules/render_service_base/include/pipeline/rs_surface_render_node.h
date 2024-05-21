@@ -1114,6 +1114,8 @@ protected:
     void OnSkipSync() override;
 
 private:
+    void CollectSurfaceForSubSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+        std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel);
     void OnResetParent() override;
     void ClearChildrenCache();
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
@@ -1132,6 +1134,8 @@ private:
     void InitRenderParams() override;
     void UpdateRenderParams() override;
     void UpdateChildHardwareEnabledNode(NodeId id, bool isOnTree);
+    void CollectSurfacePre(std::vector<RSBaseRenderNode::SharedPtr>& vec,
+        const std::shared_ptr<RSBaseRenderNode>& node, bool isUniRender, bool onlyFirstLevel);
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutexClear_;

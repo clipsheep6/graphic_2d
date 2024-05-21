@@ -1259,14 +1259,17 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 
 void RSNode::SetUIBackgroundFilter(const Filter* backgroundFilter)
 {
+    // To do: generate composing filter here.
 }
 
 void RSNode::SetUICompositingFilter(const Filter* compositingFilter)
 {
+    // To do: generate composing filter here.
 }
 
 void RSNode::SetUIForegroundFilter(const Filter* foregroundFilter)
 {
+    // To do: generate composing filter here. Now we just set pixel stretch in v1.0.
     auto filterParas = foregroundFilter->GetAllPara();
     for (const auto& filterPara : filterParas) {
         if (filterPara->type_ == FilterPara::PIXEL_STRETCH) {
@@ -1279,6 +1282,7 @@ void RSNode::SetUIForegroundFilter(const Filter* foregroundFilter)
 
 void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
 {
+    // To do: generate composing visual effect here. Now we just set background brightness in v1.0.
     auto visualEffectParas = visualEffect->GetAllPara();
     for (const auto& visualEffectPara : visualEffectParas) {
         if (visualEffectPara->type_ == VisualEffectPara::BACKGROUND_COLOR_EFFECT) {

@@ -144,8 +144,6 @@ bool RSRenderService::RegisterWithSystemAbilityManager()
         return false;
     }
     samgr->AddSystemAbility(RENDER_SERVICE, this);
-
-    RS_PROFILER_INIT(this);
     return true;
 }
 

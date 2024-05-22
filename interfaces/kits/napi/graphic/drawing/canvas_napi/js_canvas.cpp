@@ -36,6 +36,7 @@
 #include "brush_napi/js_brush.h"
 #include "pen_napi/js_pen.h"
 #include "path_napi/js_path.h"
+#include "region_napi/js_region.h"
 #include "sampling_options_napi/js_sampling_options.h"
 #include "text_blob_napi/js_text_blob.h"
 #include "js_drawing_utils.h"
@@ -327,6 +328,7 @@ bool JsCanvas::DeclareFuncAndCreateConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("drawLine", JsCanvas::DrawLine),
         DECLARE_NAPI_FUNCTION("drawTextBlob", JsCanvas::DrawText),
         DECLARE_NAPI_FUNCTION("drawPixelMapMesh", JsCanvas::DrawPixelMapMesh),
+        DECLARE_NAPI_FUNCTION("drawRegion", JsCanvas::DrawRegion),
         DECLARE_NAPI_FUNCTION("attachPen", JsCanvas::AttachPen),
         DECLARE_NAPI_FUNCTION("attachBrush", JsCanvas::AttachBrush),
         DECLARE_NAPI_FUNCTION("detachPen", JsCanvas::DetachPen),
@@ -880,6 +882,36 @@ napi_value JsCanvas::OnDrawPixelMapMesh(napi_env env, napi_callback_info info)
 #else
     return nullptr;
 #endif
+}
+
+napi_value JsCanvas::DrawRegion(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawRegion(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawRegion(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRegion canvas is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    napi_value argv[ARGC_ONE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+    CHECK_EACH_PARAM(ARGC_ZERO, napi_object);
+
+    JsRegion* jsRegion = nullptr;
+    napi_unwrap(env, argv[ARGC_ZERO], reinterpret_cast<void **>(&jsRegion));
+    if (jsRegion == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRegion jsRegion is nullptr");
+        return NapiGetUndefined(env);
+    }
+    if (jsRegion->GetRegion() == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRegion region is nullptr");
+        return NapiGetUndefined(env);
+    }
+    m_canvas->DrawRegion(*jsRegion->GetRegion());
+    return NapiGetUndefined(env);
 }
 
 napi_value JsCanvas::AttachPen(napi_env env, napi_callback_info info)

@@ -153,6 +153,7 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const 
         SetCacheType(drawableCacheType);
         isOpDropped_ = isOpDropped;
         drawBlurForCache_ = false;
+        return;
     }
 
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
@@ -160,6 +161,9 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const 
         RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", nodeId_);
         Drawing::AutoCanvasRestore arc(canvas, true);
         DrawBackground(canvas, params.GetBounds());
+        drawBlurForCache_ = false;
+        DrawChildren(canvas, params.GetBounds());
+        drawBlurForCache_ = true;
         return;
     }
 

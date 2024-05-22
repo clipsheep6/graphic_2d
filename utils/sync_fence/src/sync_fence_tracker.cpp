@@ -199,7 +199,7 @@ void SyncFenceTracker::ReportEventGpuSubhealth(int32_t duration)
     }
 }
 
-void SyncFenceTracker::Loop(const sptr<SyncFence>& fence)
+void SyncFenceTracker::Loop(const sptr<SyncFence>& fence, bool traceTag)
 {
     uint32_t fenceIndex = 0;
     fenceIndex = fencesSignaled_.load();

@@ -50,7 +50,6 @@ FrameSched::FrameSched()
         LOGE("dlopen libframe_ui_intf.so failed");
         return;
     }
-//    Init();
 }
 
 FrameSched::~FrameSched()

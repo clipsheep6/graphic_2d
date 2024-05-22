@@ -29,9 +29,7 @@ public:
     SyncFenceTracker() = delete;
     ~SyncFenceTracker() = default;
 
-    void TrackFence(const sptr<SyncFence>& fence, bool traceTag = true);
-    void SetBlurSize(int32_t blurSize);
-    void SetContainerNodeNum(int containerNodeNum);
+    void TrackFence(const sptr<SyncFence>& fence);
 
 private:
     const uint32_t SYNC_TIME_OUT = 3000;
@@ -40,7 +38,6 @@ private:
     const uint32_t FRAME_QUEUE_SIZE_LIMIT = 4;
     const int32_t FRAME_PERIOD = 1000;
     const std::string threadName_;
-    bool isGpuFence_ = false;
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_ = nullptr;
     std::atomic<uint32_t> fencesQueued_;
@@ -48,9 +45,7 @@ private:
     int32_t gpuSubhealthEventNum = 0;
     int32_t gpuSubhealthEventDay = 0;
     std::queue<int32_t> *frameStartTimes = new std::queue<int32_t>;
-    int processedNodeNum_ = 0;
-    void Loop(const sptr<SyncFence>& fence, bool traceTag);
-    int32_t WaitFence(const sptr<SyncFence>& fence);
+    void Loop(const sptr<SyncFence>& fence);
     bool CheckGpuSubhealthEventLimit();
     void ReportEventGpuSubhealth(int32_t duration);
     inline void UpdateFrameQueue(int32_t startTime);

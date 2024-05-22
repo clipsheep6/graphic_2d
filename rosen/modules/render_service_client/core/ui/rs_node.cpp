@@ -1288,22 +1288,23 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
         if (visualEffectPara->type_ == VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
             auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
             auto blender = backgroundColorEffectPara->GetBlender();
-            auto brightnessBlender = static_cast<BrightnessBlender>(blender);
+            auto blenderPtr = std::make_shared<Blender>(blender);
+            auto brightnessBlender = std::static_pointer_cast<BrightnessBlender>(blenderPtr);
             if (brightnessBlender == nullptr) {
                 continue;
             }
             SetBgBrightnessParams(
                 {
-                    brightnessBlender.GetCubicRate(),
-                    brightnessBlender.GetQuadRate(),
-                    brightnessBlender.GetLinearRate(),
-                    brightnessBlender.GetDegree(),
-                    brightnessBlender.GetSaturation(),
-                    brightnessBlender.GetPositiveCoeff(),
-                    brightnessBlender.GetNegativeCoeff()
+                    brightnessBlender->GetCubicRate(),
+                    brightnessBlender->GetQuadRate(),
+                    brightnessBlender->GetLinearRate(),
+                    brightnessBlender->GetDegree(),
+                    brightnessBlender->GetSaturation(),
+                    brightnessBlender->GetPositiveCoeff(),
+                    brightnessBlender->GetNegativeCoeff()
                 }
             );
-            auto fraction = brightnessBlender.GetFraction();
+            auto fraction = brightnessBlender->GetFraction();
             SetBgBrightnessFract(fraction);
         }
     }

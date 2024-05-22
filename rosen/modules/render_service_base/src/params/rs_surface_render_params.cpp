@@ -74,6 +74,17 @@ void RSSurfaceRenderParams::SetVisibleRegion(const Occlusion::Region& visibleReg
     needSync_ = true;
 }
 
+Occlusion::Region RSSurfaceRenderParams::GetVisibleRegionInVirtual() const
+{
+    return visibleRegionInVirtual_;
+}
+
+void RSSurfaceRenderParams::SetVisibleRegionInVirtual(const Occlusion::Region& visibleRegion)
+{
+    visibleRegionInVirtual_ = visibleRegion;
+    needSync_ = true;
+}
+
 void RSSurfaceRenderParams::SetOccludedByFilterCache(bool val)
 {
     if (isOccludedByFilterCache_ == val) {
@@ -259,6 +270,16 @@ bool RSSurfaceRenderParams::IsSubSurfaceNode() const
     return isSubSurfaceNode_;
 }
 
+void RSSurfaceRenderParams::SetIsNodeToBeCaptured(bool isNodeToBeCaptured)
+{
+    isNodeToBeCaptured_ = isNodeToBeCaptured;
+}
+
+bool RSSurfaceRenderParams::IsNodeToBeCaptured() const
+{
+    return isNodeToBeCaptured_;
+}
+
 void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target)
 {
     auto targetSurfaceParams = static_cast<RSSurfaceRenderParams*>(target.get());
@@ -286,6 +307,7 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetSurfaceParams->rrect_ = rrect_;
     targetSurfaceParams->occlusionVisible_ = occlusionVisible_;
     targetSurfaceParams->visibleRegion_ = visibleRegion_;
+    targetSurfaceParams->visibleRegionInVirtual_ = visibleRegionInVirtual_;
     targetSurfaceParams->oldDirtyInSurface_ = oldDirtyInSurface_;
     targetSurfaceParams->transparentRegion_ = transparentRegion_;
     targetSurfaceParams->isHardwareEnabled_ = isHardwareEnabled_;
@@ -309,6 +331,7 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetSurfaceParams->overDrawBufferNodeCornerRadius_ = overDrawBufferNodeCornerRadius_;
     targetSurfaceParams->isGpuOverDrawBufferOptimizeNode_ = isGpuOverDrawBufferOptimizeNode_;
     targetSurfaceParams->isSubSurfaceNode_ = isSubSurfaceNode_;
+    targetSurfaceParams->isNodeToBeCaptured_ = isNodeToBeCaptured_;
     RSRenderParams::OnSync(target);
 }
 

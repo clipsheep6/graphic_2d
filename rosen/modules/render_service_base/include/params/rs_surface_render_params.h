@@ -55,7 +55,7 @@ struct RSLayerInfo {
 class RSB_EXPORT RSSurfaceRenderParams : public RSRenderParams {
 public:
     explicit RSSurfaceRenderParams(NodeId id);
-    virtual ~RSSurfaceRenderParams() = default;
+    ~RSSurfaceRenderParams() override = default;
     bool IsMainWindowType() const
     {
         return isMainWindowType_;
@@ -218,6 +218,9 @@ public:
     void SetVisibleRegion(const Occlusion::Region& visibleRegion);
     Occlusion::Region GetVisibleRegion() const;
 
+    void SetVisibleRegionInVirtual(const Occlusion::Region& visibleRegion);
+    Occlusion::Region GetVisibleRegionInVirtual() const;
+
     void SetOccludedByFilterCache(bool val);
     bool GetOccludedByFilterCache() const;
 
@@ -237,6 +240,9 @@ public:
 
     void SetIsSubSurfaceNode(bool isSubSurfaceNode);
     bool IsSubSurfaceNode() const;
+
+    void SetIsNodeToBeCaptured(bool isNodeToBeCaptured);
+    bool IsNodeToBeCaptured() const;
 
 #ifndef ROSEN_CROSS_PLATFORM
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
@@ -281,6 +287,7 @@ private:
     float positionZ_ = 0.0f;
     bool occlusionVisible_ = false;
     Occlusion::Region visibleRegion_;
+    Occlusion::Region visibleRegionInVirtual_;
     bool isOccludedByFilterCache_ = false;
     RSLayerInfo layerInfo_;
     bool isHardwareEnabled_ = false;
@@ -291,6 +298,7 @@ private:
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
     bool isSubSurfaceNode_ = false;
+    bool isNodeToBeCaptured_ = false;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};

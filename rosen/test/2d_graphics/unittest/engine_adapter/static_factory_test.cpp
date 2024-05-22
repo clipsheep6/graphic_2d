@@ -14,8 +14,10 @@
  */
 
 #include <cstddef>
-#include "gtest/gtest.h"
+
 #include "engine_adapter/static_factory.h"
+#include "gtest/gtest.h"
+
 #include "utils/memory_stream.h"
 
 using namespace testing;
@@ -24,8 +26,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class StaticFactoryTest : public testing::Test
-{
+class StaticFactoryTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -46,8 +47,8 @@ void StaticFactoryTest::TearDown() {}
  */
 HWTEST_F(StaticFactoryTest, MakeFromRSXform001, TestSize.Level1)
 {
-    char text[10] = {0};
-    RSXform xform[] = {{25, 36, 2, 5}, {7, 8, 9, 12}};
+    char text[10] = { 0 };
+    RSXform xform[] = { { 25, 36, 2, 5 }, { 7, 8, 9, 12 } };
     Font font;
     StaticFactory::MakeFromRSXform(text, 10, xform, font, TextEncoding::UTF8);
 }
@@ -60,7 +61,7 @@ HWTEST_F(StaticFactoryTest, MakeFromRSXform001, TestSize.Level1)
  */
 HWTEST_F(StaticFactoryTest, MakeFromStream001, TestSize.Level1)
 {
-    char data[10] = {0};
+    char data[10] = { 0 };
     auto stream = std::make_unique<MemoryStream>(data, 10);
     ASSERT_TRUE(stream != nullptr);
     StaticFactory::MakeFromStream(std::move(stream), 0);
@@ -86,7 +87,7 @@ HWTEST_F(StaticFactoryTest, MakeFromName001, TestSize.Level1)
  */
 HWTEST_F(StaticFactoryTest, DeserializeTypeface001, TestSize.Level1)
 {
-    char data[10] = {0};
+    char data[10] = { 0 };
     StaticFactory::DeserializeTypeface(data, 10);
 }
 
@@ -114,8 +115,8 @@ HWTEST_F(StaticFactoryTest, GetDrawingGlyphIDforTextBlob001, TestSize.Level1)
     char text[] = "hello";
     int byteLength = 5;
     Font font;
-    std::shared_ptr<TextBlob> blob = TextBlob::MakeFromText(text,
-                                                            byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
+    std::shared_ptr<TextBlob> blob =
+        TextBlob::MakeFromText(text, byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
     StaticFactory::GetDrawingGlyphIDforTextBlob(blob.get(), glyphId);
 }
 
@@ -130,8 +131,8 @@ HWTEST_F(StaticFactoryTest, GetDrawingPointsForTextBlob001, TestSize.Level1)
     char text[] = "hello";
     int byteLength = 5;
     Font font;
-    std::shared_ptr<TextBlob> blob = TextBlob::MakeFromText(text,
-                                                            byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
+    std::shared_ptr<TextBlob> blob =
+        TextBlob::MakeFromText(text, byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
     std::vector<Point> points;
     StaticFactory::GetDrawingPointsForTextBlob(blob.get(), points);
 }

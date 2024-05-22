@@ -16,8 +16,8 @@
 #define UIEFFECT_EFFECT_BACKGROUND_COLOR_EFFECT_PARA_H
 
 #include <iostream>
+#include "brightness_blender.h"
 #include "visual_effect_para.h"
-#include "blender.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,6 +29,17 @@ public:
     }
     ~BackgroundColorEffectPara() {}
 
+    void SetBlender(Blender blender)
+    {
+        blender_ = blender;
+    }
+
+    Blender GetBlender() const
+    {
+        return blender_;
+    }
+
+private:
     Blender blender_;
 };
 } // namespace Rosen

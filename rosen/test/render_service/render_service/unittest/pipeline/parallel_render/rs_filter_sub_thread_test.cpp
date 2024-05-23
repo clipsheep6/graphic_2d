@@ -49,7 +49,6 @@ HWTEST_F(RsFilterSubThreadTest, PostTaskTest, TestSize.Level1)
     renderContext->InitializeEglContext();
     auto curThread = std::make_shared<RSFilterSubThread>(renderContext);
     curThread->PostTask([] {});
-    curThread->Start();
     curThread->PostTask([] {});
     delete renderContext;
     renderContext = nullptr;

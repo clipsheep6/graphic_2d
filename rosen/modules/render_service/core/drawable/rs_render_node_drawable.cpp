@@ -98,8 +98,15 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
             params.GetShadowRect().GetHeight(), HasFilterOrEffect());
     }
 
+    if (params.GetRSFreezeFlag().isFreeze) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSCanvasRenderNodeDrawable::GenerateCacheIfNeed id:%llu"
+                                   " GetRSFreezeFlag:%d hasFilter:%d",
+            params.GetId(), params.GetRSFreezeFlag().isFreeze, params.ChildHasVisibleFilter());
+    }
+
     // check drawing cache type (disabled: clear cache)
-    if (params.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE && !params.OpincGetCachedMark()) {
+    if ((params.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE && !params.OpincGetCachedMark()) &&
+        !params.GetRSFreezeFlag().isFreeze) {
         ClearCachedSurface();
         {
             std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
@@ -112,12 +119,12 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
     bool needUpdateCache = CheckIfNeedUpdateCache(params);
     bool hasFilter = params.ChildHasVisibleFilter() || params.ChildHasVisibleEffect();
     if ((params.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE || (!needUpdateCache && !hasFilter))
-        && !params.OpincGetCachedMark()) {
+        && !params.OpincGetCachedMark() && !params.GetRSFreezeFlag().isFreeze) {
         return;
     }
 
-    // in case of no filter
-    if (needUpdateCache && !hasFilter) {
+    // in case of no filter or freezed node (freezed node should draw filter)
+    if (needUpdateCache && (!hasFilter || params.GetRSFreezeFlag().isFreeze)) {
         RS_TRACE_NAME_FMT("UpdateCacheSurface id:%llu", nodeId_);
         UpdateCacheSurface(canvas, params);
         return;
@@ -451,6 +458,15 @@ bool RSRenderNodeDrawable::CheckIfNeedUpdateCache(RSRenderParams& params)
         nodeId_, updateTimes, params.GetDrawingCacheType(), params.GetDrawingCacheChanged(),
         params.GetCacheSize().x_, params.GetCacheSize().y_);
 
+    // node freeze
+    if (params.GetRSFreezeFlag().isFreeze) {
+        if (updateTimes == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     if (params.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE &&
         updateTimes >= DRAWING_CACHE_MAX_UPDATE_TIME) {
         params.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
@@ -505,6 +521,7 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
     cacheCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
 
     OpincCanvasUnionTranslate(*cacheCanvas);
+    UpdateFreezeCacheSurface(canvas, cacheCanvas, params);
     // draw content + children
     auto bounds = params.GetBounds();
     if (LIKELY(!params.GetDrawingCacheIncludeProperty())) {
@@ -534,6 +551,24 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
         std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
         drawingCacheUpdateTimeMap_[nodeId_]++;
     }
+}
+
+void RSRenderNodeDrawable::UpdateFreezeCacheSurface(Drawing::Canvas& canvas,
+    std::shared_ptr<RSPaintFilterCanvas>& cacheCanvas, const RSRenderParams& params)
+{
+    // if node freeze, draw background at the offscreen canvas
+    if (params.GetRSFreezeFlag().isFreeze && params.GetRSFreezeFlag().isDrawBackground) {
+        auto originalSurface = canvas.GetSurface();
+        auto backgroundImage = originalSurface->GetImageSnapshot();
+        Drawing::Matrix mat;
+        canvas.GetTotalMatrix().Invert(mat);
+        cacheCanvas->Save();
+        cacheCanvas->ConcatMatrix(mat);
+        cacheCanvas->DrawImage(*backgroundImage, 0, 0, Drawing::SamplingOptions());
+        cacheCanvas->Restore();
+    }
+    // draw filter whithout cache
+    cacheCanvas->SetDisableFilterCache(true);
 }
 
 int RSRenderNodeDrawable::GetProcessedNodeCount()

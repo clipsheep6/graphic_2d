@@ -35,6 +35,11 @@ struct DirtyRegionInfoForDFX {
     }
 };
 
+struct RSFreezeFlag {
+    bool isFreeze = false;
+    bool isDrawBackground = false;
+};
+
 class RSB_EXPORT RSRenderParams {
 public:
     RSRenderParams(NodeId id) : id_(id) {}
@@ -123,6 +128,9 @@ public:
     void SetDrawingCacheIncludeProperty(bool includeProperty);
     bool GetDrawingCacheIncludeProperty() const;
 
+    void SetRSFreezeFlag(RSFreezeFlag freezeFlag);
+    RSFreezeFlag GetRSFreezeFlag() const;
+
     void SetShadowRect(Drawing::Rect rect);
     Drawing::Rect GetShadowRect() const;
 
@@ -180,6 +188,7 @@ private:
     bool isOpincRootFlag_ = false;
     bool isOpincStateChanged_ = false;
     bool isOpincMarkCached_ = false;
+    RSFreezeFlag freezeFlag_;
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PARAMS_RS_RENDER_PARAMS_H

@@ -36,12 +36,12 @@ void RSNodeCommandHelper::RemoveModifier(RSContext& context, NodeId nodeId, Prop
     }
 }
 
-void RSNodeCommandHelper::SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze)
+void RSNodeCommandHelper::SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze, bool isDrawBackground)
 {
     auto& nodeMap = context.GetNodeMap();
     auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
     if (node) {
-        node->SetStaticCached(isFreeze);
+        node->SetStaticCached(isFreeze, isDrawBackground);
     }
 }
 

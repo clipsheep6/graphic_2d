@@ -1526,7 +1526,7 @@ void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent)
         stretchPercent);
 }
 
-void RSNode::SetFreeze(bool isFreeze)
+void RSNode::SetFreeze(bool isFreeze, bool isDrawBackground)
 {
     ROSEN_LOGE("SetFreeze only support RSSurfaceNode and RSCanvasNode in uniRender");
 }

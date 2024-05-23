@@ -38,6 +38,11 @@ public:
     std::shared_ptr<Drawing::Image> ProcessImage(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image> image,
         const Drawing::Rect& src, const Drawing::Rect& dst) override;
 
+    bool IsProcessImageSuccess() const override
+    {
+        return isProcessSuccess;
+    }
+
 private:
     std::shared_ptr<Drawing::Image> ApplyHpsBlur(
         Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image, const Drawing::HpsBlurParameter& param);
@@ -49,6 +54,8 @@ private:
     float radius_ { 0.0 };
     float saturation_ { 1.0 };
     float brightness_ { 1.0 };
+
+    bool isProcessSuccess { true };
 };
 } // namespace Rosen
 } // namespace OHOS

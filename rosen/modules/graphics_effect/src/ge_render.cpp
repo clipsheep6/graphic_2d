@@ -59,6 +59,9 @@ std::shared_ptr<Drawing::Image> GERender::ApplyImageEffect(Drawing::Canvas& canv
     for (auto geShaderFilter : geShaderFilters) {
         if (geShaderFilter != nullptr) {
             resImage = geShaderFilter->ProcessImage(canvas, resImage, src, dst);
+            if (geShaderFilter->IsProcessImageSuccess() == false) {
+                doKawaseBlur = true;
+            }
         } else {
             LOGD("GERender::ApplyImageEffect filter is null");
         }

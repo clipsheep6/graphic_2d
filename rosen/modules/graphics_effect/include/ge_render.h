@@ -48,8 +48,15 @@ public:
         Drawing::GEVisualEffectContainer& veContainer, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling);
 
+    bool IsDoKawaseBlur() const
+    {
+        return doKawaseBlur;
+    }
+
 private:
     std::vector<std::shared_ptr<GEShaderFilter>> GenerateShaderFilter(Drawing::GEVisualEffectContainer& veContainer);
+
+    bool doKawaseBlur = { false };
 };
 
 } // namespace GraphicsEffectEngine

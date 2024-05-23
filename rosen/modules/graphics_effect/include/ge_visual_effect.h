@@ -58,11 +58,6 @@ public:
         return visualEffectImpl_;
     }
 
-    bool IsImplNull() const
-    {
-        return (visualEffectImpl_ == nullptr) ? true : false;
-    }
-
 private:
     std::string visualEffectName_;
     DrawingPaintType type_;

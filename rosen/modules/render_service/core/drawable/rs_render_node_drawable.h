@@ -153,6 +153,8 @@ protected:
 
     bool CheckIfNeedUpdateCache(RSRenderParams& params);
     void UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params);
+    void UpdateFreezeCacheSurface(Drawing::Canvas& canvas, std::shared_ptr<RSPaintFilterCanvas>& cacheCanvas,
+        const RSRenderParams& params);
 
     static int GetProcessedNodeCount();
     static void ProcessedNodeCountInc();

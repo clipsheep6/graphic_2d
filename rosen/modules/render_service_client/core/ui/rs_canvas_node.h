@@ -43,7 +43,7 @@ public:
     float GetPaintHeight() const;
     void DrawOnNode(RSModifierType type, DrawFunc func) override;
 
-    void SetFreeze(bool isFreeze) override;
+    void SetFreeze(bool isFreeze, bool isDrawBackground = false) override;
 
     void SetHDRPresent(bool hdrPresent);
     

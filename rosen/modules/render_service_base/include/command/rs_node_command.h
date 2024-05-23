@@ -122,7 +122,7 @@ public:
         }
     }
 
-    static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
+    static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze, bool isDrawBackground);
     static void SetNodeName(RSContext& context, NodeId nodeId, std::string& nodeName);
     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced,
         bool includeProperty);
@@ -221,7 +221,7 @@ ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
         NodeId, Drawing::Matrix, PropertyId, PropertyUpdateType))
 
 ADD_COMMAND(RSSetFreeze,
-    ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
+    ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool, bool))
 ADD_COMMAND(RSSetNodeName,
     ARG(RS_NODE, SET_NODE_NAME, RSNodeCommandHelper::SetNodeName, NodeId, std::string))
 ADD_COMMAND(RSMarkNodeGroup,

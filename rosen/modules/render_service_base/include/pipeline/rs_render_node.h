@@ -320,7 +320,7 @@ public:
     void MapAndUpdateChildrenRect();
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
 
-    void SetStaticCached(bool isStaticCached);
+    void SetStaticCached(bool isStaticCached, bool isDrawBackground = false);
     virtual bool IsStaticCached() const;
     void SetNodeName(const std::string& nodeName);
     const std::string& GetNodeName() const;

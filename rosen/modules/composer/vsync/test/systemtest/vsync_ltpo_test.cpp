@@ -46,13 +46,13 @@ VSyncTimeStamps g_timeStamps = {};
 int32_t g_appVSyncFlag = 0;
 int32_t g_rsVSyncFlag = 0;
 constexpr int32_t SAMPLER_NUMBER = 6;
-static void OnVSyncApp(int64_t time, void *data)
+static void OnVSyncApp(int64_t time, int64_t frameCount, void *data)
 {
     g_appVSyncFlag = 1;
     g_timeStamps.appTimestamps[g_timeStamps.appIndex++] = time;
     g_timeStamps.appIndex %= MAX_SIZE;
 }
-static void OnVSyncRs(int64_t time, void *data)
+static void OnVSyncRs(int64_t time, int64_t frameCount, void *data)
 {
     g_rsVSyncFlag = 1;
     g_timeStamps.rsTimestamps[g_timeStamps.rsIndex++] = time;

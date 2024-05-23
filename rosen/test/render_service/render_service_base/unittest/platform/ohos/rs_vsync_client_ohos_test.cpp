@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <gtest/gtest.h>
 
 #include "platform/ohos/rs_vsync_client_ohos.h"
@@ -37,7 +38,7 @@ public:
 
 void RSVsyncClientTest::SetUpTestCase()
 {
-    cb = [](int64_t timestamp) {};
+    cb = [](int64_t timestamp, int64_t frameCount) {};
 }
 void RSVsyncClientTest::TearDownTestCase() {}
 void RSVsyncClientTest::SetUp()

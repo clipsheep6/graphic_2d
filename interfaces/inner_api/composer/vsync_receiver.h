@@ -31,7 +31,7 @@ namespace OHOS {
 namespace Rosen {
 class VSyncCallBackListener : public OHOS::AppExecFwk::FileDescriptorListener {
 public:
-    using VSyncCallback = std::function<void(int64_t, void*)>;
+    using VSyncCallback = std::function<void(int64_t, int64_t, void*)>;
     struct FrameCallback {
         void *userData_;
         VSyncCallback callback_;

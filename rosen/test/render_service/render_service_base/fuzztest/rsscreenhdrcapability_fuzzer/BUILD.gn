@@ -24,9 +24,7 @@ ohos_fuzztest("RSScreenHdrCapabilityFuzzTest") {
     defines = [ "USE_ROSEN_DRAWING" ]
   }
 
-  include_dirs = [
-    "../../../../../render_service_base/include",
-  ]
+  include_dirs = [ "../../../../../render_service_base/include" ]
   deps = [
     "../../../../../2d_graphics:2d_graphics",
     "../../../../../render_service:librender_service",
@@ -42,15 +40,14 @@ ohos_fuzztest("RSScreenHdrCapabilityFuzzTest") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
-  sources = [
-    "rsscreenhdrcapability_fuzzer.cpp",
-  ]
+  sources = [ "rsscreenhdrcapability_fuzzer.cpp" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
   ]
 }
+
 ###############################################################################
 group("fuzztest") {
   testonly = true

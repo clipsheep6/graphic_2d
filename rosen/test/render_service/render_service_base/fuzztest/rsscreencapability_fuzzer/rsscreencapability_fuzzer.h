@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef RSSCREENCAPABILITY_FUZZER_H
+#define RSSCREENCAPABILITY_FUZZER_H
+
 #include <cstdint>
 #include <unistd.h>
 #include <climits>
@@ -22,3 +25,4 @@
 
 #define FUZZ_PROJECT_NAME "rsscreencapability_fuzzer"
 
+#endif // RSSCREENCAPABILITY_FUZZER_H

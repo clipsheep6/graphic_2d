@@ -50,7 +50,8 @@ HWTEST_F(StaticFactoryTest, MakeFromRSXform001, TestSize.Level1)
     char text[10] = { 0 };
     RSXform xform[] = { { 25, 36, 2, 5 }, { 7, 8, 9, 12 } };
     Font font;
-    StaticFactory::MakeFromRSXform(text, 10, xform, font, TextEncoding::UTF8);
+    auto factory = StaticFactory::MakeFromRSXform(text, 10, xform, font, TextEncoding::UTF8);
+    ASSERT_TRUE(factory != nullptr);
 }
 
 /**
@@ -64,7 +65,8 @@ HWTEST_F(StaticFactoryTest, MakeFromStream001, TestSize.Level1)
     char data[10] = { 0 };
     auto stream = std::make_unique<MemoryStream>(data, 10);
     ASSERT_TRUE(stream != nullptr);
-    StaticFactory::MakeFromStream(std::move(stream), 0);
+    auto factory = StaticFactory::MakeFromStream(std::move(stream), 0);
+    ASSERT_TRUE(factory == nullptr);
 }
 
 /**
@@ -76,7 +78,8 @@ HWTEST_F(StaticFactoryTest, MakeFromStream001, TestSize.Level1)
 HWTEST_F(StaticFactoryTest, MakeFromName001, TestSize.Level1)
 {
     char familyName[] = "Arial";
-    StaticFactory::MakeFromName(familyName, Drawing::FontStyle());
+    auto factory = StaticFactory::MakeFromName(familyName, Drawing::FontStyle());
+    ASSERT_TRUE(factory != nullptr);
 }
 
 /**
@@ -88,7 +91,8 @@ HWTEST_F(StaticFactoryTest, MakeFromName001, TestSize.Level1)
 HWTEST_F(StaticFactoryTest, DeserializeTypeface001, TestSize.Level1)
 {
     char data[10] = { 0 };
-    StaticFactory::DeserializeTypeface(data, 10);
+    auto deserialize = StaticFactory::DeserializeTypeface(data, 10);
+    ASSERT_TRUE(deserialize == nullptr);
 }
 
 /**
@@ -100,7 +104,7 @@ HWTEST_F(StaticFactoryTest, DeserializeTypeface001, TestSize.Level1)
 HWTEST_F(StaticFactoryTest, AsBlendMode001, TestSize.Level1)
 {
     Brush brush;
-    StaticFactory::AsBlendMode(brush);
+    ASSERT_TRUE(StaticFactory::AsBlendMode(brush) == true);
 }
 
 /**
@@ -118,6 +122,7 @@ HWTEST_F(StaticFactoryTest, GetDrawingGlyphIDforTextBlob001, TestSize.Level1)
     std::shared_ptr<TextBlob> blob =
         TextBlob::MakeFromText(text, byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
     StaticFactory::GetDrawingGlyphIDforTextBlob(blob.get(), glyphId);
+    ASSERT_TRUE(blob != nullptr);
 }
 
 /**
@@ -135,6 +140,7 @@ HWTEST_F(StaticFactoryTest, GetDrawingPointsForTextBlob001, TestSize.Level1)
         TextBlob::MakeFromText(text, byteLength, font, static_cast<TextEncoding>(TextEncoding::UTF8));
     std::vector<Point> points;
     StaticFactory::GetDrawingPointsForTextBlob(blob.get(), points);
+    ASSERT_TRUE(blob != nullptr);
 }
 
 /**
@@ -147,7 +153,8 @@ HWTEST_F(StaticFactoryTest, GetGroupParameters001, TestSize.Level1)
 {
     DrawingAnimationType type = DrawingAnimationType::SCALE_TYPE;
     DrawingCommonSubType subType = DrawingCommonSubType::DOWN;
-    StaticFactory::GetGroupParameters(type, 0, 0, subType);
+    auto param = StaticFactory::GetGroupParameters(type, 0, 0, subType);
+    ASSERT_TRUE(param.empty());
 }
 
 /**
@@ -158,7 +165,7 @@ HWTEST_F(StaticFactoryTest, GetGroupParameters001, TestSize.Level1)
  */
 HWTEST_F(StaticFactoryTest, CreateEmpty001, TestSize.Level1)
 {
-    StaticFactory::CreateEmpty();
+    ASSERT_TRUE(StaticFactory::CreateEmpty() != nullptr);
 }
 
 } // namespace Drawing

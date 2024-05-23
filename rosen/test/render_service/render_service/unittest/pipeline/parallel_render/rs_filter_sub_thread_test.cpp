@@ -44,9 +44,16 @@ void RsFilterSubThreadTest::TearDown() {}
  */
 HWTEST_F(RsFilterSubThreadTest, PostTaskTest, TestSize.Level1)
 {
-    auto renderContext = std::make_shared<RenderContext>();
-    auto curThread = std::make_shared<RSFilterSubThread>(renderContext.get());
+    auto renderContext = new RenderContext();
+    ASSERT_TRUE(renderContext != nullptr);
+    renderContext->InitializeEglContext();
+    auto curThread = std::make_shared<RSFilterSubThread>(renderContext);
     curThread->PostTask([] {});
+    curThread->Start();
+    curThread->PostTask([] {});
+    delete renderContext;
+    renderContext = nullptr;
+    usleep(1000 * 1000); // 1000 * 1000us
 }
 
 /**

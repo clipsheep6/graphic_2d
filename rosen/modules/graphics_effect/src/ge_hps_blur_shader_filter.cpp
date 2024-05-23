@@ -63,8 +63,12 @@ std::shared_ptr<Drawing::Image> GEHpsBlurShaderFilter::ProcessImage(Drawing::Can
     }
 
     Drawing::HpsBlurParameter hpsParam = Drawing::HpsBlurParameter(src, dst, radius_, saturation_, brightness_);
-
-    return ApplyHpsBlur(canvas, image, hpsParam);
+    auto resImage = ApplyHpsBlur(canvas, image, hpsParam);
+    if (resImage == image) {
+        isProcessSuccess = false;
+        LOGE("GEHpsBlurShaderFilter::ProcessImage failed.");
+    }
+    return resImage;
 }
 
 Drawing::Matrix GEHpsBlurShaderFilter::GetShaderTransform(const Drawing::Rect& blurRect, float scaleW, float scaleH)

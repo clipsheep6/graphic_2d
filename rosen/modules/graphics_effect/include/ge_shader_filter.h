@@ -35,6 +35,11 @@ public:
         return hash_;
     }
 
+    virtual bool IsProcessImageSuccess() const
+    {
+        return true;
+    }
+
 protected:
     uint32_t hash_ = 0;
 };

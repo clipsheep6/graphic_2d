@@ -37,13 +37,13 @@ RSEffectNode::SharedPtr RSEffectNode::Create(bool isRenderServiceNode, bool isTe
     return node;
 }
 
-void RSEffectNode::SetFreeze(bool isFreeze)
+void RSEffectNode::SetFreeze(bool isFreeze, bool isDrawBackground)
 {
     if (!IsUniRenderEnabled()) {
         ROSEN_LOGE("SetFreeze is not supported in separate render");
         return;
     }
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSetFreeze>(GetId(), isFreeze);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSetFreeze>(GetId(), isFreeze, isDrawBackground);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);

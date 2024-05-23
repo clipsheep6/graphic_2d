@@ -30,6 +30,7 @@
 #include <securec.h>
 #if defined(TRACE3D_LOADER_OHOS)
 #include <hilog/log.h>
+#include <parameters.h>
 #endif
 
 #if defined(TRACE3D_LOADER_OHOS)
@@ -37,6 +38,14 @@
 #else
 #error "Unknown platform"
 #endif
+
+#define TRACE3D_APP_LIB_URI "/data/storage/el1/bundle/libs/arm64/"
+#define TRACE3D_APP_DATA_URI "/data/storage/el2/base/"
+#define TRACE3D_DATA_LOCAL_URI "/data/local/trace3d/"
+#define TRACE3D_SYSTEM_LIB_URI "/system/lib64/"
+#define TRACE3D_SHM_URI "/dev/shm/"
+
+#define TRACE3D_CAPTURE_PARAM "trace3d.capture"
 
 #undef LOG_DOMAIN
 // The "0xD001405" is the domain ID for graphic module that alloted by the OS.
@@ -51,7 +60,31 @@
 
 namespace trace3d {
 
+struct CaptureLib {
+    const char *name{nullptr};
+    const char *shmName{nullptr};
+    const bool mainEntry{false};
+    int shmFd{-1};
+    void *handle{nullptr};
+};
+
+inline CaptureLib g_captureLibs[] = {
+    {"libVkLayer_gfxreconstruct.so", "trace3d.GfxRecon"},
+    {"libAPITrace.so",               "trace3d.ApiTrace"},
+    {"libPATrace.so",                "trace3d.PaTrace"},
+    {"libVkLayer_Trace3DCapture.so", "trace3d.Capture", true},
+};
+
 size_t GetFileSize(const char *fileName);
+size_t ReadFileData(const char *fileName, std::vector<uint8_t> &blob);
+size_t WriteFileData(const char *fileName, const std::vector<uint8_t> &blob);
+
+size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob);
+void *DlopenSharedLibrary(const char *libFullName);
+void *DlopenStoredSharedLibrary(const char *libName);
+size_t TestStoredSharedLibrary(const char *libName);
+void *DlopenBundledSharedLibrary(const char *libName);
+size_t TestBundledSharedLibrary(const char *libName);
 
 } // namespace trace3d
 

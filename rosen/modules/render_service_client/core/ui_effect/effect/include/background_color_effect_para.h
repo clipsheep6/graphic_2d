@@ -29,18 +29,18 @@ public:
     }
     ~BackgroundColorEffectPara() {}
 
-    void SetBlender(Blender blender)
+    void SetBlender(std::shared_ptr<Blender> blender)
     {
         blender_ = blender;
     }
 
-    Blender GetBlender() const
+    std::shared_ptr<Blender> GetBlender() const
     {
         return blender_;
     }
 
 private:
-    Blender blender_;
+    std::shared_ptr<Blender> blender_;
 };
 } // namespace Rosen
 } // namespace OHOS

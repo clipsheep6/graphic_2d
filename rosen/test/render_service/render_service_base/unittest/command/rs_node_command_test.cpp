@@ -68,7 +68,7 @@ HWTEST_F(RSNodeCommandTest, TestRSBaseNodeCommand003, TestSize.Level1)
 {
     RSContext context;
     NodeId nodeId = static_cast<NodeId>(-1);
-    RSNodeCommandHelper::SetFreeze(context, nodeId, true);
+    RSNodeCommandHelper::SetFreeze(context, nodeId, true, false);
 }
 
 /**
@@ -149,7 +149,7 @@ HWTEST_F(RSNodeCommandTest, SetFreeze001, TestSize.Level1)
 {
     RSContext context;
     NodeId nodeId = 0;
-    RSNodeCommandHelper::SetFreeze(context, nodeId, true);
+    RSNodeCommandHelper::SetFreeze(context, nodeId, true, false);
     EXPECT_EQ(0, nodeId);
 }
 

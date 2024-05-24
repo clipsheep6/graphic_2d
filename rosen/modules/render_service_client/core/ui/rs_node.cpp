@@ -1300,7 +1300,7 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
                     brightnessBlender->GetLinearRate(),
                     brightnessBlender->GetDegree(),
                     brightnessBlender->GetSaturation(),
-                    brightnessBlender->GetPositiveCoeff(),
+                    { brightnessBlender->GetPositiveCoeff(), }
                     brightnessBlender->GetNegativeCoeff()
                 }
             );

@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
  
-## Build uieffect.so
+## Build uieffect_napi.so
  
 config("graphic_napi_uieffect_config") {
   visibility = [ ":*" ]
@@ -29,7 +29,7 @@ config("graphic_napi_uieffect_config") {
   ]
 }
  
-ohos_shared_library("uieffect") {
+ohos_shared_library("uieffect_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
@@ -71,4 +71,4 @@ ohos_shared_library("uieffect") {
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-## Build uieffect.so
+## Build uieffect_napi.so

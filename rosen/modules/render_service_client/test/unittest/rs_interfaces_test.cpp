@@ -1001,6 +1001,20 @@ HWTEST_F(RSInterfacesTest, SetVirtualScreenSurface_Test, Function | SmallTest | 
 }
 
 /*
+ * @tc.name: SetVirtualScreenBlackList Test a notfound id
+ * @tc.desc: SetVirtualScreenBlackList Test a notfound id
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, SetVirtualScreenBlackList_Test, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    std::vector<NodeId> blackListVector = {};
+    rsInterfaces->SetVirtualScreenBlackList(123, psurface);
+    ASSERT_NE(rsInterfaces, nullptr);
+}
+
+/*
  * @tc.name: Set2DRenderCtrl Test
  * @tc.desc: Set2DRenderCtrl Test
  * @tc.type: FUNC

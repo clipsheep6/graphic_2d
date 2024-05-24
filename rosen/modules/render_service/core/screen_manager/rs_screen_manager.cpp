@@ -826,6 +826,17 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     return newId;
 }
 
+void RSScreenManager::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId> blackListVector)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.find(id) == screens_.end()) {
+        return;
+    }
+    std::unordered_set<NodeId> blackListSet(blackListVector.begin(), blackListVector.end());
+    screens_[id]->blackListSet = blackListSet;
+    return;
+}
+
 int32_t RSScreenManager::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1124,6 +1135,7 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
     screen->GetPixelFormat(info.pixelFormat);
     screen->GetScreenHDRFormat(info.hdrFormat);
     info.filteredAppSet = screen->GetFilteredAppSet();
+    info.blackListSet = screen->GetBlackListSet();
     return info;
 }
 

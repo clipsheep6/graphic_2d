@@ -970,6 +970,11 @@ const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
 {
     return filteredAppSet_;
 }
+
+const std::unordered_set<uint64_t>& RSScreen::GetBlackListSet() const
+{
+    return blackListSet_;
+}
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

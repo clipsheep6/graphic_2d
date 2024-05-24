@@ -42,6 +42,7 @@ struct ScreenInfo {
     ScreenState state = ScreenState::UNKNOWN;
     ScreenRotation rotation = ScreenRotation::ROTATION_0;
     std::unordered_set<uint64_t> filteredAppSet = {};
+    std::unordered_set<uint64_t> blackListSet = {};
 
     uint32_t skipFrameInterval = DEFAULT_SKIP_FRAME_INTERVAL; // skip frame interval for change screen refresh rate
 

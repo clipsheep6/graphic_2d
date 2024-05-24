@@ -1664,17 +1664,6 @@ const RectI RSRenderNode::GetFilterCachedRegion() const
     return lastFilterRegion_;
 }
 
-bool RSRenderNode::IsEffectNodeNeedTakeSnapShot() const
-{
-    return GetRenderProperties().GetBackgroundFilter() != nullptr &&
-        !lastFrameHasVisibleEffect_ && ChildHasVisibleEffect();
-}
-
-bool RSRenderNode::IsEffectNodeShouldNotPaint() const
-{
-    return IsInstanceOf<RSEffectRenderNode>() && !ChildHasVisibleEffect();
-}
-
 bool RSRenderNode::HasBlurFilter() const
 {
     return GetRenderProperties().GetBackgroundFilter() || GetRenderProperties().GetFilter();
@@ -1775,7 +1764,7 @@ bool RSRenderNode::IsForceClearOrUseFilterCache(std::shared_ptr<DrawableV2::RSFi
 void RSRenderNode::MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged)
 {
     auto filterDrawable = GetFilterDrawable(isForeground);
-    if (filterDrawable == nullptr) {
+    if (filterDrawable == nullptr || IsForceClearOrUseFilterCache(filterDrawable)) {
         return;
     }
     auto& flag = isForeground ?
@@ -1901,14 +1890,12 @@ void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDraw
 
     RS_OPTIONAL_TRACE_NAME_FMT("MarkFilterCacheFlags:node[%llu], NeedPendingPurge:%d, forceClearWithoutNextVsync:%d",
         GetId(), filterDrawable->NeedPendingPurge(), (!needRequestNextVsync && filterDrawable->IsSkippingFrame()));
-
     // force update if last frame use cache because skip-frame and current frame background is not dirty
     if (filterDrawable->NeedPendingPurge()) {
         dirtyManager.MergeDirtyRect(filterRegion_);
         isDirtyRegionUpdated_ = true;
         return;
     }
-
     // force update if no next vsync when skip-frame enabled
     if (!needRequestNextVsync && filterDrawable->IsSkippingFrame()) {
         filterDrawable->ForceClearCacheWithLastFrame();
@@ -1939,16 +1926,14 @@ void RSRenderNode::MarkForceClearFilterCacheWhenWithInvisible()
         auto filterDrawable = GetFilterDrawable(false);
         if (filterDrawable != nullptr) {
             filterDrawable->MarkFilterForceClearCache();
-            filterDrawable->ClearCacheIfNeeded();
-            UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::BACKGROUND_FILTER);
+            CheckFilterCacheAndUpdateDirtySlots(filterDrawable, RSDrawableSlot::BACKGROUND_FILTER);
         }
     }
     if (GetRenderProperties().GetFilter()) {
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
             filterDrawable->MarkFilterForceClearCache();
-            filterDrawable->ClearCacheIfNeeded();
-            UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::COMPOSITING_FILTER);
+            CheckFilterCacheAndUpdateDirtySlots(filterDrawable, RSDrawableSlot::COMPOSITING_FILTER);
         }
     }
 }

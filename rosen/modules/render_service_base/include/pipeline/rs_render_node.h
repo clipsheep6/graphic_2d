@@ -296,7 +296,7 @@ public:
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
     void RenderTraceDebug() const;
-    inline bool ShouldPaint() const
+    virtual bool ShouldPaint() const
     {
         return shouldPaint_;
     }
@@ -674,8 +674,8 @@ public:
 
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
-    bool IsEffectNodeNeedTakeSnapShot() const;
-    bool IsEffectNodeShouldNotPaint() const;
+    virtual bool FirstFrameHasEffectChildren() const { return false; }
+    virtual void MarkClearFilterCacheIfEffectChildrenChanged() {}
     bool HasBlurFilter() const;
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
@@ -750,9 +750,8 @@ protected:
     bool clipAbsDrawRectChange_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
-    virtual void MarkFilterCacheFlags(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDirtyRegionManager& dirtyManager,
-        bool needRequestNextVsync);
+    virtual void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
+        RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync);
     bool IsForceClearOrUseFilterCache(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable);
     std::atomic<bool> isStaticCached_ = false;
     bool lastFrameHasVisibleEffect_ = false;

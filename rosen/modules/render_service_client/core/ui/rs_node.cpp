@@ -1261,17 +1261,17 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 
 void RSNode::SetUIBackgroundFilter(const OHOS::Rosen::Filter* backgroundFilter)
 {
-    // To do: generate composing filter here.
+    // To do: generate composed filter here.
 }
 
 void RSNode::SetUICompositingFilter(const OHOS::Rosen::Filter* compositingFilter)
 {
-    // To do: generate composing filter here.
+    // To do: generate composed filter here.
 }
 
 void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
 {
-    // To do: generate composing filter here. Now we just set pixel stretch in v1.0.
+    // To do: generate composed filter here. Now we just set pixel stretch in v1.0.
     auto filterParas = foregroundFilter->GetAllPara();
     for (const auto& filterPara : filterParas) {
         if (filterPara->type_ == FilterPara::PIXEL_STRETCH) {
@@ -1284,32 +1284,26 @@ void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
 
 void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
 {
-    // To do: generate composing visual effect here. Now we just set background brightness in v1.0.
+    // To do: generate composed visual effect here. Now we just set background brightness in v1.0.
     auto visualEffectParas = visualEffect->GetAllPara();
     for (const auto& visualEffectPara : visualEffectParas) {
-        if (visualEffectPara->type_ == VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
-            auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
-            auto blender = backgroundColorEffectPara->GetBlender();
-            auto brightnessBlender = std::static_pointer_cast<BrightnessBlender>(blender);
-            if (brightnessBlender == nullptr) {
-                continue;
-            }
-            auto fraction = brightnessBlender->GetFraction();
-            SetBgBrightnessFract(fraction);
-            SetBgBrightnessParams(
-                {
-                    brightnessBlender->GetCubicRate(),
-                    brightnessBlender->GetQuadRate(),
-                    brightnessBlender->GetLinearRate(),
-                    brightnessBlender->GetDegree(),
-                    brightnessBlender->GetSaturation(),
-                    { brightnessBlender->GetPositiveCoeff().data_[0], brightnessBlender->GetPositiveCoeff().data_[1],
-                        brightnessBlender->GetPositiveCoeff().data_[2] },
-                    { brightnessBlender->GetNegativeCoeff().data_[0], brightnessBlender->GetNegativeCoeff().data_[1],
-                        brightnessBlender->GetNegativeCoeff().data_[2] }
-                }
-            );
+        if (visualEffectPara->type_ != VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
+            continue;
         }
+        auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
+        auto blender = backgroundColorEffectPara->GetBlender();
+        auto brightnessBlender = std::static_pointer_cast<BrightnessBlender>(blender);
+        if (brightnessBlender == nullptr) {
+            continue;
+        }
+        auto fraction = brightnessBlender->GetFraction();
+        SetBgBrightnessFract(fraction);
+        SetBgBrightnessParams({ brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(),
+            brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree(), brightnessBlender->GetSaturation(),
+            { brightnessBlender->GetPositiveCoeff().data_[0], brightnessBlender->GetPositiveCoeff().data_[1],
+                brightnessBlender->GetPositiveCoeff().data_[2] },
+            { brightnessBlender->GetNegativeCoeff().data_[0], brightnessBlender->GetNegativeCoeff().data_[1],
+                brightnessBlender->GetNegativeCoeff().data_[2] } });
     }
 }
 

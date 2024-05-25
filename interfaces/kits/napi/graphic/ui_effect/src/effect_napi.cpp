@@ -153,34 +153,22 @@ napi_value EffectNapi::CreateBrightnessBlender(napi_env env, napi_callback_info 
     napi_status status;
     IMG_JS_ARGS(env, info, status, argCount, argValue, object);
  
-    if (argCount >= NUM_1) {
-        napi_set_named_property(env, object, "cubicRate", argValue[NUM_0]);
+    if (argCount < NUM_8) {
+        UIEFFECT_LOG_E("EffectNapi CreateBrightnessBlender object is Faild");
+        return nullptr;
     }
-    if (argCount >= NUM_2) {
-        napi_set_named_property(env, object, "quadRate", argValue[NUM_1]);
-    }
-    if (argCount >= NUM_3) {
-        napi_set_named_property(env, object, "linearRate", argValue[NUM_2]);
-    }
-    if (argCount >= NUM_4) {
-        napi_set_named_property(env, object, "degree", argValue[NUM_3]);
-    }
-    if (argCount >= NUM_5) {
-        napi_set_named_property(env, object, "saturation", argValue[NUM_4]);
-    }
-    if (argCount >= NUM_6) {
-        napi_set_named_property(env, object, "positiveCoeff", argValue[NUM_6]);
-    }
-    if (argCount >= NUM_7) {
-        napi_set_named_property(env, object, "negativeCoeff", argValue[NUM_6]);
-    }
-    if (argCount >= NUM_8) {
-        napi_set_named_property(env, object, "fraction", argValue[NUM_7]);
-    }
+    
+    napi_set_named_property(env, object, "cubicRate", argValue[NUM_0]);
+    napi_set_named_property(env, object, "quadRate", argValue[NUM_1]);
+    napi_set_named_property(env, object, "linearRate", argValue[NUM_2]);
+    napi_set_named_property(env, object, "degree", argValue[NUM_3]);
+    napi_set_named_property(env, object, "saturation", argValue[NUM_4]);
+    napi_set_named_property(env, object, "positiveCoeff", argValue[NUM_5]);
+    napi_set_named_property(env, object, "negativeCoeff", argValue[NUM_6]);
+    napi_set_named_property(env, object, "fraction", argValue[NUM_7]);
  
     if (object == nullptr) {
         UIEFFECT_LOG_E("EffectNapi CreateBrightnessBlender object is Faild");
-        return nullptr;
     }
     return object;
 }
@@ -295,6 +283,7 @@ bool EffectNapi::ParseBrightnessBlender(
  
 napi_value EffectNapi::SetbackgroundColorBlender(napi_env env, napi_callback_info info)
 {
+    UIEFFECT_LOG_E("RSNode::SetUIForegroundFilter, SetbackgroundColorBlender   000");
     napi_status status;
     napi_value thisVar = nullptr;
     napi_value argValue[NUM_1] = {0};
@@ -303,27 +292,27 @@ napi_value EffectNapi::SetbackgroundColorBlender(napi_env env, napi_callback_inf
  
     if (status != napi_ok) {
         UIEFFECT_LOG_E("EffectNapi SetbackgroundColorBlender parsr input Faild");
-        return nullptr;
+        return thisVar;
     }
     if (argCount != NUM_1) {
         UIEFFECT_LOG_E("EffectNapi SetbackgroundColorBlender the argCount does not equal NUM_1");
-        return nullptr;
+        return thisVar;
     }
  
     std::shared_ptr<BrightnessBlender> blender = std::make_shared<BrightnessBlender>();
     if (blender == nullptr) {
         UIEFFECT_LOG_E("EffectNapi SetbackgroundColorBlender blender is nullptr");
-        return nullptr;
+        return thisVar;
     }
     if (!ParseBrightnessBlender(env, argValue[0], blender)) {
         UIEFFECT_LOG_E("  SetbackgroundColorBlender input check fails");
-        return nullptr;
+        return thisVar;
     }
  
     std::shared_ptr<BackgroundColorEffectPara> para = std::make_shared<BackgroundColorEffectPara>();
     if (para == nullptr) {
         UIEFFECT_LOG_E("EffectNapi SetbackgroundColorBlender para is nullptr");
-        return nullptr;
+        return thisVar;
     }
     para->SetBlender(blender);
  
@@ -331,7 +320,7 @@ napi_value EffectNapi::SetbackgroundColorBlender(napi_env env, napi_callback_inf
     NAPI_CALL(env, napi_unwrap(env, thisVar, reinterpret_cast<void**>(&effectObj)));
     if (effectObj == nullptr) {
         UIEFFECT_LOG_E("EffectNapi SetbackgroundColorBlender effectObj is nullptr");
-        return nullptr;
+        return thisVar;
     }
     effectObj->AddPara(para);
     return thisVar;

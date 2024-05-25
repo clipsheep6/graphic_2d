@@ -265,14 +265,13 @@ napi_value FilterNapi::SetPixelStretch(napi_env env, napi_callback_info info)
     std::shared_ptr<PixelStretchPara> para = std::make_shared<PixelStretchPara>();
 
     if (argCount >= NUM_1) {
-        tileMode = ParserArgumentType(env, argValue[NUM_1 - 1]);
-    }
-    para->stretchTileMode_ = tileMode;
-    if (argCount >= NUM_2) {
-        IMG_NAPI_CHECK_RET_D(GetStretchPercent(env, argValue[NUM_1], para),
+        IMG_NAPI_CHECK_RET_D(GetStretchPercent(env, argValue[NUM_0], para),
             nullptr, FILTER_LOG_E("fail to parse coordinates"));
     }
-
+    if (argCount >= NUM_2) {
+        tileMode = ParserArgumentType(env, argValue[NUM_1]);
+    }
+    para->stretchTileMode_ = tileMode;
     Filter* filterObj = nullptr;
     NAPI_CALL(env, napi_unwrap(env, thisVar, reinterpret_cast<void**>(&filterObj)));
     if (filterObj == nullptr) {

@@ -37,20 +37,18 @@ ohos_shared_library("uieffect_napi") {
     debug = false
   }
   include_dirs = [
-    "./include",
+    "include",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
     "$graphic_2d_root/rosen/modules/render_service_client/core/ui_effect",
     "$graphic_2d_root/utils/log",
   ]
  
-  include_dirs += [ "//third_party/skia" ]
- 
   configs = [ ":graphic_napi_uieffect_config" ]
  
   sources = [
-    "./src/effect_napi.cpp",
-    "./src/filter_napi.cpp",
-    "./src/native_module_ohos_ui_effect.cpp",
+    "src/effect_napi.cpp",
+    "src/filter_napi.cpp",
+    "src/native_module_ohos_ui_effect.cpp",
   ]
  
   deps = [

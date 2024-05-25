@@ -30,7 +30,7 @@ public:
     {
         return type_;
     }
-private:
+protected:
     ParaType type_;
 };
 } // namespace Rosen

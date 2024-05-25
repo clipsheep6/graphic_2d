@@ -29,7 +29,7 @@ public:
     {
         return blenderType_;
     }
-private:
+protected:
     BlenderType blenderType_;
 };
 } // namespace Rosen

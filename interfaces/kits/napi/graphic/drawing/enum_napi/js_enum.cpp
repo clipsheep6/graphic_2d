@@ -117,7 +117,6 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "JoinStyle", g_joinStyle },
     { "CapStyle", g_capStyle },
     { "BlurType", g_blurType },
-    //test
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

@@ -1343,6 +1343,8 @@ void RSUniRenderVisitor::CalculateOcclusion(RSSurfaceRenderNode& node)
     // Update node visibleRegion
     hasSkipLayer_ = hasSkipLayer_ || node.GetSkipLayer();
     UpdateNodeVisibleRegion(node);
+    auto mainThread = RSMainThread::Instance();
+    node.SetOcclusionInSpecificScenes(mainThread->GetDeviceType() == DeviceType::PC && IsPCThreeFingerScenesListScene());
     // check current surface Participate In Occlusion
     if (node.CheckParticipateInOcclusion()) {
         accumulatedOcclusionRegion_.OrSelf(node.GetOpaqueRegion());

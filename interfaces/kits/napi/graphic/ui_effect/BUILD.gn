@@ -10,15 +10,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
- 
+
 ## Build uieffect_napi.so
- 
+
 config("graphic_napi_uieffect_config") {
   visibility = [ ":*" ]
- 
+
   cflags = [
     "-g3",
     "-Wno-pointer-arith",
@@ -28,7 +28,7 @@ config("graphic_napi_uieffect_config") {
     "-Wno-unused-but-set-variable",
   ]
 }
- 
+
 ohos_shared_library("uieffect_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -42,29 +42,29 @@ ohos_shared_library("uieffect_napi") {
     "$graphic_2d_root/rosen/modules/render_service_client/core/ui_effect",
     "$graphic_2d_root/utils/log",
   ]
- 
+
   configs = [ ":graphic_napi_uieffect_config" ]
- 
+
   sources = [
     "src/effect_napi.cpp",
     "src/filter_napi.cpp",
     "src/native_module_ohos_ui_effect.cpp",
   ]
- 
+
   deps = [
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
-    "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client"
+    "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
   ]
- 
+
   external_deps = [
     "hilog:libhilog",
     "image_framework:image",
     "image_framework:image_native",
     "napi:ace_napi",
   ]
- 
+
   cflags_cc = [ "-std=c++17" ]
- 
+
   relative_install_dir = "module/graphics"
   part_name = "graphic_2d"
   subsystem_name = "graphic"

@@ -26,7 +26,11 @@ public:
 
     VisualEffectPara()  = default;
     virtual ~VisualEffectPara() = default;
-
+    ParaType GetParaType()
+    {
+        return type_;
+    }
+private:
     ParaType type_;
 };
 } // namespace Rosen

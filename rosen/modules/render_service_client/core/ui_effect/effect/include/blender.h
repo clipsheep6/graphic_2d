@@ -25,6 +25,11 @@ public:
     };
     Blender() = default;
     virtual ~Blender() = default;
+    BlenderType GetBlenderType()
+    {
+        return blenderType_;
+    }
+private:
     BlenderType blenderType_;
 };
 } // namespace Rosen

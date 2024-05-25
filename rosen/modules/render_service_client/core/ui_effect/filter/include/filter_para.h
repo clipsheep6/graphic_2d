@@ -44,7 +44,11 @@ public:
 
     FilterPara()  = default;
     virtual ~FilterPara() = default;
-
+    ParaType GetParaType()
+    {
+        return type_;
+    }
+private:
     ParaType type_;
 };
 } // namespace Rosen

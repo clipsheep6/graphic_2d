@@ -1274,7 +1274,7 @@ void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
     // To do: generate composed filter here. Now we just set pixel stretch in v1.0.
     auto filterParas = foregroundFilter->GetAllPara();
     for (const auto& filterPara : filterParas) {
-        if (filterPara->type_ == FilterPara::PIXEL_STRETCH) {
+        if (filterPara->GetParaType() == FilterPara::PIXEL_STRETCH) {
             auto pixelStretchPara = std::static_pointer_cast<PixelStretchPara>(filterPara);
             auto stretchPercent = pixelStretchPara->GetStretchPercent();
             SetPixelStretchPercent(stretchPercent, pixelStretchPara->GetTileMode());
@@ -1287,7 +1287,7 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
     // To do: generate composed visual effect here. Now we just set background brightness in v1.0.
     auto visualEffectParas = visualEffect->GetAllPara();
     for (const auto& visualEffectPara : visualEffectParas) {
-        if (visualEffectPara->type_ != VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
+        if (visualEffectPara->GetParaType() != VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
             continue;
         }
         auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);

@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 RSForegroundEffectFilter::RSForegroundEffectFilter(float blurRadius)
-    : RSDrawingFilter(nullptr)
+    : RSDrawingFilterOriginal(nullptr)
 {
     type_ = FilterType::FOREGROUND_EFFECT;
     MakeForegroundEffect();
@@ -198,7 +198,6 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas,
 void RSForegroundEffectFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
     const Drawing::Rect& src, const Drawing::Rect& dst) const
 {
-    auto brush = GetBrush();
     ForegroundEffectParam param = ForegroundEffectParam(src, dst);
     ApplyForegroundEffect(canvas, image, param);
 }

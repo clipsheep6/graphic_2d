@@ -28,17 +28,20 @@ namespace OHOS::Rosen {
 class RSB_EXPORT RSDisplayRenderParams : public RSRenderParams {
 public:
     explicit RSDisplayRenderParams(NodeId id);
-    virtual ~RSDisplayRenderParams() = default;
+    ~RSDisplayRenderParams() override = default;
 
     void OnSync(const std::unique_ptr<RSRenderParams>& target) override;
 
     std::vector<RSBaseRenderNode::SharedPtr>& GetAllMainAndLeashSurfaces();
+    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr>& GetAllMainAndLeashSurfaceDrawables();
     void SetAllMainAndLeashSurfaces(std::vector<RSBaseRenderNode::SharedPtr>& allMainAndLeashSurfaces);
-    uint64_t GetDisplayOffsetX() const
+    void SetAllMainAndLeashSurfaceDrawables(
+        std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr>& allMainAndLeashSurfaces);
+    int32_t GetDisplayOffsetX() const
     {
         return offsetX_;
     }
-    uint64_t GetDisplayOffsetY() const
+    int32_t GetDisplayOffsetY() const
     {
         return offsetY_;
     }
@@ -100,9 +103,19 @@ public:
     bool HasSkipLayer();
     bool HasProtectedLayer();
     bool HasCaptureWindow();
+    void SetNeedOffscreen(bool needOffscreen);
+    bool GetNeedOffscreen() const;
 
     void SetRotationChanged(bool changed);
     bool IsRotationChanged() const;
+
+    void SetHDRPresent(bool hasHdrPresent);
+    bool GetHDRPresent() const;
+
+    void SetNewColorSpace(const GraphicColorGamut& newColorSpace);
+    GraphicColorGamut GetNewColorSpace() const;
+    void SetNewPixelFormat(const GraphicPixelFormat& newPixelFormat);
+    GraphicPixelFormat GetNewPixelFormat() const;
 
     // dfx
     std::string ToString() const override;
@@ -113,6 +126,7 @@ private:
     std::map<ScreenId, bool> displayHasProtectedSurface_;
     std::map<ScreenId, bool> hasCaptureWindow_;
     std::vector<RSBaseRenderNode::SharedPtr> allMainAndLeashSurfaces_;
+    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allMainAndLeashSurfaceDrawables_;
     int32_t offsetX_ = -1;
     int32_t offsetY_ = -1;
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
@@ -120,10 +134,12 @@ private:
     uint64_t screenId_ = 0;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     ScreenInfo screenInfo_;
-    ScreenId mirroredId_;
+    ScreenId mirroredId_ = INVALID_SCREEN_ID;
     RSDisplayRenderNode::CompositeType compositeType_ = RSDisplayRenderNode::CompositeType::HARDWARE_COMPOSITE;
     bool isMainAndLeashSurfaceDirty_ = false;
+    bool needOffscreen_ = false;
     bool isRotationChanged_ = false;
+    bool hasHdrPresent_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSDisplayRenderNode;
@@ -131,6 +147,8 @@ private:
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
     // vector of hardwareEnabled nodes above displayNodeSurface like pointer window
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledTopNodes_;
+    GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    GraphicPixelFormat newPixelFormat_ = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PARAMS_RS_DISPLAY_RENDER_PARAMS_H

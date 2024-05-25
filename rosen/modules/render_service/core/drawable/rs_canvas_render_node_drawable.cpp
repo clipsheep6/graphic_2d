@@ -42,27 +42,31 @@ RSRenderNodeDrawable::Ptr RSCanvasRenderNodeDrawable::OnGenerate(std::shared_ptr
  */
 void RSCanvasRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
-    if (!ShouldPaint()) {
+    const auto& params = GetRenderParams();
+    auto isOpincDraw = PreDrawableCacheState(*params, isOpincDropNodeExt_);
+    if (!ShouldPaint() && isOpincDraw) {
         return;
     }
-    const auto& params = renderNode_->GetRenderParams();
+
     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
     auto uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams().get();
-    if ((!uniParam || uniParam->IsOpDropped()) && QuickReject(canvas, params->GetLocalDrawRect())) {
+    if ((!uniParam || uniParam->IsOpDropped()) && QuickReject(canvas, params->GetLocalDrawRect())
+        && isOpincDraw) {
         return;
     }
 
     if (LIKELY(isDrawingCacheEnabled_)) {
+        BeforeDrawCache(nodeCacheType_, canvas, *params, isOpincDropNodeExt_);
         if (!drawBlurForCache_) {
             GenerateCacheIfNeed(canvas, *params);
         }
         CheckCacheTypeAndDraw(canvas, *params);
+        AfterDrawCache(nodeCacheType_, canvas, *params, isOpincDropNodeExt_, opincRootTotalCount_);
     } else {
         RSRenderNodeDrawable::OnDraw(canvas);
     }
-    RSRenderNodeDrawable::ProcessedNodeCountInc();
 }
 
 /*
@@ -73,7 +77,7 @@ void RSCanvasRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
     if (!ShouldPaint()) {
         return;
     }
-    const auto& params = renderNode_->GetRenderParams();
+    const auto& params = GetRenderParams();
     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);

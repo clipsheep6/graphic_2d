@@ -636,10 +636,12 @@ void RSScreen::SetScreenBacklight(uint32_t level)
         RS_LOGW("RSScreen %{public}s: virtual screen not support SetScreenBacklight.", __func__);
         return;
     }
+
+    RS_LOGI("RSScreen_%{public}" PRIu64 " SetScreenBacklight, level is %{public}u", id_, level);
     if (hdiScreen_->SetScreenBacklight(level) < 0) {
         return;
     }
-    screenBacklightLevel_ = level;
+    screenBacklightLevel_ = static_cast<int32_t>(level);
 }
 
 int32_t RSScreen::GetScreenBacklight() const

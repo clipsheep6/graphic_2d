@@ -266,6 +266,16 @@ void SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources()
     grContext_->purgeUnlockAndSafeCacheGpuResources();
 }
 
+void SkiaGPUContext::PurgeCacheBetweenFrames(bool scratchResourcesOnly, const std::set<pid_t>& exitedPidSet,
+    const std::set<pid_t>& protectedPidSet)
+{
+    if (!grContext_) {
+        LOGD("SkiaGPUContext::PurgeCacheBetweenFrames,grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeCacheBetweenFrames(scratchResourcesOnly, exitedPidSet, protectedPidSet);
+}
+
 void SkiaGPUContext::ReleaseByTag(const GPUResourceTag &tag)
 {
     if (!grContext_) {
@@ -297,6 +307,10 @@ void SkiaGPUContext::DumpMemoryStatisticsByTag(TraceMemoryDump* traceMemoryDump,
         return;
     }
     SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl<SkiaTraceMemoryDump>()->GetTraceMemoryDump().get();
+    if (!skTraceMemoryDump) {
+        LOGD("SkiaGPUContext::DumpMemoryStatisticsByTag, sktraceMemoryDump is nullptr");
+        return;
+    }
     GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
     grContext_->dumpMemoryStatisticsByTag(skTraceMemoryDump, grTag);
 }
@@ -313,6 +327,10 @@ void SkiaGPUContext::DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump)
         return;
     }
     SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl<SkiaTraceMemoryDump>()->GetTraceMemoryDump().get();
+    if (!skTraceMemoryDump) {
+        LOGD("SkiaGPUContext::DumpMemoryStatistics, sktraceMemoryDump is nullptr");
+        return;
+    }
     grContext_->dumpMemoryStatistics(skTraceMemoryDump);
 }
 

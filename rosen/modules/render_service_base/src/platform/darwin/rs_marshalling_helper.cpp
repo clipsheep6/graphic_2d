@@ -163,36 +163,6 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
     return {};
 }
 
-// EmitterUpdater
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
-{
-    return {};
-}
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterUpdater>& val)
-{
-    return {};
-}
-
-// ParticleNoiseField
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseField>& val)
-{
-    return {};
-}
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseField>& val)
-{
-    return {};
-}
-
-// ParticleNoiseFields
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseFields>& val)
-{
-    return {};
-}
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseFields>& val)
-{
-    return {};
-}
-
 // MotionBlurPara
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<MotionBlurParam>& val)
 {
@@ -203,51 +173,102 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<MotionBl
     return {};
 }
 
-// RSParticle
+// Particle
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterUpdater>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseField>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseField>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseFields>& val)
+{
+    return {};
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseFields>& val)
+{
+    return {};
+}
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const EmitterConfig& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, EmitterConfig& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const ParticleVelocity& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, ParticleVelocity& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderParticleParaType<float>& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleParaType<float>& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderParticleColorParaType& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleColorParaType& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleRenderParams>& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleRenderParams>& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::vector<std::shared_ptr<ParticleRenderParams>>& val)
 {
     return {};
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<std::shared_ptr<ParticleRenderParams>>& val)
 {
     return {};
@@ -437,6 +458,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<MotionBlurParam>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<EmitterUpdater>>)       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseField>)                \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseFields>)               \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<std::vector<ParticleRenderParams>>) \

@@ -125,6 +125,25 @@ static const std::vector<struct JsEnumInt> AFFINITY = {
     { "DOWNSTREAM", static_cast<size_t>(Affinity::NEXT) },
 };
 
+static const std::vector<struct JsEnumInt> FONTWIDTH = {
+    { "ULTRA_CONDENSED", static_cast<size_t>(FontWidth::ULTRA_CONDENSED) },
+    { "EXTRA_CONDENSED", static_cast<size_t>(FontWidth::EXTRA_CONDENSED) },
+    { "CONDENSED", static_cast<size_t>(FontWidth::CONDENSED) },
+    { "SEMI_CONDENSED", static_cast<size_t>(FontWidth::SEMI_CONDENSED) },
+    { "NORMAL", static_cast<size_t>(FontWidth::NORMAL) },
+    { "SEMI_EXPANDED", static_cast<size_t>(FontWidth::SEMI_EXPANDED) },
+    { "EXPANDED", static_cast<size_t>(FontWidth::EXPANDED) },
+    { "EXTRA_EXPANDED", static_cast<size_t>(FontWidth::EXTRA_EXPANDED) },
+    { "ULTRA_EXPANDED", static_cast<size_t>(FontWidth::ULTRA_EXPANDED) },
+};
+
+static const std::vector<struct JsEnumInt> TEXTHEIGHTBEHAVIOR = {
+    { "ALL", static_cast<size_t>(TextHeightBehavior::ALL) },
+    { "DISABLE_FIRST_ASCENT", static_cast<size_t>(TextHeightBehavior::DISABLE_FIRST_ASCENT) },
+    { "DISABLE_LAST_ASCENT", static_cast<size_t>(TextHeightBehavior::DISABLE_LAST_ASCENT) },
+    { "DISABLE_ALL", static_cast<size_t>(TextHeightBehavior::DISABLE_ALL) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> INT_ENUM_CLASS_MAP = {
     { "TextAlign", TEXT_ALIGN },
     { "TextDecorationStyle", TEXT_DECORATION_STYLE },
@@ -140,6 +159,27 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> IN
     { "RectWidthStyle", RECT_WIDTH_STYLE},
     { "RectHeightStyle", RECT_HEIGHT_STYLE},
     { "Affinity", AFFINITY},
+    { "FontWidth", FONTWIDTH },
+    { "TextHeightBehavior", TEXTHEIGHTBEHAVIOR },
+}
+
+static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
+    { "TextAlign", g_textAlign },
+    { "TextDecorationStyle", g_textDecorationStyle },
+    { "FontWeight", g_fontWeight },
+    { "FontStyle", g_fontStyle },
+    { "TextBaseline", g_textBaseline },
+    { "TextDirection", g_textDirection },
+    { "WordBreak", g_wordBreakType },
+    { "BreakStrategy", g_breakStrategy },
+    { "EllipsisMode", g_ellipsisModal },
+    { "TextDecorationType", g_textDecoration },
+    { "PlaceholderAlignment", g_placeholderVerticalAlignment },
+    { "RectWidthStyle", g_rectWidthStyle },
+    { "RectHeightStyle", g_rectHeightStyle },
+    { "Affinity", g_affinity },
+    { "FontWidth", g_fontWidth },
+    { "TextHeightBehavior", g_textHeightBehavior },
 };
 }
 

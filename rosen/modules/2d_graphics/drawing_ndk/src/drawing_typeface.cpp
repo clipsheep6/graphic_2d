@@ -14,8 +14,11 @@
  */
 
 #include "drawing_typeface.h"
+
 #include <mutex>
 #include <unordered_map>
+
+#include "drawing_canvas_utils.h"
 
 #include "text/typeface.h"
 #include "utils/log.h"
@@ -33,7 +36,11 @@ static MemoryStream* CastToMemoryStream(OH_Drawing_MemoryStream* cCanvas)
 
 OH_Drawing_Typeface* OH_Drawing_TypefaceCreateDefault()
 {
-    std::shared_ptr<Typeface> typeface = Typeface::MakeDefault();
+    std::shared_ptr<Typeface> typeface = g_LoadZhCnTypeface();
+    if (typeface == nullptr) {
+        LOGE("OH_Drawing_TypefaceCreateDefault: create failed.");
+        return nullptr;
+    }
     OH_Drawing_Typeface* drawingTypeface = reinterpret_cast<OH_Drawing_Typeface*>(typeface.get());
     TypefaceMgr::GetInstance().Insert(drawingTypeface, typeface);
     return drawingTypeface;
@@ -63,6 +70,7 @@ OH_Drawing_Typeface* OH_Drawing_TypefaceCreateFromFile(const char* path, int ind
 OH_Drawing_Typeface* OH_Drawing_TypefaceCreateFromStream(OH_Drawing_MemoryStream* cMemoryStream, int32_t index)
 {
     if (cMemoryStream == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
     std::unique_ptr<MemoryStream> memoryStream(CastToMemoryStream(cMemoryStream));

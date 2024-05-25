@@ -105,6 +105,8 @@ int32_t HdiDeviceImpl::RegScreenVBlankCallback(uint32_t screenId, VBlankCallback
 
 int32_t HdiDeviceImpl::SetScreenVsyncEnabled(uint32_t screenId, bool enabled)
 {
+    ScopedBytrace trace("SetScreenVsyncEnabled, screenId:" + std::to_string(screenId) +
+                        ", enabled:" + std::to_string(enabled));
     CHECK_FUNC(g_composer);
     return g_composer->SetDisplayVsyncEnabled(screenId, enabled);
 }
@@ -137,7 +139,7 @@ int32_t HdiDeviceImpl::GetScreenCapability(uint32_t screenId, GraphicDisplayCapa
         }
     }
 
-    ret = g_composer->GetDisplayProperty(screenId, propertyId, propertyValue);
+    (void)g_composer->GetDisplayProperty(screenId, propertyId, propertyValue);
     return ret;
 }
 

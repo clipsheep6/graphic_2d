@@ -37,6 +37,7 @@ public:
     static napi_value AddText(napi_env env, napi_callback_info info);
     static napi_value PopStyle(napi_env env, napi_callback_info info);
     static napi_value AddPlaceholder(napi_env env, napi_callback_info info);
+    static napi_value AppendSymbol(napi_env env, napi_callback_info info);
     static napi_value Build(napi_env env, napi_callback_info info);
 
 private:
@@ -45,7 +46,7 @@ private:
     napi_value OnPopStyle(napi_env env, napi_callback_info info);
     napi_value OnAddPlaceholder(napi_env env, napi_callback_info info);
     napi_value OnBuild(napi_env env, napi_callback_info info);
-
+    napi_value OnAppendSymbol(napi_env env, napi_callback_info info);
     static thread_local napi_ref constructor_;
     std::unique_ptr<TypographyCreate> typographyCreate_ = nullptr;
 };

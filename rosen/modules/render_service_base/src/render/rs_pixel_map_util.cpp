@@ -57,6 +57,8 @@ static Drawing::ColorType PixelFormatToDrawingColorType(PixelFormat pixelFormat)
             return Drawing::ColorType::COLORTYPE_ALPHA_8;
         case PixelFormat::RGBA_F16:
             return Drawing::ColorType::COLORTYPE_RGBA_F16;
+        case PixelFormat::RGBA_1010102:
+            return Drawing::ColorType::COLORTYPE_RGBA_1010102;
         case PixelFormat::UNKNOWN:
         case PixelFormat::ARGB_8888:
         case PixelFormat::RGB_888:
@@ -202,6 +204,11 @@ bool RSPixelMapUtil::IsYUVFormat(std::shared_ptr<Media::PixelMap> pixelMap)
     if (!pixelMap) {
         return false;
     }
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+    if (pixelMap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
+        return false;
+    }
+#endif
     ImageInfo imageInfo;
     pixelMap->GetImageInfo(imageInfo);
     return imageInfo.pixelFormat == Media::PixelFormat::NV21 || imageInfo.pixelFormat == Media::PixelFormat::NV12;
@@ -255,6 +262,18 @@ std::shared_ptr<Drawing::Image> RSPixelMapUtil::ConvertYUVPixelMapToDrawingImage
             const_cast<void *>(reinterpret_cast<const void*>(pixelMap->GetPixels())));
     }
     return nullptr;
+}
+
+bool RSPixelMapUtil::IsSupportZeroCopy(std::shared_ptr<Media::PixelMap> pixelMap,
+    const Drawing::SamplingOptions& sampling)
+{
+    if (!(pixelMap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC)) {
+        return false;
+    }
+    ImageInfo imageInfo;
+    pixelMap->GetImageInfo(imageInfo);
+    return !(imageInfo.pixelFormat == Media::PixelFormat::RGBA_8888 &&
+            sampling.GetMipmapMode() == Drawing::MipmapMode::LINEAR);
 }
 } // namespace Rosen
 } // namespace OHOS

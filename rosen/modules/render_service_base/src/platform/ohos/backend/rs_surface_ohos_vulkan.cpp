@@ -123,13 +123,6 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
         mNativeWindow = CreateNativeWindowFromSurface(&producer_);
         ROSEN_LOGD("RSSurfaceOhosVulkan: create native window");
     }
-    if (isProtected && mNativeWindow) {
-        mNativeWindow->config.usage |= BUFFER_USAGE_PROTECTED;
-        bufferUsage_ |= BUFFER_USAGE_PROTECTED;
-    } else {
-        mNativeWindow->config.usage &= (~BUFFER_USAGE_PROTECTED);
-        bufferUsage_ &= (~BUFFER_USAGE_PROTECTED);
-    }
 
     if (!mSkContext) {
         ROSEN_LOGE("RSSurfaceOhosVulkan: skia context is nullptr");
@@ -191,6 +184,14 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
         std::make_unique<RSSurfaceFrameOhosVulkan>(nativeSurface.drawingSurface, width, height, bufferAge);
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
     return ret;
+}
+
+sptr<SurfaceBuffer> RSSurfaceOhosVulkan::GetCurrentBuffer()
+{
+    if (mSurfaceList.empty()) {
+        return nullptr;
+    }
+    return mSurfaceList.back()->sfbuffer;
 }
 
 void RSSurfaceOhosVulkan::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)

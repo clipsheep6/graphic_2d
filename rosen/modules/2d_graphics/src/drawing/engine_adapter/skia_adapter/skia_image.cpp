@@ -242,7 +242,7 @@ bool SkiaImage::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info
 #endif
     if (skiaImage_ == nullptr) {
         LOGE("SkiaImage::MakeFromTexture skiaImage_ is nullptr!!!! "
-            "TextureInfo format:%u, w:%d, h:%d , bitmapFormat.colorType is %d",
+            "TextureInfo format:%{public}u, w:%{public}d, h:%{public}d , bitmapFormat.colorType is %{public}d",
             info.GetFormat(), info.GetWidth(), info.GetHeight(), static_cast<int>(bitmapFormat.colorType));
         return false;
     }
@@ -570,7 +570,7 @@ std::shared_ptr<Data> SkiaImage::Serialize() const
         int32_t width = pixmap.width();
         int32_t height = pixmap.height();
         const void* addr = pixmap.addr();
-        size_t size = rb * static_cast<size_t>(height);
+        size_t size = pixmap.computeByteSize();
 
         writer.writeUInt(size);
         writer.writeByteArray(addr, size);

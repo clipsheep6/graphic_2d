@@ -65,6 +65,10 @@ public:
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
 #endif
 
+#ifdef RS_ENABLE_VK
+    bool Set2DRenderCtrl(bool enable);
+#endif
+
     void RemoveVirtualScreen(ScreenId id);
 
     int32_t SetScreenChangeCallback(const ScreenChangeCallback &callback);
@@ -112,7 +116,7 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode);
 
-    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range);
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped);
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
 
@@ -220,7 +224,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo);
 
-    void NotifyTouchEvent(int32_t touchStatus);
+    void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt);
 
     void ReportEventResponse(DataBaseRs info);
 
@@ -238,7 +242,11 @@ public:
 
     void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
 
-    GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id);
+    std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo();
+
+    GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo();
+
+    LayerComposeInfo GetLayerComposeInfo();
 
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);

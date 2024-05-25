@@ -19,9 +19,11 @@
 #include "rs_dirty_rects_dfx.h"
 #include "rs_trace.h"
 
+#include "drawable/rs_render_node_drawable.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
 #include "platform/common/rs_log.h"
+#include "screen_manager/rs_screen_manager.h"
 
 // fresh rate
 #include "hgm_core.h"
@@ -86,6 +88,50 @@ void RSDirtyRectsDfx::OnDraw(std::shared_ptr<RSPaintFilterCanvas> canvas)
     if (RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled()) {
         DrawCurrentRefreshRate();
     }
+
+    DrawableV2::RSRenderNodeDrawable::DrawDfxForCacheInfo(*canvas_);
+}
+
+void RSDirtyRectsDfx::OnDrawVirtual(std::shared_ptr<RSPaintFilterCanvas> canvas)
+{
+    if (!canvas) {
+        RS_LOGE("RSDirtyRectsDfx::OnDraw canvas is nullptr!");
+        return;
+    }
+    if (!targetNode_) {
+        RS_LOGE("RSDirtyRectsDfx::OnDraw target node is nullptr!");
+        return;
+    }
+    auto& renderThreadParams = RSUniRenderThread::Instance().GetRSRenderThreadParams();
+    if (!renderThreadParams) {
+        RS_LOGE("RSDirtyRectsDfx::OnDraw render thread params is nullptr!");
+        return;
+    }
+
+    canvas_ = canvas;
+    if (renderThreadParams->isVirtualDirtyDfxEnabled_) {
+        DrawDirtyRegionInVirtual();
+    }
+}
+
+void RSDirtyRectsDfx::DrawDirtyRegionInVirtual() const
+{
+    for (const auto& subRect : virtualDirtyRects_) {
+        RectI tmpRect;
+#ifdef RS_ENABLE_VK
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+            RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+            tmpRect = subRect;
+        } else {
+            tmpRect = RectI(subRect.GetLeft(), screenInfo_.GetRotatedHeight() - subRect.GetTop() - subRect.GetHeight(),
+                subRect.GetWidth(), subRect.GetHeight());
+        }
+#else
+        tmpRect = RectI(subRect.GetLeft(), screenInfo_.GetRotatedHeight() - subRect.GetTop() - subRect.GetHeight(),
+            subRect.GetWidth(), subRect.GetHeight());
+#endif
+        DrawDirtyRectForDFX(tmpRect, Drawing::Color::COLOR_BLUE, RSPaintStyle::STROKE, DFXFillAlpha);
+    }
 }
 
 void RSDirtyRectsDfx::DrawCurrentRefreshRate()
@@ -120,7 +166,7 @@ void RSDirtyRectsDfx::DrawCurrentRefreshRate()
             (rotation == ScreenRotation::ROTATION_270 ? ScreenRotation::ROTATION_0
                                                       : static_cast<ScreenRotation>(static_cast<int>(rotation) + 1));
     }
-
+    auto saveCount = canvas_->Save();
     if (rotation != ScreenRotation::ROTATION_0) {
         auto screenManager = CreateOrGetScreenManager();
         auto mainScreenInfo = screenManager->QueryScreenInfo(screenId);
@@ -140,6 +186,7 @@ void RSDirtyRectsDfx::DrawCurrentRefreshRate()
     }
     // 100.f:Scalar x of drawing TextBlob; 200.f:Scalar y of drawing TextBlob
     canvas_->DrawTextBlob(textBlob.get(), 100.f, 200.f);
+    canvas_->RestoreToCount(saveCount);
     canvas_->DetachBrush();
 }
 

@@ -15,6 +15,8 @@
 
 #include "drawing_filter.h"
 
+#include "drawing_canvas_utils.h"
+
 #include "effect/filter.h"
 
 using namespace OHOS;
@@ -24,6 +26,11 @@ using namespace Drawing;
 static Filter* CastToFilter(OH_Drawing_Filter* cFilter)
 {
     return reinterpret_cast<Filter*>(cFilter);
+}
+
+static ImageFilter* CastToImageFilter(OH_Drawing_ImageFilter* cImageFilter)
+{
+    return reinterpret_cast<ImageFilter*>(cImageFilter);
 }
 
 static MaskFilter* CastToMaskFilter(OH_Drawing_MaskFilter* cMaskFilter)
@@ -41,10 +48,29 @@ OH_Drawing_Filter* OH_Drawing_FilterCreate()
     return (OH_Drawing_Filter*)new Filter();
 }
 
+void OH_Drawing_FilterSetImageFilter(OH_Drawing_Filter* cFliter, OH_Drawing_ImageFilter* cImageFilter)
+{
+    Filter* filter = CastToFilter(cFliter);
+    if (filter == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    if (cImageFilter == nullptr) {
+        filter->SetImageFilter(nullptr);
+        return;
+    }
+    filter->SetImageFilter(std::shared_ptr<ImageFilter>{CastToImageFilter(cImageFilter), [](auto p) {}});
+}
+
 void OH_Drawing_FilterSetMaskFilter(OH_Drawing_Filter* cFliter, OH_Drawing_MaskFilter* cMaskFilter)
 {
     Filter* filter = CastToFilter(cFliter);
     if (filter == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    if (cMaskFilter == nullptr) {
+        filter->SetMaskFilter(nullptr);
         return;
     }
     filter->SetMaskFilter(std::shared_ptr<MaskFilter>{CastToMaskFilter(cMaskFilter), [](auto p) {}});
@@ -54,6 +80,11 @@ void OH_Drawing_FilterSetColorFilter(OH_Drawing_Filter* cFliter, OH_Drawing_Colo
 {
     Filter* filter = CastToFilter(cFliter);
     if (filter == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    if (cColorFilter == nullptr) {
+        filter->SetColorFilter(nullptr);
         return;
     }
     filter->SetColorFilter(std::shared_ptr<ColorFilter>{CastToColorFilter(cColorFilter), [](auto p) {}});
@@ -63,10 +94,12 @@ void OH_Drawing_FilterGetColorFilter(OH_Drawing_Filter* cFliter, OH_Drawing_Colo
 {
     Filter* filter = CastToFilter(cFliter);
     if (filter == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
     ColorFilter* colorFilter = CastToColorFilter(cColorFilter);
     if (colorFilter == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
     std::shared_ptr<ColorFilter> colorFilterPtr = filter->GetColorFilter();

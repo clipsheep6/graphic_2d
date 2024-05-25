@@ -21,6 +21,7 @@
 #include "common/rs_common_def.h"
 #include "common/rs_occlusion_region.h"
 #include "drawable/rs_render_node_drawable.h"
+#include "params/rs_render_thread_params.h"
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_handler.h"
@@ -31,16 +32,19 @@ namespace OHOS::Rosen {
 namespace DrawableV2 {
 class RSDisplayRenderNodeDrawable : public RSRenderNodeDrawable {
 public:
-    explicit RSDisplayRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     ~RSDisplayRenderNodeDrawable() override = default;
 
     static RSRenderNodeDrawable::Ptr OnGenerate(std::shared_ptr<const RSRenderNode> node);
     void OnDraw(Drawing::Canvas& canvas) override;
     void OnCapture(Drawing::Canvas& canvas) override;
+    void DrawHardwareEnabledNodes(Drawing::Canvas& canvas,
+        std::shared_ptr<RSDisplayRenderNode> displayNodeSp, RSDisplayRenderParams* params);
+    void DrawHardwareEnabledNodes(Drawing::Canvas& canvas);
     void SwitchColorFilter(RSPaintFilterCanvas& canvas) const;
     void SetHighContrastIfEnabled(RSPaintFilterCanvas& canvas) const;
 
 private:
+    explicit RSDisplayRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     bool CheckDisplayNodeSkip(std::shared_ptr<RSDisplayRenderNode> displayNode, RSDisplayRenderParams* params,
         std::shared_ptr<RSProcessor> processor);
     std::unique_ptr<RSRenderFrame> RequestFrame(std::shared_ptr<RSDisplayRenderNode> displayNodeSp,
@@ -49,25 +53,46 @@ private:
     void AdjustZOrderAndDrawSurfaceNode(
         std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes,
         Drawing::Canvas& canvas, RSDisplayRenderParams& params) const;
-    void DrawWatermarkIfNeed(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
-    void ProcessVirtualScreen(RSDisplayRenderNode& displayNodeSp, RSDisplayRenderParams& params,
+    void WiredScreenProjection(std::shared_ptr<RSDisplayRenderNode> displayNodeSp, RSDisplayRenderParams& params,
         std::shared_ptr<RSProcessor> processor);
+    void DrawWatermarkIfNeed(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
+    void RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight);
+    void RotateMirrorCanvasOnExFoldScreen(RSDisplayRenderParams& params, ScreenRotation& rotation, float mainWidth,
+        float mainHeight);
+    void DrawMirrorScreen(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
+        std::shared_ptr<RSProcessor> processor);
+    std::vector<RectI> CalculateVirtualDirty(RSDisplayRenderNode& displayNode,
+        std::shared_ptr<RSProcessor> processor, RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
+    using DrawFuncPtr = void(RSDisplayRenderNodeDrawable::*)(Drawing::Canvas&);
+    void DrawMirror(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
+        std::shared_ptr<RSProcessor> processor, DrawFuncPtr drawFunc, RSRenderThreadParams& uniParam);
+    void DrawExpandScreen(RSUniRenderVirtualProcessor& processor);
+    void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
     void ScaleMirrorIfNeed(RSDisplayRenderNode& node, std::shared_ptr<RSProcessor> processor);
     void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node);
-    void DrawCurtainScreen(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
+    void DrawCurtainScreen() const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
     std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(
         std::shared_ptr<RSDisplayRenderNode> mirrorNode);
-    void processCacheImage(Drawing::Image& cacheImageProcessed,
-        RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor);
+    void ResetRotateIfNeed(RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor,
+        Drawing::Region& clipRegion);
+    void ProcessCacheImage(Drawing::Image& cacheImageProcessed);
     void SetCanvasBlack(RSProcessor& processor);
+    // Prepare for off-screen render
+    void ClearTransparentBeforeSaveLayer();
+    void PrepareOffscreenRender(const RSRenderNode& node);
+    void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
 
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::DISPLAY_NODE, OnGenerate>;
     static Registrar instance_;
     mutable std::shared_ptr<RSPaintFilterCanvas> curCanvas_;
-    Drawing::Region clipRegion_;
+    std::shared_ptr<Drawing::Surface> offscreenSurface_; // temporary holds offscreen surface
+    std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen rende
     bool canvasRotation_ = false;
+    bool exFoldScreen_ = false; // Expanded state of folding screen
+    bool isLastFrameHasSecSurface_ = false;
+    Drawing::Matrix lastMatrix_;
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

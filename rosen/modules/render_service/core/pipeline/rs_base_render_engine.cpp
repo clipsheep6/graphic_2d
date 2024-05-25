@@ -38,6 +38,7 @@
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
 #endif
+#include "render/rs_drawing_filter.h"
 #include "render/rs_skia_filter.h"
 #include "metadata_helper.h"
 
@@ -223,14 +224,8 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
 #else
     (void)colorGamut;
 #endif
-    Drawing::ColorType colorType = Drawing::ColorType::COLORTYPE_RGBA_8888;
     auto pixelFmt = buffer->GetFormat();
-    if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
-        colorType = Drawing::ColorType::COLORTYPE_BGRA_8888;
-    } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
-        colorType = Drawing::ColorType::COLORTYPE_RGBA_1010102;
-    }
-    Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
+    auto bitmapFormat = RSBaseRenderUtil::GenerateDrawingBitmapFormat(buffer);
 
     auto image = std::make_shared<Drawing::Image>();
     Drawing::TextureInfo externalTextureInfo;
@@ -251,7 +246,8 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
         auto glType = GR_GL_RGBA8;
         if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
             glType = GR_GL_BGRA8;
-        } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+        } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010 ||
+            pixelFmt == GRAPHIC_PIXEL_FMT_RGBA_1010102) {
             glType = GR_GL_RGB10_A2;
         }
         externalTextureInfo.SetFormat(glType);
@@ -287,8 +283,14 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 #endif
 {
 #ifdef RS_ENABLE_VK
-    skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext();
-    renderContext_->SetUpGpuContext(skContext_);
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext();
+        if (renderContext_ == nullptr) {
+            return nullptr;
+        }
+        renderContext_->SetUpGpuContext(skContext_);
+    }
 #endif
     if (rsSurface == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: surface is null!");
@@ -397,6 +399,48 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
 #endif
     RS_OPTIONAL_TRACE_END();
     return RequestFrame(rsSurface, config, forceCPU, useAFBC, isProtected);
+}
+
+#ifdef NEW_RENDER_CONTEXT
+std::shared_ptr<RSRenderSurfaceOhos> RSBaseRenderEngine::MakeRSSurface(const sptr<Surface>& targetSurface,
+    bool forceCPU)
+#else
+std::shared_ptr<RSSurfaceOhos> RSBaseRenderEngine::MakeRSSurface(const sptr<Surface>& targetSurface, bool forceCPU)
+#endif
+{
+    RS_TRACE_FUNC();
+    if (targetSurface == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::MakeRSSurface: surface is null!");
+        RS_OPTIONAL_TRACE_END();
+        return nullptr;
+    }
+
+#if defined(NEW_RENDER_CONTEXT)
+    std::shared_ptr<RSRenderSurfaceOhos> rsSurface = nullptr;
+    std::shared_ptr<RSRenderSurface> renderSurface = RSSurfaceFactory::CreateRSSurface(PlatformName::OHOS,
+        targetSurface);
+    rsSurface = std::static_pointer_cast<RSRenderSurfaceOhos>(renderSurface);
+#else
+    std::shared_ptr<RSSurfaceOhos> rsSurface = nullptr;
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        if (forceCPU) {
+            rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
+        } else {
+            rsSurface = std::make_shared<RSSurfaceOhosGl>(targetSurface);
+        }
+    }
+#endif
+#if (defined RS_ENABLE_VK)
+    if (RSSystemProperties::IsUseVulkan()) {
+        rsSurface = std::make_shared<RSSurfaceOhosVulkan>(targetSurface);
+    }
+#endif
+    if (rsSurface == nullptr) {
+        rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
+    }
+#endif
+    return rsSurface;
 }
 
 #ifdef NEW_RENDER_CONTEXT
@@ -643,6 +687,10 @@ void RSBaseRenderEngine::ColorSpaceConvertor(std::shared_ptr<Drawing::ShaderEffe
         RS_OPTIONAL_TRACE_END();
         return;
     }
+    if (parameter.inputColorSpace.colorSpaceInfo.transfunc == HDI::Display::Graphic::Common::V1_0::TRANSFUNC_PQ ||
+        parameter.inputColorSpace.colorSpaceInfo.transfunc == HDI::Display::Graphic::Common::V1_0::TRANSFUNC_HLG) {
+        params.paint.SetHdr(true);
+    }
     params.paint.SetShaderEffect(outputShader);
     RS_OPTIONAL_TRACE_END();
 }
@@ -661,16 +709,7 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 #ifdef USE_VIDEO_PROCESSING_ENGINE
         drawingColorSpace = ConvertColorGamutToDrawingColorSpace(params.targetColorGamut);
 #endif
-        Drawing::ColorType drawingColorType = Drawing::ColorType::COLORTYPE_RGBA_8888;
-        auto pixelFmt = params.buffer->GetFormat();
-        if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
-            drawingColorType = Drawing::ColorType::COLORTYPE_BGRA_8888;
-        } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
-            drawingColorType = Drawing::ColorType::COLORTYPE_RGBA_1010102;
-        } else if (pixelFmt == GRAPHIC_PIXEL_FMT_RGB_565) {
-            drawingColorType = Drawing::ColorType::COLORTYPE_RGB_565;
-        }
-        Drawing::BitmapFormat bitmapFormat = { drawingColorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
+        auto bitmapFormat = RSBaseRenderUtil::GenerateDrawingBitmapFormat(params.buffer);
 #ifndef ROSEN_EMULATOR
         auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
 #else
@@ -719,7 +758,7 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         if (params.isMirror) {
             samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NEAREST);
         } else {
-            samplingOptions = RSSystemProperties::IsPhoneType() && !params.useBilinearInterpolation
+            samplingOptions = !params.useBilinearInterpolation
                                 ? Drawing::SamplingOptions()
                                 : Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
         }
@@ -737,6 +776,9 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
     canvas.AttachBrush(params.paint);
 #ifndef USE_VIDEO_PROCESSING_ENGINE
     Drawing::SamplingOptions drawingSamplingOptions;
+    if (!RSSystemProperties::GetUniRenderEnabled()) {
+        drawingSamplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR);
+    }
     canvas.DrawImageRect(*image.get(), params.srcRect, params.dstRect, drawingSamplingOptions,
         Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
 #else

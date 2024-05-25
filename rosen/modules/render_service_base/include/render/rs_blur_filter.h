@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSB_EXPORT RSBlurFilter : public RSDrawingFilter {
+class RSB_EXPORT RSBlurFilter : public RSDrawingFilterOriginal {
 public:
     RSBlurFilter(float blurRadiusX, float blurRadiusY);
     RSBlurFilter(const RSBlurFilter&) = delete;
@@ -36,7 +36,8 @@ public:
     float GetBlurRadiusX();
     float GetBlurRadiusY();
     bool IsValid() const override;
-    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
+    std::shared_ptr<RSDrawingFilterOriginal> Compose(
+        const std::shared_ptr<RSDrawingFilterOriginal>& other) const override;
     std::string GetDescription() override;
     std::string GetDetailedDescription() override;
 
@@ -53,6 +54,9 @@ public:
     bool IsNearEqual(
         const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const override;
     bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
+
+    bool IsEqual(const std::shared_ptr<RSFilter>& other) const override;
+    bool IsEqualZero() const override;
 
 private:
     float blurRadiusX_;

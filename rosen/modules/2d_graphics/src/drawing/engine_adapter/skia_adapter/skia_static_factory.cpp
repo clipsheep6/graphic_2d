@@ -15,6 +15,7 @@
 
 #include "skia_static_factory.h"
 
+#include "skia_adapter/skia_blender.h"
 #include "skia_adapter/skia_data.h"
 #include "skia_adapter/skia_font_style_set.h"
 #include "skia_adapter/skia_hm_symbol.h"
@@ -78,17 +79,14 @@ std::shared_ptr<Surface> SkiaStaticFactory::MakeFromBackendRenderTarget(GPUConte
     return SkiaSurface::MakeFromBackendRenderTarget(gpuContext, info, origin,
         colorType, colorSpace, deleteVkImage, cleanHelper);
 }
+#endif
 std::shared_ptr<Surface> SkiaStaticFactory::MakeFromBackendTexture(GPUContext* gpuContext, const TextureInfo& info,
     TextureOrigin origin, int sampleCnt, ColorType colorType,
     std::shared_ptr<ColorSpace> colorSpace, void (*deleteVkImage)(void *), void* cleanHelper)
 {
-    if (!SystemProperties::IsUseVulkan()) {
-        return nullptr;
-    }
     return SkiaSurface::MakeFromBackendTexture(gpuContext, info, origin, sampleCnt, colorType,
         colorSpace, deleteVkImage, cleanHelper);
 }
-#endif
 std::shared_ptr<Surface> SkiaStaticFactory::MakeRenderTarget(GPUContext* gpuContext,
     bool budgeted, const ImageInfo& imageInfo)
 {
@@ -136,6 +134,11 @@ std::shared_ptr<TextBlob> SkiaStaticFactory::DeserializeTextBlob(const void* dat
 std::shared_ptr<Typeface> SkiaStaticFactory::DeserializeTypeface(const void* data, size_t size)
 {
     return SkiaTypeface::Deserialize(data, size);
+}
+
+bool SkiaStaticFactory::GetFillPath(const Pen& pen, const Path& src, Path& dst, const Rect* rect, const Matrix& matrix)
+{
+    return SkiaPaint::GetFillPath(pen, src, dst, rect, matrix);
 }
 
 bool SkiaStaticFactory::CanComputeFastBounds(const Brush& brush)
@@ -198,6 +201,11 @@ std::vector<std::vector<DrawingPiecewiseParameter>> SkiaStaticFactory::GetGroupP
 FontStyleSet* SkiaStaticFactory::CreateEmpty()
 {
     return SkiaFontStyleSet::CreateEmpty();
+}
+
+std::shared_ptr<Blender> SkiaStaticFactory::CreateWithBlendMode(BlendMode mode)
+{
+    return SkiaBlender::CreateWithBlendMode(mode);
 }
 } // namespace Drawing
 } // namespace Rosen

@@ -35,7 +35,7 @@ namespace TextEngine {
 #define FAILED 1
 
 const std::string DEFAULT_DIR = "/system/fonts/";
-const std::string FONT_DEFAULT_CONFIG = "/system/etc/fontconfig.json";
+const char* FONT_DEFAULT_CONFIG = "/system/etc/fontconfig.json";
 
 FontConfig::FontConfig(const char* fname)
 {
@@ -148,7 +148,7 @@ int FontConfigJson::ParseFile(const char* fname)
 {
     if (fname == nullptr) {
         LOGSO_FUNC_LINE(DEBUG) << "ParseFile fname is nullptr";
-        fname = FONT_DEFAULT_CONFIG.c_str();
+        fname = FONT_DEFAULT_CONFIG;
     }
 
     LOGSO_FUNC_LINE(INFO) << "ParseFile fname is: " << fname;
@@ -156,6 +156,22 @@ int FontConfigJson::ParseFile(const char* fname)
     int err = ParseConfigList(fname);
     if (err != 0) {
         LOGSO_FUNC_LINE(ERROR) << "ParseFile ParseConfigList failed";
+        return err;
+    }
+    return SUCCESSED;
+}
+int FontConfigJson::ParseFontFileMap(const char* fname)
+{
+    if (fname == nullptr) {
+        LOGSO_FUNC_LINE(DEBUG) << "ParseFontFileMap fname is nullptr";
+        fname = FONT_DEFAULT_CONFIG;
+    }
+
+    LOGSO_FUNC_LINE(INFO) << "ParseFontFileMap fname is: " << fname;
+    fontFileMap = std::make_shared<FontFileMap>();
+    int err = ParseConfigListPath(fname);
+    if (err != 0) {
+        LOGSO_FUNC_LINE(ERROR) << "ParseFontFileMap ParseConfigList failed";
         return err;
     }
     return SUCCESSED;
@@ -217,6 +233,22 @@ int FontConfigJson::ParseConfigList(const char* fname)
             ParseFallback(root, key);
         }
     }
+    cJSON_Delete(root);
+    return SUCCESSED;
+}
+
+int FontConfigJson::ParseConfigListPath(const char* fname)
+{
+    if (fname == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "ParseConfigListPath fname is nullptr";
+        return FAILED;
+    }
+    cJSON* root = CheckConfigFile(fname);
+    if (root == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "ParseConfigListPath CheckConfigFile failed";
+        return FAILED;
+    }
+    ParseFontMap(root, "font_file_map");
     cJSON_Delete(root);
     return SUCCESSED;
 }
@@ -308,6 +340,9 @@ int FontConfigJson::ParseAlias(const cJSON* root, FontGenericInfo &genericInfo)
             continue;
         }
         std::string aliasName = std::string(item->string);
+        if (!cJSON_IsNumber(item)) {
+            continue;
+        }
         int weight = item->valueint;
         AliasInfo info = {aliasName, weight};
         genericInfo.aliasSet.emplace_back(std::move(info));
@@ -323,10 +358,14 @@ int FontConfigJson::ParseAdjust(const cJSON* root, FontGenericInfo &genericInfo)
         return FAILED;
     }
     int size = cJSON_GetArraySize(root);
-    int *value = new int(size);
+    const int count = 2; // the adjust item is 2
+    int value[count] = { 0 };
     for (int i = 0; i < size; i++) {
+        if (i >= count) {
+            break;
+        }
         cJSON* item = cJSON_GetArrayItem(root, i);
-        if (item == nullptr) {
+        if (item == nullptr || !cJSON_IsNumber(item)) {
             continue;
         }
         value[i] = item->valueint;
@@ -334,7 +373,6 @@ int FontConfigJson::ParseAdjust(const cJSON* root, FontGenericInfo &genericInfo)
 
     AdjustInfo info = {value[0], value[1]};
     genericInfo.adjustSet.emplace_back(std::move(info));
-    delete value;
     return SUCCESSED;
 }
 
@@ -359,12 +397,41 @@ int FontConfigJson::ParseFallback(const cJSON* root, const char* key)
             continue;
         }
         cJSON* item2 = cJSON_GetArrayItem(item, 0);
+        if (item2 == nullptr) {
+            continue;
+        }
         FallbackInfo fallbackInfo;
         fallbackInfo.familyName = item2->valuestring;
         fallbackInfo.font = item2->string;
         fallbackGroup.fallbackInfoSet.emplace_back(std::move(fallbackInfo));
     }
     fontPtr->fallbackGroupSet.emplace_back(std::move(fallbackGroup));
+    return SUCCESSED;
+}
+
+int FontConfigJson::ParseFontMap(const cJSON* root, const char* key)
+{
+    if (root == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "root is nullptr";
+        return FAILED;
+    }
+    cJSON* filters = cJSON_GetObjectItem(root, key);
+    if (filters == nullptr || !cJSON_IsArray(filters)) {
+        LOGSO_FUNC_LINE(ERROR) << "cJSON_GetObjectItem failed";
+        return FAILED;
+    }
+    int size = cJSON_GetArraySize(filters);
+    for (int i = 0; i < size; i++) {
+        cJSON* item = cJSON_GetArrayItem(filters, i);
+        if (item == nullptr) {
+            continue;
+        }
+        cJSON* item2 = cJSON_GetArrayItem(item, 0);
+        if (item2 == nullptr || item2->valuestring == nullptr || item2->string == nullptr) {
+            continue;
+        }
+        (*fontFileMap)[item2->string] = item2->valuestring;
+    }
     return SUCCESSED;
 }
 
@@ -444,19 +511,28 @@ void FontConfigJson::DumpFontDir() const
     LOGSO_FUNC_LINE(INFO) << "]";
 }
 
+void FontConfigJson::DumpFontFileMap() const
+{
+    for (auto it : (*fontFileMap)) {
+        LOGSO_FUNC_LINE(INFO) << "\"" << it.first << "\": \""
+            << it.second << "\"";
+    }
+}
+
 void FontConfigJson::Dump() const
 {
-    LOGSO_FUNC_LINE(INFO) << "font config dump in";
-    if (fontPtr == nullptr) {
-        LOGSO_FUNC_LINE(INFO) << "adapter is nullptr";
-        return;
+    if (fontPtr != nullptr) {
+        LOGSO_FUNC_LINE(INFO) << "font config dump fontPtr in";
+        DumpFontDir();
+        DumpGeneric();
+        DumpForbak();
+        LOGSO_FUNC_LINE(INFO) << "font config dump fontPtr out";
     }
-
-    DumpFontDir();
-    DumpGeneric();
-    DumpForbak();
-
-    LOGSO_FUNC_LINE(INFO) << "dump out";
+    if (fontFileMap != nullptr) {
+        LOGSO_FUNC_LINE(INFO) << "font config dump fontFileMap in";
+        DumpFontFileMap();
+        LOGSO_FUNC_LINE(INFO) << "font config dump fontFileMap out";
+    }
 }
 } // namespace TextEngine
 } // namespace Rosen

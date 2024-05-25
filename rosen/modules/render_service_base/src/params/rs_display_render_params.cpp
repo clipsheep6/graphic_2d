@@ -17,6 +17,7 @@
 
 #include "platform/common/rs_log.h"
 namespace OHOS::Rosen {
+using RSRenderNodeDrawableAdapterSharedPtr = DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr;
 RSDisplayRenderParams::RSDisplayRenderParams(NodeId id) : RSRenderParams(id) {}
 
 std::vector<RSBaseRenderNode::SharedPtr>& RSDisplayRenderParams::GetAllMainAndLeashSurfaces()
@@ -24,10 +25,21 @@ std::vector<RSBaseRenderNode::SharedPtr>& RSDisplayRenderParams::GetAllMainAndLe
     return allMainAndLeashSurfaces_;
 }
 
+std::vector<RSRenderNodeDrawableAdapterSharedPtr>& RSDisplayRenderParams::GetAllMainAndLeashSurfaceDrawables()
+{
+    return allMainAndLeashSurfaceDrawables_;
+}
+
 void RSDisplayRenderParams::SetAllMainAndLeashSurfaces(
     std::vector<RSBaseRenderNode::SharedPtr>& allMainAndLeashSurfaces)
 {
     std::swap(allMainAndLeashSurfaces_, allMainAndLeashSurfaces);
+}
+
+void RSDisplayRenderParams::SetAllMainAndLeashSurfaceDrawables(
+    std::vector<RSRenderNodeDrawableAdapterSharedPtr>& allMainAndLeashSurfaceDrawables)
+{
+    std::swap(allMainAndLeashSurfaceDrawables_, allMainAndLeashSurfaceDrawables);
 }
 
 void RSDisplayRenderParams::SetMainAndLeashSurfaceDirty(bool isDirty)
@@ -58,6 +70,48 @@ bool RSDisplayRenderParams::IsRotationChanged() const
     return isRotationChanged_;
 }
 
+void RSDisplayRenderParams::SetHDRPresent(bool hasHdrPresent)
+{
+    if (hasHdrPresent_ == hasHdrPresent) {
+        return;
+    }
+    hasHdrPresent_ = hasHdrPresent;
+    needSync_ = true;
+}
+
+bool RSDisplayRenderParams::GetHDRPresent() const
+{
+    return hasHdrPresent_;
+}
+
+void RSDisplayRenderParams::SetNewColorSpace(const GraphicColorGamut& newColorSpace)
+{
+    if (newColorSpace_ == newColorSpace) {
+        return;
+    }
+    needSync_ = true;
+    newColorSpace_ = newColorSpace;
+}
+
+GraphicColorGamut RSDisplayRenderParams::GetNewColorSpace() const
+{
+    return newColorSpace_;
+}
+
+void RSDisplayRenderParams::SetNewPixelFormat(const GraphicPixelFormat& newPixelFormat)
+{
+    if (newPixelFormat_ == newPixelFormat) {
+        return;
+    }
+    needSync_ = true;
+    newPixelFormat_ = newPixelFormat;
+}
+
+GraphicPixelFormat RSDisplayRenderParams::GetNewPixelFormat() const
+{
+    return newPixelFormat_;
+}
+
 void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target)
 {
     auto targetDisplayParams = static_cast<RSDisplayRenderParams*>(target.get());
@@ -65,7 +119,15 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
         RS_LOGE("RSDisplayRenderParams::OnSync targetDisplayParams is nullptr");
         return;
     }
-    targetDisplayParams->allMainAndLeashSurfaces_ = allMainAndLeashSurfaces_;
+    allMainAndLeashSurfaceDrawables_.clear();
+    for (auto& surfaceNode : allMainAndLeashSurfaces_) {
+        auto ptr = DrawableV2::RSRenderNodeDrawableAdapter::GetDrawableById(surfaceNode->GetId());
+        if (ptr == nullptr) {
+            continue;
+        }
+        allMainAndLeashSurfaceDrawables_.push_back(ptr);
+    }
+    targetDisplayParams->allMainAndLeashSurfaceDrawables_ = allMainAndLeashSurfaceDrawables_;
     targetDisplayParams->displayHasSecSurface_ = displayHasSecSurface_;
     targetDisplayParams->displayHasSkipSurface_ = displayHasSkipSurface_;
     targetDisplayParams->displayHasProtectedSurface_ = displayHasProtectedSurface_;
@@ -80,7 +142,11 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->mirrorSource_ = mirrorSource_;
     targetDisplayParams->screenInfo_ = std::move(screenInfo_);
     targetDisplayParams->isMainAndLeashSurfaceDirty_ = isMainAndLeashSurfaceDirty_;
+    targetDisplayParams->needOffscreen_ = needOffscreen_;
     targetDisplayParams->isRotationChanged_ = isRotationChanged_;
+    targetDisplayParams->newColorSpace_ = newColorSpace_;
+    targetDisplayParams->newPixelFormat_ = newPixelFormat_;
+    targetDisplayParams->hasHdrPresent_ = hasHdrPresent_;
     RSRenderParams::OnSync(target);
 }
 
@@ -95,6 +161,7 @@ std::string RSDisplayRenderParams::ToString() const
     ret += RENDER_BASIC_PARAM_TO_STRING(mirroredId_);
     ret += RENDER_BASIC_PARAM_TO_STRING(compositeType_);
     ret += RENDER_BASIC_PARAM_TO_STRING(allMainAndLeashSurfaces_.size());
+    ret += RENDER_BASIC_PARAM_TO_STRING(allMainAndLeashSurfaceDrawables_.size());
     ret += RENDER_PARAM_TO_STRING(screenInfo_);
     ret += "}";
     return ret;
@@ -138,6 +205,20 @@ bool RSDisplayRenderParams::HasCaptureWindow()
         hasCaptureWindow = iter->second;
     }
     return hasCaptureWindow;
+}
+
+void RSDisplayRenderParams::SetNeedOffscreen(bool needOffscreen)
+{
+    if (needOffscreen_ == needOffscreen) {
+        return;
+    }
+    needOffscreen_ = needOffscreen;
+    needSync_ = true;
+}
+
+bool RSDisplayRenderParams::GetNeedOffscreen() const
+{
+    return needOffscreen_;
 }
 
 } // namespace OHOS::Rosen

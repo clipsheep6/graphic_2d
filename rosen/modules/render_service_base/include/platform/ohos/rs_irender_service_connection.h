@@ -90,6 +90,10 @@ public:
 
     virtual int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) = 0;
 
+#ifdef RS_ENABLE_VK
+    virtual bool Set2DRenderCtrl(bool enable) = 0;
+#endif
+
     virtual void RemoveVirtualScreen(ScreenId id) = 0;
 
     virtual int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) = 0;
@@ -100,7 +104,7 @@ public:
 
     virtual void SetRefreshRateMode(int32_t refreshRateMode) = 0;
 
-    virtual void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range) = 0;
+    virtual void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped) = 0;
 
     virtual uint32_t GetScreenCurrentRefreshRate(ScreenId id) = 0;
 
@@ -224,7 +228,7 @@ public:
 
     virtual void NotifyRefreshRateEvent(const EventInfo& eventInfo) = 0;
 
-    virtual void NotifyTouchEvent(int32_t touchStatus) = 0;
+    virtual void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt) = 0;
 
     virtual void ReportEventResponse(DataBaseRs info) = 0;
 
@@ -246,7 +250,11 @@ public:
 
     virtual void SetCurtainScreenUsingStatus(bool isCurtainScreenOn) = 0;
 
-    virtual GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id) = 0;
+    virtual std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo() = 0;
+
+    virtual GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo() = 0;
+
+    virtual LayerComposeInfo GetLayerComposeInfo() = 0;
 
 #ifdef TP_FEATURE_ENABLE
     virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;

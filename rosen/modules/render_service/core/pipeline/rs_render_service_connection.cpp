@@ -14,14 +14,15 @@
  */
 
 #include "rs_render_service_connection.h"
+#include <string>
 
 #include "frame_report.h"
 #include "hgm_command.h"
 #include "hgm_core.h"
 #include "hgm_frame_rate_manager.h"
+#include "luminance/rs_luminance_control.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "rs_main_thread.h"
-#include "rs_profiler.h"
 #include "rs_trace.h"
 #include "system/rs_system_parameters.h"
 
@@ -37,6 +38,7 @@
 #include "pipeline/rs_surface_capture_task_parallel.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_task_dispatcher.h"
+#include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_ui_capture.h"
 #include "pixel_map_from_surface.h"
@@ -49,9 +51,14 @@
 #include "touch_screen/touch_screen.h"
 #endif
 
+#ifdef RS_ENABLE_VK
+#include "platform/ohos/backend/rs_vulkan_context.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 constexpr int SLEEP_TIME_US = 1000;
+constexpr int TASK_DELAY_TIME_MS = 1000;
 // we guarantee that when constructing this object,
 // all these pointers are valid, so will not check them.
 RSRenderServiceConnection::RSRenderServiceConnection(
@@ -119,6 +126,18 @@ void RSRenderServiceConnection::MoveRenderNodeMap(
 void RSRenderServiceConnection::RemoveRenderNodeMap(
     std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap) noexcept
 {
+    // temp solution to address the dma leak
+    for (auto& [_, node] : *subRenderNodeMap) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+        if (surfaceNode && surfaceNode->GetName().find("ShellAssistantAnco") != std::string::npos) {
+            auto task = [surfaceNode = surfaceNode] {
+                surfaceNode->CleanCache();
+                surfaceNode->ResetRenderParams();
+                surfaceNode->SetConsumer(nullptr);
+            };
+            RSMainThread::Instance()->PostTask(task, "ResetBuffer", TASK_DELAY_TIME_MS);
+        }
+    }
     auto iter = subRenderNodeMap->begin();
     for (; iter != subRenderNodeMap->end();) {
         iter = subRenderNodeMap->erase(iter);
@@ -429,6 +448,16 @@ int32_t RSRenderServiceConnection::SetVirtualScreenSurface(ScreenId id, sptr<Sur
     return screenManager_->SetVirtualScreenSurface(id, surface);
 }
 
+#ifdef RS_ENABLE_VK
+bool RSRenderServiceConnection::Set2DRenderCtrl(bool enable)
+{
+    if (RsVulkanContext::GetSingleton().GetRsVulkanInterface().HMS_XEG_SetFreqAdjustEnable != nullptr) {
+        RsVulkanContext::GetSingleton().GetRsVulkanInterface().HMS_XEG_SetFreqAdjustEnable(enable);
+    }
+    return true;
+}
+#endif
+
 void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -495,7 +524,8 @@ void RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range)
+void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id,
+    const FrameRateRange& range, bool isAnimatorStopped)
 {
     mainThread_->ScheduleTask([=]() {
         auto& context = mainThread_->GetContext();
@@ -506,6 +536,7 @@ void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id, const F
             return;
         }
         linker->SetExpectedRange(range);
+        linker->SetAnimationIdle(isAnimatorStopped);
     }).wait();
 }
 
@@ -780,6 +811,11 @@ int32_t RSRenderServiceConnection::GetScreenBacklight(ScreenId id)
 
 void RSRenderServiceConnection::SetScreenBacklight(ScreenId id, uint32_t level)
 {
+    RSLuminanceControl::Get().SetSdrLuminance(id, level);
+    if (RSLuminanceControl::Get().IsHdrOn(id) && level > 0) {
+        return;
+    }
+
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
@@ -1022,9 +1058,6 @@ int32_t RSRenderServiceConnection::GetScreenType(ScreenId id, RSScreenType& scre
 
 bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
 {
-    if (!mainThread_->IsIdle()) {
-        return false;
-    }
     auto node = mainThread_->GetContext().GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id);
     if (node == nullptr) {
         RS_LOGE("RSRenderServiceConnection::GetBitmap cannot find NodeId: [%{public}" PRIu64 "]", id);
@@ -1045,6 +1078,9 @@ bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
     };
     auto getBitmapTask = [&node, &bitmap, tid]() { bitmap = node->GetBitmap(tid); };
     if (tid == UNI_MAIN_THREAD_INDEX) {
+        if (!mainThread_->IsIdle() && mainThread_->GetContext().HasActiveNode(node)) {
+            return false;
+        }
         mainThread_->PostSyncTask(getBitmapTask);
     } else if (tid == UNI_RENDER_THREAD_INDEX) {
         renderThread_.PostSyncTask(getDrawableBitmapTask);
@@ -1091,9 +1127,6 @@ bool RSRenderServiceConnection::GetPixelmap(NodeId id, const std::shared_ptr<Med
         }
         mainThread_->PostSyncTask(getPixelmapTask);
     } else if (tid == UNI_RENDER_THREAD_INDEX) {
-        if (!renderThread_.IsIdle()) {
-            return false;
-        }
         renderThread_.PostSyncTask(getDrawablePixelmapTask);
     } else {
         RSTaskDispatcher::GetInstance().PostTask(
@@ -1205,6 +1238,7 @@ void RSRenderServiceConnection::SetAppWindowNum(uint32_t num)
 
 bool RSRenderServiceConnection::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
 {
+    RSUifirstManager::Instance().OnProcessAnimateScene(systemAnimatedScenes);
     std::lock_guard<std::mutex> lock(mutex_);
     return mainThread_->SetSystemAnimatedScenes(systemAnimatedScenes);
 }
@@ -1250,9 +1284,13 @@ void RSRenderServiceConnection::NotifyRefreshRateEvent(const EventInfo& eventInf
     mainThread_->GetFrameRateMgr()->HandleRefreshRateEvent(remotePid_, eventInfo);
 }
 
-void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
-    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus);
+    if (mainThread_->GetFrameRateMgr() == nullptr) {
+        RS_LOGW("RSRenderServiceConnection::NotifyTouchEvent: frameRateMgr is nullptr.");
+        return;
+    }
+    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus, touchCnt);
 }
 
 void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
@@ -1261,6 +1299,7 @@ void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
         RSJankStats::GetInstance().SetReportEventResponse(info);
     };
     renderThread_.PostTask(task);
+    RSUifirstManager::Instance().OnProcessEventResponse(info);
 }
 
 void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
@@ -1269,6 +1308,7 @@ void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
         RSJankStats::GetInstance().SetReportEventComplete(info);
     };
     renderThread_.PostTask(task);
+    RSUifirstManager::Instance().OnProcessEventComplete(info);
 }
 
 void RSRenderServiceConnection::ReportEventJankFrame(DataBaseRs info)
@@ -1306,11 +1346,25 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
     RSSystemProperties::SetCacheEnabledForRotation(isEnabled);
 }
 
-GpuDirtyRegionInfo RSRenderServiceConnection::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnection::GetActiveDirtyRegionInfo()
 {
-    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegion::GetInstance().GetGpuDirtyRegionInfo(id);
-    GpuDirtyRegion::GetInstance().ResetDirtyRegionInfo();
-    return gpuDirtyRegionInfo;
+    const auto& activeDirtyRegionInfos = GpuDirtyRegionCollection::GetInstance().GetActiveDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetActiveDirtyRegionInfo();
+    return activeDirtyRegionInfos;
+}
+
+GlobalDirtyRegionInfo RSRenderServiceConnection::GetGlobalDirtyRegionInfo()
+{
+    const auto& globalDirtyRegionInfo = GpuDirtyRegionCollection::GetInstance().GetGlobalDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetGlobalDirtyRegionInfo();
+    return globalDirtyRegionInfo;
+}
+
+LayerComposeInfo RSRenderServiceConnection::GetLayerComposeInfo()
+{
+    const auto& layerComposeInfo = LayerComposeCollection::GetInstance().GetLayerComposeInfo();
+    LayerComposeCollection::GetInstance().ResetLayerComposeInfo();
+    return layerComposeInfo;
 }
 
 #ifdef TP_FEATURE_ENABLE
@@ -1338,15 +1392,6 @@ void RSRenderServiceConnection::SetVirtualScreenUsingStatus(bool isVirtualScreen
     }
     return;
 }
-
-#ifdef RS_PROFILER_ENABLED
-int RSRenderServiceConnection::OnRemoteRequest(
-    uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
-{
-    RS_PROFILER_ON_REMOTE_REQUEST(this, code, data, reply, option);
-    return RSRenderServiceConnectionStub::OnRemoteRequest(code, data, reply, option);
-}
-#endif
 
 void RSRenderServiceConnection::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 {

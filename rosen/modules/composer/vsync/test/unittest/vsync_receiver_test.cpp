@@ -72,7 +72,12 @@ namespace {
 * EnvConditions: N/A
 * CaseDescription: 1. call RequestNextVSync Before Init
                    2. call SetVSyncRate Before Init
-                   3. call GetVSyncPeriodAndLastTimeStamp Before Init
+                   3. call the one-parameter method of CreateVSyncReceiver
+                   4. call GetVSyncPeriodAndLastTimeStamp Before Init of vSync receiver in 3.
+                   5. call the two-parameter method of CreateVSyncReceiver
+                   6. call GetVSyncPeriodAndLastTimeStamp Before Init of vSync receiver in 5.
+                   7. call the four-parameter method of CreateVSyncReceiver
+                   8. call GetVSyncPeriodAndLastTimeStamp Before Init of vSync receiver in 7.
  */
 HWTEST_F(VsyncReceiverTest, BeforeInit001, Function | MediumTest| Level3)
 {
@@ -80,14 +85,18 @@ HWTEST_F(VsyncReceiverTest, BeforeInit001, Function | MediumTest| Level3)
         .userData_ = this,
         .callback_ = OnVSync,
     };
-    ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->RequestNextVSync(fcb), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->RequestNextVSync(fcb), VSYNC_ERROR_NOT_INIT);
     ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->SetVSyncRate(fcb, 0), VSYNC_ERROR_API_FAILED);
 
     int64_t period;
     int64_t timeStamp;
     auto& rsClient = RSInterfaces::GetInstance();
     auto rsReceiver = rsClient.CreateVSyncReceiver("VsyncReceiverTest");
-    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_NOT_INIT);
+    rsReceiver = rsClient.CreateVSyncReceiver("VsyncReceiverTest", nullptr);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_NOT_INIT);
+    rsReceiver = rsClient.CreateVSyncReceiver("VsyncReceiverTest", 0, nullptr, 0);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_NOT_INIT);
 }
 
 /*
@@ -220,9 +229,45 @@ HWTEST_F(VsyncReceiverTest, GetVSyncPeriodAndLastTimeStamp001, Function | Medium
     int64_t period;
     int64_t timeStamp;
     ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_OK);
-    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp, true), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp, true), VSYNC_ERROR_UNKOWN);
     ASSERT_NE(period, 0);
     ASSERT_NE(timeStamp, 0);
+}
+
+/*
+* Function: SetVsyncCallBackForEveryFrame001
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetVsyncCallBackForEveryFrame
+ */
+HWTEST_F(VsyncReceiverTest, SetVsyncCallBackForEveryFrame001, Function | MediumTest| Level3)
+{
+    onVsyncCount = 0;
+    auto& rsClient = RSInterfaces::GetInstance();
+    auto rsReceiver = rsClient.CreateVSyncReceiver("VsyncReceiverTest");
+
+    ASSERT_EQ(rsReceiver->Init(), VSYNC_ERROR_OK);
+    VSyncReceiver::FrameCallback fcb = {
+        .userData_ = this,
+        .callback_ = OnVSync,
+    };
+
+    ASSERT_EQ(rsReceiver->RequestNextVSync(fcb), VSYNC_ERROR_OK);
+    while (onVsyncCount == 0) {
+        sleep(1);
+        std::cout<< "OnVsync called count: " << onVsyncCount << std::endl;
+    }
+
+    onVsyncCount = 0;
+    ASSERT_EQ(rsReceiver->SetVsyncCallBackForEveryFrame(fcb, true), VSYNC_ERROR_OK);
+    int64_t period = 0;
+    ASSERT_EQ(rsReceiver->GetVSyncPeriod(period), VSYNC_ERROR_OK);
+    usleep(period / 10);
+    ASSERT_EQ(rsReceiver->SetVsyncCallBackForEveryFrame(fcb, false), VSYNC_ERROR_OK);
+    sleep(1);
+    std::cout<< "OnVsync called count: " << onVsyncCount << " period: " << period << std::endl;
+    ASSERT_EQ(abs(onVsyncCount - 100) <= 5, true);
 }
 
 /*

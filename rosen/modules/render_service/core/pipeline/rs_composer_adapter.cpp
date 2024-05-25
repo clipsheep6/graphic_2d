@@ -22,7 +22,6 @@
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
-#include "rs_base_render_util.h"
 #include "rs_divided_render_util.h"
 #include "rs_trace.h"
 #include "string_utils.h"
@@ -62,6 +61,54 @@ bool RSComposerAdapter::Init(const ScreenInfo& screenInfo, int32_t offsetX, int3
     screenInfo_ = screenInfo;
 
     GraphicIRect damageRect {0, 0, static_cast<int32_t>(screenInfo_.width), static_cast<int32_t>(screenInfo_.height)};
+    std::vector<GraphicIRect> damageRects;
+    damageRects.emplace_back(damageRect);
+    output_->SetOutputDamages(damageRects);
+    bool directClientCompEnableStatus = RSSystemProperties::GetDirectClientCompEnableStatus();
+    output_->SetDirectClientCompEnableStatus(directClientCompEnableStatus);
+
+#if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
+    // enable direct GPU composition.
+    output_->SetLayerCompCapacity(LAYER_COMPOSITION_CAPACITY);
+#else
+    output_->SetLayerCompCapacity(LAYER_COMPOSITION_CAPACITY_INVALID);
+#endif
+
+    return true;
+}
+
+bool RSComposerAdapter::Init(const RSDisplayRenderNode& node, const ScreenInfo& screenInfo,
+    const ScreenInfo& mirroredScreenInfo, float mirrorAdaptiveCoefficient, const FallbackCallback& cb)
+{
+    hdiBackend_ = HdiBackend::GetInstance();
+    if (hdiBackend_ == nullptr) {
+        RS_LOGE("RSComposerAdapter::Init: hdiBackend is nullptr");
+        return false;
+    }
+    auto screenManager = CreateOrGetScreenManager();
+    if (screenManager == nullptr) {
+        RS_LOGE("RSComposerAdapter::Init: ScreenManager is nullptr");
+        return false;
+    }
+    output_ = screenManager->GetOutput(ToScreenPhysicalId(screenInfo.id));
+    if (output_ == nullptr) {
+        RS_LOGE("RSComposerAdapter::Init: output_ is nullptr");
+        return false;
+    }
+
+    fallbackCb_ = cb;
+    auto onPrepareCompleteFunc = [this](auto& surface, const auto& param, void* data) {
+        OnPrepareComplete(surface, param, data);
+    };
+    hdiBackend_->RegPrepareComplete(onPrepareCompleteFunc, this);
+
+    offsetX_ = node.GetDisplayOffsetX();
+    offsetY_ = node.GetDisplayOffsetY();
+    screenInfo_ = screenInfo;
+    mirroredScreenInfo_ = mirroredScreenInfo;
+    mirrorAdaptiveCoefficient_ = mirrorAdaptiveCoefficient;
+
+    GraphicIRect damageRect { 0, 0, static_cast<int32_t>(screenInfo_.width), static_cast<int32_t>(screenInfo_.height) };
     std::vector<GraphicIRect> damageRects;
     damageRects.emplace_back(damageRect);
     output_->SetOutputDamages(damageRects);
@@ -271,19 +318,33 @@ bool RSComposerAdapter::GetComposerInfoNeedClient(const ComposeInfo &info, RSSur
     if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<GraphicColorGamut>(screenInfo_.colorGamut)) {
         needClient = true;
     }
+    if (colorFilterMode_ == ColorFilterMode::INVERT_COLOR_ENABLE_MODE) {
+        needClient = true;
+    }
     return needClient;
 }
 
 // private func, for RSSurfaceRenderNode.
 ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool isTunnelCheck) const
 {
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+    if (mirroredScreenInfo_.id != INVALID_SCREEN_ID) {
+        // align center
+        offsetX =
+            (screenInfo_.GetRotatedWidth() - mirroredScreenInfo_.GetRotatedWidth() * mirrorAdaptiveCoefficient_) / 2.0f;
+        offsetY =
+            (screenInfo_.GetRotatedHeight() - mirroredScreenInfo_.GetRotatedHeight() * mirrorAdaptiveCoefficient_) /
+            2.0f;
+    }
+
     const auto& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
     ComposeInfo info {};
     info.srcRect = GraphicIRect {srcRect.left_, srcRect.top_, srcRect.width_, srcRect.height_};
     info.dstRect = GraphicIRect {
-        static_cast<int32_t>(static_cast<float>(dstRect.left_) * mirrorAdaptiveCoefficient_),
-        static_cast<int32_t>(static_cast<float>(dstRect.top_) * mirrorAdaptiveCoefficient_),
+        static_cast<int32_t>(static_cast<float>(dstRect.left_) * mirrorAdaptiveCoefficient_ + offsetX),
+        static_cast<int32_t>(static_cast<float>(dstRect.top_) * mirrorAdaptiveCoefficient_ + offsetY),
         static_cast<int32_t>(static_cast<float>(dstRect.width_) * mirrorAdaptiveCoefficient_),
         static_cast<int32_t>(static_cast<float>(dstRect.height_) * mirrorAdaptiveCoefficient_)
     };
@@ -296,6 +357,9 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool 
     info.dstRect.x -= static_cast<int32_t>(static_cast<float>(offsetX_) * mirrorAdaptiveCoefficient_);
     info.dstRect.y -= static_cast<int32_t>(static_cast<float>(offsetY_) * mirrorAdaptiveCoefficient_);
     info.visibleRect = info.dstRect;
+    std::vector<GraphicIRect> dirtyRects;
+    dirtyRects.emplace_back(info.srcRect);
+    info.dirtyRects = dirtyRects;
     if (!isTunnelCheck) {
         const auto& buffer = node.GetBuffer();
         info.buffer = buffer;
@@ -321,6 +385,9 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& node) const
         static_cast<int32_t>(static_cast<float>(screenInfo_.GetRotatedHeight()) * mirrorAdaptiveCoefficient_)
     };
     info.visibleRect = GraphicIRect {info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h};
+    std::vector<GraphicIRect> dirtyRects;
+    dirtyRects.emplace_back(info.srcRect);
+    info.dirtyRects = dirtyRects;
     info.zOrder = static_cast<int32_t>(node.GetGlobalZOrder());
     info.alpha.enGlobalAlpha = false;
     info.buffer = buffer;
@@ -350,9 +417,7 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     std::vector<GraphicIRect> visibleRegions;
     visibleRegions.emplace_back(info.visibleRect);
     layer->SetVisibleRegions(visibleRegions);
-    std::vector<GraphicIRect> dirtyRegions;
-    dirtyRegions.emplace_back(info.srcRect);
-    layer->SetDirtyRegions(dirtyRegions);
+    layer->SetDirtyRegions(info.dirtyRects);
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
     if (node -> GetTunnelHandleChange()) {
@@ -427,7 +492,7 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
         return false;
     }
 
-    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+    auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGW("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer: node(%{public}" PRIu64 ")'s"
             " geoPtr is nullptr!", node.GetId());
@@ -524,7 +589,7 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
         RS_LOGE("RSComposerAdapter::CreateLayer: output is nullptr");
         return nullptr;
     }
-    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(node)) {
+    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(node, true)) {
         RS_LOGE("RSComposerAdapter::CreateLayer consume buffer failed.");
         return nullptr;
     }
@@ -546,6 +611,11 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
     LayerRotate(layer, node);
     // do not crop or scale down for displayNode's layer.
     return layer;
+}
+
+void RSComposerAdapter::SetColorFilterMode(ColorFilterMode colorFilterMode)
+{
+    colorFilterMode_ = colorFilterMode;
 }
 
 static int GetSurfaceNodeRotation(RSBaseRenderNode& node)
@@ -759,5 +829,11 @@ void RSComposerAdapter::SetHdiBackendDevice(HdiDevice* device)
 {
     hdiBackend_->SetHdiBackendDevice(device);
 }
+
+void RSComposerAdapter::SetMirroredScreenInfo(const ScreenInfo& mirroredScreenInfo)
+{
+    mirroredScreenInfo_ = mirroredScreenInfo;
+}
+
 } // namespace Rosen
 } // namespace OHOS

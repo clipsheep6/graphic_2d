@@ -110,6 +110,10 @@ bool MarshallingExtendObjectFromDrawCmdList(Parcel& parcel, const std::shared_pt
     if (objectSize == 0) {
         return true;
     }
+    if (objectSize > USHRT_MAX) {
+        ROSEN_LOGE("unirender: RSMarshallingHelper::MarshallingExtendObjectFromDrawCmdList failed with max limit");
+        return false;
+    }
     for (const auto& object : objectVec) {
         if (!object->Marshalling(parcel)) {
             return false;
@@ -123,6 +127,10 @@ bool UnmarshallingExtendObjectToDrawCmdList(Parcel& parcel, std::shared_ptr<Draw
     uint32_t objectSize = parcel.ReadUint32();
     if (objectSize == 0) {
         return true;
+    }
+    if (objectSize > USHRT_MAX) {
+        ROSEN_LOGE("unirender: RSMarshallingHelper::UnmarshallingExtendObjectToDrawCmdList failed with max limit");
+        return false;
     }
     std::vector<std::shared_ptr<Drawing::ExtendObject>> objectVec;
     for (uint32_t i = 0; i < objectSize; i++) {
@@ -247,7 +255,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, Drawing::Bitmap& val)
     return true;
 }
 
-static void sk_free_releaseproc(const void* ptr, void*)
+static void SkFreeReleaseproc(const void* ptr, void*)
 {
     MemoryTrack::Instance().RemovePictureRecord(ptr);
     free(const_cast<void*>(ptr));
@@ -401,7 +409,7 @@ bool RSMarshallingHelper::UnmarshallingNoLazyGeneratedImage(Parcel& parcel,
     if (pixmapSize < MIN_DATA_SIZE || (!g_useSharedMem && g_tid == std::this_thread::get_id())) {
         skData->BuildWithCopy(addr, pixmapSize);
     } else {
-        skData->BuildWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
+        skData->BuildWithProc(addr, pixmapSize, SkFreeReleaseproc, nullptr);
     }
     val = Drawing::Image::MakeRasterData(imageInfo, skData, rb);
     // add to MemoryTrack for memoryManager
@@ -516,8 +524,8 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const Drawing::Matrix& val
 {
     Drawing::Matrix::Buffer buffer;
     val.GetAll(buffer);
-    int32_t size = buffer.size() * sizeof(Drawing::scalar);
-    bool ret = parcel.WriteInt32(size);
+    uint32_t size = buffer.size() * sizeof(Drawing::scalar);
+    bool ret = parcel.WriteUint32(size);
     ret &= RSMarshallingHelper::WriteToParcel(parcel, buffer.data(), size);
     if (!ret) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::Matrix");
@@ -527,7 +535,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const Drawing::Matrix& val
 
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, Drawing::Matrix& val)
 {
-    int32_t size = parcel.ReadInt32();
+    uint32_t size = parcel.ReadUint32();
     if (size < sizeof(Drawing::scalar) * Drawing::Matrix::MATRIX_SIZE) {
         ROSEN_LOGE("RSMarshallingHelper::Unmarshalling Drawing::Matrix failed size %{public}d", size);
         return false;
@@ -590,6 +598,33 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
     return success;
 }
 
+// MotionBlurPara
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<MotionBlurParam>& val)
+{
+    bool success = Marshalling(parcel, val->radius);
+    success = success && Marshalling(parcel, val->scaleAnchor[0]);
+    success = success && Marshalling(parcel, val->scaleAnchor[1]);
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<MotionBlurParam>& val)
+{
+    float radius;
+    float anchorX = 0.f;
+    float anchorY = 0.f;
+
+    bool success = Unmarshalling(parcel, radius);
+    success = success && Unmarshalling(parcel, anchorX);
+    success = success && Unmarshalling(parcel, anchorY);
+    Vector2f anchor(anchorX, anchorY);
+
+    if (success) {
+        val = std::make_shared<MotionBlurParam>(radius, anchor);
+    }
+    return success;
+}
+
+// Particle
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
 {
     bool success = Marshalling(parcel, val->emitterIndex_);
@@ -612,6 +647,34 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterU
     success = success && Unmarshalling(parcel, emitRate);
     if (success) {
         val = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize, emitRate);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    bool success = parcel.WriteUint32(static_cast<uint32_t>(val.size()));
+    for (size_t i = 0; i < val.size(); i++) {
+        success = success && Marshalling(parcel, val[i]);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    uint32_t size = parcel.ReadUint32();
+    bool success = true;
+    std::vector<std::shared_ptr<EmitterUpdater>> emitterUpdaters;
+    if (size > PARTICLE_UPPER_LIMIT) {
+        return false;
+    }
+    for (size_t i = 0; i < size; i++) {
+        std::shared_ptr<EmitterUpdater> emitterUpdater;
+        success = success && Unmarshalling(parcel, emitterUpdater);
+        emitterUpdaters.push_back(emitterUpdater);
+    }
+    if (success) {
+        val = emitterUpdaters;
     }
     return success;
 }
@@ -653,32 +716,6 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Particle
     if (success) {
         val = std::make_shared<ParticleNoiseField>(fieldStrength, fieldShape, fieldSize, fieldCenter, fieldFeather,
             noiseScale, noiseFrequency, noiseAmplitude);
-    }
-    return success;
-}
-
-// MotionBlurPara
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<MotionBlurParam>& val)
-{
-    bool success = Marshalling(parcel, val->radius);
-    success = success && Marshalling(parcel, val->scaleAnchor[0]);
-    success = success && Marshalling(parcel, val->scaleAnchor[1]);
-    return success;
-}
-
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<MotionBlurParam>& val)
-{
-    float radius;
-    float anchorX = 0.f;
-    float anchorY = 0.f;
-
-    bool success = Unmarshalling(parcel, radius);
-    success = success && Unmarshalling(parcel, anchorX);
-    success = success && Unmarshalling(parcel, anchorY);
-    Vector2f anchor(anchorX, anchorY);
-
-    if (success) {
-        val = std::make_shared<MotionBlurParam>(radius, anchor);
     }
     return success;
 }
@@ -1773,6 +1810,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<MotionBlurParam>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<EmitterUpdater>>)       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseField>)                \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseFields>)               \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<ParticleRenderParams>>) \

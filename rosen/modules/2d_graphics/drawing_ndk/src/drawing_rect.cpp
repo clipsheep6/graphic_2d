@@ -15,6 +15,8 @@
 
 #include "drawing_rect.h"
 
+#include "drawing_canvas_utils.h"
+
 #include "utils/rect.h"
 
 using namespace OHOS;
@@ -36,19 +38,30 @@ bool OH_Drawing_RectIntersect(OH_Drawing_Rect* cRect, const OH_Drawing_Rect* oth
     Rect* rect = CastToRect(cRect);
     const Rect* otherRect = reinterpret_cast<const Rect*>(other);
     if (rect == nullptr || otherRect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return false;
     }
-
     return rect->Intersect(*otherRect);
+}
+
+bool OH_Drawing_RectJoin(OH_Drawing_Rect* cRect, const OH_Drawing_Rect* other)
+{
+    Rect* rect = CastToRect(cRect);
+    const Rect* otherRect = reinterpret_cast<const Rect*>(other);
+    if (rect == nullptr || otherRect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+    return rect->Join(*otherRect);
 }
 
 void OH_Drawing_RectSetTop(OH_Drawing_Rect* cRect, float top)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-
     rect->SetTop(top);
 }
 
@@ -56,9 +69,9 @@ void OH_Drawing_RectSetBottom(OH_Drawing_Rect* cRect, float bottom)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-
     rect->SetBottom(bottom);
 }
 
@@ -66,9 +79,9 @@ void OH_Drawing_RectSetLeft(OH_Drawing_Rect* cRect, float left)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-
     rect->SetLeft(left);
 }
 
@@ -76,9 +89,9 @@ void OH_Drawing_RectSetRight(OH_Drawing_Rect* cRect, float right)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-
     rect->SetRight(right);
 }
 
@@ -86,9 +99,9 @@ float OH_Drawing_RectGetTop(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetTop();
 }
 
@@ -96,9 +109,9 @@ float OH_Drawing_RectGetBottom(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetBottom();
 }
 
@@ -106,9 +119,9 @@ float OH_Drawing_RectGetLeft(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetLeft();
 }
 
@@ -116,9 +129,9 @@ float OH_Drawing_RectGetRight(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetRight();
 }
 
@@ -126,9 +139,9 @@ float OH_Drawing_RectGetHeight(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetHeight();
 }
 
@@ -136,9 +149,9 @@ float OH_Drawing_RectGetWidth(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);
     if (rect == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return 0.f;
     }
-
     return rect->GetWidth();
 }
 
@@ -146,11 +159,13 @@ void OH_Drawing_RectCopy(OH_Drawing_Rect* sRect, OH_Drawing_Rect* dRect)
 {
     Rect* rectSrc = CastToRect(dRect);
     if (rectSrc == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
 
     Rect* rectDst = CastToRect(sRect);
     if (rectDst == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
 

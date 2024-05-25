@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -33,6 +34,7 @@ namespace OHOS {
 namespace Rosen {
 class RSUniRenderThread {
 public:
+    using Callback = std::function<void()>;
     static RSUniRenderThread& Instance();
 
     // disable copy and move
@@ -48,6 +50,8 @@ public:
     void PostTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
     void PostRTTask(const std::function<void()>& task);
+    void PostImageReleaseTask(const std::function<void()>& task);
+    void RunImageReleaseTask();
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::HIGH);
     void PostSyncTask(const std::function<void()>& task);
@@ -56,12 +60,13 @@ public:
     void ReleaseSelfDrawingNodeBuffer();
     std::shared_ptr<RSBaseRenderEngine> GetRenderEngine() const;
     void NotifyDisplayNodeBufferReleased();
-    bool WaitUntilDisplayNodeBufferReleased(std::shared_ptr<RSSurfaceHandler> surfaceHandler);
+    bool WaitUntilDisplayNodeBufferReleased(std::shared_ptr<RSDisplayRenderNode> displayNode);
 
     uint64_t GetCurrentTimestamp() const;
     uint32_t GetPendingScreenRefreshRate() const;
 
     void ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid = -1);
+    void PurgeCacheBetweenFrames();
     bool GetClearMemoryFinished() const;
     bool GetClearMemDeeply() const;
     void SetClearMoment(ClearMemoryMoment moment);
@@ -70,8 +75,18 @@ public:
     void DumpMem(DfxString& log);
     void TrimMem(std::string& dumpString, std::string& type);
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
+    uint64_t GetFrameCount() const
+    {
+        return frameCount_;
+    }
+    void IncreaseFrameCount()
+    {
+        frameCount_++;
+    }
     bool GetWatermarkFlag();
     
+    bool IsCurtainScreenOn() const;
+
     static void SetCaptureParam(const CaptureParam& param);
     static CaptureParam& GetCaptureParam();
     static void ResetCaptureParam();
@@ -104,7 +119,9 @@ public:
     }
     void SetDiscardJankFrames(bool discardJankFrames)
     {
-        discardJankFrames_.store(discardJankFrames);
+        if (discardJankFrames_.load() != discardJankFrames) {
+            discardJankFrames_.store(discardJankFrames);
+        }
     }
     bool GetSkipJankAnimatorFrame() const
     {
@@ -116,11 +133,18 @@ public:
     }
     void UpdateDisplayNodeScreenId();
     uint32_t GetDynamicRefreshRate() const;
+    pid_t GetTid() const
+    {
+        return tid_;
+    }
+
+    void SetAcquireFence(sptr<SyncFence> acquireFence);
 
 private:
     RSUniRenderThread();
     ~RSUniRenderThread() noexcept;
     void Inittcache();
+    void ReleaseSkipSyncBuffer(std::vector<std::function<void()>>& tasks);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -145,8 +169,10 @@ private:
     bool clearMemDeeply_ = false;
     DeviceType deviceType_ = DeviceType::PHONE;
     std::mutex mutex_;
+    mutable std::mutex clearMemoryMutex_;
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
     static thread_local CaptureParam captureParam_;
+    std::atomic<uint64_t> frameCount_ = 0;
 
     pid_t tid_ = 0;
 
@@ -157,6 +183,13 @@ private:
     ScreenId displayNodeScreenId_ = 0;
     std::set<pid_t> exitedPidSet_;
     ClearMemoryMoment clearMoment_;
+
+    std::vector<Callback> imageReleaseTasks_;
+    std::mutex imageReleaseMutex_;
+    bool postImageReleaseTaskFlag_;
+    int imageReleaseCount_ = 0;
+
+    sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
 };
 } // namespace Rosen
 } // namespace OHOS

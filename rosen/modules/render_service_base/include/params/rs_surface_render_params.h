@@ -35,8 +35,8 @@ struct RSLayerInfo {
     GraphicIRect dstRect;
     GraphicIRect boundRect;
     Drawing::Matrix matrix;
-    int32_t gravity;
-    int32_t zOrder;
+    int32_t gravity = 0;
+    int32_t zOrder = 0;
     sptr<SurfaceBuffer> buffer;
     sptr<SurfaceBuffer> preBuffer;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
@@ -55,10 +55,18 @@ struct RSLayerInfo {
 class RSB_EXPORT RSSurfaceRenderParams : public RSRenderParams {
 public:
     explicit RSSurfaceRenderParams(NodeId id);
-    virtual ~RSSurfaceRenderParams() = default;
+    ~RSSurfaceRenderParams() override = default;
     bool IsMainWindowType() const
     {
         return isMainWindowType_;
+    }
+    bool IsLeashWindow() const
+    {
+        return isLeashWindow_;
+    }
+    bool IsAppWindow() const
+    {
+        return isAppWindow_;
     }
     RSSurfaceNodeType GetSurfaceNodeType() const
     {
@@ -140,7 +148,7 @@ public:
         return name_;
     }
 
-    void SetUifirstNodeEnableParam(bool isUifirst)
+    void SetUifirstNodeEnableParam(MultiThreadCacheType isUifirst)
     {
         if (uiFirstFlag_ == isUifirst) {
             return;
@@ -149,7 +157,7 @@ public:
         needSync_ = true;
     }
 
-    bool GetUifirstNodeEnableParam()
+    MultiThreadCacheType GetUifirstNodeEnableParam()
     {
         return uiFirstFlag_;
     }
@@ -186,6 +194,10 @@ public:
     {
         return childrenDirtyRect_;
     }
+    const RectI& GetDstRect() const
+    {
+        return dstRect_;
+    }
     void SetSurfaceCacheContentStatic(bool contentStatic);
     bool GetSurfaceCacheContentStatic() const;
     bool GetPreSurfaceCacheContentStatic() const;
@@ -202,14 +214,20 @@ public:
     void SetOcclusionVisible(bool visible);
     bool GetOcclusionVisible() const;
 
-    void SetIsTransparent(bool isTransparent);
-    bool GetIsTransparent() const;
+    void SetIsParentScaling(bool isParentScaling);
+    bool IsParentScaling() const;
+
+    void SetTransparentRegion(const Occlusion::Region& transparentRegion);
+    const Occlusion::Region& GetTransparentRegion() const;
 
     void SetOldDirtyInSurface(const RectI& oldDirtyInSurface);
     RectI GetOldDirtyInSurface() const;
 
     void SetVisibleRegion(const Occlusion::Region& visibleRegion);
     Occlusion::Region GetVisibleRegion() const;
+
+    void SetVisibleRegionInVirtual(const Occlusion::Region& visibleRegion);
+    Occlusion::Region GetVisibleRegionInVirtual() const;
 
     void SetOccludedByFilterCache(bool val);
     bool GetOccludedByFilterCache() const;
@@ -220,6 +238,19 @@ public:
     bool GetHardwareEnabled() const;
     void SetLastFrameHardwareEnabled(bool enabled);
     bool GetLastFrameHardwareEnabled() const;
+    void SetForceHardwareByUser(bool flag);
+    bool GetForceHardwareByUser() const;
+
+    void SetGpuOverDrawBufferOptimizeNode(bool overDrawNode);
+    bool IsGpuOverDrawBufferOptimizeNode() const;
+    void SetOverDrawBufferNodeCornerRadius(const Vector4f& radius);
+    const Vector4f& GetOverDrawBufferNodeCornerRadius() const;
+
+    void SetIsSubSurfaceNode(bool isSubSurfaceNode);
+    bool IsSubSurfaceNode() const;
+
+    void SetIsNodeToBeCaptured(bool isNodeToBeCaptured);
+    bool IsNodeToBeCaptured() const;
 
 #ifndef ROSEN_CROSS_PLATFORM
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
@@ -238,6 +269,8 @@ public:
 protected:
 private:
     bool isMainWindowType_ = false;
+    bool isLeashWindow_ = false;
+    bool isAppWindow_ = false;
     RSSurfaceNodeType rsSurfaceNodeType_ = RSSurfaceNodeType::DEFAULT;
     SelfDrawingNodeType selfDrawingType_ = SelfDrawingNodeType::DEFAULT;
     RSRenderNode::WeakPtr ancestorDisplayNode_;
@@ -245,15 +278,18 @@ private:
     float alpha_ = 0;
     bool isTransparent_ = false;
     bool isSpherizeValid_ = false;
+    bool isParentScaling_ = false;
     bool needBilinearInterpolation_ = false;
-    bool uiFirstFlag_ = false;
+    MultiThreadCacheType uiFirstFlag_ = MultiThreadCacheType::NONE;
     bool uiFirstParentFlag_ = false;
     Color backgroundColor_ = RgbPalette::Transparent();
 
+    RectI dstRect_;
     RectI oldDirtyInSurface_;
     RectI childrenDirtyRect_;
     RectI absDrawRect_;
     RRect rrect_;
+    Occlusion::Region transparentRegion_;
 
     bool surfaceCacheContentStatic_ = false;
     bool preSurfaceCacheContentStatic_ = false;
@@ -261,21 +297,29 @@ private:
     float positionZ_ = 0.0f;
     bool occlusionVisible_ = false;
     Occlusion::Region visibleRegion_;
+    Occlusion::Region visibleRegionInVirtual_;
     bool isOccludedByFilterCache_ = false;
     RSLayerInfo layerInfo_;
     bool isHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
+    bool isForceHardwareByUser_ = false;
+    int32_t releaseInHardwareThreadTaskNum_ = 0;
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
+    bool isSubSurfaceNode_ = false;
+    bool isNodeToBeCaptured_ = false;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};
     std::set<int32_t> bufferCacheSet_ = {};
     std::string name_= "";
+    Vector4f overDrawBufferNodeCornerRadius_;
+    bool isGpuOverDrawBufferOptimizeNode_ = false;
 
     friend class RSSurfaceRenderNode;
     friend class RSUniRenderProcessor;
+    friend class RSUniRenderThread;
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PARAMS_RS_SURFACE_RENDER_PARAMS_H

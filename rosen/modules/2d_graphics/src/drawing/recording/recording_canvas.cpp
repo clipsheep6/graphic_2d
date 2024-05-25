@@ -203,16 +203,16 @@ void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, co
 }
 
 void RecordingCanvas::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isLimitElevation)
 {
     if (!addDrawOpImmediate_) {
         cmdList_->AddDrawOp(std::make_shared<DrawShadowStyleOpItem>(
-            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle));
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation));
         return;
     }
     auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
     cmdList_->AddDrawOp<DrawShadowStyleOpItem::ConstructorHandle>(
-        pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+        pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation);
 }
 
 void RecordingCanvas::DrawRegion(const Region& region)
@@ -359,7 +359,7 @@ void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const s
         AddDrawOpDeferred<DrawTextBlobOpItem>(blob, x, y);
         return;
     }
-    TextBlob::Context ctx {nullptr, IsCustomTypeface()};
+    TextBlob::Context ctx {nullptr, false};
     auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(*cmdList_, blob, &ctx);
     uint64_t globalUniqueId = 0;
     if (ctx.GetTypeface() != nullptr) {
@@ -561,7 +561,7 @@ uint32_t RecordingCanvas::Save()
 {
     uint32_t ret = static_cast<uint32_t>(saveOpStateStack_.size());
     saveOpStateStack_.push(LazySaveOp);
-    return ret;
+    return ret + 1; // The minimum value for non-recording types is 1
 }
 
 void RecordingCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
@@ -610,7 +610,7 @@ void RecordingCanvas::Restore()
 
 uint32_t RecordingCanvas::GetSaveCount() const
 {
-    return static_cast<uint32_t>(saveOpStateStack_.size());
+    return static_cast<uint32_t>(saveOpStateStack_.size()) + 1; // The minimum value for non-recording types is 1
 }
 
 void RecordingCanvas::Discard()
@@ -703,10 +703,7 @@ void RecordingCanvas::AddDrawOpDeferred(Args&&... args)
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        Paint paint;
-        paint.SetAntiAlias(true);
-        paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
-        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paint));
+        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., defaultPaint_));
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
@@ -728,10 +725,7 @@ void RecordingCanvas::GenerateCachedOpForTextblob(const TextBlob* blob, const sc
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        Paint paint;
-        paint.SetAntiAlias(true);
-        paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
-        GenerateCachedOpForTextblob(blob, x, y, paint);
+        GenerateCachedOpForTextblob(blob, x, y, defaultPaint_);
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {

@@ -57,7 +57,7 @@ struct MaterialParam {
     float brightness;
     RSColor maskColor;
 };
-class RSB_EXPORT RSMaterialFilter : public RSDrawingFilter {
+class RSB_EXPORT RSMaterialFilter : public RSDrawingFilterOriginal {
 public:
     RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio);
     RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode);
@@ -68,7 +68,8 @@ public:
     bool IsValid() const override;
     void PreProcess(std::shared_ptr<Drawing::Image> image) override;
     void PostProcess(Drawing::Canvas& canvas) override;
-    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
+    std::shared_ptr<RSDrawingFilterOriginal> Compose(
+        const std::shared_ptr<RSDrawingFilterOriginal>& other) const override;
     std::string GetDescription() override;
     std::string GetDetailedDescription() override;
 
@@ -76,16 +77,24 @@ public:
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
-
+    void ApplyColorFilter(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& greyImage,
+        const Drawing::Rect& src, const Drawing::Rect& dst) const;
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
     float GetRadius() const;
+    float GetSaturation() const;
+    float GetBrightness() const;
+    RSColor GetMaskColor() const;
+    BLUR_COLOR_MODE GetColorMode() const;
     bool CanSkipFrame() const override;
 
     bool IsNearEqual(
         const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const override;
     bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
     void SetGreyCoef(const std::optional<Vector2f>& greyCoef) override;
+
+    bool IsEqual(const std::shared_ptr<RSFilter>& other) const override;
+    bool IsEqualZero() const override;
  
     // color picker subthread
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;

@@ -88,6 +88,8 @@ public:
     void Init();
     void Start();
     bool IsNeedProcessBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void UpdateFocusNodeId(NodeId focusNodeId);
+    void UpdateNeedDrawFocusChange(NodeId id);
     void ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvAndProcessRSTransactionDataImmediately(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
@@ -101,6 +103,8 @@ public:
     void RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame = true);
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
+    void UpdateAnimateNodeFlag();
+    void ResetAnimateNodeFlag();
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
     void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false, pid_t pid = -1);
 
@@ -112,7 +116,7 @@ public:
         return std::move(taskFuture);
     }
 
-    const std::shared_ptr<RSBaseRenderEngine>& GetRenderEngine() const
+    const std::shared_ptr<RSBaseRenderEngine> GetRenderEngine() const
     {
         RS_LOGD("You'd better to call GetRenderEngine from RSUniRenderThread directly");
         return isUniRender_ ? std::move(RSUniRenderThread::Instance().GetRenderEngine()) : renderEngine_;
@@ -184,11 +188,15 @@ public:
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
 
-    void SetDirtyFlag();
+    void SetDirtyFlag(bool isDirty = true);
+    bool GetDirtyFlag();
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
     void SetNoNeedToPostTask(bool noNeedToPostTask);
     void SetAccessibilityConfigChanged();
+    void SetScreenPowerOnChanged(bool val);
+    bool GetScreenPowerOnChanged() const;
     bool IsAccessibilityConfigChanged() const;
+    bool IsCurtainScreenUsingStatusChanged() const;
     void ForceRefreshForUni();
     void TrimMem(std::unordered_set<std::u16string>& argSets, std::string& result);
     void DumpMem(std::unordered_set<std::u16string>& argSets, std::string& result, std::string& type, int pid = 0);
@@ -230,6 +238,7 @@ public:
 
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
+    bool HasMirrorDisplay() const;
     bool GetNoNeedToPostTask();
     uint64_t GetFocusNodeId() const;
     uint64_t GetFocusLeashWindowId() const;
@@ -260,6 +269,7 @@ public:
     }
 
     void SurfaceOcclusionChangeCallback(VisibleData& dstCurVisVec);
+    void SurfaceOcclusionCallback();
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
     void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
@@ -294,7 +304,9 @@ public:
 
     void SetDiscardJankFrames(bool discardJankFrames)
     {
-        discardJankFrames_.store(discardJankFrames);
+        if (discardJankFrames_.load() != discardJankFrames) {
+            discardJankFrames_.store(discardJankFrames);
+        }
     }
 
     bool GetSkipJankAnimatorFrame() const
@@ -320,19 +332,24 @@ private:
     RSMainThread& operator=(const RSMainThread&) = delete;
     RSMainThread& operator=(const RSMainThread&&) = delete;
 
-    void OnVsync(uint64_t timestamp, void* data);
+    void OnVsync(uint64_t timestamp, uint64_t frameCount, void* data);
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
     void ReleaseAllNodesBuffer();
     void Render();
+    void OnUniRenderDraw();
     void SetDeviceType();
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
-    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
-        VisibleData& dstCurVisVec, std::map<NodeId, RSVisibleLevel>& dstPidVisMap);
+    RSVisibleLevel CalcSurfaceNodeVisibleRegion(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
+        const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode, Occlusion::Region& accumulatedRegion,
+        Occlusion::Region& curRegion, Occlusion::Region& totalRegion);
+    void CalcOcclusionImplementation(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces, VisibleData& dstCurVisVec,
+        std::map<NodeId, RSVisibleLevel>& dstPidVisMap);
     void CalcOcclusion();
     bool CheckSurfaceVisChanged(std::map<NodeId, RSVisibleLevel>& pidVisMap,
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
@@ -340,7 +357,6 @@ private:
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
-    void SurfaceOcclusionCallback();
     void InitRSEventDetector();
     void RemoveRSEventDetector();
     void SetRSEventDetectorLoopStartTag();
@@ -360,6 +376,7 @@ private:
     void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
     void ProcessSyncRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
+    void ProcessSyncTransactionCount(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void ProcessAllSyncTransactionData();
     void ProcessCommandForDividedRender();
     void ProcessCommandForUniRender();
@@ -370,7 +387,7 @@ private:
     void PerfAfterAnim(bool needRequestNextVsync);
     void PerfMultiWindow();
     void RenderFrameStart(uint64_t timestamp);
-    void ResetHardwareEnabledState();
+    void ResetHardwareEnabledState(bool isUniRender);
     void CheckIfHardwareForcedDisabled();
     void CheckAndUpdateTransactionIndex(
         std::shared_ptr<TransactionDataMap>& transactionDataEffective, std::string& transactionFlags);
@@ -393,11 +410,10 @@ private:
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
-    void TryCleanResourceInBackGroundThd();
+    void ProcessScreenHotPlugEvents();
     void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
     void SubScribeSystemAbility();
-    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
 #endif
 #if defined(RS_ENABLE_CHIPSET_VSYNC)
     void ConnectChipsetVsyncSer();
@@ -406,10 +422,14 @@ private:
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT);
 
-    void RSJankStatsOnVsyncStart(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady);
-    void RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady);
+    void RSJankStatsOnVsyncStart(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady,
+                                 float onVsyncStartTimeSteadyFloat);
+    void RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady,
+                               float onVsyncStartTimeSteadyFloat);
     int64_t GetCurrentSystimeMs() const;
     int64_t GetCurrentSteadyTimeMs() const;
+    float GetCurrentSteadyTimeMsFloat() const;
+    void UpdateLuminance();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -422,8 +442,8 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> effectiveCommands_;
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
+    std::unordered_map<int32_t, int32_t> subSyncTransactionCounts_;
     int32_t syncTransactionCount_ { 0 };
-    int32_t syncTransactionCountExt_ { 0 };
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -450,6 +470,7 @@ private:
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
+    bool needWaitUnmarshalFinished_ = true;
     sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
 
     std::condition_variable surfaceCapProcTaskCond_;
@@ -479,6 +500,9 @@ private:
     // Used to refresh the whole display when AccessibilityConfig is changed
     bool isAccessibilityConfigChanged_ = false;
 
+    // Used to refresh the whole display when curtain screen status is changed
+    bool isCurtainScreenUsingStatusChanged_ = false;
+
     // used for blocking mainThread when hardwareThread has 2 and more task to Execute
     mutable std::mutex hardwareThreadTaskMutex_;
     std::condition_variable hardwareThreadTaskCond_;
@@ -488,7 +512,9 @@ private:
     std::map<NodeId, uint64_t> lastDrawStatusMap_;
     std::vector<NodeId> curDrawStatusVec_;
     bool qosPidCal_ = false;
-    bool isDirty_ = false;
+
+    std::atomic<bool> isDirty_ = false;
+    std::atomic<bool> screenPowerOnChanged_ = false;
     std::atomic_bool doWindowAnimate_ = false;
     std::vector<NodeId> lastSurfaceIds_;
     std::atomic<int32_t> focusAppPid_ = -1;
@@ -594,7 +620,9 @@ private:
     std::unique_ptr<RSRenderThreadParams> renderThreadParams_ = nullptr; // sync to render thread
     RsParallelType rsParallelType_;
     bool isCurtainScreenOn_ = false;
-
+#ifdef RES_SCHED_ENABLE
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
     // for statistic of jank frames
     std::atomic_bool isOnVsync_ = false;
     std::atomic_bool discardJankFrames_ = false;

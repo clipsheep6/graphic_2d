@@ -45,6 +45,8 @@ protected:
     bool needSync_ = false;
     std::shared_ptr<Drawing::DrawCmdList> drawCmdList_;
     std::shared_ptr<Drawing::DrawCmdList> stagingDrawCmdList_;
+    std::string propertyDescription_;
+    std::string stagingPropertyDescription_;
 
     friend class RSPropertyDrawCmdListUpdater;
 };
@@ -122,13 +124,18 @@ public:
     void MarkFilterRegionIsLargeArea();
     void MarkFilterForceUseCache();
     void MarkFilterForceClearCache();
+    void ForceClearCacheWithLastFrame();
     void MarkRotationChanged();
     void MarkHasEffectChildren();
     void MarkNodeIsOccluded(bool isOccluded);
-    void CheckClearFilterCache();
+    void ClearCacheIfNeeded();
 
     bool IsFilterCacheValid() const;
-    bool GetFilterForceClearCache() const;
+    bool IsForceClearFilterCache() const;
+    bool IsForceUseFilterCache() const;
+    bool NeedPendingPurge() const;
+    bool IsSkippingFrame() const;
+    bool IsAIBarCacheValid() const;
  
     void OnSync() override;
     Drawing::RecordingCanvas::DrawFunc CreateDrawFunc() const override;
@@ -153,8 +160,8 @@ protected:
     bool filterRegionChanged_ = false;
     bool filterInteractWithDirty_ = false;
     bool rotationChanged_ = false;
-    bool hasEffectChildren_ = false;
     bool clearFilteredCacheAfterDrawing_ = false;
+    bool forceClearCacheWithLastFrame_ = false;
  
     // clear one of snapshot cache and filtered cache after drawing
     bool stagingForceUseCache_ = false;
@@ -172,12 +179,7 @@ protected:
     RSFilter::FilterType filterType_ = RSFilter::NONE;
     int cacheUpdateInterval_ = 0;
     bool isFilterCacheValid_ = false; // catch status in current frame
-
-    // used for linear gradient blur
-    float stagingFrameWidth_ = 0.f;
-    float stagingFrameHeight_ = 0.f;
-    float frameWidth_ = 0.f;
-    float frameHeight_ = 0.f;
+    bool pendingPurge_ = false;
 
     std::unique_ptr<RSFilterCacheManager> cacheManager_;
     NodeId nodeId_ = INVALID_NODEID;

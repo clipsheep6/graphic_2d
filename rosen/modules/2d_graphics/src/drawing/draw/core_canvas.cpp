@@ -21,11 +21,23 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-CoreCanvas::CoreCanvas() : impl_(ImplFactory::CreateCoreCanvasImpl()) {}
+CoreCanvas::CoreCanvas() : impl_(ImplFactory::CreateCoreCanvasImpl())
+{
+    defaultPaint_.SetAntiAlias(true);
+    defaultPaint_.SetStyle(Drawing::Paint::PaintStyle::PAINT_FILL);
+}
 
-CoreCanvas::CoreCanvas(void* rawCanvas) : impl_(ImplFactory::CreateCoreCanvasImpl(rawCanvas)) {}
+CoreCanvas::CoreCanvas(void* rawCanvas) : impl_(ImplFactory::CreateCoreCanvasImpl(rawCanvas))
+{
+    defaultPaint_.SetAntiAlias(true);
+    defaultPaint_.SetStyle(Drawing::Paint::PaintStyle::PAINT_FILL);
+}
 
-CoreCanvas::CoreCanvas(int32_t width, int32_t height) : impl_(ImplFactory::CreateCoreCanvasImpl(width, height)) {}
+CoreCanvas::CoreCanvas(int32_t width, int32_t height) : impl_(ImplFactory::CreateCoreCanvasImpl(width, height))
+{
+    defaultPaint_.SetAntiAlias(true);
+    defaultPaint_.SetStyle(Drawing::Paint::PaintStyle::PAINT_FILL);
+}
 
 void CoreCanvas::Bind(const Bitmap& bitmap)
 {
@@ -45,6 +57,11 @@ Rect CoreCanvas::GetLocalClipBounds() const
 RectI CoreCanvas::GetDeviceClipBounds() const
 {
     return impl_->GetDeviceClipBounds();
+}
+
+RectI CoreCanvas::GetRoundInDeviceClipBounds() const
+{
+    return impl_->GetRoundInDeviceClipBounds();
 }
 
 #ifdef ACE_ENABLE_GPU
@@ -167,9 +184,10 @@ void CoreCanvas::DrawShadow(const Path& path, const Point3& planeParams, const P
 }
 
 void CoreCanvas::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isLimitElevation)
 {
-    impl_->DrawShadowStyle(path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+    impl_->DrawShadowStyle(
+        path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation);
 }
 
 void CoreCanvas::DrawColor(ColorQuad color, BlendMode mode)
@@ -195,27 +213,6 @@ void CoreCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
     impl_->DrawVertices(vertices, mode);
 }
 
-// opinc_begin
-bool CoreCanvas::BeginOpRecording(const Rect* bound, bool isDynamic)
-{
-    return impl_->BeginOpRecording(bound, isDynamic);
-}
-
-Drawing::OpListHandle CoreCanvas::EndOpRecording()
-{
-    return impl_->EndOpRecording();
-}
-
-void CoreCanvas::DrawOpList(Drawing::OpListHandle handle)
-{
-    impl_->DrawOpList(handle);
-}
-
-int CoreCanvas::CanDrawOpList(Drawing::OpListHandle handle)
-{
-    return impl_->CanDrawOpList(handle);
-}
-
 bool CoreCanvas::OpCalculateBefore(const Matrix& matrix)
 {
     return impl_->OpCalculateBefore(matrix);
@@ -225,7 +222,12 @@ std::shared_ptr<Drawing::OpListHandle> CoreCanvas::OpCalculateAfter(const Rect& 
 {
     return impl_->OpCalculateAfter(bound);
 }
-// opinc_end
+
+void CoreCanvas::DrawAtlas(const Image* atlas, const RSXform xform[], const Rect tex[], const ColorQuad colors[],
+    int count, BlendMode mode, const SamplingOptions& sampling, const Rect* cullRect)
+{
+    impl_->DrawAtlas(atlas, xform, tex, colors, count, mode, sampling, cullRect);
+}
 
 void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
@@ -500,7 +502,7 @@ void CoreCanvas::ApplyDrawLooper(const std::function<void()> drawProc)
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        LOGD("Drawing CoreCanvas ApplyDrawLooper with Invalid Paint");
+        ApplyDrawProc(defaultPaint_, drawProc);
         return;
     }
 
@@ -528,7 +530,7 @@ void CoreCanvas::AttachPaint()
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        LOGD("Drawing CoreCanvas AttachPaint with Invalid Paint");
+        impl_->AttachPaint(defaultPaint_);
         return;
     }
 

@@ -70,6 +70,9 @@ public:
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
+#ifdef RS_ENABLE_VK
+    bool Set2DRenderCtrl(bool enable) override;
+#endif
     void RemoveVirtualScreen(ScreenId id) override;
 
     int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) override;
@@ -80,7 +83,7 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode) override;
 
-    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range) override;
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped) override;
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
@@ -198,7 +201,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo) override;
 
-    void NotifyTouchEvent(int32_t touchStatus) override;
+    void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt) override;
 
     void ReportEventResponse(DataBaseRs info) override;
 
@@ -216,7 +219,11 @@ public:
 
     void RunOnRemoteDiedCallback() override;
 
-    GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id) override;
+    std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo() override;
+
+    GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo() override;
+
+    LayerComposeInfo GetLayerComposeInfo() override;
 
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config) override;

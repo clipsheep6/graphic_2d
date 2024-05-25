@@ -609,7 +609,7 @@ DrawShadowStyleOpItem::DrawShadowStyleOpItem(
       ambientColor_(handle->ambientColor),
       spotColor_(handle->spotColor),
       flag_(handle->flag),
-      isShadowStyle_(handle->isShadowStyle)
+      isLimitElevation_(handle->isLimitElevation)
 {
     path_ = CmdListHelper::GetPathFromCmdList(cmdList, handle->path);
 }
@@ -624,7 +624,7 @@ void DrawShadowStyleOpItem::Marshalling(DrawCmdList& cmdList)
 {
     auto pathHandle = CmdListHelper::AddPathToCmdList(cmdList, *path_);
     cmdList.AddOp<ConstructorHandle>(
-        pathHandle, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_, isShadowStyle_);
+        pathHandle, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_, isLimitElevation_);
 }
 
 void DrawShadowStyleOpItem::Playback(Canvas* canvas, const Rect* rect)
@@ -634,7 +634,7 @@ void DrawShadowStyleOpItem::Playback(Canvas* canvas, const Rect* rect)
         return;
     }
     canvas->DrawShadowStyle(
-        *path_, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_, isShadowStyle_);
+        *path_, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_, isLimitElevation_);
 }
 
 /* DrawShadowOpItem */
@@ -1025,9 +1025,6 @@ DrawTextBlobOpItem::DrawTextBlobOpItem(const DrawCmdList& cmdList, DrawTextBlobO
     }
 
     TextBlob::Context ctx {typeface, false};
-    if (typeface != nullptr) {
-        ctx.SetIsCustomTypeface(true);
-    }
     textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle->textBlob, &ctx);
 }
 
@@ -1058,38 +1055,57 @@ void DrawTextBlobOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGD("DrawTextBlobOpItem textBlob is null");
         return;
     }
+    RectI globalClipBounds = canvas->GetDeviceClipBounds();
+    bool saveFlag = false;
+    if (globalClipBounds.GetWidth() == 1 || globalClipBounds.GetHeight() == 1) {
+        // In this case, the clip area for textblob must have AA.
+        Matrix m = canvas->GetTotalMatrix();
+        canvas->Save();
+        canvas->SetMatrix(m);
+        auto bounds = textBlob_->Bounds();
+        canvas->ClipRect(*bounds, ClipOp::INTERSECT, true);
+        saveFlag = true;
+    }
     if (canvas->isHighContrastEnabled()) {
         LOGD("DrawTextBlobOpItem::Playback highContrastEnabled, %{public}s, %{public}d", __FUNCTION__, __LINE__);
-        ColorQuad colorQuad = paint_.GetColor().CastToColorQuad();
-        if (Color::ColorQuadGetA(colorQuad) == 0 || paint_.HasFilter()) {
-            canvas->AttachPaint(paint_);
-            canvas->DrawTextBlob(textBlob_.get(), x_, y_);
-            return;
-        }
-        if (canvas->GetAlphaSaveCount() > 0 && canvas->GetAlpha() < 1.0f) {
-            std::shared_ptr<Drawing::Surface> offScreenSurface;
-            std::shared_ptr<Canvas> offScreenCanvas;
-            if (GetOffScreenSurfaceAndCanvas(*canvas, offScreenSurface, offScreenCanvas)) {
-                DrawHighContrast(offScreenCanvas.get());
-                offScreenCanvas->Flush();
-                Drawing::Brush paint;
-                paint.SetAntiAlias(true);
-                canvas->AttachBrush(paint);
-                Drawing::SamplingOptions sampling =
-                    Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
-                canvas->Save();
-                canvas->ResetMatrix();
-                canvas->DrawImage(*offScreenSurface->GetImageSnapshot().get(), 0, 0, sampling);
-                canvas->DetachBrush();
-                canvas->Restore();
-                return;
-            }
-        }
-        DrawHighContrast(canvas);
+        DrawHighContrastEnabled(canvas);
     } else {
         canvas->AttachPaint(paint_);
         canvas->DrawTextBlob(textBlob_.get(), x_, y_);
     }
+    if (saveFlag) {
+        canvas->Restore();
+    }
+}
+
+void DrawTextBlobOpItem::DrawHighContrastEnabled(Canvas* canvas) const
+{
+    ColorQuad colorQuad = paint_.GetColor().CastToColorQuad();
+    if (Color::ColorQuadGetA(colorQuad) == 0 || paint_.HasFilter()) {
+        canvas->AttachPaint(paint_);
+        canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+        return;
+    }
+    if (canvas->GetAlphaSaveCount() > 0 && canvas->GetAlpha() < 1.0f) {
+        std::shared_ptr<Drawing::Surface> offScreenSurface;
+        std::shared_ptr<Canvas> offScreenCanvas;
+        if (GetOffScreenSurfaceAndCanvas(*canvas, offScreenSurface, offScreenCanvas)) {
+            DrawHighContrast(offScreenCanvas.get());
+            offScreenCanvas->Flush();
+            Drawing::Brush paint;
+            paint.SetAntiAlias(true);
+            canvas->AttachBrush(paint);
+            Drawing::SamplingOptions sampling =
+                Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
+            canvas->Save();
+            canvas->ResetMatrix();
+            canvas->DrawImage(*offScreenSurface->GetImageSnapshot().get(), 0, 0, sampling);
+            canvas->DetachBrush();
+            canvas->Restore();
+            return;
+        }
+    }
+    DrawHighContrast(canvas);
 }
 
 void DrawTextBlobOpItem::DrawHighContrast(Canvas* canvas) const

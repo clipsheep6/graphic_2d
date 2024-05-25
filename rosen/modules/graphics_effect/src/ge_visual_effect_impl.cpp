@@ -24,28 +24,34 @@ namespace Rosen {
 namespace Drawing {
 
 std::map<const std::string, std::function<void(GEVisualEffectImpl*)>> GEVisualEffectImpl::g_initialMap = {
-    { "KAWASE_BLUR",
+    { GE_FILTER_KAWASE_BLUR,
         [](GEVisualEffectImpl* impl) {
             impl->SetFilterType(GEVisualEffectImpl::FilterType::KAWASE_BLUR);
             impl->MakeKawaseParams();
         }
     },
-    { "GREY",
+    { GE_FILTER_GREY,
         [](GEVisualEffectImpl* impl) {
             impl->SetFilterType(GEVisualEffectImpl::FilterType::GREY);
             impl->MakeGreyParams();
         }
     },
-    { "AIBAR",
+    { GE_FILTER_AI_BAR,
         [](GEVisualEffectImpl* impl) {
             impl->SetFilterType(GEVisualEffectImpl::FilterType::AIBAR);
             impl->MakeAIBarParams();
         }
     },
-    { "LINEAR_GRADIENT_BLUR",
+    { GE_FILTER_LINEAR_GRADIENT_BLUR,
         [](GEVisualEffectImpl* impl) {
             impl->SetFilterType(GEVisualEffectImpl::FilterType::LINEAR_GRADIENT_BLUR);
             impl->MakeLinearGradientBlurParams();
+        }
+    },
+    { GE_FILTER_HPS_BLUR,
+        [](GEVisualEffectImpl* impl) {
+            impl->SetFilterType(GEVisualEffectImpl::FilterType::HPS_BLUR);
+            impl->MakeHpsBlurParams();
         }
     }
 };
@@ -68,7 +74,7 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, int32_t param)
                 return;
             }
 
-            if (tag == "KAWASE_BLUR_RADIUS") {
+            if (tag == GE_FILTER_KAWASE_BLUR_RADIUS) {
                 kawaseParams_->radius = param;
             }
             break;
@@ -78,7 +84,7 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, int32_t param)
                 return;
             }
 
-            if (tag == "DIRECTION") {
+            if (tag == GE_FILTER_LINEAR_GRADIENT_BLUR_DIRECTION) {
                 linearGradientBlurParams_->direction = param;
             }
             break;
@@ -96,7 +102,7 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, bool param)
                 return;
             }
 
-            if (tag == "ISOFFSCREEN") {
+            if (tag == GE_FILTER_LINEAR_GRADIENT_BLUR_IS_OFF_SCREEN) {
                 linearGradientBlurParams_->isOffscreenCanvas = param;
             }
             break;
@@ -124,6 +130,10 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, float param)
             SetLinearGradientBlurParams(tag, param);
             break;
         }
+        case FilterType::HPS_BLUR: {
+            SetHpsBlurParams(tag, param);
+            break;
+        }
         default:
             break;
     }
@@ -145,7 +155,7 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, const Drawing::Matrix 
                 return;
             }
 
-            if (tag == "CANVASMAT") {
+            if (tag == GE_FILTER_LINEAR_GRADIENT_BLUR_CANVAS_MAT) {
                 linearGradientBlurParams_->mat = param;
             }
             break;
@@ -162,7 +172,7 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, const std::vector<std:
             if (linearGradientBlurParams_ == nullptr) {
                 return;
             }
-            if (tag == "FRACTIONSTOPS") {
+            if (tag == GE_FILTER_LINEAR_GRADIENT_BLUR_FRACTION_STOPS) {
                 linearGradientBlurParams_->fractionStops = param;
             }
             break;
@@ -179,11 +189,16 @@ void GEVisualEffectImpl::SetAIBarParams(const std::string& tag, float param)
     }
 
     static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
-        { "AIBAR_LOW",        [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarLow        = p; } },
-        { "AIBAR_HIGH",       [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarHigh       = p; } },
-        { "AIBAR_THRESHOLD",  [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarThreshold  = p; } },
-        { "AIBAR_OPACITY",    [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarOpacity    = p; } },
-        { "AIBAR_SATURATION", [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarSaturation = p; } }
+        { GE_FILTER_AI_BAR_LOW,
+            [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarLow        = p; } },
+        { GE_FILTER_AI_BAR_HIGH,
+            [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarHigh       = p; } },
+        { GE_FILTER_AI_BAR_THRESHOLD,
+            [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarThreshold  = p; } },
+        { GE_FILTER_AI_BAR_OPACITY,
+            [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarOpacity    = p; } },
+        { GE_FILTER_AI_BAR_SATURATION,
+            [](GEVisualEffectImpl* obj, float p) { obj->aiBarParams_->aiBarSaturation = p; } }
     };
 
     auto it = actions.find(tag);
@@ -199,8 +214,8 @@ void GEVisualEffectImpl::SetGreyParams(const std::string& tag, float param)
     }
 
     static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
-        { "GREY_COEF_1", [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef1 = p; } },
-        { "GREY_COEF_2", [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef2 = p; } }
+        { GE_FILTER_GREY_COEF_1, [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef1 = p; } },
+        { GE_FILTER_GREY_COEF_2, [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef2 = p; } }
     };
 
     auto it = actions.find(tag);
@@ -216,11 +231,35 @@ void GEVisualEffectImpl::SetLinearGradientBlurParams(const std::string& tag, flo
     }
 
     static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
-        { "BLURRADIUS", [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->blurRadius = p; } },
-        { "GEOWIDTH",   [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->geoWidth   = p; } },
-        { "GEOHEIGHT",  [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->geoHeight  = p; } },
-        { "TRANX",      [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->tranX      = p; } },
-        { "TRANY",      [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->tranY      = p; } }
+        { GE_FILTER_LINEAR_GRADIENT_BLUR_RADIUS,
+            [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->blurRadius = p; } },
+        { GE_FILTER_LINEAR_GRADIENT_BLUR_GEO_WIDTH,
+            [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->geoWidth   = p; } },
+        { GE_FILTER_LINEAR_GRADIENT_BLUR_GEO_HEIGHT,
+            [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->geoHeight  = p; } },
+        { GE_FILTER_LINEAR_GRADIENT_BLUR_TRAN_X,
+            [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->tranX      = p; } },
+        { GE_FILTER_LINEAR_GRADIENT_BLUR_TRAN_Y,
+            [](GEVisualEffectImpl* obj, float p) { obj->linearGradientBlurParams_->tranY      = p; } }
+    };
+
+    auto it = actions.find(tag);
+    if (it != actions.end()) {
+        it->second(this, param);
+    }
+}
+
+void GEVisualEffectImpl::SetHpsBlurParams(const std::string& tag, float param)
+{
+    if (hpsBlurParams_ == nullptr) {
+        return;
+    }
+
+    static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
+        { GE_FILTER_HPS_BLUR_RADIUS, [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->radius = p; } },
+        { GE_FILTER_HPS_BLUR_SATURATION,
+            [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->saturation = p; } },
+        { GE_FILTER_HPS_BLUR_BRIGHTNESS, [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->brightness = p; } }
     };
 
     auto it = actions.find(tag);

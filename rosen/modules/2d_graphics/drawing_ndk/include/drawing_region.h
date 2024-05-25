@@ -44,6 +44,39 @@ extern "C" {
 #endif
 
 /**
+ * @brief Enumerates of operations when two regions are combined.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum {
+    /**
+     * Difference operation.
+     */
+    REGION_OP_MODE_DIFFERENCE,
+    /**
+     * Intersect operation.
+     */
+    REGION_OP_MODE_INTERSECT,
+    /**
+     * Union operation.
+     */
+    REGION_OP_MODE_UNION,
+    /**
+     * Xor operation.
+     */
+    REGION_OP_MODE_XOR,
+    /**
+     * Reverse difference operation.
+     */
+    REGION_OP_MODE_REVERSE_DIFFERENCE,
+    /**
+     * Replace operation.
+     */
+    REGION_OP_MODE_REPLACE,
+} OH_Drawing_RegionOpMode;
+
+/**
  * @brief Creates an <b>OH_Drawing_Region</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -54,7 +87,33 @@ extern "C" {
 OH_Drawing_Region* OH_Drawing_RegionCreate(void);
 
 /**
- * @brief Destroys an <b>OH_Drawing_Region</b> object and reclaims the memory occupied by the object.
+ * @brief Determines whether the region contains the specified coordinates.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param region Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param int32_t x-coordinate.
+ * @param int32_t y-coordinate.
+ * @return Returns <b>true</b> if (x, y) is inside region; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_RegionContains(OH_Drawing_Region* region, int32_t x, int32_t y);
+
+/**
+ * @brief Combines two regions.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param region Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param dst Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param op Indicates the operation to apply to combine.
+ * @return Returns <b>true</b> if constructed region is not empty; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_RegionOp(OH_Drawing_Region* region, const OH_Drawing_Region* dst, OH_Drawing_RegionOpMode op);
+
+/**
+ * @brief Set the region to the specified rect.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Region Indicates the pointer to an <b>OH_Drawing_Region</b> object.
@@ -64,6 +123,19 @@ OH_Drawing_Region* OH_Drawing_RegionCreate(void);
  * @version 1.0
  */
 bool OH_Drawing_RegionSetRect(OH_Drawing_Region* region, const OH_Drawing_Rect* rect);
+
+/**
+ * @brief Constructs region that matchs outline of path within clip.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param region Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @param clip Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @return Returns <b>true</b> if constructed region is not empty; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_RegionSetPath(OH_Drawing_Region* region, const OH_Drawing_Path* path, const OH_Drawing_Region* clip);
 
 /**
  * @brief Destroys an <b>OH_Drawing_Region</b> object and reclaims the memory occupied by the object.

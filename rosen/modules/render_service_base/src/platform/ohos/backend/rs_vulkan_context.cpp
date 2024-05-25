@@ -61,7 +61,7 @@ static std::vector<const char*> gDeviceExtensions = {
 
 static const int GR_CACHE_MAX_COUNT = 8192;
 static const size_t GR_CACHE_MAX_BYTE_SIZE = 96 * (1 << 20);
-static const int32_t CACHE_LIMITS_TIMES = 5;
+static const int32_t CACHE_LIMITS_TIMES = 5;  // this will change RS memory!
 
 void RsVulkanInterface::Init(bool isProtected)
 {
@@ -151,6 +151,8 @@ bool RsVulkanInterface::CreateInstance()
     ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties, instance_);
     ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties2, instance_);
     ACQUIRE_PROC(GetPhysicalDeviceFeatures2, instance_);
+
+    HMS_XEG_SetFreqAdjustEnable = AcquireProc("HMS_XEG_SetFreqAdjustEnable", instance_);
 
     return true;
 }

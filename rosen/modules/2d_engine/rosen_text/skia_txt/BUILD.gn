@@ -12,12 +12,9 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/arkui/ace_engine/ace_config.gni")
+import("//foundation/graphic/graphic_2d/ace_platforms.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/config.gni")
-
-import("//third_party/skia/modules/skshaper/skshaper.gni")
-import("//third_party/skia/modules/skunicode/skunicode.gni")
 
 config("skia_libtxt_config") {
   include_dirs = [
@@ -33,6 +30,8 @@ config("skia_libtxt_config") {
 }
 
 txt_root = "$rosen_root/modules/2d_engine/rosen_text/skia_txt/"
+skunicode_root = "//third_party/skia/modules/skunicode"
+skshaper_root = "//third_party/skia/modules/skshaper"
 
 template("skia_libtxt") {
   forward_variables_from(invoker, "*")
@@ -53,7 +52,6 @@ template("skia_libtxt") {
       "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/adapter/skia_txt",
       "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt",
       "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/txt",
-      "//third_party/skia",
     ]
 
     sources = [
@@ -108,7 +106,10 @@ template("skia_libtxt") {
       "//third_party/skia:skia_$platform",
     ]
 
-    external_deps += [ "hilog:libhilog" ]
+    external_deps += [
+      "bounds_checking_function:libsec_shared",
+      "hilog:libhilog",
+    ]
 
     if (!is_cross_platform) {
       external_deps += [ "hitrace:hitrace_meter" ]
@@ -149,8 +150,6 @@ ohos_source_set("skia_paragraph") {
     "$graphic_2d_root/rosen/modules/2d_graphics/src",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
-    "//third_party/skia",
-    "//third_party/skia/modules",
     "//third_party/skia/modules/skparagraph",
   ]
   defines = []
@@ -195,7 +194,10 @@ ohos_source_set("skia_paragraph") {
     "//third_party/skia:skia_$platform",
   ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_source_set("skia_unicode") {
@@ -203,20 +205,21 @@ ohos_source_set("skia_unicode") {
   subsystem_name = "graphic"
 
   public_configs = [ ":skia_libtxt_config" ]
-  include_dirs = [
-    "//third_party/skia",
-    "//third_party/skia/modules",
-    "//third_party/skia/modules/skunicode",
-  ]
+  include_dirs = []
   defines = []
 
-  public = skia_unicode_public
+  public = [ "$skunicode_root/include/SkUnicode.h" ]
   defines += [ "SKUNICODE_IMPLEMENTATION=1" ]
-  sources = skia_unicode_sources
+  sources = [ "$skunicode_root/src/SkUnicode.cpp" ]
   defines += [ "SK_UNICODE_AVAILABLE" ]
-  sources += skia_unicode_icu_sources
+  sources += [
+    "$skunicode_root/src/SkUnicode_icu.cpp",
+    "$skunicode_root/src/SkUnicode_icu.h",
+    "$skunicode_root/src/SkUnicode_icu_bidi.cpp",
+    "$skunicode_root/src/SkUnicode_icu_bidi.h",
+  ]
   defines += [ "SK_UNICODE_ICU_IMPLEMENTATION" ]
-  sources += skia_unicode_builtin_icu_sources
+  sources += [ "$skunicode_root/src/SkUnicode_icu_builtin.cpp" ]
 
   platform = current_os
   if (platform == "mingw") {
@@ -237,9 +240,6 @@ ohos_source_set("skia_shaper") {
     "$graphic_2d_root/rosen/modules/2d_graphics/src",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
-    "//third_party/skia",
-    "//third_party/skia/modules",
-    "//third_party/skia/modules/skshaper",
   ]
   defines = []
 
@@ -254,8 +254,11 @@ ohos_source_set("skia_shaper") {
   }
 
   defines += [ "SKSHAPER_IMPLEMENTATION=1" ]
-  sources = skia_shaper_primitive_sources
-  sources += skia_shaper_harfbuzz_sources
+  sources = [
+    "$skshaper_root/src/SkShaper.cpp",
+    "$skshaper_root/src/SkShaper_harfbuzz.cpp",
+    "$skshaper_root/src/SkShaper_primitive.cpp",
+  ]
 
   platform = current_os
   if (platform == "mingw") {
@@ -265,4 +268,6 @@ ohos_source_set("skia_shaper") {
     ":skia_unicode",
     "//third_party/skia:skia_$platform",
   ]
+
+  external_deps = [ "bounds_checking_function:libsec_shared" ]
 }

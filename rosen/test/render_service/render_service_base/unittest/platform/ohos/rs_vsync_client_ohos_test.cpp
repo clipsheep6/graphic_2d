@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include "platform/ohos/rs_vsync_client_ohos.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "platform/ohos/rs_render_service_connect_hub.h"
 
@@ -36,7 +37,7 @@ public:
 
 void RSVsyncClientTest::SetUpTestCase()
 {
-    cb = [](int64_t timestamp) {};
+    cb = [](int64_t timestamp, int64_t frameCount) {};
 }
 void RSVsyncClientTest::TearDownTestCase() {}
 void RSVsyncClientTest::SetUp()
@@ -55,19 +56,6 @@ HWTEST_F(RSVsyncClientTest, SetVsyncCallback_Test, TestSize.Level1)
 {
     ASSERT_NE(vsyncClient, nullptr);
     vsyncClient->SetVsyncCallback(cb);
-}
-
-/**
- * @tc.name: RequestNextVsync Test
- * @tc.desc: RequestNextVsync Test
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSVsyncClientTest, RequestNextVsync_Test, TestSize.Level1)
-{
-    ASSERT_NE(vsyncClient, nullptr);
-    vsyncClient->SetVsyncCallback(cb);
-    vsyncClient->RequestNextVsync();
 }
 } // namespace Rosen
 } // namespace OHOS

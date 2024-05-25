@@ -24,6 +24,8 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "drawable/rs_canvas_drawing_render_node_drawable.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -32,6 +34,7 @@
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_skia_filter.h"
 #include "pipeline/rs_render_engine.h"
 
@@ -76,7 +79,9 @@ std::shared_ptr<Media::PixelMap> RSUniUICapture::TakeLocalCapture()
     }
     auto canvas = std::make_shared<RSPaintFilterCanvas>(drSurface.get());
     RS_LOGD("RSUniUICapture::TakeLocalCapture: drawCallList size is %{public}zu", drawCallList->GetOpItemSize());
-    drawCallList->Playback(*canvas);
+    const auto& property = node->GetRenderProperties();
+    Drawing::Rect rect = Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+    drawCallList->Playback(*canvas, &rect);
     if (!isUniRender_ || isUseCpuSurface_) {
         return pixelmap;
     }
@@ -201,19 +206,6 @@ RSUniUICapture::RSUniUICaptureVisitor::RSUniUICaptureVisitor(NodeId nodeId, floa
     renderEngine_ = std::make_shared<RSRenderEngine>();
     renderEngine_->Init();
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
-    auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(nodeId_);
-    if (node == nullptr) {
-        RS_LOGE("RSUniUICapture::TakeLocalCapture node is nullptr return");
-        return;
-    }
-    const auto& targetNodeProperty = node->GetRenderProperties();
-    auto targetNodeGeoPtr = (targetNodeProperty.GetBoundsGeometry());
-    captureMatrix_.Set(Drawing::Matrix::Index::SCALE_X, scaleX_);
-    captureMatrix_.Set(Drawing::Matrix::Index::SCALE_X, scaleY_);
-    Drawing::Matrix invertMatrix;
-    if (targetNodeGeoPtr->GetAbsMatrix().Invert(invertMatrix)) {
-        captureMatrix_.PreConcat(invertMatrix);
-    }
 }
 
 void RSUniUICapture::PostTaskToRSRecord(std::shared_ptr<ExtendRecordingCanvas> canvas,
@@ -245,8 +237,13 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<ExtendReco
         RS_LOGE("RSUniUICaptureVisitor::SetCanvas: canvas == nullptr");
         return;
     }
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    canvas->SetGrRecordingContext(renderContext->GetSharedDrGPUContext());
+    std::shared_ptr<Drawing::GPUContext> sharedContext = nullptr;
+    if (isUniRender_) {
+        sharedContext = RSOffscreenRenderThread::Instance().GetRenderContext()->GetSharedDrGPUContext();
+    } else {
+        sharedContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext()->GetSharedDrGPUContext();
+    }
+    canvas->SetGrRecordingContext(sharedContext);
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
     canvas_->Scale(scaleX_, scaleY_);
     canvas_->SetDisableFilterCache(true);
@@ -299,7 +296,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
-        auto geoPtr = (property.GetBoundsGeometry());
+        auto& geoPtr = (property.GetBoundsGeometry());
         Drawing::Matrix relativeMatrix = Drawing::Matrix();
         relativeMatrix.Set(Drawing::Matrix::Index::SCALE_X, scaleX_);
         relativeMatrix.Set(Drawing::Matrix::Index::SCALE_Y, scaleY_);
@@ -311,19 +308,13 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     }
     node.ProcessRenderBeforeChildren(*canvas_);
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
-        auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
-        if (!canvasDrawingNode->IsOnTheTree()) {
-            auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
-                // The second param is null, 0 is an invalid value.
-                RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
-            };
-            canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
-            canvasDrawingNode->ProcessRenderContents(*canvas_);
-        } else {
-            auto image = canvasDrawingNode->GetImage(UNI_MAIN_THREAD_INDEX);
-            if (image) {
-                canvas_->DrawImage(*image, 0, 0, Drawing::SamplingOptions());
-            }
+        auto drawable = DrawableV2::RSRenderNodeDrawableAdapter::GetDrawableById(node.GetId());
+        if (!drawable) {
+            return;
+        }
+        auto bitmap = static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawable.get())->GetBitmap();
+        if (!bitmap.IsEmpty()) {
+            canvas_->DrawBitmap(bitmap, 0, 0);
         }
     } else {
         node.ProcessRenderContents(*canvas_);
@@ -367,7 +358,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRe
 
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode& node)
 {
-    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+    auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGI(
             "RSUniUICaptureVisitor::ProcessSurfaceRenderNode node:%{public}" PRIu64 ", get geoPtr failed",
@@ -384,17 +375,25 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     canvas_->Save();
 
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
         RS_LOGE("RSUniUICaptureVisitor::ProcessSurfaceViewWithUni node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());
         return;
     }
+    captureMatrix_.Set(Drawing::Matrix::Index::SCALE_X, scaleX_);
+    captureMatrix_.Set(Drawing::Matrix::Index::SCALE_Y, scaleY_);
+    Drawing::Matrix invertMatrix;
+    if (geoPtr->GetAbsMatrix().Invert(invertMatrix)) {
+        captureMatrix_.PreConcat(invertMatrix);
+    }
     canvas_->SetMatrix(captureMatrix_);
     canvas_->ConcatMatrix(geoPtr->GetAbsMatrix());
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
-    const RectF absBounds = { 0, 0, property.GetBoundsWidth(), property.GetBoundsHeight() };
+    auto boundsWidth = std::round(property.GetBoundsWidth());
+    auto boundsHeight = std::round(property.GetBoundsHeight());
+    const RectF absBounds = { 0, 0, boundsWidth, boundsHeight };
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     if (isSelfDrawingSurface) {
         RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
@@ -405,8 +404,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         canvas_->ClipRoundRect(RSPropertiesPainter::RRect2DrawingRRect(absClipRRect),
             Drawing::ClipOp::INTERSECT, true);
     } else {
-        canvas_->ClipRect(Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()),
-            Drawing::ClipOp::INTERSECT, false);
+        canvas_->ClipRect(Drawing::Rect(0, 0, boundsWidth, boundsHeight), Drawing::ClipOp::INTERSECT, false);
     }
     if (isSelfDrawingSurface) {
         RSPropertiesPainter::DrawBackground(property, *canvas_);

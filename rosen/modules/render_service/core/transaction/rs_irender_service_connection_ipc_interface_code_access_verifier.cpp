@@ -33,14 +33,24 @@ bool RSIRenderServiceConnectionInterfaceCodeAccessVerifier::IsExclusiveVerificat
             hasPermission = CheckPermission(code);
             break;
         }
+        case static_cast<CodeUnderlyingType>(CodeEnumType::GET_SHOW_REFRESH_RATE_ENABLED): {
+            hasPermission = IsSystemCalling(codeEnumTypeName_ + "::GET_SHOW_REFRESH_RATE_ENABLED");
+            break;
+        }
+        case static_cast<CodeUnderlyingType>(CodeEnumType::SET_SHOW_REFRESH_RATE_ENABLED): {
+            hasPermission = IsSystemCalling(codeEnumTypeName_ + "::SET_SHOW_REFRESH_RATE_ENABLED");
+            break;
+        }
         case static_cast<CodeUnderlyingType>(CodeEnumType::TAKE_SURFACE_CAPTURE): {
             hasPermission = CheckPermission(code);
             break;
         }
-        case static_cast<CodeUnderlyingType>(CodeEnumType::GET_CURRENT_DIRTY_REGION_INFO): {
-            hasPermission = CheckPermission(code);
+#ifdef RS_ENABLE_VK
+        case static_cast<CodeUnderlyingType>(CodeEnumType::SET_2D_RENDER_CTRL): {
+            hasPermission = IsSystemCalling(codeEnumTypeName_ + "::SET_2D_RENDER_CTRL");
             break;
         }
+#endif
         default: {
             break;
         }

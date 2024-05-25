@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 RSLightUpEffectFilter::RSLightUpEffectFilter(float lightUpDegree)
-    : RSDrawingFilter(RSLightUpEffectFilter::CreateLightUpEffectFilter(lightUpDegree)),
+    : RSDrawingFilterOriginal(RSLightUpEffectFilter::CreateLightUpEffectFilter(lightUpDegree)),
       lightUpDegree_(lightUpDegree)
 {
     type_ = FilterType::LIGHT_UP_EFFECT;
@@ -57,7 +57,8 @@ std::string RSLightUpEffectFilter::GetDescription()
     return "RSLightUpEffectFilter light up degree is " + std::to_string(lightUpDegree_);
 }
 
-std::shared_ptr<RSDrawingFilter> RSLightUpEffectFilter::Compose(const std::shared_ptr<RSDrawingFilter>& other) const
+std::shared_ptr<RSDrawingFilterOriginal> RSLightUpEffectFilter::Compose(
+    const std::shared_ptr<RSDrawingFilterOriginal>& other) const
 {
     std::shared_ptr<RSLightUpEffectFilter> result = std::make_shared<RSLightUpEffectFilter>(lightUpDegree_);
     result->imageFilter_ = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter_, other->GetImageFilter());
@@ -108,6 +109,22 @@ bool RSLightUpEffectFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, 
 bool RSLightUpEffectFilter::IsNearZero(float threshold) const
 {
     return ROSEN_EQ(lightUpDegree_, 0.0f, threshold);
+}
+
+bool RSLightUpEffectFilter::IsEqual(const std::shared_ptr<RSFilter>& other) const
+{
+    auto otherLightUpFilter = std::static_pointer_cast<RSLightUpEffectFilter>(other);
+    if (otherLightUpFilter == nullptr) {
+        ROSEN_LOGE("RSLightUpEffectFilter::IsEqual: the types of filters are different.");
+        return true;
+    }
+    float otherLightUpDegree = otherLightUpFilter->GetLightUpDegree();
+    return ROSEN_EQ(lightUpDegree_, otherLightUpDegree);
+}
+
+bool RSLightUpEffectFilter::IsEqualZero() const
+{
+    return ROSEN_EQ(lightUpDegree_, 0.0f);
 }
 } // namespace Rosen
 } // namespace OHOS

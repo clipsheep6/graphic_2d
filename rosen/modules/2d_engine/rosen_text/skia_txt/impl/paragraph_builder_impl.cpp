@@ -63,7 +63,7 @@ RSFontStyle MakeFontStyle(FontWeight fontWeight, FontWidth fontWidth, FontStyle 
     return RSFontStyle(weight, width, slant);
 }
 
-SkFontArguments MakeFontArguments(const FontVariations& fontVariations)
+void MakeFontArguments(skt::TextStyle& skStyle, const FontVariations& fontVariations)
 {
     constexpr size_t axisLen = 4;
 
@@ -80,7 +80,7 @@ SkFontArguments MakeFontArguments(const FontVariations& fontVariations)
 
     SkFontArguments arguments;
     arguments.setVariationDesignPosition(position);
-    return arguments;
+    skStyle.setFontArguments(arguments);
 }
 
 skt::TextShadow MakeTextShadow(const TextShadow& txtShadow)
@@ -90,6 +90,12 @@ skt::TextShadow MakeTextShadow(const TextShadow& txtShadow)
     shadow.fBlurSigma = txtShadow.blurSigma;
     shadow.fColor = txtShadow.color;
     return shadow;
+}
+
+const char* DefaultLocale()
+{
+    static const char* localeZh = "zh-Hans";
+    return localeZh;
 }
 } // anonymous namespace
 
@@ -165,7 +171,7 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
         textStyle.setHeight(SkDoubleToScalar(txt.height));
         textStyle.setHeightOverride(txt.heightOverride);
         textStyle.setFontFamilies({ SkString(txt.fontFamily.c_str()) });
-        textStyle.setLocale(SkString(txt.locale.c_str()));
+        textStyle.setLocale(SkString(txt.locale.empty() ? DefaultLocale() : txt.locale.c_str()));
     }
 
     skStyle.setTextStyle(textStyle);
@@ -239,7 +245,7 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
     skStyle.setHalfLeading(txt.halfLeading);
     skStyle.setBaselineShift(txt.baseLineShift);
 
-    skStyle.setLocale(SkString(txt.locale.c_str()));
+    skStyle.setLocale(SkString(txt.locale.empty() ? DefaultLocale() : txt.locale.c_str()));
     skStyle.setStyleId(txt.styleId);
     skStyle.setBackgroundRect({ txt.backgroundRect.color, txt.backgroundRect.leftTopRadius,
         txt.backgroundRect.rightTopRadius, txt.backgroundRect.rightBottomRadius,
@@ -251,7 +257,7 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
     }
 
     if (!txt.fontVariations.GetAxisValues().empty()) {
-        skStyle.setFontArguments(MakeFontArguments(txt.fontVariations));
+        MakeFontArguments(skStyle, txt.fontVariations);
     }
 
     skStyle.resetShadows();

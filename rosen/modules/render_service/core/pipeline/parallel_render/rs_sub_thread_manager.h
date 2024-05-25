@@ -41,7 +41,6 @@ public:
     void PostTask(const std::function<void()>& task, uint32_t threadIndex, bool isSyncTask = false);
     void WaitNodeTask(uint64_t nodeId);
     void NodeTaskNotify(uint64_t nodeId);
-    void SubmitFilterSubThreadTask();
     void SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
         const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     void ResetSubThreadGrContext();
@@ -66,13 +65,13 @@ private:
 
     RenderContext* renderContext_ = nullptr;
     uint32_t minLoadThreadIndex_ = 0;
+    uint32_t defaultThreadIndex_ = 0;
     std::mutex parallelRenderMutex_;
     std::condition_variable cvParallelRender_;
     std::map<uint64_t, uint8_t> nodeTaskState_;
     std::vector<std::shared_ptr<RSSubThread>> threadList_;
     std::unordered_map<pid_t, uint32_t> threadIndexMap_;
     std::unordered_map<uint32_t, pid_t> reThreadIndexMap_;
-    std::shared_ptr<RSFilterSubThread> filterThread = nullptr;
     std::shared_ptr<RSFilterSubThread> colorPickerThread_ = nullptr;
     bool needResetContext_ = false;
     bool needCancelTask_ = false;

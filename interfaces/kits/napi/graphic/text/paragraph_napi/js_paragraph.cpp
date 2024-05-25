@@ -48,6 +48,9 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
     }
 
     JsParagraph *jsParagraph = new(std::nothrow) JsParagraph(std::move(g_Typography));
+    if (jsParagraph == nullptr) {
+        return nullptr;
+    }
 
     status = napi_wrap(env, jsThis, jsParagraph,
         JsParagraph::Destructor, nullptr, nullptr);
@@ -169,20 +172,12 @@ napi_value JsParagraph::OnPaint(napi_env env, napi_callback_info info)
     double x = 0.0;
     double y = 0.0;
     napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsCanvas));
-    if (jsCanvas == nullptr ||
-        !(argv[ARGC_ONE] != nullptr && ConvertFromJsValue(env, argv[ARGC_ONE], x) &&
-         argv[ARGC_TWO] != nullptr && ConvertFromJsValue(env, argv[ARGC_TWO], y))) {
+    if (!jsCanvas || !jsCanvas->GetCanvas() ||
+        !(ConvertFromJsValue(env, argv[ARGC_ONE], x) && ConvertFromJsValue(env, argv[ARGC_TWO], y))) {
         ROSEN_LOGE("JsParagraph::OnPaint Argv is invalid");
         return NapiGetUndefined(env);
     }
-    if (jsCanvas->GetCanvas()->GetDrawingType() == Drawing::DrawingType::RECORDING) {
-        Drawing::RecordingCanvas* recordingCanvas = (Drawing::RecordingCanvas*)jsCanvas->GetCanvas();
-        recordingCanvas->SetIsCustomTypeface(true);
-        recordingCanvas->SetIsCustomTextType(true);
-        paragraph_->Paint(recordingCanvas, x, y);
-    } else {
-        paragraph_->Paint(jsCanvas->GetCanvas(), x, y);
-    }
+    paragraph_->Paint(jsCanvas->GetCanvas(), x, y);
 
     return NapiGetUndefined(env);
 }
@@ -452,7 +447,7 @@ napi_value JsParagraph::OnGetLineCount(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsParagraph::OnGetLineCount paragraph_ is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    size_t lineCount = paragraph_->GetLineCount();
+    size_t lineCount = static_cast<size_t>(paragraph_->GetLineCount());
     return CreateJsNumber(env, lineCount);
 }
 

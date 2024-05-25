@@ -20,7 +20,9 @@
 #include "property/rs_properties.h"
 
 namespace OHOS::Rosen {
-Drawing::Matrix RSRenderParams::parentSurfaceMatrix_;
+namespace {
+thread_local Drawing::Matrix parentSurfaceMatrix_;
+}
 
 void RSRenderParams::SetAlpha(float alpha)
 {
@@ -33,6 +35,20 @@ void RSRenderParams::SetAlpha(float alpha)
 float RSRenderParams::GetAlpha() const
 {
     return alpha_;
+}
+
+void RSRenderParams::SetAlphaOffScreen(bool alphaOffScreen)
+{
+    if (alphaOffScreen_ == alphaOffScreen) {
+        return;
+    }
+    alphaOffScreen_ = alphaOffScreen;
+    needSync_ = true;
+}
+
+bool RSRenderParams::GetAlphaOffScreen() const
+{
+    return alphaOffScreen_;
 }
 
 void RSRenderParams::SetMatrix(const Drawing::Matrix& matrix)
@@ -54,7 +70,15 @@ void RSRenderParams::ApplyAlphaAndMatrixToCanvas(RSPaintFilterCanvas& canvas) co
         canvas.SetAlpha(alpha_);
     } else {
         canvas.ConcatMatrix(matrix_);
-        canvas.MultiplyAlpha(alpha_);
+        if (alpha_ < 1.0f && (drawingCacheType_ == RSDrawingCacheType::FORCED_CACHE || alphaOffScreen_)) {
+            auto rect = GetBounds();
+            Drawing::Brush brush;
+            brush.SetAlpha(static_cast<uint32_t>(std::clamp(alpha_, 0.f, 1.f) * UINT8_MAX));
+            Drawing::SaveLayerOps slr(&rect, &brush);
+            canvas.SaveLayer(slr);
+        } else {
+            canvas.MultiplyAlpha(alpha_);
+        }
     }
 }
 
@@ -231,6 +255,43 @@ bool RSRenderParams::GetDrawingCacheIncludeProperty() const
     return drawingCacheIncludeProperty_;
 }
 
+void RSRenderParams::OpincUpdateRootFlag(bool suggestFlag)
+{
+    if (isOpincRootFlag_ == suggestFlag) {
+        return;
+    }
+    isOpincRootFlag_ = suggestFlag;
+    needSync_ = true;
+}
+
+bool RSRenderParams::OpincGetRootFlag() const
+{
+    return isOpincRootFlag_;
+}
+
+void RSRenderParams::OpincSetCacheChangeFlag(bool state)
+{
+    isOpincStateChanged_ = state;
+    needSync_ = true;
+}
+
+bool RSRenderParams::OpincGetCacheChangeState()
+{
+    bool state = isOpincStateChanged_;
+    isOpincStateChanged_ = false;
+    return state;
+}
+
+bool RSRenderParams::OpincGetCachedMark()
+{
+    return isOpincMarkCached_;
+}
+
+void RSRenderParams::OpincSetCachedMark(bool mark)
+{
+    isOpincMarkCached_ = mark;
+}
+
 void RSRenderParams::SetShadowRect(Drawing::Rect rect)
 {
     if (shadowRect_ == rect) {
@@ -324,7 +385,10 @@ void RSRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target)
     target->drawingCacheType_ = drawingCacheType_;
     target->drawingCacheIncludeProperty_ = drawingCacheIncludeProperty_;
     target->dirtyRegionInfoForDFX_ = dirtyRegionInfoForDFX_;
+    target->alphaOffScreen_ = alphaOffScreen_;
     OnCanvasDrawingSurfaceChange(target);
+    target->isOpincRootFlag_ = isOpincRootFlag_;
+    target->isOpincStateChanged_ = OpincGetCacheChangeState();
     needSync_ = false;
 }
 
@@ -342,6 +406,15 @@ std::string RSRenderParams::ToString() const
     ret += RENDER_BASIC_PARAM_TO_STRING(shouldPaint_);
     ret += RENDER_BASIC_PARAM_TO_STRING(int(frameGravity_));
     return ret;
+}
+
+void RSRenderParams::SetParentSurfaceMatrix(const Drawing::Matrix& parentSurfaceMatrix)
+{
+    parentSurfaceMatrix_ = parentSurfaceMatrix;
+}
+const Drawing::Matrix& RSRenderParams::GetParentSurfaceMatrix()
+{
+    return parentSurfaceMatrix_;
 }
 
 } // namespace OHOS::Rosen

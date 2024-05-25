@@ -20,8 +20,7 @@
 #include <map>
 
 #include "draw/color.h"
-#include "native_engine/native_engine.h"
-#include "native_engine/native_value.h"
+#include "js_drawing_utils.h"
 #include "text_style.h"
 #include "typography.h"
 #include "typography_create.h"
@@ -268,15 +267,48 @@ inline napi_value NapiGetUndefined(napi_env env)
     return result;
 }
 
-inline napi_value GetPointAndConvertToJsValue(napi_env env, Drawing::Point& ponit)
+inline napi_value GetPointAndConvertToJsValue(napi_env env, Drawing::Point& point)
 {
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue != nullptr) {
-        napi_set_named_property(env, objValue, "x", CreateJsNumber(env, ponit.GetX()));
-        napi_set_named_property(env, objValue, "y", CreateJsNumber(env, ponit.GetY()));
+        napi_set_named_property(env, objValue, "x", CreateJsNumber(env, point.GetX()));
+        napi_set_named_property(env, objValue, "y", CreateJsNumber(env, point.GetY()));
     }
     return objValue;
+}
+
+inline void GetPointXFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetX = 0;
+    if (napi_get_named_property(env, argValue, "x", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetX) != napi_ok) {
+        ROSEN_LOGE("The Parameter of number x about JsPoint is unvaild");
+        return;
+    }
+    point.SetX(targetX);
+    return;
+}
+
+inline void GetPointYFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetY = 0;
+    if (napi_get_named_property(env, argValue, "y", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetY) != napi_ok) {
+        ROSEN_LOGE("The Parameter of number y about JsPoint is unvaild");
+        return;
+    }
+    point.SetY(targetY);
+    return;
+}
+
+inline void GetPointFromJsValue(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    GetPointXFromJsNumber(env, argValue, point);
+    GetPointYFromJsNumber(env, argValue, point);
+    return;
 }
 
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
@@ -289,7 +321,7 @@ inline std::u16string Str8ToStr16(const std::string &str)
     return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(str);
 }
 
-inline void SetTextStyleDoubleValueFromJS(napi_env env, napi_value argValue, const std::string str, double& cValue)
+inline void SetDoubleValueFromJS(napi_env env, napi_value argValue, const std::string str, double& cValue)
 {
     napi_value tempValue = nullptr;
     napi_get_named_property(env, argValue, str.c_str(), &tempValue);
@@ -299,7 +331,7 @@ inline void SetTextStyleDoubleValueFromJS(napi_env env, napi_value argValue, con
     ConvertFromJsValue(env, tempValue, cValue);
 }
 
-inline void SetTextStyleBooleValueFromJS(napi_env env, napi_value argValue, const std::string str, bool& cValue)
+inline void SetBoolValueFromJS(napi_env env, napi_value argValue, const std::string str, bool& cValue)
 {
     napi_value tempValue = nullptr;
     napi_get_named_property(env, argValue, str.c_str(), &tempValue);
@@ -358,7 +390,7 @@ inline napi_value CreateTextRectJsValue(napi_env env, TextRect textrect)
 
 bool OnMakeFontFamilies(napi_env& env, napi_value jsValue, std::vector<std::string> &fontFamilies);
 
-bool SetTextStyleColor(napi_env env, napi_value argValue, const std::string& str, Drawing::Color& colorSrc);
+bool SetColorFromJS(napi_env env, napi_value argValue, const std::string& str, Drawing::Color& colorSrc);
 
 bool GetDecorationFromJS(napi_env env, napi_value argValue, TextStyle& textStyle);
 
@@ -368,6 +400,33 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
 
 bool GetPlaceholderSpanFromJS(napi_env env, napi_value argValue, PlaceholderSpan& placeholderSpan);
 
+void ParsePartTextStyle(napi_env env, napi_value argValue, TextStyle& textStyle);
+
+void SetTextStyleBaseType(napi_env env, napi_value argValue, TextStyle& textStyle);
+
+void ReceiveFontFeature(napi_env env, napi_value argValue, TextStyle& textStyle);
+
 size_t GetParamLen(napi_env env, napi_value param);
+
+bool GetNamePropertyFromJS(napi_env env, napi_value argValue, const std::string& str, napi_value& propertyValue);
+
+template<class Type>
+void SetEnumValueFromJS(napi_env env, napi_value argValue, const std::string str, Type& typeValue)
+{
+    napi_value propertyValue = nullptr;
+    if (!GetNamePropertyFromJS(env, argValue, str, propertyValue)) {
+        return;
+    }
+
+    ConvertFromJsValue(env, propertyValue, typeValue);
+}
+
+void ScanShadowValue(napi_env env, napi_value allShadowValue, uint32_t arrayLength, TextStyle& textStyle);
+
+void SetTextShadowProperty(napi_env env, napi_value argValue, TextStyle& textStyle);
+
+void SetStrutStyleFromJS(napi_env env, napi_value argValue, TypographyStyle& pographyStyle);
+
+void SetRectStyleFromJS(napi_env env, napi_value argValue, RectStyle& rectStyle);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

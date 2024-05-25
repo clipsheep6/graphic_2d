@@ -187,8 +187,12 @@ int32_t HdiOutput::CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo
     }
     surfaceIdMap_[surfaceId] = layer;
 
+#ifdef RS_IS_TABLE_PRODUCT
+    return GRAPHIC_DISPLAY_SUCCESS;
+#endif
+
     // DISPLAY ENGINE
-    uint32_t ret = 0;
+    int32_t ret = 0;
     std::vector<std::string> validKeys{};
     ret = device_->GetSupportedLayerPerFrameParameterKey(validKeys);
     if (ret != 0) {
@@ -261,11 +265,13 @@ uint32_t HdiOutput::GetScreenId() const
 
 void HdiOutput::SetLayerCompCapacity(uint32_t layerCompositionCapacity)
 {
+    std::unique_lock<std::mutex> lock(layerMutex_);
     layerCompCapacity_ = layerCompositionCapacity;
 }
 
 uint32_t HdiOutput::GetLayerCompCapacity() const
 {
+    std::unique_lock<std::mutex> lock(layerMutex_);
     return layerCompCapacity_;
 }
 
@@ -305,11 +311,13 @@ void HdiOutput::RecordCompositionTime(int64_t timeStamp)
 
 void HdiOutput::SetDirectClientCompEnableStatus(bool enableStatus)
 {
+    std::unique_lock<std::mutex> lock(layerMutex_);
     directClientCompositionEnabled_ = enableStatus;
 }
 
 bool HdiOutput::GetDirectClientCompEnableStatus() const
 {
+    std::unique_lock<std::mutex> lock(layerMutex_);
     return directClientCompositionEnabled_;
 }
 
@@ -864,6 +872,11 @@ void HdiOutput::ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) con
     }
 
     std::sort(dumpLayerInfos.begin(), dumpLayerInfos.end(), Cmp);
+}
+
+int HdiOutput::GetBufferCacheSize()
+{
+    return bufferCache_.size();
 }
 } // namespace Rosen
 } // namespace OHOS

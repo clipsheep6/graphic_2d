@@ -278,7 +278,7 @@ void RSScreenManager::ForceRefreshOneFrameIfNoRNV()
         mainThread->PostTask([mainThread]() {
             mainThread->SetDirtyFlag();
         });
-        mainThread->ForceRefreshForUni();
+        mainThread->RequestNextVSync();
     }
 }
 
@@ -391,6 +391,17 @@ void RSScreenManager::CleanAndReinit()
             }
         });
     }
+}
+
+bool RSScreenManager::TrySimpleProcessHotPlugEvents()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (pendingHotPlugEvents_.empty() && connectedIds_.empty()) {
+        isHwcDead_ = false;
+        mipiCheckInFirstHotPlugEvent_ = true;
+        return true;
+    }
+    return false;
 }
 
 void RSScreenManager::ProcessScreenHotPlugEvents()
@@ -818,7 +829,7 @@ ScreenId RSScreenManager::CreateVirtualScreen(
 int32_t RSScreenManager::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (screens_.find(id) == screens_.end()) {
+    if (screens_.find(id) == screens_.end() || surface == nullptr) {
         return SCREEN_NOT_FOUND;
     }
     uint64_t surfaceId = surface->GetUniqueId();
@@ -929,6 +940,7 @@ void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
         }
         mainThread->PostTask([mainThread]() {
             mainThread->SetDirtyFlag();
+            mainThread->SetScreenPowerOnChanged(true);
         });
         if (screenPowerStatus_.count(id) == 0 ||
             screenPowerStatus_[id] == ScreenPowerStatus::POWER_STATUS_OFF ||
@@ -954,7 +966,7 @@ bool RSScreenManager::SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool can
     }
 
     RS_LOGD("RSScreenManager %{public}s: canvasRotation: %{public}d", __func__, canvasRotation);
-    
+
     return screens_.at(id)->SetVirtualMirrorScreenCanvasRotation(canvasRotation);
 }
 
@@ -968,7 +980,7 @@ bool RSScreenManager::SetVirtualMirrorScreenScaleMode(ScreenId id, ScreenScaleMo
     }
 
     RS_LOGD("RSScreenManager %{public}s: scaleMode: %{public}d", __func__, scaleMode);
-    
+
     return screens_.at(id)->SetVirtualMirrorScreenScaleMode(scaleMode);
 }
 
@@ -1094,8 +1106,8 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
     info.id = id;
     info.width = screen->Width();
     info.height = screen->Height();
-    info.phyWidth = screen->PhyWidth();
-    info.phyHeight = screen->PhyHeight();
+    info.phyWidth = screen->PhyWidth() ? screen->PhyWidth() : screen->Width();
+    info.phyHeight = screen->PhyHeight() ? screen->PhyHeight() : screen->Height();
     auto ret = screen->GetScreenColorGamut(info.colorGamut);
     if (ret != StatusCode::SUCCESS) {
         info.colorGamut = COLOR_GAMUT_SRGB;
@@ -1106,7 +1118,7 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
     } else if (!screen->IsVirtual()) {
         info.state = ScreenState::HDI_OUTPUT_ENABLE;
     } else {
-        info.state = ScreenState::PRODUCER_SURFACE_ENABLE;
+        info.state = ScreenState::SOFTWARE_OUTPUT_ENABLE;
     }
     info.skipFrameInterval = screen->GetScreenSkipFrameInterval();
     screen->GetPixelFormat(info.pixelFormat);
@@ -1160,7 +1172,7 @@ std::shared_ptr<HdiOutput> RSScreenManager::GetOutput(ScreenId id) const
     std::lock_guard<std::mutex> lock(mutex_);
 
     // assert screens_.count(id) == 1
-    if (screens_.count(id) == 0) {
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
         RS_LOGW("RSScreenManager::GetOutput: There is no screen for id %{public}" PRIu64 ".", id);
         return nullptr;
     }
@@ -1201,10 +1213,11 @@ void RSScreenManager::RemoveScreenChangeCallback(const sptr<RSIScreenChangeCallb
 
 void RSScreenManager::DisplayDump(std::string& dumpString)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t index = 0;
     for (const auto &[id, screen] : screens_) {
         if (screen == nullptr) {
-            return;
+            continue;
         }
         screen->DisplayDump(index, dumpString);
         index++;
@@ -1213,8 +1226,12 @@ void RSScreenManager::DisplayDump(std::string& dumpString)
 
 void RSScreenManager::SurfaceDump(std::string& dumpString)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t index = 0;
     for (const auto &[id, screen] : screens_) {
+        if (screen == nullptr) {
+            continue;
+        }
         screen->SurfaceDump(index, dumpString);
         index++;
     }
@@ -1222,6 +1239,7 @@ void RSScreenManager::SurfaceDump(std::string& dumpString)
 
 void RSScreenManager::FpsDump(std::string& dumpString, std::string& arg)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t index = 0;
     dumpString += "\n-- The recently fps records info of screens:\n";
     for (const auto &[id, screen] : screens_) {
@@ -1232,6 +1250,7 @@ void RSScreenManager::FpsDump(std::string& dumpString, std::string& arg)
 
 void RSScreenManager::ClearFpsDump(std::string& dumpString, std::string& arg)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t index = 0;
     dumpString += "\n-- Clear fps records info of screens:\n";
     for (const auto &[id, screen] : screens_) {
@@ -1240,8 +1259,24 @@ void RSScreenManager::ClearFpsDump(std::string& dumpString, std::string& arg)
     }
 }
 
+void RSScreenManager::ClearFrameBufferIfNeed()
+{
+    RSHardwareThread::Instance().PostTask([this]() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (const auto& [id, screen] : screens_) {
+            if (!screen || !screen->GetOutput()) {
+                continue;
+            }
+            if (screen->GetOutput()->GetBufferCacheSize() > 0) {
+                RSHardwareThread::Instance().ClearFrameBuffers(screen->GetOutput());
+            }
+        }
+    });
+}
+
 void RSScreenManager::HitchsDump(std::string& dumpString, std::string& arg)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t index = 0;
     dumpString += "\n-- The recently window hitchs records info of screens:\n";
     for (const auto &[id, screen] : screens_) {

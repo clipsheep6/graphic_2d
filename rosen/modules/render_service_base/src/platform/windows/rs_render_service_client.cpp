@@ -83,8 +83,8 @@ public:
             return GSERROR_NOT_INIT;
         }
 
-        auto func = [callback](int64_t time) {
-            callback.callback_(time, callback.userData_);
+        auto func = [callback](int64_t time, int64_t frameCount) {
+            callback.callbackWithId_(time, frameCount, callback.userData_);
         };
         client_->SetVsyncCallback(func);
         client_->RequestNextVsync();
@@ -143,6 +143,13 @@ std::vector<ScreenId> RSRenderServiceClient::GetAllScreenIds()
     return {0};
 }
 
+#ifdef RS_ENABLE_VK
+bool RSRenderServiceClient::Set2DRenderCtrl(bool enable)
+{
+    return false;
+}
+#endif
+
 void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
 {
 }
@@ -164,7 +171,8 @@ void RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
 {
 }
 
-void RSRenderServiceClient::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range)
+void RSRenderServiceClient::SyncFrameRateRange(FrameRateLinkerId id,
+    const FrameRateRange& range, bool isAnimatorStopped)
 {
 }
 
@@ -466,7 +474,7 @@ void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
 {
 }
 
-void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
 }
 
@@ -478,9 +486,19 @@ void RSRenderServiceClient::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& 
 {
 }
 
-GpuDirtyRegionInfo RSRenderServiceClient::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceClient::GetActiveDirtyRegionInfo()
 {
-    return GpuDirtyRegionInfo {};
+    return {};
+}
+
+GlobalDirtyRegionInfo RSRenderServiceClient::GetGlobalDirtyRegionInfo()
+{
+    return GlobalDirtyRegionInfo {};
+}
+
+LayerComposeInfo RSRenderServiceClient::GetLayerComposeInfo()
+{
+    return LayerComposeInfo {};
 }
 
 #ifdef TP_FEATURE_ENABLE

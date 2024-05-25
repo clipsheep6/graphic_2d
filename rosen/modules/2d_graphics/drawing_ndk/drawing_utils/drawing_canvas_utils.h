@@ -16,6 +16,7 @@
 #ifndef DRAWING_CANVAS_H
 #define DRAWING_CANVAS_H
 #include "draw/canvas.h"
+#include "drawing_error_code.h"
 #include "utils/rect.h"
 #include "utils/sampling_options.h"
 
@@ -31,4 +32,18 @@ public:
         const OHOS::Rosen::Drawing::Rect* src, const OHOS::Rosen::Drawing::Rect* dst,
         const OHOS::Rosen::Drawing::SamplingOptions* sampling);
 };
+
+// Default typeface does not support chinese characters, needs to load chinese character ttf file.
+static constexpr char ZH_CN_TTF[] = "/system/fonts/HarmonyOS_Sans_SC.ttf";
+
+inline std::shared_ptr<OHOS::Rosen::Drawing::Typeface> g_LoadZhCnTypeface()
+{
+    auto typeface = OHOS::Rosen::Drawing::Typeface::MakeFromFile(ZH_CN_TTF);
+    if (typeface == nullptr) {
+        typeface = OHOS::Rosen::Drawing::Typeface::MakeDefault();
+    }
+    return typeface;
+}
+
+extern OH_Drawing_ErrorCode g_drawingErrorCode;
 #endif // DRAWING_CANVAS_H

@@ -67,6 +67,11 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationTraceEnabled()
+{
+    return false;
+}
+
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 {
     return {};
@@ -78,6 +83,16 @@ PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 }
 
 PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetVirtualDirtyEnabled()
 {
     return {};
 }
@@ -227,6 +242,11 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     return false;
 }
 
+int RSSystemProperties::GetDebugTraceLevel()
+{
+    return 0;
+}
+
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
 {
     return false;
@@ -263,6 +283,11 @@ bool RSSystemProperties::GetKawaseOriginalEnabled()
 }
 
 bool RSSystemProperties::GetBlurEnabled()
+{
+    return true;
+}
+
+bool RSSystemProperties::GetForegroundFilterEnabled()
 {
     return true;
 }
@@ -334,6 +359,16 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetBlurExtraFilterEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetSubSurfaceEnabled()
 {
     return false;
@@ -358,7 +393,7 @@ bool RSSystemProperties::GetDumpUIPixelmapEnabled()
     return false;
 }
 
-uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
+int RSSystemProperties::GetVirtualScreenScaleModeDFX()
 {
     return {};
 }
@@ -379,6 +414,36 @@ bool RSSystemProperties::GetRenderParallelEnabled()
 }
 
 bool RSSystemProperties::GetUIFirstForceEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetAceDebugBoundaryEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::IsForceClient()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetTextBlobAsPixelMap()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetUnmarshParallelFlag()
+{
+    return false;
+}
+
+uint32_t RSSystemProperties::GetUnMarshParallelSize()
+{
+    return UINT32_MAX;
+}
+
+bool RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
 {
     return false;
 }

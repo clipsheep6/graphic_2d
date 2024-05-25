@@ -30,6 +30,8 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 static constexpr size_t ASHMEM_SIZE_THRESHOLD = 400 * 1024; // cannot > 500K in TF_ASYNC mode
+static constexpr int MAX_RETRY_COUNT = 10;
+static constexpr int RETRY_WAIT_TIME_US = 500; // wait 0.5ms before retry SendRequest
 }
 
 RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemoteObject>& impl)
@@ -66,11 +68,19 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
     for (const auto& parcel : parcelVector) {
         MessageParcel reply;
         uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::COMMIT_TRANSACTION);
-        int32_t err = Remote()->SendRequest(code, *parcel, reply, option);
-        if (err != NO_ERROR) {
-            ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, err = %{public}d", err);
-            return;
-        }
+        int retryCount = 0;
+        int32_t err = NO_ERROR;
+        do {
+            err = Remote()->SendRequest(code, *parcel, reply, option);
+            if (err != NO_ERROR && retryCount < MAX_RETRY_COUNT) {
+                retryCount++;
+                usleep(RETRY_WAIT_TIME_US);
+            } else if (err != NO_ERROR) {
+                ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, "
+                    "err = %{public}d, retryCount = %{public}d", err, retryCount);
+                return;
+            }
+        } while (err != NO_ERROR && retryCount < MAX_RETRY_COUNT);
     }
 }
 
@@ -205,6 +215,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     }
     sptr<IRemoteObject> surfaceObject = reply.ReadRemoteObject();
     sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
+    if (bp == nullptr) {
+        return nullptr;
+    }
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
     return surface;
 }
@@ -449,6 +462,30 @@ int32_t RSRenderServiceConnectionProxy::SetVirtualScreenSurface(ScreenId id, spt
     return status;
 }
 
+#ifdef RS_ENABLE_VK
+bool RSRenderServiceConnectionProxy::Set2DRenderCtrl(bool enable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return false;
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteBool(enable);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_2D_RENDER_CTRL);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::Set2DRenderCtrl: Send Request err.");
+        return false;
+    }
+    bool result = reply.ReadBool();
+    return result;
+}
+#endif
+
 void RSRenderServiceConnectionProxy::RemoveVirtualScreen(ScreenId id)
 {
     MessageParcel data;
@@ -553,7 +590,8 @@ void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
     }
 }
 
-void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range)
+void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range,
+    bool isAnimatorStopped)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -568,6 +606,7 @@ void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, co
     data.WriteUint32(range.min_);
     data.WriteUint32(range.max_);
     data.WriteUint32(range.preferred_);
+    data.WriteBool(isAnimatorStopped);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SYNC_FRAME_RATE_RANGE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2091,7 +2130,7 @@ void RSRenderServiceConnectionProxy::NotifyRefreshRateEvent(const EventInfo& eve
     }
 }
 
-void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -2100,6 +2139,9 @@ void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
         return;
     }
     if (!data.WriteUint32(touchStatus)) {
+        return;
+    }
+    if (!data.WriteUint32(touchCnt)) {
         return;
     }
     option.SetFlags(MessageOption::TF_ASYNC);
@@ -2141,30 +2183,66 @@ void RSRenderServiceConnectionProxy::RunOnRemoteDiedCallback()
     }
 }
 
-GpuDirtyRegionInfo RSRenderServiceConnectionProxy::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnectionProxy::GetActiveDirtyRegionInfo()
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    GpuDirtyRegionInfo gpuDirtyRegionInfo;
+    std::vector<ActiveDirtyRegionInfo> activeDirtyRegionInfos;
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return gpuDirtyRegionInfo;
+        return activeDirtyRegionInfos;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_CURRENT_DIRTY_REGION_INFO);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetCurrentDirtyRegionInfo: Send Request err.");
-        return gpuDirtyRegionInfo;
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetActiveDirtyRegionInfo: Send Request err.");
+        return activeDirtyRegionInfos;
     }
-    gpuDirtyRegionInfo.activeGpuDirtyRegionAreas = reply.ReadInt64();
-    gpuDirtyRegionInfo.globalGpuDirtyRegionAreas = reply.ReadInt64();
-    gpuDirtyRegionInfo.skipProcessFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.activeFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.globalFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.windowName = reply.ReadString();
-    return gpuDirtyRegionInfo;
+    int32_t activeDirtyRegionInfosSize = reply.ReadInt32();
+    while (activeDirtyRegionInfosSize--) {
+        activeDirtyRegionInfos.emplace_back(ActiveDirtyRegionInfo(reply.ReadInt64(), reply.ReadInt32(),
+            reply.ReadInt32(), reply.ReadString()));
+    }
+    return activeDirtyRegionInfos;
+}
+
+GlobalDirtyRegionInfo RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    GlobalDirtyRegionInfo globalDirtyRegionInfo;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return globalDirtyRegionInfo;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_GLOBAL_DIRTY_REGION_INFO);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo: Send Request err.");
+        return globalDirtyRegionInfo;
+    }
+    return GlobalDirtyRegionInfo(reply.ReadInt64(), reply.ReadInt32(), reply.ReadInt32());
+}
+
+LayerComposeInfo RSRenderServiceConnectionProxy::GetLayerComposeInfo()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    LayerComposeInfo layerComposeInfo;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return layerComposeInfo;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_SYNTHESIS_MODE_INFO);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetLayerComposeInfo: Send Request err.");
+        return layerComposeInfo;
+    }
+    return LayerComposeInfo(reply.ReadInt32(), reply.ReadInt32(), reply.ReadInt32());
 }
 
 #ifdef TP_FEATURE_ENABLE

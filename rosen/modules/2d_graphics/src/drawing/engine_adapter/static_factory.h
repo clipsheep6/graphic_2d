@@ -22,6 +22,7 @@
 #include "draw/brush.h"
 #include "draw/path.h"
 #include "draw/surface.h"
+#include "effect/blender.h"
 #include "image/pixmap.h"
 #include "image/yuv_info.h"
 #include "text/font_style_set.h"
@@ -50,10 +51,10 @@ public:
     static std::shared_ptr<Surface> MakeFromBackendRenderTarget(GPUContext* gpuContext, const TextureInfo& info,
         TextureOrigin origin, ColorType colorType, std::shared_ptr<ColorSpace> colorSpace,
         void (*deleteVkImage)(void *), void* cleanHelper);
+#endif
     static std::shared_ptr<Surface> MakeFromBackendTexture(GPUContext* gpuContext, const TextureInfo& info,
         TextureOrigin origin, int sampleCnt, ColorType colorType,
         std::shared_ptr<ColorSpace> colorSpace, void (*deleteVkImage)(void *), void* cleanHelper);
-#endif
     static std::shared_ptr<Surface> MakeRenderTarget(GPUContext* gpuContext, bool budgeted, const ImageInfo& imageInfo);
     static std::shared_ptr<Image> MakeFromYUVAPixmaps(GPUContext& gpuContext, const YUVInfo& info, void* memory);
 #endif
@@ -66,6 +67,7 @@ public:
         size_t rowBytes);
     static std::shared_ptr<TextBlob> DeserializeTextBlob(const void* data, size_t size, void* ctx);
     static std::shared_ptr<Typeface> DeserializeTypeface(const void* data, size_t size);
+    static bool GetFillPath(const Pen& pen, const Path& src, Path& dst, const Rect* rect, const Matrix& matrix);
     static bool CanComputeFastBounds(const Brush& brush);
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
     static bool AsBlendMode(const Brush& brush);
@@ -79,8 +81,9 @@ public:
     static DrawingSymbolLayersGroups GetSymbolLayersGroups(uint32_t glyphId);
     static std::vector<std::vector<DrawingPiecewiseParameter>> GetGroupParameters(
         DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode = 0,
-        DrawingCommonSubType commonSubType = DrawingCommonSubType::UP);
+        DrawingCommonSubType commonSubType = DrawingCommonSubType::DOWN);
     static FontStyleSet* CreateEmpty();
+    static std::shared_ptr<Blender> CreateWithBlendMode(BlendMode mode);
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -20,6 +20,7 @@
 #include "parameters.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {
@@ -40,6 +41,7 @@ BufferDrawParam RSDividedRenderUtil::CreateBufferDrawParam(
     filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
     params.paint.SetFilter(filter);
     params.setColorFilter = setColorFilter;
+    params.threadIndex = gettid();
 
     const RSProperties& property = node.GetRenderProperties();
     auto backgroundColor = property.GetBackgroundColor();
@@ -99,7 +101,8 @@ void RSDividedRenderUtil::CalculateSurfaceNodeClipRects(
         params.clipRRect = RRect(localBounds, params.cornerRadius);
     } else {
         // in logical screen's coordinate system.
-        const auto& clipRect = node.GetDstRect();
+        auto clipRect = node.GetDstRect();
+        clipRect = clipRect.Offset(node.GetOffSetX() * -1, node.GetOffSetY() * -1);
         params.clipRect = Drawing::Rect(clipRect.GetLeft(), clipRect.GetTop(),
             clipRect.GetWidth() + clipRect.GetLeft(), clipRect.GetHeight() + clipRect.GetTop());
         params.clipRRect = RRect(absBounds, params.cornerRadius);

@@ -57,7 +57,9 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
 napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_STATIC_FUNCTION("getGlobalInstance", JsFontCollection::GetGlobalInstance),
         DECLARE_NAPI_FUNCTION("loadFontSync", JsFontCollection::LoadFontSync),
+        DECLARE_NAPI_FUNCTION("clearCaches", JsFontCollection::ClearCaches),
     };
 
     napi_value constructor = nullptr;
@@ -96,6 +98,33 @@ JsFontCollection::JsFontCollection()
 std::shared_ptr<FontCollection> JsFontCollection::GetFontCollection()
 {
     return fontcollection_;
+}
+
+napi_value JsFontCollection::GetGlobalInstance(napi_env env, napi_callback_info info)
+{
+    napi_value constructor = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status != napi_ok || !constructor) {
+        ROSEN_LOGE("Failed to get constructor object");
+        return nullptr;
+    }
+
+    napi_value object = nullptr;
+    status = napi_new_instance(env, constructor, 0, nullptr, &object);
+    if (status != napi_ok || !object) {
+        ROSEN_LOGE("Failed to instantiate instance");
+        return nullptr;
+    }
+
+    JsFontCollection* jsFontCollection = nullptr;
+    status = napi_unwrap(env, object, reinterpret_cast<void**>(&jsFontCollection));
+    if (status != napi_ok || !jsFontCollection) {
+        ROSEN_LOGE("Failed to unwrap JsFontCollection");
+        return nullptr;
+    }
+    jsFontCollection->fontcollection_ = OHOS::Rosen::FontCollection::Create();
+
+    return object;
 }
 
 napi_value JsFontCollection::LoadFontSync(napi_env env, napi_callback_info info)
@@ -253,8 +282,7 @@ bool JsFontCollection::ParseResourcePath(napi_env env, napi_value value, const s
         if (state >= GLOBAL_ERROR || state < 0) {
             return false;
         }
-        Drawing::Typeface* typeface = fontcollection_->LoadFont(familyName.c_str(), rawData.get(), dataLen);
-        if (typeface == nullptr || !AddTypefaceInformation(typeface, familyName)) {
+        if (!fontcollection_->LoadFont(familyName.c_str(), rawData.get(), dataLen)) {
             return false;
         }
         return true;
@@ -265,71 +293,54 @@ bool JsFontCollection::ParseResourcePath(napi_env env, napi_value value, const s
     return true;
 }
 
-Drawing::Typeface* JsFontCollection::GetFontFileProperties(const std::string path, const std::string familyName)
+bool JsFontCollection::GetFontFileProperties(const std::string path, const std::string familyName)
 {
     size_t datalen;
-    std::ifstream f(path.c_str());
-    if (!f.good()) {
-        return nullptr;
+
+    char tmpPath[PATH_MAX] = {0};
+    if (realpath(path.c_str(), tmpPath) == nullptr) {
+        return false;
     }
 
-    std::ifstream ifs(path, std::ios_base::in);
+    std::ifstream f(tmpPath);
+    if (!f.good()) {
+        return false;
+    }
+
+    std::ifstream ifs(tmpPath, std::ios_base::in);
     if (!ifs.is_open()) {
-        return nullptr;
+        return false;
     }
 
     ifs.seekg(0, ifs.end);
     if (!ifs.good()) {
         ifs.close();
-        return nullptr;
+        return false;
     }
 
-    datalen = ifs.tellg();
+    datalen = static_cast<size_t>(ifs.tellg());
     if (ifs.fail()) {
         ifs.close();
-        return nullptr;
+        return false;
     }
 
     ifs.seekg(ifs.beg);
     if (!ifs.good()) {
         ifs.close();
-        return nullptr;
+        return false;
     }
 
     std::unique_ptr<char[]> buffer = std::make_unique<char[]>(datalen);
     ifs.read(buffer.get(), datalen);
     if (!ifs.good()) {
         ifs.close();
-        return nullptr;
+        return false;
     }
     ifs.close();
     const uint8_t* rawData = reinterpret_cast<uint8_t*>(buffer.get());
-    Drawing::Typeface* typeface = nullptr;
-    typeface = fontcollection_->LoadFont(familyName.c_str(), rawData, datalen);
-    if (typeface == nullptr) {
-        return nullptr;
+    if (!fontcollection_->LoadFont(familyName.c_str(), rawData, datalen)) {
+        return false;
     }
-    if (!AddTypefaceInformation(typeface, familyName)) {
-        return nullptr;
-    }
-    return typeface;
-}
-
-bool JsFontCollection::AddTypefaceInformation(Drawing::Typeface* typeface, const std::string familyName)
-{
-    std::shared_ptr<Drawing::Typeface> drawingTypeface(typeface);
-    std::string name = familyName;
-    if (name.empty()) {
-        name = drawingTypeface->GetFamilyName();
-    }
-    fontcollection_->AddLoadedFamilyName(name);
-    if (Drawing::Typeface::GetTypefaceRegisterCallBack() != nullptr) {
-        bool ret = Drawing::Typeface::GetTypefaceRegisterCallBack()(drawingTypeface);
-        if (!ret) {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -367,6 +378,23 @@ napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFontCollection::ClearCaches(napi_env env, napi_callback_info info)
+{
+    JsFontCollection* me = CheckParamsAndGetThis<JsFontCollection>(env, info);
+    return (me != nullptr) ? me->OnClearCaches(env, info) : nullptr;
+}
+
+napi_value JsFontCollection::OnClearCaches(napi_env env, napi_callback_info info)
+{
+    if (fontcollection_ == nullptr) {
+        ROSEN_LOGE("JsFontCollection is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "JsFontCollection::OnClearCaches fontCollection is nullptr.");
+    }
+    fontcollection_->ClearCaches();
     return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

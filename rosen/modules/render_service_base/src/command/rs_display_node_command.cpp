@@ -16,6 +16,7 @@
 #include "command/rs_display_node_command.h"
 
 #include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_render_node_gc.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
@@ -23,8 +24,8 @@ namespace Rosen {
 
 void DisplayNodeCommandHelper::Create(RSContext& context, NodeId id, const RSDisplayNodeConfig& config)
 {
-    std::shared_ptr<RSDisplayRenderNode> node =
-        std::make_shared<RSDisplayRenderNode>(id, config, context.weak_from_this());
+    auto node = std::shared_ptr<RSDisplayRenderNode>(new RSDisplayRenderNode(id,
+        config, context.weak_from_this()), RSRenderNodeGC::NodeDestructor);
     auto& nodeMap = context.GetMutableNodeMap();
     nodeMap.RegisterDisplayRenderNode(node);
     context.GetGlobalRootRenderNode()->AddChild(node);
@@ -36,6 +37,24 @@ void DisplayNodeCommandHelper::Create(RSContext& context, NodeId id, const RSDis
         auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node);
         displayNode->SetMirrorSource(mirrorSourceNode);
     }
+}
+
+void DisplayNodeCommandHelper::AddDisplayNodeToTree(RSContext& context, NodeId id)
+{
+    auto& nodeMap = context.GetMutableNodeMap();
+    auto node = nodeMap.GetRenderNode<RSDisplayRenderNode>(id);
+    context.GetGlobalRootRenderNode()->AddChild(node);
+
+    ROSEN_LOGD("DisplayNodeCommandHelper::AddDisplayNodeToTree, id:[%{public}" PRIu64 "]", id);
+}
+
+void DisplayNodeCommandHelper::RemoveDisplayNodeFromTree(RSContext& context, NodeId id)
+{
+    auto& nodeMap = context.GetMutableNodeMap();
+    auto node = nodeMap.GetRenderNode<RSDisplayRenderNode>(id);
+    context.GetGlobalRootRenderNode()->RemoveChild(node);
+
+    ROSEN_LOGD("DisplayNodeCommandHelper::RemoveDisplayNodeFromTree, id:[%{public}" PRIu64 "]", id);
 }
 
 void DisplayNodeCommandHelper::SetScreenId(RSContext& context, NodeId id, uint64_t screenId)
@@ -101,5 +120,13 @@ void DisplayNodeCommandHelper::SetBootAnimation(RSContext& context, NodeId nodeI
     }
 }
 
+void DisplayNodeCommandHelper::SetScbNodePid(RSContext& context, NodeId nodeId,
+    const std::vector<int32_t>& oldScbPids, int32_t currentScbPid)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSDisplayRenderNode>(nodeId)) {
+        ROSEN_LOGI("SetScbNodePid NodeId:[%{public}" PRIu64 "] currentPid:[%{public}d]", nodeId, currentScbPid);
+        node->SetScbNodePid(oldScbPids, currentScbPid);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

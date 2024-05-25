@@ -48,7 +48,6 @@ HWTEST_F(RsFilterSubThreadTest, PostTaskTest, TestSize.Level1)
     ASSERT_TRUE(renderContext != nullptr);
     auto curThread = std::make_shared<RSFilterSubThread>(renderContext);
     curThread->PostTask([] {});
-    curThread->PostTask([] {});
     delete renderContext;
     renderContext = nullptr;
     usleep(1000 * 1000); // 1000 * 1000us

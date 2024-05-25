@@ -161,26 +161,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> IN
     { "Affinity", AFFINITY},
     { "FontWidth", FONTWIDTH },
     { "TextHeightBehavior", TEXTHEIGHTBEHAVIOR },
-}
-
-static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
-    { "TextAlign", g_textAlign },
-    { "TextDecorationStyle", g_textDecorationStyle },
-    { "FontWeight", g_fontWeight },
-    { "FontStyle", g_fontStyle },
-    { "TextBaseline", g_textBaseline },
-    { "TextDirection", g_textDirection },
-    { "WordBreak", g_wordBreakType },
-    { "BreakStrategy", g_breakStrategy },
-    { "EllipsisMode", g_ellipsisModal },
-    { "TextDecorationType", g_textDecoration },
-    { "PlaceholderAlignment", g_placeholderVerticalAlignment },
-    { "RectWidthStyle", g_rectWidthStyle },
-    { "RectHeightStyle", g_rectHeightStyle },
-    { "Affinity", g_affinity },
-    { "FontWidth", g_fontWidth },
-    { "TextHeightBehavior", g_textHeightBehavior },
 };
+
 }
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

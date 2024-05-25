@@ -283,7 +283,6 @@ bool EffectNapi::ParseBrightnessBlender(
  
 napi_value EffectNapi::SetbackgroundColorBlender(napi_env env, napi_callback_info info)
 {
-    UIEFFECT_LOG_E("RSNode::SetUIForegroundFilter, SetbackgroundColorBlender   000");
     napi_status status;
     napi_value thisVar = nullptr;
     napi_value argValue[NUM_1] = {0};

@@ -20,9 +20,9 @@ ohos_unittest("2d_graphics_image_test") {
   module_out_path = module_output_path
 
   sources = [
+    "gpu_context_test.cpp",
     "image_test.cpp",
     "picture_test.cpp",
-    "gpu_context_test.cpp",
   ]
 
   if (ace_enable_gpu) {

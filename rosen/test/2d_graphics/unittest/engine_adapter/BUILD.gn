@@ -19,9 +19,7 @@ module_output_path = "graphic_2d/rosen/modules/2d_graphics/engine_adapter"
 ohos_unittest("2d_graphics_engine_adapter_test") {
   module_out_path = module_output_path
 
-  sources = [
-    "static_factory_test.cpp",
-  ]
+  sources = [ "static_factory_test.cpp" ]
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
@@ -33,7 +31,7 @@ ohos_unittest("2d_graphics_engine_adapter_test") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//third_party/googletest:gtest_main",
   ]
-  
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

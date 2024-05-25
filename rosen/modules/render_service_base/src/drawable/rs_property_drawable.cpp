@@ -231,9 +231,9 @@ void RSFilterDrawable::MarkFilterRegionIsLargeArea()
     isLargeArea_ = true;
 }
 
-void RSFilterDrawable::MarkFilterForceUseCache()
+void RSFilterDrawable::MarkFilterForceUseCache(bool forceUseCache)
 {
-    stagingForceUseCache_ = true;
+    stagingForceUseCache_ = forceUseCache;
 }
 
 void RSFilterDrawable::MarkFilterForceClearCache()

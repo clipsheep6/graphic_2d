@@ -122,7 +122,7 @@ public:
     void MarkFilterRegionChanged();
     void MarkFilterRegionInteractWithDirty();
     void MarkFilterRegionIsLargeArea();
-    void MarkFilterForceUseCache();
+    void MarkFilterForceUseCache(bool forceUseCache = true);
     void MarkFilterForceClearCache();
     void ForceClearCacheWithLastFrame();
     void MarkRotationChanged();

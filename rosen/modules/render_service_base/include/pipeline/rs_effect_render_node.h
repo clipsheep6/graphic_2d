@@ -83,14 +83,19 @@ public:
     void InitRenderParams() override;
     void MarkFilterHasEffectChildren() override;
     void OnFilterCacheStateChanged() override;
+    inline bool ShouldPaint() const override;
+    bool FirstFrameHasEffectChildren() const override;
+    void MarkClearFilterCacheIfEffectChildrenChanged() override;
 
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheWithSelfDirty() override;
     void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
         RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync) override;
-    
+
 private:
+    bool FirstFrameHasNoEffectChildren() const;
+
     bool isVisitedOcclusionFilterCacheEmpty_ = true;
     bool isRotationChanged_ = false;
     bool preRotationStatus_ = false;

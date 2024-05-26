@@ -37,6 +37,7 @@
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_proxy_node.h"
+#include "rs_trace.h"
 
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_utils.h"
@@ -628,6 +629,10 @@ void RSSurfaceNode::AttachToDisplay(uint64_t screenId)
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
+        RS_LOGI("RSSurfaceNode:attach to display, node:[name: %{public}s, id: %{public}" PRIu64 "], "
+            "screen id: %{public}" PRIu64, GetName().c_str(), GetId(), screenId);
+        RS_TRACE_NAME_FMT("RSSurfaceNode:attach to display, node:[name: %s, id: %" PRIu64 "], "
+            "screen id: %" PRIu64, GetName().c_str(), GetId(), screenId);
     }
 }
 
@@ -637,6 +642,10 @@ void RSSurfaceNode::DetachToDisplay(uint64_t screenId)
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
+        RS_LOGI("RSSurfaceNode:detach from display, node:[name: %{public}s, id: %{public}" PRIu64 "], "
+            "screen id: %{public}" PRIu64, GetName().c_str(), GetId(), screenId);
+        RS_TRACE_NAME_FMT("RSSurfaceNode:detach from display, node:[name: %s, id: %" PRIu64 "], "
+            "screen id: %" PRIu64, GetName().c_str(), GetId(), screenId);
     }
 }
 

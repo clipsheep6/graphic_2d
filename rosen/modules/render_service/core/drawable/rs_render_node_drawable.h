@@ -160,7 +160,6 @@ protected:
     void UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params);
 
     static thread_local bool drawBlurForCache_;
-    static thread_local bool isOpDropped_;
 
 private:
     DrawableCacheType cacheType_ = DrawableCacheType::NONE;
@@ -179,6 +178,7 @@ private:
     static inline std::mutex drawingCacheMapMutex_;
     static inline std::unordered_map<NodeId, int32_t> drawingCacheUpdateTimeMap_;
 
+    static thread_local bool isOpDropped_;
     static inline std::atomic<int> totalProcessedNodeCount_ = 0;
     // used foe render group cache
 

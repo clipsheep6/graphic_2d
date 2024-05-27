@@ -2179,6 +2179,15 @@ bool RSRenderNode::ChildHasSharedTransition() const
     return childHasSharedTransition_;
 }
 
+void RSRenderNode::MarkForegroundFilterCache()
+{
+    if (GetRenderProperties().GetForegroundFilterCache() != nullptr) {
+        MarkNodeGroup(NodeGroupType::GROUPED_BY_FOREGROUND_FILTER, true, true);
+    } else if (nodeGroupType_ & NodeGroupType::GROUPED_BY_FOREGROUND_FILTER) { // clear foreground filter cache
+        MarkNodeGroup(NodeGroupType::GROUPED_BY_FOREGROUND_FILTER, false, false);
+    }
+}
+
 void RSRenderNode::ApplyModifiers()
 {
     if (UNLIKELY(!isFullChildrenListValid_)) {
@@ -2214,11 +2223,7 @@ void RSRenderNode::ApplyModifiers()
     // execute hooks
     GetMutableRenderProperties().OnApplyModifiers();
     OnApplyModifiers();
-    if (GetRenderProperties().GetForegroundFilterCache() != nullptr) {
-        MarkNodeGroup(NodeGroupType::GROUPED_BY_FOREGROUND_FILTER, true, true);
-    } else if (nodeGroupType_ & NodeGroupType::GROUPED_BY_FOREGROUND_FILTER) { // clear foreground filter cache
-        MarkNodeGroup(NodeGroupType::GROUPED_BY_FOREGROUND_FILTER, false, false);
-    }
+    MarkForegroundFilterCache();
     UpdateShouldPaint();
 
     if (dirtyTypes_.test(static_cast<size_t>(RSModifierType::SANDBOX)) &&

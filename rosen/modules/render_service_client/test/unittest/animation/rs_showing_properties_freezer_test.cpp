@@ -351,7 +351,7 @@ HWTEST_F(RSShowingPropertiesFreezerTest, GetFilterTest, TestSize.Level1)
     auto canvasNode = RSCanvasNode::Create();
     canvasNode->SetBackgroundFilter(filter);
     auto result1 = canvasNode->GetShowingProperties().GetBackgroundFilter();
-    EXPECT_TRUE(!result1.has_value());rfvrffdd
+    EXPECT_TRUE(!result1.has_value());
 
     canvasNode->SetFilter(filter);
     auto result2 = canvasNode->GetShowingProperties().GetFilter();

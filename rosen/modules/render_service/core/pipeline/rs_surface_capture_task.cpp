@@ -146,30 +146,53 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             Drawing::ImageInfo info = Drawing::ImageInfo{ pixelmap->GetWidth(), pixelmap->GetHeight(),
                 Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
             std::shared_ptr<Drawing::Surface> surface;
-            auto grContext = RSBackgroundThread::Instance().GetShareGPUContext().get();
-            surface = Drawing::Surface::MakeRenderTarget(grContext, false, info);
-            if (surface == nullptr) {
-                RS_LOGE("RSSurfaceCaptureTask::Run MakeRenderTarget fail.");
-                callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
-                return;
-            }
-            auto canvas = std::make_shared<RSPaintFilterCanvas>(surface.get());
-            auto tmpImg = std::make_shared<Drawing::Image>();
-            Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
-            Drawing::BitmapFormat bitmapFormat =
-                Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-            tmpImg->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
-                origin, bitmapFormat, nullptr);
-            canvas->DrawImage(*tmpImg, 0.f, 0.f, Drawing::SamplingOptions());
-            surface->FlushAndSubmit(true);
-            if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
-                RS_LOGE("RSSurfaceCaptureTask::Run CopyDataToPixelMap failed");
-                callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
-                return;
+            DmaMem dmaMem;
+            if (RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE) {
+                sptr<SurfaceBuffer> surfaceBuffer = dmaMem.DmaMemAlloc(info, pixelmap);
+                surface = dmaMem.GetSurfaceFromSurfaceBuffer(surfaceBuffer);
+                if (surface == nullptr) {
+                    RS_LOGE("RSSurfaceCaptureTask::Run GetSurfaceFromSurfaceBuffer fail.");
+                    dmaMem.ReleaseDmaMemory();
+                    callback->OnSurfaceCapture(id, nullptr);
+                    RSUniRenderUtil::ClearNodeCacheSurface(
+                        std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                    return;
+                }
+                auto canvas = surface->GetCanvas();
+                Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
+                Drawing::BitmapFormat bitmapFormat =
+                    Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
+                auto tmpImg = std::make_shared<Drawing::Image>();
+                tmpImg->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
+                    origin, bitmapFormat, nullptr);
+                canvas->DrawImage(*tmpImg, 0.f, 0.f, Drawing::SamplingOptions());
+                surface->FlushAndSubmit(true);
+            } else {
+                auto grContext = RSBackgroundThread::Instance().GetShareGPUContext().get();
+                surface = Drawing::Surface::MakeRenderTarget(grContext, false, info);
+                if (surface == nullptr) {
+                    RS_LOGE("RSSurfaceCaptureTask::Run MakeRenderTarget fail.");
+                    callback->OnSurfaceCapture(id, nullptr);
+                    RSUniRenderUtil::ClearNodeCacheSurface(
+                        std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                    return;
+                }
+                auto canvas = std::make_shared<RSPaintFilterCanvas>(surface.get());
+                auto tmpImg = std::make_shared<Drawing::Image>();
+                Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
+                Drawing::BitmapFormat bitmapFormat =
+                    Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
+                tmpImg->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
+                    origin, bitmapFormat, nullptr);
+                canvas->DrawImage(*tmpImg, 0.f, 0.f, Drawing::SamplingOptions());
+                surface->FlushAndSubmit(true);
+                if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
+                    RS_LOGE("RSSurfaceCaptureTask::Run CopyDataToPixelMap failed");
+                    callback->OnSurfaceCapture(id, nullptr);
+                    RSUniRenderUtil::ClearNodeCacheSurface(
+                        std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                    return;
+                }
             }
             if (ableRotation) {
                 if (screenCorrection != 0) {
@@ -191,6 +214,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             RSBaseRenderUtil::WritePixelMapToPng(*pixelmap);
             callback->OnSurfaceCapture(id, pixelmap.get());
             RSBackgroundThread::Instance().CleanGrResource();
+            dmaMem.ReleaseDmaMemory();
             RSUniRenderUtil::ClearNodeCacheSurface(
                 std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
         };
@@ -320,6 +344,101 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapByDisplayNo
         scaleX_, scaleY_, isProcOnBgThread_);
     return Media::PixelMap::Create(opts);
 }
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+void DmaMem::ReleaseDmaMemory()
+{
+    if(nativeWindowBuffer_ != nullptr) {
+        DestroyNativeWindowBuffer(nativeWindowBuffer_);
+        nativeWindowBuffer_ = nullptr;
+    }
+}
+#endif
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+sptr<SurfaceBuffer> DmaMem::DmaMemAlloc(Drawing::ImageInfo &dstInfo, const std::unique_ptr<Media::PixelMap>& pixelmap)
+{
+#if defined(_WIN32) || defined(_APPLE) || defined(A_PLATFORM) || defined(IOS_PLATFORM)
+    RS_LOGE("Unsupport dma mem alloc");
+    return nullptr;
+#else
+    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig requestConfig = {
+        .width = dstInfo.GetWidth(),
+        .height = dstInfo.GetHeight(),
+        .strideAlignment = 0x8, // set 0x8 as default value to alloc SurfaceBufferImpl
+        .format = GRAPHIC_PIXEL_FMT_RGBA_8888, // PixelFormat
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+        .colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB,
+        .transform = GraphicTransformType::GRAPHIC_ROTATE_NONE,
+    };
+    GSError ret = surfaceBuffer->Alloc(requestConfig);
+    if (ret != GSERROR_OK) {
+        RS_LOGE("SurfaceBuffer Alloc failed, %{public}s", GSErrorStr(ret).c_str());
+        return nullptr;
+    }
+    void* nativeBuffer = surfaceBuffer.GetRefPtr();
+    OHOS::RefBase *ref = reinterpret_cast<OHOS::RefBase *>(nativeBuffer);
+    ref->IncStrongRef(ref);
+    int32_t bufferSize = pixelmap->GetByteCount();
+    pixelmap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), nativeBuffer, bufferSize,
+        Media::AllocatorType::DMA_ALLOC, nullptr);
+    return surfaceBuffer;
+#endif
+}
+#endif
+
+#if defined(RS_ENABLE_VK)
+void DeleteVkImage(void *context)
+{
+    NativeBufferUtils::VulkanCleanupHelper *cleanupHelper =
+        static_cast<NativeBufferUtils::VulkanCleanupHelper *> (context);
+    if (cleanupHelper != nullptr) {
+        cleanupHelper->UnRef();
+    }
+}
+#endif
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+std::shared_ptr<Drawing::Surface> DmaMem::GetSurfaceFromSurfaceBuffer(sptr<SurfaceBuffer> surfaceBuffer)
+{
+    if (surfaceBuffer == nullptr) {
+        RS_LOGE("GetSurfaceFromSurfaceBuffer surfaceBuffer is nullptr");
+        return nullptr;
+    }
+    if (nativeWindowBuffer_ == nullptr) {
+        nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuffer);
+        if (!nativeWindowBuffer_) {
+            RS_LOGE("GetSurfaceFromSurfaceBuffer nativeWindowBuffer_ is nullptr");
+            return nullptr;
+        }
+    }
+
+    Drawing::BackendTexture backendTextureTmp =
+        NativeBufferUtils::MakeBackendTextureFromNativeBuffer(nativeWindowBuffer_,
+            surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight());
+    if (!backendTextureTmp.IsValid()) {
+        return nullptr;
+    }
+
+    auto vkTextureInfo = backendTextureTmp.GetTextureInfo().GetVKTextureInfo();
+    vkTextureInfo->imageUsageFlags = vkTextureInfo->imageUsageFlags | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    auto cleanUpHelper = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+        vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory);
+    if (cleanUpHelper == nullptr) {
+        return nullptr;
+    }
+
+    auto drawingSurface = Drawing::Surface::MakeFromBackendTexture(
+        RSBackgroundThread::Instance().GetShareGPUContext().get(),
+        backendTextureTmp.GetTextureInfo(),
+        Drawing::TextureOrigin::TOP_LEFT,
+        1, Drawing::ColorType::COLORTYPE_RGBA_8888, nullptr,
+        NativeBufferUtils::DeleteVkImage, cleanUpHelper);
+    return drawingSurface;
+}
+#endif
 
 bool CopyDataToPixelMap(std::shared_ptr<Drawing::Image> img, const std::unique_ptr<Media::PixelMap>& pixelmap)
 {

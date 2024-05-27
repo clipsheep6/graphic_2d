@@ -1256,7 +1256,7 @@ void OH_Drawing_TextStyleGetBackgroundPen(OH_Drawing_TextStyle* style, OH_Drawin
 
 OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void)
 {
-    auto fontDescriptor = new TextEngine::FontParser::FontDescriptor;
+    auto fontDescriptor = new FontParser::FontParser::FontDescriptor;
     if (fontDescriptor == nullptr) {
         return nullptr;
     }
@@ -1266,14 +1266,14 @@ OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void)
 void OH_Drawing_DestroyFontDescriptor(OH_Drawing_FontDescriptor* descriptor)
 {
     if (descriptor) {
-        delete ConvertToOriginalText<TextEngine::FontParser::FontDescriptor>(descriptor);
+        delete ConvertToOriginalText<FontParser::FontParser::FontDescriptor>(descriptor);
         descriptor = nullptr;
     }
 }
 
 OH_Drawing_FontParser* OH_Drawing_CreateFontParser(void)
 {
-    auto fontParser = new TextEngine::FontParser;
+    auto fontParser = new FontParser::FontParser;
     if (fontParser == nullptr) {
         return nullptr;
     }
@@ -1283,7 +1283,7 @@ OH_Drawing_FontParser* OH_Drawing_CreateFontParser(void)
 void OH_Drawing_DestroyFontParser(OH_Drawing_FontParser* parser)
 {
     if (parser) {
-        delete ConvertToOriginalText<TextEngine::FontParser>(parser);
+        delete ConvertToOriginalText<FontParser::FontParser>(parser);
         parser = nullptr;
     }
 }
@@ -1328,8 +1328,8 @@ char** OH_Drawing_FontParserGetSystemFontList(OH_Drawing_FontParser* fontParser,
     }
     char** fontList = nullptr;
     icu::Locale locale = icu::Locale::getDefault();
-    std::vector<TextEngine::FontParser::FontDescriptor> systemFontList =
-        ConvertToOriginalText<TextEngine::FontParser>(fontParser)->GetVisibilityFonts(std::string(locale.getName()));
+    std::vector<FontParser::FontParser::FontDescriptor> systemFontList =
+        ConvertToOriginalText<FontParser::FontParser>(fontParser)->GetVisibilityFonts(std::string(locale.getName()));
     fontList = new char* [systemFontList.size()];
     if (fontList == nullptr) {
         return nullptr;
@@ -1372,9 +1372,9 @@ OH_Drawing_FontDescriptor* OH_Drawing_FontParserGetFontByName(OH_Drawing_FontPar
     if (fontParser == nullptr || name == nullptr) {
         return nullptr;
     }
-    std::vector<TextEngine::FontParser::FontDescriptor> systemFontList =
-        ConvertToOriginalText<TextEngine::FontParser>(fontParser)->GetVisibilityFonts();
-    TextEngine::FontParser::FontDescriptor *descriptor = new TextEngine::FontParser::FontDescriptor;
+    std::vector<FontParser::FontParser::FontDescriptor> systemFontList =
+        ConvertToOriginalText<FontParser::FontParser>(fontParser)->GetVisibilityFonts();
+    FontParser::FontParser::FontDescriptor *descriptor = new FontParser::FontParser::FontDescriptor;
     for (size_t i = 0; i < systemFontList.size(); ++i) {
         if (strcmp(name, systemFontList[i].fullName.c_str()) == 0) {
             *descriptor = systemFontList[i];
@@ -2752,7 +2752,7 @@ static bool CopyDrawingFontDirSet(char*** drawFontDirSet, size_t& fontDirSize,
     return true;
 }
 
-static bool CopyDrawingAliasInfo(OH_Drawing_FontAliasInfo& drawAliasInfo, const TextEngine::AliasInfo& aliasInfo,
+static bool CopyDrawingAliasInfo(OH_Drawing_FontAliasInfo& drawAliasInfo, const FontParser::AliasInfo& aliasInfo,
     OH_Drawing_FontConfigInfoErrorCode& code)
 {
     bool result = CopyStrData(&drawAliasInfo.familyName, aliasInfo.familyName, &code);
@@ -2765,7 +2765,7 @@ static bool CopyDrawingAliasInfo(OH_Drawing_FontAliasInfo& drawAliasInfo, const 
 }
 
 static bool CopyDrawingAliasInfoSet(OH_Drawing_FontAliasInfo** drawAliasInfoSet, size_t& aliasInfoSize,
-    const std::vector<TextEngine::AliasInfo>& aliasSet, OH_Drawing_FontConfigInfoErrorCode& code)
+    const std::vector<FontParser::AliasInfo>& aliasSet, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!drawAliasInfoSet) {
         code = ERROR_FONT_CONFIG_INFO_ALLOC_MEMORY;
@@ -2794,14 +2794,14 @@ static bool CopyDrawingAliasInfoSet(OH_Drawing_FontAliasInfo** drawAliasInfoSet,
     return true;
 }
 
-static void CopyDrawingAdjustInfo(OH_Drawing_FontAdjustInfo& drawAdjustInfo, const TextEngine::AdjustInfo& adjustInfo)
+static void CopyDrawingAdjustInfo(OH_Drawing_FontAdjustInfo& drawAdjustInfo, const FontParser::AdjustInfo& adjustInfo)
 {
     drawAdjustInfo.weight = adjustInfo.origValue;
     drawAdjustInfo.to = adjustInfo.newValue;
 }
 
 static bool CopyDrawingAdjustSet(OH_Drawing_FontAdjustInfo** drawAdjustInfoSet, size_t& adjustInfoSize,
-    const std::vector<TextEngine::AdjustInfo>& adjustSet, OH_Drawing_FontConfigInfoErrorCode& code)
+    const std::vector<FontParser::AdjustInfo>& adjustSet, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!drawAdjustInfoSet) {
         code = ERROR_FONT_CONFIG_INFO_ALLOC_MEMORY;
@@ -2828,7 +2828,7 @@ static bool CopyDrawingAdjustSet(OH_Drawing_FontAdjustInfo** drawAdjustInfoSet, 
 }
 
 static bool CopyDrawingFontGenericInfo(OH_Drawing_FontGenericInfo& drawFontGenericInfo,
-    const TextEngine::FontGenericInfo& genericInfo, OH_Drawing_FontConfigInfoErrorCode& code)
+    const FontParser::FontGenericInfo& genericInfo, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     bool result = CopyStrData(&drawFontGenericInfo.familyName, genericInfo.familyName, &code);
     if (!result) {
@@ -2850,7 +2850,7 @@ static bool CopyDrawingFontGenericInfo(OH_Drawing_FontGenericInfo& drawFontGener
 }
 
 static bool CopyDrawingFontGenericInfoSetInner(OH_Drawing_FontGenericInfo** fontGenericInfoSet,
-    size_t& fontGenericInfoSize, const std::vector<TextEngine::FontGenericInfo>& genericSet,
+    size_t& fontGenericInfoSize, const std::vector<FontParser::FontGenericInfo>& genericSet,
     OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!fontGenericInfoSet || !(*fontGenericInfoSet)) {
@@ -2878,7 +2878,7 @@ static bool CopyDrawingFontGenericInfoSetInner(OH_Drawing_FontGenericInfo** font
 }
 
 static bool CopyDrawingFallbackInfo(OH_Drawing_FontFallbackInfo& drawFallbackInfo,
-    const TextEngine::FallbackInfo& fallbackInfo, OH_Drawing_FontConfigInfoErrorCode& code)
+    const FontParser::FallbackInfo& fallbackInfo, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!CopyStrData(&drawFallbackInfo.language, fallbackInfo.font, &code)) {
         return false;
@@ -2890,7 +2890,7 @@ static bool CopyDrawingFallbackInfo(OH_Drawing_FontFallbackInfo& drawFallbackInf
 }
 
 static bool CopyDrawingFallbackGroup(OH_Drawing_FontFallbackGroup& drawFallbackGroup,
-    const TextEngine::FallbackGroup& fallbackGroup, OH_Drawing_FontConfigInfoErrorCode& code)
+    const FontParser::FallbackGroup& fallbackGroup, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!fallbackGroup.groupName.empty()) {
         if (!CopyStrData(&drawFallbackGroup.groupName, fallbackGroup.groupName, &code)) {
@@ -2925,7 +2925,7 @@ static bool CopyDrawingFallbackGroup(OH_Drawing_FontFallbackGroup& drawFallbackG
 }
 
 static bool CopyDrawingFallbackGroupSetInner(OH_Drawing_FontFallbackGroup** drawFallbackGroupSet,
-    size_t& fallbackGroupSize, const std::vector<TextEngine::FallbackGroup>& fallbackGroupSet,
+    size_t& fallbackGroupSize, const std::vector<FontParser::FallbackGroup>& fallbackGroupSet,
     OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!drawFallbackGroupSet) {
@@ -2956,7 +2956,7 @@ static bool CopyDrawingFallbackGroupSetInner(OH_Drawing_FontFallbackGroup** draw
 }
 
 static bool CopyDrawingFontGenericInfoSet(OH_Drawing_FontConfigInfo** drawFontCfgInfo,
-    const std::vector<TextEngine::FontGenericInfo>& genericSet, OH_Drawing_FontConfigInfoErrorCode& code)
+    const std::vector<FontParser::FontGenericInfo>& genericSet, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!drawFontCfgInfo || !(*drawFontCfgInfo)) {
         code = ERROR_FONT_CONFIG_INFO_ALLOC_MEMORY;
@@ -2982,7 +2982,7 @@ static bool CopyDrawingFontGenericInfoSet(OH_Drawing_FontConfigInfo** drawFontCf
 }
 
 static bool CopyDrawingFallbackGroupSet(OH_Drawing_FontConfigInfo** drawFontCfgInfo,
-    const std::vector<TextEngine::FallbackGroup>& fallbackGroupSet, OH_Drawing_FontConfigInfoErrorCode& code)
+    const std::vector<FontParser::FallbackGroup>& fallbackGroupSet, OH_Drawing_FontConfigInfoErrorCode& code)
 {
     if (!drawFontCfgInfo || !(*drawFontCfgInfo)) {
         code = ERROR_FONT_CONFIG_INFO_ALLOC_MEMORY;
@@ -3008,7 +3008,7 @@ static bool CopyDrawingFallbackGroupSet(OH_Drawing_FontConfigInfo** drawFontCfgI
 OH_Drawing_FontConfigInfo* OH_Drawing_GetSystemFontConfigInfo(OH_Drawing_FontConfigInfoErrorCode* errorCode)
 {
     OH_Drawing_FontConfigInfoErrorCode code = ERROR_FONT_CONFIG_INFO_UNKNOWN;
-    TextEngine::FontConfigJson fontConfigJson;
+    FontParser::FontConfigJson fontConfigJson;
     int res = fontConfigJson.ParseFile();
     if (res) {
         code = ERROR_FONT_CONFIG_INFO_PARSE_FILE;

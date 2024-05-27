@@ -97,6 +97,8 @@ if (enable_text_gine) {
     }
 
     deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
+    deps += [ "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser_source" ]
+
 
     part_name = "graphic_2d"
     subsystem_name = "graphic"
@@ -192,12 +194,15 @@ if (enable_text_gine) {
       }
     }
 
-    deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
+    deps = [
+      "$graphic_2d_root/rosen/modules/texgine:libtexgine_source",
+      "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser_source",
+    ]
     if (!(host_os == "linux" && host_cpu == "arm64")) {
-      deps += [
-        "$skia_root_new:skia_$platform",
-        "./skia_txt:skia_libtxt_$platform",
-      ]
+       deps += [
+          "$skia_root_new:skia_$platform",
+          "./skia_txt:skia_libtxt_$platform",
+       ]
     }
 
     external_deps = [ "hilog:libhilog" ]

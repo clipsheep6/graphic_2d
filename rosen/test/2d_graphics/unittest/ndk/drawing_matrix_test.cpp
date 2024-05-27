@@ -33,6 +33,9 @@ public:
     void TearDown() override;
 };
 
+constexpr uint32_t MAPPOINTS_SIZE = 5;
+constexpr uint32_t MAPPOINTS_COUNT = 2;
+
 void NativeDrawingMatrixTest::SetUpTestCase() {}
 void NativeDrawingMatrixTest::TearDownTestCase() {}
 void NativeDrawingMatrixTest::SetUp() {}
@@ -722,6 +725,52 @@ HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_SetPolyToPoly021, Test
     OH_Drawing_Point2D src[] = {{0, 0}, {100, 0}, {100, 100}, {0, 100}, {0, 100}};
     OH_Drawing_Point2D dst[] = {{0, 0}, {100, 30}, {100, 70}, {0, 100}, {0, 100}};
     EXPECT_FALSE(OH_Drawing_MatrixSetPolyToPoly(matrix, src, dst, 5));
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/**
+ * @tc.name: NativeDrawingMatrixTest_MapPoints022
+ * @tc.desc: test for maps the src point array to the dst point array by matrix transformation.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_MapPoints022, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    ASSERT_TRUE(matrix != nullptr);
+    OH_Drawing_Point2D src[] = {{0, 0}, {100, 0}, {100, 100}, {0, 100}, {0, 100}};
+    OH_Drawing_Point2D dst[MAPPOINTS_SIZE];
+
+    OH_Drawing_MatrixMapPoints(nullptr, src, dst, MAPPOINTS_COUNT);
+    OH_Drawing_MatrixTranslate(matrix, 100, 200);
+    OH_Drawing_MatrixMapPoints(matrix, src, dst, MAPPOINTS_COUNT);
+
+    EXPECT_EQ(dst[0].x, 100);
+    EXPECT_EQ(dst[0].y, 200);
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/**
+ * @tc.name: NativeDrawingMatrixTest_MapRect023
+ * @tc.desc: test for sets dst to bounds of src corners mapped by matrix transformation.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_MapRect023, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    ASSERT_TRUE(matrix != nullptr);
+    OH_Drawing_Rect *src = OH_Drawing_RectCreate(0, 100, 200, 200);
+    OH_Drawing_Rect *dst = OH_Drawing_RectCreate(0, 0, 0, 0);
+
+    EXPECT_FALSE(OH_Drawing_MatrixMapRect(nullptr, src, dst));
+    OH_Drawing_MatrixTranslate(matrix, 100, 200);
+    EXPECT_TRUE(OH_Drawing_MatrixMapRect(matrix, src, dst));
+
+    EXPECT_TRUE(IsScalarAlmostEqual(OH_Drawing_RectGetHeight(dst), 100.f));
+    EXPECT_TRUE(IsScalarAlmostEqual(OH_Drawing_RectGetLeft(dst), 100.f));
+    OH_Drawing_RectDestroy(src);
+    OH_Drawing_RectDestroy(dst);
     OH_Drawing_MatrixDestroy(matrix);
 }
 } // namespace Drawing

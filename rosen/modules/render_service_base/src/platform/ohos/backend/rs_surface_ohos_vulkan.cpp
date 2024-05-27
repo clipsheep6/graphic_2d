@@ -53,6 +53,7 @@ void RSSurfaceOhosVulkan::SetNativeWindowInfo(int32_t width, int32_t height, boo
             NativeWindowCancelBuffer(mNativeWindow, key);
         }
         mSurfaceMap.clear();
+        mSurfaceList.clear();
     }
     NativeWindowHandleOpt(mNativeWindow, SET_FORMAT, pixelFormat_);
 #ifdef RS_ENABLE_AFBC
@@ -275,6 +276,7 @@ void RSSurfaceOhosVulkan::SetColorSpace(GraphicColorGamut colorSpace)
             NativeWindowCancelBuffer(mNativeWindow, key);
         }
         mSurfaceMap.clear();
+        mSurfaceList.clear();
     }
 }
 
@@ -290,6 +292,7 @@ void RSSurfaceOhosVulkan::SetSurfacePixelFormat(int32_t pixelFormat)
             NativeWindowCancelBuffer(mNativeWindow, key);
         }
         mSurfaceMap.clear();
+        mSurfaceList.clear();
     }
     pixelFormat_ = pixelFormat;
 }

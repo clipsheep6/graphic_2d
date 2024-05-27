@@ -18,6 +18,7 @@
 
 #include "pixel_map.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "drawing/engine_adapter/impl_interface/bitmap_impl.h"
 #include "image/yuv_info.h"
 
@@ -272,8 +273,16 @@ bool RSPixelMapUtil::IsSupportZeroCopy(std::shared_ptr<Media::PixelMap> pixelMap
     }
     ImageInfo imageInfo;
     pixelMap->GetImageInfo(imageInfo);
-    return !(imageInfo.pixelFormat == Media::PixelFormat::RGBA_8888 &&
-            sampling.GetMipmapMode() == Drawing::MipmapMode::LINEAR);
+    if (imageInfo.pixelFormat == Media::PixelFormat::NV12 || imageInfo.pixelFormat == Media::PixelFormat::NV21) {
+        return true;
+    }
+
+    if (imageInfo.pixelFormat == Media::PixelFormat::RGBA_8888 &&
+        RSSystemProperties::IsPhoneType() &&
+        sampling.GetMipmapMode() != Drawing::MipmapMode::LINEAR) {
+        return true;
+    }
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

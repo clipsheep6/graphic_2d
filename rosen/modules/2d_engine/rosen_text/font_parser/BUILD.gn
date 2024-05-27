@@ -1,0 +1,130 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+is_ok = true
+
+## Build libfont_parser.so {{{
+config("libfont_parser_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+    "-std=c++17",
+  ]
+
+  include_dirs = [
+    "src",
+    "utils",
+    "//third_party/skia",
+    "//third_party/skia/third_party/externals/harfbuzz/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include/text",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+    "$graphic_2d_root/rosen/modules",
+    "$graphic_2d_root/rosen/modules/render_service_client",
+    "$graphic_2d_root/rosen/modules/render_service_client/core",
+    "$graphic_2d_root/rosen/modules/render_service_base",
+    "$graphic_2d_root/rosen/modules/render_service_base/include",
+  ]
+}
+
+config("libfont_parser_public_config") {
+  include_dirs = [
+    "export",
+  ]
+}
+
+ohos_source_set("libfont_parser_source") {
+  if (is_ok) {
+    sources = [
+      "src/opentype_parser/cmap_parser.cpp",
+      "src/opentype_parser/cmap_table_parser.cpp",
+      "src/opentype_parser/name_table_parser.cpp",
+      "src/opentype_parser/opentype_basic_type.cpp",
+      "src/opentype_parser/post_table_parser.cpp",
+      "src/opentype_parser/ranges.cpp",
+      "src/font_config.cpp",
+      "src/font_parser.cpp",
+      "utils/logger.cpp",
+      "utils/exlog.cpp",
+    ]
+
+    configs = [
+      ":libfont_parser_config",
+      "//build/config/compiler:exceptions",
+      "//build/config/compiler:rtti",
+    ]
+
+    public_configs = [ ":libfont_parser_public_config" ]
+
+    platform = current_os
+    if (platform == "mingw") {
+      platform = "windows"
+    }
+
+    defines = []
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson_static",
+    ]
+
+    if (platform == "ohos") {
+      defines += [ "BUILD_NON_SDK_VER" ]
+
+      public_deps =
+          [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
+    } else {
+      if (platform == "mac") {
+        defines += [ "BUILD_SDK_MAC" ]
+        public_deps += [
+          "$graphic_2d_root/rosen/build/harfbuzz:rosen_libharfbuzz_$platform",
+        ]
+      } else {
+        public_deps =
+           [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
+      }
+    }
+  }
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_shared_library("libfont_parser") {
+  deps = [ ":libfont_parser_source" ]
+
+  platform = current_os
+  if (platform == "mingw") {
+    platform = "windows"
+  }
+
+  if (platform == "ohos") {
+    deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+  } else {
+    deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_new" ]
+  }
+  deps += [ "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client" ]
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+## Build libfont_parser.so }}}
+

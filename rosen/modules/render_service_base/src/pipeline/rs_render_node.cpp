@@ -3703,7 +3703,7 @@ void RSRenderNode::InitRenderParams()
 
 void RSRenderNode::UpdateRenderParams()
 {
-    auto boundGeo = GetRenderProperties().GetBoundsGeometry();
+    auto& boundGeo = GetRenderProperties().GetBoundsGeometry();
     if (!boundGeo) {
         return;
     }

@@ -47,6 +47,23 @@ class MockRSPaintFilterCanvas : public RSPaintFilterCanvas {
 public:
     explicit MockRSPaintFilterCanvas(Drawing::Canvas *canvas) : RSPaintFilterCanvas(canvas) {}
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
+    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
+    MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
+    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
+    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
+        const Drawing::scalar x, const Drawing::scalar y));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
+        const Drawing::scalar px, const Drawing::scalar py));
+    MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px,
+        const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD5(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint));
+    MOCK_METHOD3(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
+    MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
 
 class RSDelegateTest : public RSDelegate {

@@ -64,12 +64,46 @@ class MockRSPaintFilterCanvas : public RSPaintFilterCanvas {
 public:
     explicit MockRSPaintFilterCanvas(Drawing::Canvas* canvas) : RSPaintFilterCanvas(canvas) {}
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
+    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
+    MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
+    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
+    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
+        const Drawing::scalar x, const Drawing::scalar y));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
+        const Drawing::scalar px, const Drawing::scalar py));
+    MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px,
+        const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD5(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint));
+    MOCK_METHOD3(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
+    MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
 
 class MockRSCanvasListener : public RSCanvasListener {
 public:
     explicit MockRSCanvasListener(Drawing::Canvas& canvas) : RSCanvasListener(canvas) {}
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
+    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
+    MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
+    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
+    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
+        const Drawing::scalar x, const Drawing::scalar y));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
+        const Drawing::scalar px, const Drawing::scalar py));
+    MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px,
+        const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD5(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint));
+    MOCK_METHOD3(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
+    MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
 
 class TextBlobImplTest : public Drawing::TextBlobImpl {
@@ -151,40 +185,77 @@ HWTEST_F(RSListenedCanvasTest, RequestPassThrough, Function | SmallTest | Level2
  */
 HWTEST_F(RSListenedCanvasTest, RequestSplitToListener, Function | SmallTest | Level2)
 {
-    PART("CaseDescription")
-    {
-        auto mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
-        std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas = nullptr;
-        STEP("1. create mock MockRSPaintFilterCanvas")
-        {
-            mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
-        }
+    auto mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
+    std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas = nullptr;
+    mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
+    std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener = nullptr;
+    mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
+    std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
+    listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
+    listenedCanvas->SetListener(mockRSCanvasListener);
 
-        std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener = nullptr;
-        STEP("2. create mock MockRSCanvasListener")
-        {
-            mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
-        }
+    Drawing::Rect rect = Drawing::Rect(1, 2, 4, 6);
 
-        Drawing::Rect rect = Drawing::Rect(1, 2, 4, 6);
-        STEP("3. expect MockRSCanvasListener call drawRect once")
-        {
-            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRect(rect)).Times(1);
-            EXPECT_CALL(*mockRSCanvasListener, DrawRect(rect)).Times(1);
-        }
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRect(rect)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawRect(rect)).Times(1);
 
-        std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
-        STEP("4. create RSListenedCanvas from MockRSPaintFilterCanvas")
-        {
-            listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
-            listenedCanvas->SetListener(mockRSCanvasListener);
-        }
+    listenedCanvas->DrawRect(rect);
 
-        STEP("5. call RSListenedCanvas's drawRect")
-        {
-            listenedCanvas->DrawRect(rect);
-        }
-    }
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRoundRect(_)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawRoundRect(_)).Times(1);
+
+    listenedCanvas->DrawRoundRect(Drawing::RoundRect());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawNestedRoundRect(_, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawNestedRoundRect(_, _)).Times(1);
+
+    listenedCanvas->DrawNestedRoundRect(Drawing::RoundRect(), Drawing::RoundRect());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPie(_, _, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawPie(_, _, _)).Times(1);
+
+    listenedCanvas->DrawPie(Drawing::Rect(), 0.0f, 90.0f);
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawCircle(_, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawCircle(_, _)).Times(1);
+
+    listenedCanvas->DrawCircle(Drawing::Point(), 0.0f);
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBackground(_)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawBackground(_)).Times(1);
+
+    listenedCanvas->DrawBackground(Drawing::Brush());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawBitmap(_, _, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawBitmap(_, _, _)).Times(1);
+
+    listenedCanvas->DrawBitmap(Drawing::Bitmap(), 0.0f, 0.0f);
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImage(_, _, _, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawImage(_, _, _, _)).Times(1);
+
+    listenedCanvas->DrawImage(Drawing::Image(), 0.0f, 0.0f, Drawing::SamplingOptions());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _, _, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _, _, _)).Times(1);
+
+    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(),
+        Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawImageRect(_, _, _)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawImageRect(_, _, _)).Times(1);
+
+    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::SamplingOptions());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPicture(_)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, DrawPicture(_)).Times(1);
+
+    listenedCanvas->DrawPicture(Drawing::Picture());
+
+    EXPECT_CALL(*mockRSPaintFilterCanvas, Clear(_)).Times(1);
+    EXPECT_CALL(*mockRSCanvasListener, Clear(_)).Times(1);
+
+    listenedCanvas->Clear(Drawing::ColorQuad());
 }
 
 /**

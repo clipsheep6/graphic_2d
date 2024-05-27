@@ -404,10 +404,10 @@ void RSRenderNodeDrawable::DrawCachedImage(RSPaintFilterCanvas& canvas, const Ve
         return;
     }
     if (canvas.GetTotalMatrix().HasPerspective()) {
-        // In case of perspective transformation, make dstRect 1px outset to anti-alias
+        // In case of perspective transformation, make dstRect 1px inset to anti-alias
         Drawing::Rect dst(
             0, 0, static_cast<float>(cacheImage->GetWidth()), static_cast<float>(cacheImage->GetHeight()));
-        dst.MakeOutset(1, 1);
+        dst.MakeOutset(-1, -1);
         canvas.DrawImageRect(*cacheImage, dst, samplingOptions);
     } else {
         canvas.DrawImage(*cacheImage, 0.0, 0.0, samplingOptions);

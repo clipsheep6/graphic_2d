@@ -208,6 +208,7 @@ template("graphics2d_source_set") {
       "//third_party/skia/src/core",
       "$rosen_root/modules/texgine/src",
       "$rosen_root/modules/texgine/texgine_drawing/src",
+      "$rosen_root/modules/2d_engine/rosen_text/font_parser/src",
       "$rosen_root/../interfaces/kits/napi/graphic/drawing/common_napi",
     ]
 

@@ -385,6 +385,18 @@
           },
           {
             "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser",
+            "header": {
+              "header_files": [
+                "font_config.h",
+                "font_parser.h",
+                "drawing.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/font_parser/src"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager:color_space_object_convertor",
             "header": {
               "header_files": [

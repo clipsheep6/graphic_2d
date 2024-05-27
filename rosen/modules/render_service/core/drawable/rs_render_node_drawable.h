@@ -152,13 +152,15 @@ protected:
     void InitCachedSurface(Drawing::GPUContext* gpuContext, const Vector2f& cacheSize, pid_t threadId);
     bool NeedInitCachedSurface(const Vector2f& newSize);
     std::shared_ptr<Drawing::Image> GetCachedImage(RSPaintFilterCanvas& canvas);
-    void DrawCachedImage(RSPaintFilterCanvas& canvas, const Vector2f& boundSize);
+    void DrawCachedImage(RSPaintFilterCanvas& canvas, const Vector2f& boundSize,
+    const std::shared_ptr<RSFilter>& rsFilter = nullptr);
     void ClearCachedSurface();
 
     bool CheckIfNeedUpdateCache(RSRenderParams& params);
     void UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params);
 
     static thread_local bool drawBlurForCache_;
+    static thread_local bool isOpDropped_;
 
 private:
     DrawableCacheType cacheType_ = DrawableCacheType::NONE;
@@ -177,7 +179,6 @@ private:
     static inline std::mutex drawingCacheMapMutex_;
     static inline std::unordered_map<NodeId, int32_t> drawingCacheUpdateTimeMap_;
 
-    static thread_local bool isOpDropped_;
     static inline std::atomic<int> totalProcessedNodeCount_ = 0;
     // used foe render group cache
 

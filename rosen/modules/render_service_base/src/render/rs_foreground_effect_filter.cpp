@@ -36,7 +36,8 @@ RSForegroundEffectFilter::~RSForegroundEffectFilter() = default;
 
 std::string RSForegroundEffectFilter::GetDescription()
 {
-    return "RSForegroundEffectFilter " + std::to_string(blurRadius_);
+    return "ForegroundEffect radius: " + std::to_string(blurRadius_) +
+        "scale: "+ std::to_string(blurScale_) + "passNum: " + std::to_string(numberOfPasses_);
 }
 
 bool RSForegroundEffectFilter::IsValid() const

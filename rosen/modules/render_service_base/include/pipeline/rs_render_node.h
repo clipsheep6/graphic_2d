@@ -499,7 +499,8 @@ public:
         GROUPED_BY_ANIM = 1,
         GROUPED_BY_UI = GROUPED_BY_ANIM << 1,
         GROUPED_BY_USER = GROUPED_BY_UI << 1,
-        GROUP_TYPE_BUTT = GROUPED_BY_USER,
+        GROUPED_BY_FOREGROUND_FILTER = GROUPED_BY_USER << 1,
+        GROUP_TYPE_BUTT = GROUPED_BY_FOREGROUND_FILTER,
     };
     void MarkNodeGroup(NodeGroupType type, bool isNodeGroup, bool includeProperty);
     NodeGroupType GetNodeGroupType();
@@ -939,6 +940,7 @@ private:
     RectI localShadowRect_;
     RectI localOutlineRect_;
     RectI localPixelStretchRect_;
+    RectI localForegroundEffectRect_;
     // map parentMatrix
     RectI absDrawRect_;
 

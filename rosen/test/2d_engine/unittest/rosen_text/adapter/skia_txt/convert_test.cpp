@@ -137,5 +137,21 @@ HWTEST_F(OH_Drawing_ConvertTest, OH_Drawing_ConvertTest009, TestSize.Level1)
     //The default fontsize for TextStyle is 14.0
     EXPECT_EQ(sptextStyle.fontSize == 14.0, true);
 }
+
+
+/*
+ * @tc.name: OH_Drawing_ConvertTest010
+ * @tc.desc: test for  Convert PlaceholderSpan
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_ConvertTest, OH_Drawing_ConvertTest010, TestSize.Level2)
+{
+    TextStyle textStyle;
+    textStyle.symbol.SetVisualMode(VisualMode::VISUAL_SMALL);
+    textStyle.fontFeatures.SetFeature("tag", 10);
+    textStyle.fontVariations.SetAxisValue("tag", 1.2);
+    SPText::TextStyle sptextStyle = AdapterTxt::Convert(textStyle);
+    EXPECT_EQ(sptextStyle.fontSize == 14.0, true);
+}   
 } // namespace Rosen
 } // namespace OHOS

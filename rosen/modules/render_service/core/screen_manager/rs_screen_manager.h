@@ -193,6 +193,8 @@ public:
     virtual void ForceRefreshOneFrameIfNoRNV() = 0;
 
     virtual void ClearFrameBufferIfNeed() = 0;
+
+    virtual int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) = 0;
 };
 
 sptr<RSScreenManager> CreateOrGetScreenManager();
@@ -368,6 +370,8 @@ public:
 
     void ClearFrameBufferIfNeed() override;
 
+    int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) override;
+
 private:
     RSScreenManager();
     ~RSScreenManager() noexcept override;
@@ -376,6 +380,8 @@ private:
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
     static void OnHwcDead(void *data);
     void OnHwcDeadEvent();
+    static void OnScreenVBlankIdle(uint32_t devId, uint64_t ns, void *data);
+    void OnScreenVBlankIdleEvent(uint32_t devId, uint64_t ns);
     void CleanAndReinit();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);
@@ -438,6 +444,8 @@ private:
 
     static std::once_flag createFlag_;
     static sptr<OHOS::Rosen::RSScreenManager> instance_;
+
+    uint64_t frameId_ = 0;
 
 #ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     SensorUser user;

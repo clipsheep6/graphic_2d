@@ -975,6 +975,20 @@ const std::unordered_set<uint64_t>& RSScreen::GetBlackListSet() const
 {
     return blackListSet_;
 }
+
+int32_t RSScreen::SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type)
+{
+    if (IsVirtual()) {
+        return StatusCode::SUCCESS;
+    }
+    if (hdiScreen_ != nullptr) {
+        int32_t result = hdiScreen_->SetScreenConstraint(frameId, timestamp, static_cast<uint32_t>(type));
+        if (result == GRAPHIC_DISPLAY_SUCCESS) {
+            return StatusCode::SUCCESS;
+        }
+    }
+    return StatusCode::HDI_ERROR;
+}
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

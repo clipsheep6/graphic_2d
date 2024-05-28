@@ -422,7 +422,8 @@ const std::shared_ptr<RSObjGeometry>& RSProperties::GetFrameGeometry() const
 bool RSProperties::UpdateGeometryByParent(const Drawing::Matrix* parentMatrix,
     const std::optional<Drawing::Point>& offset)
 {
-    auto prevAbsMatrix = prevAbsMatrix_;
+    static thread_local Drawing::Matrix prevAbsMatrix;
+    prevAbsMatrix.Swap(prevAbsMatrix_);
     boundsGeo_->UpdateMatrix(parentMatrix, offset);
     prevAbsMatrix_ = boundsGeo_->GetAbsMatrix();
     if (!RSSystemProperties::GetSkipGeometryNotChangeEnabled()) {
@@ -1731,7 +1732,7 @@ RRect RSProperties::GetClipRRect() const
 
 bool RSProperties::GetClipToRRect() const
 {
-    return clipRRect_.has_value();
+    return clipRRect_.has_value() && !clipRRect_->rect_.IsEmpty();
 }
 
 void RSProperties::SetClipBounds(const std::shared_ptr<RSPath>& path)
@@ -2335,7 +2336,7 @@ void RSProperties::GenerateBackgroundBlurFilter()
         originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
 
-    if (RSSystemProperties::GetHpsBlurEnabled()) {
+    if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
             std::make_shared<RSHpsBlurShaderFilter>(backgroundBlurRadiusX_, 1.f, 1.f);
         originalFilter =
@@ -2420,7 +2421,7 @@ void RSProperties::GenerateForegroundBlurFilter()
         std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
 
-    if (RSSystemProperties::GetHpsBlurEnabled()) {
+    if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
             std::make_shared<RSHpsBlurShaderFilter>(foregroundBlurRadiusX_, 1.f, 1.f);
         originalFilter =

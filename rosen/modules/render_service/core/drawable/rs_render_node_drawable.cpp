@@ -409,30 +409,14 @@ void RSRenderNodeDrawable::DrawCachedImage(RSPaintFilterCanvas& canvas, const Ve
         DrawAutoCacheDfx(canvas, autoCacheRenderNodeInfos_);
         return;
     }
-    if (canvas.GetTotalMatrix().HasPerspective()) {
-        // In case of perspective transformation, make dstRect 1px outset to anti-alias
-        Drawing::Rect dst(
-            0, 0, static_cast<float>(cacheImage->GetWidth()), static_cast<float>(cacheImage->GetHeight()));
-        dst.MakeOutset(1, 1);
-        if (rsFilter != nullptr) {
-            RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNodeDrawable::DrawCachedImage image width: %d, height: %d, %s",
-                cacheImage->GetWidth(), cacheImage->GetHeight(), rsFilter->GetDescription().c_str());
-            auto foregroundFilter = std::static_pointer_cast<RSDrawingFilterOriginal>(rsFilter);
-            foregroundFilter->DrawImageRect(canvas, cacheImage, Drawing::Rect(0, 0, cacheImage->GetWidth(),
-            cacheImage->GetHeight()), dst);
-        } else {
-            canvas.DrawImageRect(*cacheImage, dst, samplingOptions);
-        }
+    if (rsFilter != nullptr) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNodeDrawable::DrawCachedImage image width: %d, height: %d, %s",
+            cacheImage->GetWidth(), cacheImage->GetHeight(), rsFilter->GetDescription().c_str());
+        auto foregroundFilter = std::static_pointer_cast<RSDrawingFilterOriginal>(rsFilter);
+        foregroundFilter->DrawImageRect(canvas, cacheImage, Drawing::Rect(0, 0, cacheImage->GetWidth(),
+        cacheImage->GetHeight()), Drawing::Rect(0, 0, cacheImage->GetWidth(), cacheImage->GetHeight()));
     } else {
-        if (rsFilter != nullptr) {
-            RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNodeDrawable::DrawCachedImage image width: %d, height: %d, %s",
-                cacheImage->GetWidth(), cacheImage->GetHeight(), rsFilter->GetDescription().c_str());
-            auto foregroundFilter = std::static_pointer_cast<RSDrawingFilterOriginal>(rsFilter);
-            foregroundFilter->DrawImageRect(canvas, cacheImage, Drawing::Rect(0, 0, cacheImage->GetWidth(),
-            cacheImage->GetHeight()), Drawing::Rect(0, 0, cacheImage->GetWidth(), cacheImage->GetHeight()));
-        } else {
-            canvas.DrawImage(*cacheImage, 0.0, 0.0, samplingOptions);
-        }
+        canvas.DrawImage(*cacheImage, 0.0, 0.0, samplingOptions);
     }
     canvas.DetachBrush();
 }

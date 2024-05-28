@@ -4475,4 +4475,437 @@ HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeed003, TestSize.Level2)
     screenManager->RemoveVirtualScreen(id);
     sleep(1);
 }
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeed with rotation_90 and canvasRotation_true
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeed004, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_90);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeed(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: UpdateSrcRectForHwcNode
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSrcRectForHwcNode with GRAPHIC_FLIP_H_ROT90 and isProtected_true
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSrcRectForHwcNode001, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(rsSurfaceRenderNode->GetConsumer(), nullptr);
+    RectI dstRect{0, 0, 400, 600};
+    rsSurfaceRenderNode->SetSrcRect(dstRect);
+    rsSurfaceRenderNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_FLIP_H_ROT90);
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_TRUE(rsUniRenderVisitor->UpdateSrcRectForHwcNode(*rsSurfaceRenderNode, true));
+}
+
+/*
+ * @tc.name: UpdateSrcRectForHwcNode
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSrcRectForHwcNode with GRAPHIC_FLIP_H_ROT90 and isProtected_false
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSrcRectForHwcNode002, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(rsSurfaceRenderNode->GetConsumer(), nullptr);
+    RectI dstRect{0, 0, 400, 600};
+    rsSurfaceRenderNode->SetSrcRect(dstRect);
+    rsSurfaceRenderNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_FLIP_H_ROT90);
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_TRUE(rsUniRenderVisitor->UpdateSrcRectForHwcNode(*rsSurfaceRenderNode, false));
+}
+
+/*
+ * @tc.name: UpdateSrcRectForHwcNode
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSrcRectForHwcNode with GRAPHIC_FLIP_H_ROT180 and isProtected_false
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSrcRectForHwcNode003, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(rsSurfaceRenderNode->GetConsumer(), nullptr);
+    RectI dstRect{0, 0, 400, 600};
+    rsSurfaceRenderNode->SetSrcRect(dstRect);
+    rsSurfaceRenderNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_FLIP_H_ROT180);
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_FALSE(rsUniRenderVisitor->UpdateSrcRectForHwcNode(*rsSurfaceRenderNode, false));
+}
+
+/*
+ * @tc.name: IsRosenWebHardwareDisabled
+ * @tc.desc: Test RSUniRenderVisitorTest.IsRosenWebHardwareDisabled with rosen web and ROTATION_90
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsRosenWebHardwareDisabled001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    ASSERT_NE(rsContext, nullptr);
+    RSSurfaceRenderNodeConfig config;
+    config.name = "RosenWebNode";
+    auto rsSurfaceRenderNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_TRUE(rsUniRenderVisitor->IsRosenWebHardwareDisabled(*rsSurfaceRenderNode, ROTATION_90));
+}
+
+/*
+ * @tc.name: IsRosenWebHardwareDisabled
+ * @tc.desc: Test RSUniRenderVisitorTest.IsRosenWebHardwareDisabled with rosen web and ROTATION_270
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsRosenWebHardwareDisabled002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    ASSERT_NE(rsContext, nullptr);
+    RSSurfaceRenderNodeConfig config;
+    config.name = "RosenWebNode";
+    auto rsSurfaceRenderNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_TRUE(rsUniRenderVisitor->IsRosenWebHardwareDisabled(*rsSurfaceRenderNode, ROTATION_270));
+}
+
+/*
+ * @tc.name: IsRosenWebHardwareDisabled
+ * @tc.desc: Test RSUniRenderVisitorTest.IsRosenWebHardwareDisabled with not rosen web and ROTATION_90
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsRosenWebHardwareDisabled003, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    ASSERT_NE(rsContext, nullptr);
+    RSSurfaceRenderNodeConfig config;
+    config.name = "node";
+    auto rsSurfaceRenderNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    ASSERT_TRUE(rsUniRenderVisitor->IsRosenWebHardwareDisabled(*rsSurfaceRenderNode, ROTATION_90));
+}
+
+/*
+ * @tc.name: CheckAndSetNodeCacheType
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckAndSetNodeCacheType with CacheType::NONE
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckAndSetNodeCacheType001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    node->InitRenderParams();
+    node->SetCacheType(CacheType::CONTENT);
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->CheckAndSetNodeCacheType(*node);
+    ASSERT_EQ(node->GetCacheType(), CacheType::NONE);
+}
+
+/*
+ * @tc.name: UpdateHwcNodeEnableByFilterRect
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateHwcNodeEnableByFilterRect with intersect rect
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateHwcNodeEnableByFilterRect001, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode1 = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode1, nullptr);
+    surfaceConfig.id = 2;
+    auto surfaceNode2 = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode2, nullptr);
+
+    RectI rect(0, 0, 300, 300);
+    surfaceNode2->SetDstRect(rect);
+    surfaceNode1->AddChildHardwareEnabledNode(surfaceNode2);
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateHwcNodeEnableByFilterRect(surfaceNode1, rect);
+    ASSERT_TRUE(surfaceNode2->IsHardwareForcedDisabled());
+}
+
+/*
+ * @tc.name: UpdateHwcNodeEnableByFilterRect
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateHwcNodeEnableByFilterRect with empty rect
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateHwcNodeEnableByFilterRect002, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode1 = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode1, nullptr);
+
+    RectI rect(0, 0, 0, 0);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateHwcNodeEnableByFilterRect(surfaceNode1, rect);
+}
+
+/*
+ * @tc.name: UpdateHwcNodeEnableByFilterRect
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateHwcNodeEnableByFilterRect with no hwcNode
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateHwcNodeEnableByFilterRect003, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode, nullptr);
+
+    RectI rect(0, 0, 300, 300);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateHwcNodeEnableByFilterRect(surfaceNode, rect);
+}
+
+/*
+ * @tc.name: CheckMergeGlobalFilterForDisplay
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckMergeGlobalFilterForDisplay
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckMergeGlobalFilterForDisplay001, TestSize.Level2)
+{
+    auto& nodeMap = RSMainThread::Instance()->GetContext().GetMutableNodeMap();
+    NodeId id0 = 0;
+    nodeMap.renderNodeMap_[id0] = nullptr;
+    NodeId id1 = 1;
+    auto node1 = std::make_shared<RSRenderNode>(id1);
+    nodeMap.renderNodeMap_[id1] = node1;
+    NodeId id2 = 2;
+    auto node2 = std::make_shared<RSRenderNode>(id2);
+    nodeMap.renderNodeMap_[id2] = node2;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    RectI rect(0, 0, 300, 300);
+    rsUniRenderVisitor->containerFilter_.insert({node2->GetId(), rect});
+    NodeId displayNodeId = 3;
+    RSDisplayNodeConfig config;
+    rsUniRenderVisitor->curDisplayNode_ = std::make_shared<RSDisplayRenderNode>(displayNodeId, config);
+    auto dirtyRegion = Occlusion::Region{ Occlusion::Rect{ rect } };
+    rsUniRenderVisitor->CheckMergeGlobalFilterForDisplay(dirtyRegion);
+}
+
+/*
+ * @tc.name: UpdateOccludedStatusWithFilterNode
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateOccludedStatusWithFilterNode with surface node nullptr
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateOccludedStatusWithFilterNode001, TestSize.Level2)
+{
+    std::shared_ptr<RSSurfaceRenderNode> surfaceNode = nullptr;
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateOccludedStatusWithFilterNode(surfaceNode);
+}
+
+/*
+ * @tc.name: UpdateOccludedStatusWithFilterNode
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateOccludedStatusWithFilterNode with surfaceNode
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateOccludedStatusWithFilterNode002, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode1 = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode1, nullptr);
+    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(1.0f, 1.0f);
+    surfaceNode1->renderContent_->renderProperties_.SetBackgroundFilter(filter);
+    surfaceNode1->isOccludedByFilterCache_ = true;
+    auto& nodeMap = RSMainThread::Instance()->GetContext().GetMutableNodeMap();
+    NodeId id1 = 2;
+    auto filterNode1 = std::make_shared<RSRenderNode>(id1);
+    ASSERT_NE(filterNode1, nullptr);
+    nodeMap.renderNodeMap_[id1] = filterNode1;
+    NodeId id2 = 3;
+    auto filterNode2 = std::make_shared<RSRenderNode>(id2);
+    ASSERT_NE(filterNode2, nullptr);
+    filterNode2->renderContent_->renderProperties_.SetBackgroundFilter(filter);
+    nodeMap.renderNodeMap_[id2] = filterNode2;
+    surfaceNode1->visibleFilterChild_.emplace_back(filterNode1->GetId());
+    surfaceNode1->visibleFilterChild_.emplace_back(filterNode2->GetId());
+
+    ASSERT_FALSE(filterNode1->isOccluded_);
+    ASSERT_FALSE(filterNode2->isOccluded_);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateOccludedStatusWithFilterNode(surfaceNode1);
+    ASSERT_TRUE(filterNode2->isOccluded_);
+}
+
+/*
+ * @tc.name: CheckMergeTransparentFilterForDisplay
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckMergeTransparentFilterForDisplay with mainWindow
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckMergeTransparentFilterForDisplay001, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
+    ASSERT_TRUE(surfaceNode->GetVisibleRegion().IsEmpty());
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    Occlusion::Rect rect{0, 0, 260, 600};
+    Occlusion::Region region{rect};
+    rsUniRenderVisitor->CheckMergeTransparentFilterForDisplay(surfaceNode, region);
+}
+
+/*
+ * @tc.name: CheckMergeTransparentFilterForDisplay
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckMergeTransparentFilterForDisplay
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckMergeTransparentFilterForDisplay002, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::ABILITY_COMPONENT_NODE);
+    auto& nodeMap = RSMainThread::Instance()->GetContext().GetMutableNodeMap();
+    NodeId id0 = 0;
+    nodeMap.renderNodeMap_[id0] = nullptr;
+    NodeId id1 = 1;
+    auto node1 = std::make_shared<RSRenderNode>(id1);
+    nodeMap.renderNodeMap_[id1] = node1;
+    NodeId id2 = 2;
+    auto node2 = std::make_shared<RSRenderNode>(id2);
+    nodeMap.renderNodeMap_[id2] = node2;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    Occlusion::Rect rect1{0, 0, 260, 600};
+    Occlusion::Region region1{rect1};
+    RectI rect2{0, 0, 200, 300};
+    rsUniRenderVisitor->transparentCleanFilter_[surfaceNode->GetId()].push_back({id0, rect2});
+    rsUniRenderVisitor->transparentCleanFilter_[surfaceNode->GetId()].push_back({id1, rect2});
+    rsUniRenderVisitor->transparentCleanFilter_[surfaceNode->GetId()].push_back({id2, rect2});
+    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(1.0f, 1.0f);
+    node2->renderContent_->renderProperties_.SetBackgroundFilter(filter);
+    node2->renderContent_->renderProperties_.SetFilter(filter);
+    NodeId displayNodeId = 3;
+    RSDisplayNodeConfig config;
+    rsUniRenderVisitor->curDisplayNode_ = std::make_shared<RSDisplayRenderNode>(displayNodeId, config);
+    rsUniRenderVisitor->curDisplayNode_->InitRenderParams();
+    ASSERT_NE(rsUniRenderVisitor->curDisplayNode_, nullptr);
+
+    rsUniRenderVisitor->CheckMergeTransparentFilterForDisplay(surfaceNode, region1);
+}
+
+/*
+ * @tc.name: CheckMergeTransparentDirtysForDisplay
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckMergeTransparentDirtysForDisplay with container window
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckMergeTransparentDirtysForDisplay001, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, 200, 300};
+    surfaceNode->GetDirtyManager()->SetCurrentFrameDirtyRect(rect);
+    surfaceNode->containerConfig_.hasContainerWindow_ = true;
+    Occlusion::Rect rect1{0, 0, 260, 600};
+    Occlusion::Region region1{rect1};
+    surfaceNode->containerRegion_ = region1;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->CheckMergeTransparentDirtysForDisplay(surfaceNode);
+}
+
+/*
+ * @tc.name: CheckMergeTransparentDirtysForDisplay
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckMergeTransparentDirtysForDisplay with no container window
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckMergeTransparentDirtysForDisplay002, TestSize.Level2)
+{
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = 1;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->isNodeDirty_ = true;
+    RectI rect{0, 0, 200, 300};
+    Occlusion::Rect rect1{0, 0, 260, 600};
+    Occlusion::Region region1{rect1};
+    surfaceNode->transparentRegion_ = region1;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->CheckMergeTransparentDirtysForDisplay(surfaceNode);
+}
 } // OHOS::Rosen

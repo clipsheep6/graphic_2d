@@ -65,7 +65,7 @@ void RSTypefaceCache::CacheDrawingTypeface(uint64_t uniqueId,
             typefaceHashMap_[hash_value] = std::make_tuple(typeface, ref + 1);
             return;
         }
-        typefaceHashMap_.[hash_value] = std::make_tuple(typeface , 1);
+        typefaceHashMap_[hash_value] = std::make_tuple(typeface , 1);
     }
 }
 

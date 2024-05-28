@@ -88,17 +88,6 @@ void RSRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
 void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRenderParams& params)
 {
-    // check if drawing cache enabled
-    if (params.GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
-        RS_OPTIONAL_TRACE_NAME_FMT("RSCanvasRenderNodeDrawable::OnDraw id:%llu cacheType:%d cacheChanged:%d"
-                                   " size:[%.2f, %.2f] ChildHasVisibleFilter:%d ChildHasVisibleEffect:%d"
-                                   " shadowRect:[%.2f, %.2f, %.2f, %.2f] HasFilterOrEffect:%d",
-            params.GetId(), params.GetDrawingCacheType(), params.GetDrawingCacheChanged(), params.GetCacheSize().x_,
-            params.GetCacheSize().y_, params.ChildHasVisibleFilter(), params.ChildHasVisibleEffect(),
-            params.GetShadowRect().GetLeft(), params.GetShadowRect().GetTop(), params.GetShadowRect().GetWidth(),
-            params.GetShadowRect().GetHeight(), HasFilterOrEffect());
-    }
-
     // check drawing cache type (disabled: clear cache)
     if (params.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE && !params.OpincGetCachedMark()) {
         ClearCachedSurface();
@@ -266,12 +255,15 @@ void RSRenderNodeDrawable::InitCachedSurface(Drawing::GPUContext* gpuContext, co
     }
     ClearCachedSurface();
     cacheThreadId_ = threadId;
-    auto width = static_cast<int32_t>(cacheSize.x_);
-    auto height = static_cast<int32_t>(cacheSize.y_);
+    int32_t width;
+    int32_t height;
     if (IsComputeDrawAreaSucc()) {
         auto& unionRect = GetOpListUnionArea();
         width = static_cast<int32_t>(unionRect.GetWidth());
         height = static_cast<int32_t>(unionRect.GetHeight());
+    } else {
+        width = static_cast<int32_t>(cacheSize.x_);
+        height = static_cast<int32_t>(cacheSize.y_);
     }
 
 #ifdef RS_ENABLE_GL
@@ -467,23 +459,23 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
 {
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     pid_t threadId = gettid();
-    if (GetCachedSurface(threadId) == nullptr) {
+    auto cacheSurface = GetCachedSurface(threadId);
+    if (cacheSurface == nullptr) {
         RS_TRACE_NAME_FMT("InitCachedSurface size:[%.2f, %.2f]", params.GetCacheSize().x_, params.GetCacheSize().y_);
         InitCachedSurface(curCanvas->GetGPUContext().get(), params.GetCacheSize(), threadId);
+        cacheSurface = GetCachedSurface(threadId);
+        if (cacheSurface == nullptr) {
+            return;
+        }
     }
 
-    auto surface = GetCachedSurface(threadId);
-    if (!surface) {
-        return;
-    }
-
-    auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(surface.get());
+    auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(cacheSurface.get());
     if (!cacheCanvas) {
         return;
     }
 
     // copy current canvas properties into cacheCanvas
-    auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
+    const auto& renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if (renderEngine) {
         cacheCanvas->SetHighContrast(renderEngine->IsHighContrastEnabled());
     }
@@ -511,7 +503,7 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
     isOpDropped_ = isOpDropped;
 
     // get image & backend
-    cachedImage_ = surface->GetImageSnapshot();
+    cachedImage_ = cacheSurface->GetImageSnapshot();
     if (cachedImage_) {
         SetCacheType(DrawableCacheType::CONTENT);
     }
@@ -519,7 +511,7 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
     // vk backend has been created when surface init.
     if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
         OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
-        cachedBackendTexture_ = surface->GetBackendTexture();
+        cachedBackendTexture_ = cacheSurface->GetBackendTexture();
     }
 #endif
     // update cache updateTimes

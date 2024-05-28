@@ -49,16 +49,19 @@ public:
         uint64_t globalUniqueId = 0;
         uint32_t refCount = 0;
     };
+    void Dump() const;
 
 private:
     RSTypefaceCache(const RSTypefaceCache&) = delete;
     RSTypefaceCache(const RSTypefaceCache&&) = delete;
     RSTypefaceCache& operator=(const RSTypefaceCache&) = delete;
     RSTypefaceCache& operator=(const RSTypefaceCache&&) = delete;
+    using TypefaceTuple = std::tuple<std::shared_ptr<Drawing::Typeface>, uint32_t>;
 
     mutable std::mutex mapMutex_;
-    std::unordered_map<pid_t, std::unordered_map<uint32_t, std::shared_ptr<Drawing::Typeface>>>
-        drawingTypefaceCache_;
+    std::unordered_map<uint64_t , uint32_t > typefaceHashCode_;
+    std::unordered_map<uint32_t , TypefaceTuple> typefaceHashMap_;
+
     mutable std::mutex listMutex_;
     std::list<RSTypefaceRef> delayDestroyTypefaces_;
 };

@@ -60,7 +60,6 @@ private:
         const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) const;
     void ComputeRadiusAndScale(int radius);
     void AdjustRadiusAndScale();
-    std::string GetDescription() const;
     void SetBlurBuilderParam(Drawing::RuntimeShaderBuilder& blurBuilder, const float offsetXY,
         const Drawing::ImageInfo& scaledInfo, const int width, const int height);
     bool IsInputValid(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image, const Drawing::Rect& src,

@@ -21,7 +21,6 @@ namespace OHOS {
 namespace Rosen {
 
 namespace {
-constexpr static float FLOAT_ZERO_THRESHOLD = 0.001f;
 constexpr static uint8_t DIRECTION_NUM = 4;
 
 static bool GetMaskLinearBlurEnabled()
@@ -53,39 +52,6 @@ GELinearGradientBlurShaderFilter::GELinearGradientBlurShaderFilter(
     tranX_ = params.tranX;
     tranY_ = params.tranY;
     isOffscreenCanvas_ = params.isOffscreenCanvas;
-}
-
-std::shared_ptr<Drawing::Image> GELinearGradientBlurShaderFilter::ProcessImageDDGR(
-    Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image> image, uint8_t directionBias)
-{
-    auto& para = linearGradientBlurPara_;
-    auto clipIPadding = Drawing::Rect(0, 0, geoWidth_ * imageScale_, geoHeight_ * imageScale_);
-    uint8_t direction = static_cast<uint8_t>(para->direction_);
-    TransformGradientBlurDirection(direction, directionBias);
-    float radius = para->blurRadius_;
-
-    Drawing::Brush brush;
-    Drawing::Filter imageFilter;
-    Drawing::GradientBlurType blurType;
-    if (GetMaskLinearBlurEnabled() && para->useMaskAlgorithm_) {
-        blurType = Drawing::GradientBlurType::AlPHA_BLEND;
-        radius /= 2; // 2: half radius.
-    } else {
-        radius -= GELinearGradientBlurPara::ORIGINAL_BASE;
-        radius = std::clamp(radius, 0.0f, 60.0f); // 60.0 represents largest blur radius
-        blurType = Drawing::GradientBlurType::RADIUS_GRADIENT;
-    }
-    imageFilter.SetImageFilter(Drawing::ImageFilter::CreateGradientBlurImageFilter(
-        radius, para->fractionStops_, static_cast<Drawing::GradientDir>(direction), blurType, nullptr));
-    brush.SetFilter(imageFilter);
-
-    canvas.AttachBrush(brush);
-    Drawing::Rect rect = clipIPadding;
-    rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
-    canvas.DrawImageRect(
-        *image, rect, clipIPadding, Drawing::SamplingOptions(), Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
-    canvas.DetachBrush();
-    return image;
 }
 
 std::shared_ptr<Drawing::Image> GELinearGradientBlurShaderFilter::ProcessImage(Drawing::Canvas& canvas,
@@ -140,22 +106,6 @@ void GELinearGradientBlurShaderFilter::ComputeScale(float width, float height, b
             imageScale_ = 0.5f; // 0.5 for scale
         }
     }
-}
-
-uint8_t GELinearGradientBlurShaderFilter::CalcDirectionBias(const Drawing::Matrix& mat)
-{
-    uint8_t directionBias = 0;
-    // 1 and 3 represents rotate matrix's index
-    if ((mat.Get(1) > FLOAT_ZERO_THRESHOLD) && (mat.Get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 1; // 1 represents rotate 90 degree
-        // 0 and 4 represents rotate matrix's index
-    } else if ((mat.Get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 2; // 2 represents rotate 180 degree
-        // 1 and 3 represents rotate matrix's index
-    } else if ((mat.Get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(3) > FLOAT_ZERO_THRESHOLD)) {
-        directionBias = 3; // 3 represents rotate 270 degree
-    }
-    return directionBias;
 }
 
 void GELinearGradientBlurShaderFilter::TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias)

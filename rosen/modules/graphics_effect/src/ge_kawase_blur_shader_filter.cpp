@@ -61,7 +61,6 @@ static bool IsAdvancedFilterUsable()
     // If persist.sys.graphic.supports_af=0
     // we will not use it
     return GESystemProperties::GetBoolSystemProperty(PROPERTY_DEBUG_SUPPORT_AF, false);
-    return false;
 }
 
 static bool GetBlurExtraFilterEnabled()
@@ -478,11 +477,5 @@ void GEKawaseBlurShaderFilter::AdjustRadiusAndScale()
         blurScale_ = BASE_BLUR_SCALE;
     }
 }
-
-std::string GEKawaseBlurShaderFilter::GetDescription() const
-{
-    return "blur radius is " + std::to_string(blurRadius_);
-}
-
 } // namespace Rosen
 } // namespace OHOS

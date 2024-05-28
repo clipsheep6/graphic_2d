@@ -50,6 +50,7 @@ namespace {
     constexpr uint32_t DEFAULT_CANVAS_WIDTH = 800;
     constexpr uint32_t DEFAULT_CANVAS_HEIGHT = 600;
     constexpr int ROTATION_90 = 90;
+    constexpr int ROTATION_270 = 270;
     const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 }
 
@@ -3895,5 +3896,583 @@ HWTEST_F(RSUniRenderVisitorTest, ClipRegion003, TestSize.Level2)
     region.Op(secondRectRegion, Drawing::RegionOp::UNION);
 
     rsUniRenderVisitor->ClipRegion(paintFilterCanvas, region);
+}
+
+/*
+ * @tc.name: IsOutOfScreenRegion001
+ * @tc.desc: Test RSUniRenderVisitorTest.IsOutOfScreenRegion while UniRenderVisitor has no canvas
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsOutOfScreenRegion001, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    RectI rect(0, 0, 0, 0);
+
+    ASSERT_FALSE(rsUniRenderVisitor->IsOutOfScreenRegion(rect));
+
+}
+
+/*
+ * @tc.name: IsOutOfScreenRegion002
+ * @tc.desc: Test RSUniRenderVisitorTest.IsOutOfScreenRegion while cavas not out screen
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsOutOfScreenRegion002, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
+
+    RectI rect(0, 0, 100, 100);
+    ASSERT_FALSE(rsUniRenderVisitor->IsOutOfScreenRegion(rect));
+}
+
+/*
+ * @tc.name: PrepareIsOutOfScreenRegion003
+ * @tc.desc: Test RSUniRenderVisitorTest.IsOutOfScreenRegion while cavas height out screen
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsOutOfScreenRegion003, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
+
+    RectI rect(1000, 1000, 100, 100);
+    ASSERT_TRUE(rsUniRenderVisitor->IsOutOfScreenRegion(rect));
+}
+
+/*
+ * @tc.name: PrepareIsOutOfScreenRegion004
+ * @tc.desc: Test RSUniRenderVisitorTest.IsOutOfScreenRegion while cavas weight out screen
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsOutOfScreenRegion004, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
+
+    RectI rect(800, 1000, 1000, 300);
+    ASSERT_TRUE(rsUniRenderVisitor->IsOutOfScreenRegion(rect));
+}
+
+/*
+ * @tc.name: ScaleMirrorIfNeedForWiredScreen
+ * @tc.desc: Test RSUniRenderVisitorTest.ScaleMirrorIfNeedForWiredScreen with rotation true
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, ScaleMirrorIfNeedForWiredScreen001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_0);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsHeight(800);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsWidth(600);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->ScaleMirrorIfNeedForWiredScreen(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: ScaleMirrorIfNeedForWiredScreen
+ * @tc.desc: Test RSUniRenderVisitorTest.ScaleMirrorIfNeedForWiredScreen with rotation false
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, ScaleMirrorIfNeedForWiredScreen002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_0);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsHeight(800);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsWidth(600);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->ScaleMirrorIfNeedForWiredScreen(*rsDisplayRenderNode, false);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeedForWiredScreen
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeedForWiredScreen with rotation_90
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeedForWiredScreen001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_90);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeedForWiredScreen(*rsDisplayRenderNode);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeedForWiredScreen
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeedForWiredScreen with rotation_180
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeedForWiredScreen002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_180);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeedForWiredScreen(*rsDisplayRenderNode);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeedForWiredScreen
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeedForWiredScreen with rotation_270
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeedForWiredScreen003, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_270);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeedForWiredScreen(*rsDisplayRenderNode);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: ScaleMirrorIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.ScaleMirrorIfNeed with cavasRotation_true ScreenScaleMode::FILL_MODE and rotation_90
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, ScaleMirrorIfNeed001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+    screenManager->SetVirtualMirrorScreenScaleMode(rsDisplayRenderNode->GetScreenId(), ScreenScaleMode::FILL_MODE);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_90);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsHeight(800);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsWidth(600);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->ScaleMirrorIfNeed(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: ScaleMirrorIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.ScaleMirrorIfNeed with cavasRotation_false ScreenScaleMode::FILL_MODE and rotation_90
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, ScaleMirrorIfNeed002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+    screenManager->SetVirtualMirrorScreenScaleMode(rsDisplayRenderNode->GetScreenId(), ScreenScaleMode::FILL_MODE);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_90);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsHeight(800);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsWidth(600);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->ScaleMirrorIfNeed(*rsDisplayRenderNode, false);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: ScaleMirrorIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.ScaleMirrorIfNeed with cavasRotation_false ScreenScaleMode::UNISCALE_MODE and rotation_270
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, ScaleMirrorIfNeed003, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+    screenManager->SetVirtualMirrorScreenScaleMode(rsDisplayRenderNode->GetScreenId(), ScreenScaleMode::UNISCALE_MODE);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_90);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsHeight(800);
+    mirrorNode->renderContent_->renderProperties_.SetBoundsWidth(600);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->ScaleMirrorIfNeed(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeed with rotation_270 and canvasRotation_false
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeed001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_270);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeed(*rsDisplayRenderNode, false);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeed with rotation_270 and canvasRotation_true
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeed002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_270);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeed(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
+}
+
+/*
+ * @tc.name: RotateMirrorCanvasIfNeed
+ * @tc.desc: Test RSUniRenderVisitorTest.RotateMirrorCanvasIfNeed with rotation_180 and canvasRotation_true
+ * @tc.type: FUNC
+ * @tc.require: issuesI9SIK7
+ */
+HWTEST_F(RSUniRenderVisitorTest, RotateMirrorCanvasIfNeed003, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(10, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(screenManager, nullptr);
+    std::string name = "virtualScreen";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    RSDisplayNodeConfig config1;
+    auto mirrorNode = std::make_shared<RSDisplayRenderNode>(id, config1);
+    ASSERT_NE(mirrorNode, nullptr);
+    mirrorNode->SetScreenRotation(ScreenRotation::ROTATION_180);
+    rsDisplayRenderNode->mirrorSource_ = mirrorNode;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->RotateMirrorCanvasIfNeed(*rsDisplayRenderNode, true);
+
+    screenManager->RemoveVirtualScreen(id);
+    sleep(1);
 }
 } // OHOS::Rosen

@@ -983,9 +983,6 @@ void RSRenderNode::UpdateDrawingCacheInfoAfterChildren()
         SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     stagingRenderParams_->SetDrawingCacheType(GetDrawingCacheType());
-    if (GetRenderProperties().GetForegroundFilterCache() != nullptr) {
-        stagingRenderParams_->SetDrawingCacheType(RSDrawingCacheType::FOREGROUND_FILTER_CACHE);
-    }
     if (GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         RS_OPTIONAL_TRACE_NAME_FMT("DrawingCacheInfoAfter id:%llu cacheType:%d childHasVisibleFilter:%d " \
             "childHasVisibleEffect:%d",
@@ -2960,6 +2957,8 @@ void RSRenderNode::CheckDrawingCacheType()
 {
     if (nodeGroupType_ == NodeGroupType::NONE) {
         SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+    } else if (nodeGroupType_ & NodeGroupType::GROUPED_BY_FOREGROUND_FILTER) {
+        SetDrawingCacheType(RSDrawingCacheType::FOREGROUND_FILTER_CACHE);
     } else if (nodeGroupType_ & NodeGroupType::GROUPED_BY_USER) {
         SetDrawingCacheType(RSDrawingCacheType::FORCED_CACHE);
     } else {

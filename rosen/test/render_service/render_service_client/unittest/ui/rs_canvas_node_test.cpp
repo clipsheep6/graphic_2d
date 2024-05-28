@@ -33,13 +33,48 @@ constexpr static float FLOAT_DATA_MIN = std::numeric_limits<float>::min();
 class RSCanvasNodeTest : public testing::Test {
 public:
     constexpr static float floatData[] = {
-        0.0f, 485.44f, -34.4f,
-        std::numeric_limits<float>::max(), std::numeric_limits<float>::min(),
+        FLOAT_DATA_ZERO, FLOAT_DATA_POSITIVE, FLOAT_DATA_NEGATIVE,
+        FLOAT_DATA_MAX, FLOAT_DATA_MIN,
         };
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    Vector4<Vector2f> createV4v2fWithValue(float value) const
+    {
+        Vector2f tmp{value, value};
+        return {tmp, tmp, tmp, tmp};
+    }
+    void SetBorderDashParamsAndTest(float value) const
+    {
+        SetBorderDashParamsAndTest(createV4v2fWithValue(value));
+        SetBorderDashParamsAndTest(Vector2f(value));
+    }
+    void SetOutlineDashParamsAndTest(float value) const
+    {
+        SetOutlineDashParamsAndTest(createV4v2fWithValue(value));
+        SetOutlineDashParamsAndTest(Vector2f(value));
+    }
+    template<typename T>
+    void SetBorderDashParamsAndTest(const T& params) const
+    {
+        auto rsNode = RSCanvasNode::Create();
+        rsNode->SetBorderDashParams(params);
+        Vector4<Vector2f> borderDashParams = rsNode->GetStagingProperties().GetBorderDashParams();
+        for (auto i = 0; i < borderDashParams.Size(); i++) {
+            EXPECT_TRUE(borderDashParams[i].IsNearEqual(params[i]));
+        }
+    }
+    template<typename T>
+    void SetOutlineDashParamsAndTest(const T& params) const
+    {
+        auto rsNode = RSCanvasNode::Create();
+        rsNode->SetOutlineDashParams(params);
+        Vector4<Vector2f> outlineDashParams = rsNode->GetStagingProperties().GetOutlineDashParams();
+        for (auto i = 0; i < outlineDashParams.Size(); i++) {
+            EXPECT_TRUE(outlineDashParams[i].IsNearEqual(params[i]));
+        }
+    }
 };
 
 void RSCanvasNodeTest::SetUpTestCase() {}
@@ -1878,6 +1913,106 @@ HWTEST_F(RSCanvasNodeTest, SetandGetBorderWidth005, TestSize.Level1)
     RSCanvasNode::SharedPtr canvasNode = RSCanvasNode::Create();
     canvasNode->SetBorderWidth(floatData[0]);
     EXPECT_TRUE(ROSEN_EQ(canvasNode->GetStagingProperties().GetBorderWidth().x_, floatData[0]));
+}
+
+/**
+ * @tc.name: SetandGetBorderDashParams001
+ * @tc.desc: Check for zero values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetBorderDashParams001, TestSize.Level1)
+{
+    SetBorderDashParamsAndTest(FLOAT_DATA_ZERO);
+}
+
+/**
+ * @tc.name: SetandGetBorderDashParams002
+ * @tc.desc: Check for positive values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetBorderDashParams002, TestSize.Level1)
+{
+    SetBorderDashParamsAndTest(FLOAT_DATA_POSITIVE);
+}
+
+/**
+ * @tc.name: SetandGetBorderDashParams003
+ * @tc.desc: Check for negative values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetBorderDashParams003, TestSize.Level1)
+{
+    SetBorderDashParamsAndTest(FLOAT_DATA_NEGATIVE);
+}
+
+/**
+ * @tc.name: SetandGetBorderDashParams004
+ * @tc.desc: Check for max values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetBorderDashParams004, TestSize.Level1)
+{
+    SetBorderDashParamsAndTest(FLOAT_DATA_MAX);
+}
+
+/**
+ * @tc.name: SetandGetBorderDashParams005
+ * @tc.desc: Check for min values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetBorderDashParams005, TestSize.Level1)
+{
+    SetBorderDashParamsAndTest(FLOAT_DATA_MIN);
+}
+
+/**
+ * @tc.name: SetandGetOutlineDashParams001
+ * @tc.desc: Check for zero values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetOutlineDashParams001, TestSize.Level1)
+{
+    SetOutlineDashParamsAndTest(FLOAT_DATA_ZERO);
+}
+
+/**
+ * @tc.name: SetandGetOutlineDashParams002
+ * @tc.desc: Check for positive values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetOutlineDashParams002, TestSize.Level1)
+{
+    SetOutlineDashParamsAndTest(FLOAT_DATA_POSITIVE);
+}
+
+/**
+ * @tc.name: SetandGetOutlineDashParams003
+ * @tc.desc: Check for negative values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetOutlineDashParams003, TestSize.Level1)
+{
+    SetOutlineDashParamsAndTest(FLOAT_DATA_NEGATIVE);
+}
+
+/**
+ * @tc.name: SetandGetOutlineDashParams004
+ * @tc.desc: Check for max values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetOutlineDashParams004, TestSize.Level1)
+{
+    SetOutlineDashParamsAndTest(FLOAT_DATA_MAX);
+}
+
+/**
+ * @tc.name: SetandGetOutlineDashParams005
+ * @tc.desc: Check for min values
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSCanvasNodeTest, SetandGetOutlineDashParams005, TestSize.Level1)
+{
+    SetOutlineDashParamsAndTest(FLOAT_DATA_MIN);
 }
 
 /**

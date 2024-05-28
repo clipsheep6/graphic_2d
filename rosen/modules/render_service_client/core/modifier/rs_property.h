@@ -329,6 +329,7 @@ class RSAnimatableProperty : public RSProperty<T> {
                   std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> || std::is_same_v<Vector4f, T> ||
                   std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||
                   std::is_same_v<Vector4<Color>, T> || std::is_base_of_v<RSAnimatableArithmetic<T>, T> ||
+                  std::is_same_v<Vector4<Vector2f>, T> ||
                   supports_animatable_arithmetic<T>::value || std::is_same_v<RRect, T>);
 
 public:
@@ -728,6 +729,9 @@ template<>
 RSC_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(
     const Vector4<Color>& value, PropertyUpdateType type) const;
 template<>
+RSC_EXPORT void RSProperty<Vector4<Vector2f>>::UpdateToRender(
+    const Vector4<Vector2f>& value, PropertyUpdateType type) const;
+template<>
 RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, PropertyUpdateType type) const;
 template<>
 RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, PropertyUpdateType type) const;
@@ -755,6 +759,8 @@ template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<std::shared_ptr<RSFilter>>::GetPropertyType() const;
 template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const;
+template<>
+RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Vector2f>>::GetPropertyType() const;
 template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const;
 } // namespace Rosen

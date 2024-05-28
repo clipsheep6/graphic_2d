@@ -44,7 +44,9 @@ private:
     RSAnimationTraceUtils();
     ~RSAnimationTraceUtils() = default;
 
-    std::string ParseRenderPropertyVaule(const std::shared_ptr<RSRenderPropertyBase>& value,
+    std::string ParseRenderPropertyVectorsValue(const std::shared_ptr<RSRenderPropertyBase>& value,
+        const RSRenderPropertyType type = RSRenderPropertyType::INVALID) const;
+    std::string ParseRenderPropertyValue(const std::shared_ptr<RSRenderPropertyBase>& value,
         const RSRenderPropertyType type = RSRenderPropertyType::INVALID) const;
 
     static RSAnimationTraceUtils instance_;

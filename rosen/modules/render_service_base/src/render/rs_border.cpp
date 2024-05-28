@@ -70,6 +70,12 @@ void RSBorder::SetStyle(BorderStyle style)
     styles_.push_back(style);
 }
 
+void RSBorder::SetDashParams(const Vector2f& dashParams)
+{
+    dashParams_.clear();
+    dashParams_.push_back(dashParams);
+}
+
 Color RSBorder::GetColor(int idx) const
 {
     if (colors_.empty()) {
@@ -103,6 +109,17 @@ BorderStyle RSBorder::GetStyle(int idx) const
     }
 }
 
+Vector2f RSBorder::GetDashParams(int idx) const
+{
+    if (dashParams_.empty()) {
+        return {0.f, 0.f};
+    } else if (dashParams_.size() == 1) {
+        return dashParams_.front();
+    } else {
+        return dashParams_.at(idx);
+    }
+}
+
 void RSBorder::SetColorFour(const Vector4<Color>& color)
 {
     if (color.x_ == color.y_ && color.x_ == color.z_ && color.x_ == color.w_) {
@@ -131,6 +148,16 @@ void RSBorder::SetStyleFour(const Vector4<uint32_t>& style)
 void RSBorder::SetRadiusFour(const Vector4f& radius)
 {
     radius_ = { radius.x_, radius.y_, radius.z_, radius.w_ };
+}
+
+void RSBorder::SetDashParamsFour(const Vector4<Vector2f>& dashParams)
+{
+    if (dashParams.x_.x_ == dashParams.y_.x_ && dashParams.x_.y_ == dashParams.y_.y_ &&
+        dashParams.x_.x_ == dashParams.z_.x_ && dashParams.x_.y_ == dashParams.z_.y_ &&
+        dashParams.x_.x_ == dashParams.w_.x_ && dashParams.x_.y_ == dashParams.w_.y_) {
+        return SetDashParams(dashParams.x_);
+    }
+    dashParams_ = { dashParams.x_, dashParams.y_, dashParams.z_, dashParams.w_ };
 }
 
 Vector4<Color> RSBorder::GetColorFour() const
@@ -166,11 +193,23 @@ Vector4f RSBorder::GetRadiusFour() const
     return radius_;
 }
 
-void SetBorderEffect(Drawing::Pen& pen, BorderStyle style, float width, float spaceBetweenDot, float borderLength)
+Vector4<Vector2f> RSBorder::GetDashParamsFour() const
 {
+    if (dashParams_.size() <= 1) {
+        return Vector4<Vector2f>(GetDashParams());
+    } else {
+        return Vector4<Vector2f>(GetDashParams(BorderType::LEFT), GetDashParams(BorderType::TOP),
+                                 GetDashParams(BorderType::RIGHT), GetDashParams(BorderType::BOTTOM));
+    }
+}
+
+void RSBorder::SetBorderEffect(Drawing::Pen& pen, int idx, float spaceBetweenDot, float borderLength) const
+{
+    float width = GetWidth(idx);
     if (ROSEN_EQ(width, 0.f)) {
         return;
     }
+    BorderStyle style = GetStyle(idx);
     if (style == BorderStyle::DOTTED) {
         Drawing::Path dotPath;
         if (ROSEN_EQ(spaceBetweenDot, 0.f)) {
@@ -179,24 +218,36 @@ void SetBorderEffect(Drawing::Pen& pen, BorderStyle style, float width, float sp
         dotPath.AddCircle(0.0f, 0.0f, width / PARAM_DOUBLE);
         pen.SetPathEffect(Drawing::PathEffect::CreatePathDashEffect(dotPath, spaceBetweenDot, 0.0,
             Drawing::PathDashStyle::ROTATE));
-    } else if (style == BorderStyle::DASHED) {
+        return;
+    }
+    if (style == BorderStyle::DASHED) {
+        float intervals[2] = { 0.f, 0.f };
+        Vector2f dashParams = GetDashParams(idx);
+        if (dashParams.x_ > 0.f && dashParams.y_ > 0.f) {
+            intervals[0] = dashParams.x_;
+            intervals[1] = dashParams.y_;
+            pen.SetPathEffect(
+                Drawing::PathEffect::CreateDashPathEffect(intervals, sizeof(intervals)/sizeof(float), 0.0));
+            return;
+        }
         double addLen = 0.0; // When left < 2 * gap, splits left to gaps.
         double delLen = 0.0; // When left > 2 * gap, add one dash and shortening them.
-        if (!ROSEN_EQ(borderLength, 0.f)) {
+        if (!ROSEN_EQ(borderLength, 0.f) && width > 0) {
             float count = borderLength / width;
             float leftLen = fmod((count - DASHED_LINE_LENGTH), (DASHED_LINE_LENGTH + 1));
             if (leftLen > DASHED_LINE_LENGTH - 1) {
                 delLen = (DASHED_LINE_LENGTH + 1 - leftLen) * width /
-                         static_cast<int>((count - DASHED_LINE_LENGTH) / (DASHED_LINE_LENGTH + 1) + 2);
+                         static_cast<int>((count - DASHED_LINE_LENGTH) / (DASHED_LINE_LENGTH + 1) + PARAM_DOUBLE);
             } else {
                 addLen = leftLen * width / static_cast<int>((count - DASHED_LINE_LENGTH) / (DASHED_LINE_LENGTH + 1));
             }
         }
-        const float intervals[] = { width * DASHED_LINE_LENGTH - delLen, width + addLen };
+        intervals[0] = width * DASHED_LINE_LENGTH - delLen;
+        intervals[1] = width + addLen;
         pen.SetPathEffect(Drawing::PathEffect::CreateDashPathEffect(intervals, sizeof(intervals)/sizeof(float), 0.0));
-    } else {
-        pen.SetPathEffect(nullptr);
+        return;
     }
+    pen.SetPathEffect(nullptr);
 }
 
 bool RSBorder::ApplyFillStyle(Drawing::Brush& brush) const
@@ -218,12 +269,12 @@ bool RSBorder::ApplyFillStyle(Drawing::Brush& brush) const
 
 bool RSBorder::ApplyPathStyle(Drawing::Pen& pen) const
 {
-    if (colors_.size() != 1 || widths_.size() != 1 || styles_.size() != 1) {
+    if (colors_.size() != 1 || widths_.size() != 1 || styles_.size() != 1 || dashParams_.size() != 1) {
         return false;
     }
     pen.SetWidth(widths_.front());
     pen.SetColor(colors_.front().AsArgbInt());
-    SetBorderEffect(pen, GetStyle(), widths_.front(), 0.f, 0.f);
+    SetBorderEffect(pen, BorderType::LEFT, 0.f, 0.f);
     return true;
 }
 
@@ -252,7 +303,7 @@ bool RSBorder::ApplyLineStyle(Drawing::Pen& pen, int borderIdx, float length) co
     pen.SetWidth(GetWidth(borderIdx));
     Color color = GetColor(borderIdx);
     pen.SetColor(color.AsArgbInt());
-    SetBorderEffect(pen, GetStyle(borderIdx), borderWidth, borderLength / rawNumber, borderLength);
+    SetBorderEffect(pen, borderIdx, borderLength / rawNumber, borderLength);
     return true;
 }
 

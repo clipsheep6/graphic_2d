@@ -346,6 +346,15 @@ protected:
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
 
+class RSC_EXPORT RSBorderDashParamsModifier : public RSForegroundModifier {
+public:
+    explicit RSBorderDashParamsModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSBorderDashParamsModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
 class RSC_EXPORT RSOutlineColorModifier : public RSForegroundModifier {
 public:
     explicit RSOutlineColorModifier(const std::shared_ptr<RSPropertyBase>& property);
@@ -368,6 +377,15 @@ class RSC_EXPORT RSOutlineStyleModifier : public RSForegroundModifier {
 public:
     explicit RSOutlineStyleModifier(const std::shared_ptr<RSPropertyBase>& property);
     virtual ~RSOutlineStyleModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
+class RSC_EXPORT RSOutlineDashParamsModifier : public RSForegroundModifier {
+public:
+    explicit RSOutlineDashParamsModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSOutlineDashParamsModifier() = default;
 protected:
     RSModifierType GetModifierType() const override;
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;

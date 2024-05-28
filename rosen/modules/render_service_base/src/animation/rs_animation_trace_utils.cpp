@@ -29,7 +29,7 @@ RSAnimationTraceUtils::RSAnimationTraceUtils()
     isDebugOpen_ = RSSystemProperties::GetAnimationTraceEnabled();
 }
 
-std::string RSAnimationTraceUtils::ParseRenderPropertyVaule(
+std::string RSAnimationTraceUtils::ParseRenderPropertyValue(
     const std::shared_ptr<RSRenderPropertyBase>& value, const RSRenderPropertyType type) const
 {
     std::string str;
@@ -72,6 +72,19 @@ std::string RSAnimationTraceUtils::ParseRenderPropertyVaule(
             }
             break;
         }
+        default: {
+            str = ParseRenderPropertyVectorsValue(value, type);
+        }
+    }
+    return str;
+}
+
+std::string RSAnimationTraceUtils::ParseRenderPropertyVectorsValue(
+    const std::shared_ptr<RSRenderPropertyBase>& value, const RSRenderPropertyType type) const
+{
+    std::string str;
+    auto propertyType = value->GetPropertyType() == RSRenderPropertyType::INVALID ? type : value->GetPropertyType();
+    switch (propertyType) {
         case RSRenderPropertyType::PROPERTY_VECTOR2F: {
             auto property = std::static_pointer_cast<RSRenderAnimatableProperty<Vector2f>>(value);
             if (property) {
@@ -97,6 +110,17 @@ std::string RSAnimationTraceUtils::ParseRenderPropertyVaule(
                       "y:" + std::to_string(property->Get().y_.AsRgbaInt()) + "," +
                       "z:" + std::to_string(property->Get().z_.AsRgbaInt()) + "," +
                       "w:" + std::to_string(property->Get().w_.AsRgbaInt());
+            }
+            break;
+        }
+        case RSRenderPropertyType::PROPERTY_VECTOR4_VECTOR2F: {
+            auto property = std::static_pointer_cast<RSRenderAnimatableProperty<Vector4<Vector2f>>>(value);
+            if (property) {
+                str = "Vector4:x:" +
+                    std::to_string(property->Get().x_.x_) + "," + std::to_string(property->Get().x_.y_) + "," +
+                    "y:" + std::to_string(property->Get().y_.x_) + "," + std::to_string(property->Get().y_.y_) + "," +
+                    "z:" + std::to_string(property->Get().z_.x_) + "," + std::to_string(property->Get().z_.y_) + "," +
+                    "w:" + std::to_string(property->Get().w_.x_) + "," + std::to_string(property->Get().w_.y_);
             }
             break;
         }
@@ -128,8 +152,8 @@ void RSAnimationTraceUtils::addAnimationCreateTrace(const uint64_t nodeId, const
     const int animationDelay, const int animationDur) const
 {
     if (isDebugOpen_) {
-        auto startStr = ParseRenderPropertyVaule(startValue);
-        auto endStr = ParseRenderPropertyVaule(endValue);
+        auto startStr = ParseRenderPropertyValue(startValue);
+        auto endStr = ParseRenderPropertyValue(endValue);
         RS_TRACE_NAME_FMT(
             "CreateImplicitAnimation node[%llu] pro[%llu] animate[%llu], animateType %d, propertyType %d, " \
             "startValue[%s], endValue[%s], delay %d, dur %d",
@@ -143,7 +167,7 @@ void RSAnimationTraceUtils::addAnimationFrameTrace(const uint64_t nodeId, const 
     const int64_t time) const
 {
     if (isDebugOpen_) {
-        auto propertyValue = ParseRenderPropertyVaule(value);
+        auto propertyValue = ParseRenderPropertyValue(value);
         RS_TRACE_NAME_FMT("frame animation node[%llu] pro[%llu] animate[%llu], fraction %f, value[%s], time[%lld]",
             nodeId, propertyId, animationId, fraction, propertyValue.c_str(), time);
     }
@@ -154,7 +178,7 @@ void RSAnimationTraceUtils::addSpringInitialVelocityTrace(const uint64_t propert
     const std::shared_ptr<RSRenderPropertyBase>& value) const
 {
     if (isDebugOpen_) {
-        auto propertyValue = ParseRenderPropertyVaule(initialVelocity, value->GetPropertyType());
+        auto propertyValue = ParseRenderPropertyValue(initialVelocity, value->GetPropertyType());
         RS_TRACE_NAME_FMT("spring pro[%llu] animate[%llu], initialVelocity[%s]",
             propertyId, animationId, propertyValue.c_str());
     }

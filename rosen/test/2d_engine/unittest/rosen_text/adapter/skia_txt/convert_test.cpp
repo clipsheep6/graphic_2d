@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 #include "convert.h"
+#include "rosen_text/text_style.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -152,6 +153,6 @@ HWTEST_F(OH_Drawing_ConvertTest, OH_Drawing_ConvertTest010, TestSize.Level2)
     textStyle.fontVariations.SetAxisValue("tag", 1.2);
     SPText::TextStyle sptextStyle = AdapterTxt::Convert(textStyle);
     EXPECT_EQ(sptextStyle.fontSize == 14.0, true);
-}   
+}
 } // namespace Rosen
 } // namespace OHOS

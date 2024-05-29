@@ -71,7 +71,7 @@ HWTEST_F(RSEffectNodeTest, Create002, TestSize.Level1)
 HWTEST_F(RSEffectNodeTest, SetFreeze, TestSize.Level1)
 {
     RSEffectNode::SharedPtr effectNode = RSEffectNode::Create(true);
-    effectNode->SetFreeze(true);
+    effectNode->SetFreeze(true, false);
     ASSERT_TRUE(effectNode != nullptr);
 
     RSSystemProperties::GetUniRenderEnabled();

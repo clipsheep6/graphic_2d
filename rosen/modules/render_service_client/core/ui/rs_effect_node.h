@@ -33,7 +33,7 @@ public:
     ~RSEffectNode() override = default;
 
     static SharedPtr Create(bool isRenderServiceNode = false, bool isTextureExportNode = false);
-    void SetFreeze(bool isFreeze) override;
+    void SetFreeze(bool isFreeze, bool isDrawBackground = false) override;
 
 protected:
     RSEffectNode(bool isRenderServiceNode, bool isTextureExportNode = false);

@@ -4050,7 +4050,7 @@ HWTEST_F(RSNodeTest, SetShadowPath001, TestSize.Level1)
 HWTEST_F(RSNodeTest, SetFreeze001, TestSize.Level1)
 {
     auto rsNode = RSCanvasNode::Create();
-    rsNode->SetFreeze(true);
+    rsNode->SetFreeze(true, false);
 }
 
 template<typename ModifierName, typename PropertyName, typename T>

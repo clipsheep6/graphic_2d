@@ -570,13 +570,13 @@ void RSSurfaceNode::SetWindowId(uint32_t windowId)
     windowId_ = windowId;
 }
 
-void RSSurfaceNode::SetFreeze(bool isFreeze)
+void RSSurfaceNode::SetFreeze(bool isFreeze, bool isDrawBackground)
 {
     if (!IsUniRenderEnabled()) {
         ROSEN_LOGE("SetFreeze is not supported in separate render");
         return;
     }
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSetFreeze>(GetId(), isFreeze);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSetFreeze>(GetId(), isFreeze, isDrawBackground);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);

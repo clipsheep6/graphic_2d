@@ -187,7 +187,8 @@ public:
     virtual void SetFramePositionY(float positionY);
 
     // The property is valid only for CanvasNode and SurfaceNode in uniRender.
-    virtual void SetFreeze(bool isFreeze);
+    virtual void SetFreeze(bool isFreeze, bool isDrawBackground = false);
+
     void SetNodeName(const std::string& nodeName);
 
     void SetSandBox(std::optional<Vector2f> parentPosition);

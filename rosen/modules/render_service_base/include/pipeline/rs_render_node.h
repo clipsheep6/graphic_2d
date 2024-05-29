@@ -329,7 +329,7 @@ public:
     void MapAndUpdateChildrenRect();
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
 
-    void SetStaticCached(bool isStaticCached);
+    void SetStaticCached(bool isStaticCached, bool isDrawBackground = false);
     virtual bool IsStaticCached() const;
     void SetNodeName(const std::string& nodeName);
     const std::string& GetNodeName() const;
@@ -837,6 +837,7 @@ private:
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, const std::optional<RectI>& clipRect);
     void UpdateFullScreenFilterCacheRect(RSDirtyRegionManager& dirtyManager, bool isForeground) const;
     void ValidateLightResources();
+    bool ShouldClearSurface();
     void UpdateShouldPaint(); // update node should paint state in apply modifier stage
     bool shouldPaint_ = true;
     bool isSubTreeDirty_ = false;

@@ -130,7 +130,7 @@ public:
     void SetContainerWindow(bool hasContainerWindow, float density);
     void SetWindowId(uint32_t windowId);
 
-    void SetFreeze(bool isFreeze) override;
+    void SetFreeze(bool isFreeze, bool isDrawBackground = false) override;
 #ifdef USE_SURFACE_TEXTURE
     void SetSurfaceTexture(const RSSurfaceExtConfig& config);
     void MarkUiFrameAvailable(bool available);

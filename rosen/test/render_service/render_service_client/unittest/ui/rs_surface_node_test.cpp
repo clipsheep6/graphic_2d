@@ -1016,7 +1016,7 @@ HWTEST_F(RSSurfaceNodeTest, SetFreeze001, TestSize.Level1)
 {
     RSSurfaceNodeConfig c;
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
-    surfaceNode->SetFreeze(true);
+    surfaceNode->SetFreeze(true, false);
 }
 
 /**
@@ -1074,7 +1074,7 @@ HWTEST_F(RSSurfaceNodeTest, SetFreeze_True, TestSize.Level1)
     RSSurfaceNodeConfig c;
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
     ASSERT_NE(surfaceNode, nullptr);
-    surfaceNode->SetFreeze(true);
+    surfaceNode->SetFreeze(true, false);
 }
 
 /**
@@ -1088,7 +1088,7 @@ HWTEST_F(RSSurfaceNodeTest, SetFreeze_False, TestSize.Level1)
     RSSurfaceNodeConfig c;
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
     ASSERT_NE(surfaceNode, nullptr);
-    surfaceNode->SetFreeze(false);
+    surfaceNode->SetFreeze(false, false);
 }
 
 /**

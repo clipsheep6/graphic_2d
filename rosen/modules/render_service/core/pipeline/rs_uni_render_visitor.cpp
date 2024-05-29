@@ -2735,7 +2735,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     // avoid EntryView upload texture while screen rotation
     if (node.GetName() == "EntryView") {
-        node.SetStaticCached(curDisplayNode_->IsRotationChanged());
+        node.SetStaticCached(curDisplayNode_->IsRotationChanged(), false);
     }
     node.UpdatePositionZ();
     if (node.GetName().find(CAPTURE_WINDOW_NAME) != std::string::npos) {

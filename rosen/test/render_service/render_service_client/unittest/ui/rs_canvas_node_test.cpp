@@ -3468,7 +3468,7 @@ HWTEST_F(RSCanvasNodeTest, GetPaintHeight, TestSize.Level1)
 HWTEST_F(RSCanvasNodeTest, SetFreeze, TestSize.Level1)
 {
     RSCanvasNode::SharedPtr canvasNode = RSCanvasNode::Create();
-    canvasNode->SetFreeze(true);
+    canvasNode->SetFreeze(true, false);
     EXPECT_TRUE(RSTransactionProxy::instance_ != nullptr);
 }
 

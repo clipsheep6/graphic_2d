@@ -139,7 +139,8 @@
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json",
-            "//foundation/graphic/graphic_2d/rosen/modules/graphics_effect:libgraphics_effect"
+            "//foundation/graphic/graphic_2d/rosen/modules/graphics_effect:libgraphics_effect",
+            "//foundation/graphic/graphic_2d/rosen/modules/hyper_graphic_manager/core/native_display_soloist:libnative_display_soloist"
           ],
           "fwk_group": [
             "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
@@ -359,33 +360,6 @@
                 "effect_errors.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker/include"
-            }
-          },
-          {
-            "type": "so",
-            "name": "//foundation/graphic/graphic_2d/rosen/modules/ui_effect/effect:uieffect_effect",
-            "header": {
-              "header_files": [
-                "background_color_effect_para.h",
-                "blender.h",
-                "brightness_blender.h",
-                "visual_effect_para.h",
-                "visual_effect.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/ui_effect/effect/include"
-            }
-          },
-          {
-            "type": "so",
-            "name": "//foundation/graphic/graphic_2d/rosen/modules/ui_effect/filter:uieffect_filter",
-            "header": {
-              "header_files": [
-                "filter.h",
-                "filter_blur_para.h",
-                "filter_para.h",
-                "filter_pixel_stretch_para.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/ui_effect/filter/include"
             }
           },
           {

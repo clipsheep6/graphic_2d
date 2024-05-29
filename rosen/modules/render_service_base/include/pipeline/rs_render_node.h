@@ -120,7 +120,7 @@ public:
     void SetContentDirty();
     void ResetIsOnlyBasicGeoTransform();
     bool IsOnlyBasicGeoTransform() const;
-    void MergeSubTreeDirtyRegion(RSDirtyRegionManager& dirtyManager, const RectI& clipRect);
+    void ForceMergeSubTreeDirtyRegion(RSDirtyRegionManager& dirtyManager, const RectI& clipRect);
     void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty,
         const RectI& clipRect);
     inline bool LastFrameSubTreeSkipped() const
@@ -223,7 +223,7 @@ public:
     bool HasRemovedChild() const;
     inline void ResetChildrenRect()
     {
-        childrenRect_ = RectI();
+        childrenRect_.Clear();
     }
     RectI GetChildrenRect() const;
 
@@ -236,11 +236,20 @@ public:
     const std::unordered_set<NodeId>& GetVisibleEffectChild() const;
     void UpdateVisibleEffectChild(RSRenderNode& childNode);
 
-    NodeId GetInstanceRootNodeId() const;
+    inline NodeId GetInstanceRootNodeId() const
+    {
+        return instanceRootNodeId_;
+    }
     const std::shared_ptr<RSRenderNode> GetInstanceRootNode() const;
-    NodeId GetFirstLevelNodeId() const;
+    inline NodeId GetFirstLevelNodeId() const
+    {
+        return firstLevelNodeId_;
+    }
     const std::shared_ptr<RSRenderNode> GetFirstLevelNode() const;
-    NodeId GetUifirstRootNodeId() const;
+    inline NodeId GetUifirstRootNodeId() const
+    {
+        return uifirstRootNodeId_;
+    }
     void UpdateTreeUifirstRootNodeId(NodeId id);
 
     // reset accumulated vals before traverses children
@@ -674,8 +683,9 @@ public:
 
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
-    bool IsEffectNodeNeedTakeSnapShot() const;
-    bool IsEffectNodeShouldNotPaint() const;
+    virtual bool EffectNodeShouldPaint() const { return true; };
+    virtual bool FirstFrameHasEffectChildren() const { return false; }
+    virtual void MarkClearFilterCacheIfEffectChildrenChanged() {}
     bool HasBlurFilter() const;
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
@@ -750,9 +760,8 @@ protected:
     bool clipAbsDrawRectChange_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
-    virtual void MarkFilterCacheFlags(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDirtyRegionManager& dirtyManager,
-        bool needRequestNextVsync);
+    virtual void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
+        RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync);
     bool IsForceClearOrUseFilterCache(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable);
     std::atomic<bool> isStaticCached_ = false;
     bool lastFrameHasVisibleEffect_ = false;
@@ -799,8 +808,14 @@ private:
     bool hasRemovedChild_ = false;
     bool lastFrameSubTreeSkipped_ = false;
     bool hasChildrenOutOfRect_ = false;
+    bool lastFrameHasChildrenOutOfRect_ = false;
     RectI childrenRect_;
+    
+    // aim to record children rect in abs coords, without considering clip
     RectI absChildrenRect_;
+    // aim to record current frame clipped children dirty region, in abs coords
+    RectI subTreeDirtyRegion_;
+
     bool childHasVisibleFilter_ = false;  // only collect visible children filter status
     bool childHasVisibleEffect_ = false;  // only collect visible children has useeffect
     std::vector<NodeId> visibleFilterChild_;

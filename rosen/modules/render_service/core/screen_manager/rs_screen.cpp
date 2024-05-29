@@ -971,6 +971,11 @@ const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
     return filteredAppSet_;
 }
 
+const std::unordered_set<uint64_t>& RSScreen::GetBlackListSet() const
+{
+    return blackListSet_;
+}
+
 int32_t RSScreen::SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type)
 {
     if (IsVirtual()) {

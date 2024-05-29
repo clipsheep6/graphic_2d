@@ -26,6 +26,7 @@ namespace Rosen {
 template<typename T>
 class Vector4 {
 public:
+    static constexpr uint32_t V4SIZE = 4;
     union {
         struct {
             T x_;
@@ -38,6 +39,7 @@ public:
 
     Vector4();
     Vector4(T value);
+    Vector4(const Vector4<T>& value);
     Vector4(T x, T y, T z, T w);
     explicit Vector4(const T* array);
     ~Vector4();
@@ -53,6 +55,7 @@ public:
     bool IsZero() const;
     void SetValues(T x, T y, T z, T w);
     void SetZero();
+    uint32_t Size();
     Vector4 operator-() const;
     Vector4 operator-(const Vector4<T>& other) const;
     Vector4 operator+(const Vector4<T>& other) const;
@@ -111,6 +114,15 @@ Vector4<T>::Vector4(T value)
     data_[2] = value;
     data_[3] = value;
 }
+
+template<typename T>
+Vector4<T>::Vector4(const Vector4<T>& value)
+{
+    for (auto i = 0; i < Size(); i++) {
+        data_[i] = value[i];
+    }
+}
+
 
 template<typename T>
 Vector4<T>::Vector4(T x, T y, T z, T w)
@@ -300,6 +312,12 @@ template<typename T>
 void Vector4<T>::SetZero()
 {
     SetValues(T(0.f), T(0.f), T(0.f), T(0.f));
+}
+
+template<typename T>
+uint32_t Vector4<T>::Size()
+{
+    return V4SIZE;
 }
 
 template<typename T>

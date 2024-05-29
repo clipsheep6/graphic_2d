@@ -265,6 +265,10 @@ public:
     void SetBorderStyle(uint32_t styleValue);
     void SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
     void SetBorderStyle(const Vector4<BorderStyle>& style);
+    void SetBorderDashParams(const Vector2f& dashParams);
+    void SetBorderDashParams(const Vector2f& dashParamsLeft, const Vector2f& dashParamsTop,
+                             const Vector2f& dashParamsRight, const Vector2f& dashParamsBottom);
+    void SetBorderDashParams(const Vector4<Vector2f>& dashParams);
     void SetOuterBorderColor(const Vector4<Color>& color);
     void SetOuterBorderWidth(const Vector4f& width);
     void SetOuterBorderStyle(const Vector4<BorderStyle>& style);
@@ -272,6 +276,7 @@ public:
     void SetOutlineColor(const Vector4<Color>& color);
     void SetOutlineWidth(const Vector4f& width);
     void SetOutlineStyle(const Vector4<BorderStyle>& style);
+    void SetOutlineDashParams(const Vector4<Vector2f>& dashParams);
     void SetOutlineRadius(const Vector4f& radius);
 
     // UIEffect

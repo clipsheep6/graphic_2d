@@ -33,6 +33,7 @@ public:
     };
 
     Vector2();
+    Vector2(T x);
     Vector2(T x, T y);
     explicit Vector2(const T* v);
     virtual ~Vector2();
@@ -71,6 +72,13 @@ typedef Vector2<double> Vector2d;
 template<typename T>
 Vector2<T>::Vector2()
 {}
+
+template<typename T>
+Vector2<T>::Vector2(T x)
+{
+    data_[0] = x;
+    data_[1] = x;
+}
 
 template<typename T>
 Vector2<T>::Vector2(T x, T y)

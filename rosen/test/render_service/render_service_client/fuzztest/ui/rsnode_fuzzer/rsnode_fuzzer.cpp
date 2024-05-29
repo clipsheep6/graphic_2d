@@ -164,6 +164,9 @@ void RSNodeFuzzTestInner02(std::shared_ptr<RSSurfaceNode> surfaceNode)
 {
     std::shared_ptr<RSShader> shader = RSShader::CreateRSShader();
     Vector4f width(GetData<float>(), GetData<float>(), GetData<float>(), GetData<float>());
+    Vector2f dashParams2f(GetData<float>(), GetData<float>());
+    Vector4<Vector2f> dashParams42f({GetData<float>(), GetData<float>()}, {GetData<float>(), GetData<float>()},
+        {GetData<float>(), GetData<float>()}, {GetData<float>(), GetData<float>()});
     Vector4<BorderStyle> style(
         GetData<BorderStyle>(), GetData<BorderStyle>(), GetData<BorderStyle>(), GetData<BorderStyle>());
 
@@ -183,6 +186,10 @@ void RSNodeFuzzTestInner02(std::shared_ptr<RSSurfaceNode> surfaceNode)
     surfaceNode->SetBorderWidth(GetData<float>());
     surfaceNode->SetBorderWidth(GetData<float>(), GetData<float>(), GetData<float>(), GetData<float>());
     surfaceNode->SetBorderWidth(width);
+    surfaceNode->SetBorderDashParams(dashParams2f);
+    surfaceNode->SetBorderDashParams(dashParams42f);
+    surfaceNode->SetOutlineDashParams(dashParams2f);
+    surfaceNode->SetOutlineDashParams(dashParams42f);
     surfaceNode->SetBorderStyle(GetData<uint32_t>());
     surfaceNode->SetBorderStyle(GetData<uint32_t>(), GetData<uint32_t>(), GetData<uint32_t>(), GetData<uint32_t>());
     surfaceNode->SetBorderStyle(style);

@@ -98,6 +98,7 @@ constexpr static std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::
     [](RSProperties* prop) { prop->SetBorderColor(RSColor()); },         // BORDER_COLOR
     [](RSProperties* prop) { prop->SetBorderWidth(0.f); },               // BORDER_WIDTH
     [](RSProperties* prop) { prop->SetBorderStyle(BORDER_TYPE_NONE); },  // BORDER_STYLE
+    [](RSProperties* prop) { prop->SetBorderDashParams(Vector2f(0.f, 0.f)); }, // BORDER_DASH_PARAMS
     [](RSProperties* prop) { prop->SetFilter({}); },                     // FILTER
     [](RSProperties* prop) { prop->SetBackgroundFilter({}); },           // BACKGROUND_FILTER
     [](RSProperties* prop) { prop->SetLinearGradientBlurPara({}); },     // LINEAR_GRADIENT_BLUR_PARA
@@ -147,6 +148,7 @@ constexpr static std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::
     [](RSProperties* prop) { prop->SetOutlineColor(RSColor()); },        // OUTLINE_COLOR
     [](RSProperties* prop) { prop->SetOutlineWidth(0.f); },              // OUTLINE_WIDTH
     [](RSProperties* prop) { prop->SetOutlineStyle(BORDER_TYPE_NONE); }, // OUTLINE_STYLE
+    [](RSProperties* prop) { prop->SetOutlineDashParams(Vector2f(0.f, 0.f)); }, // OUTLINE_DASH_PARAMS
     [](RSProperties* prop) { prop->SetOutlineRadius(0.f); },             // OUTLINE_RADIUS
     [](RSProperties* prop) { prop->SetUseShadowBatching(false); },       // USE_SHADOW_BATCHING
     [](RSProperties* prop) { prop->SetGreyCoef(std::nullopt); },         // GREY_COEF
@@ -1046,6 +1048,16 @@ void RSProperties::SetBorderStyle(Vector4<uint32_t> style)
     contentDirty_ = true;
 }
 
+void RSProperties::SetBorderDashParams(const Vector4<Vector2f> dashParams)
+{
+    if (!border_) {
+        border_ = std::make_shared<RSBorder>();
+    }
+    border_->SetDashParamsFour(dashParams);
+    SetDirty();
+    contentDirty_ = true;
+}
+
 Vector4<Color> RSProperties::GetBorderColor() const
 {
     return border_ ? border_->GetColorFour() : Vector4<Color>(RgbPalette::Transparent());
@@ -1059,6 +1071,11 @@ Vector4f RSProperties::GetBorderWidth() const
 Vector4<uint32_t> RSProperties::GetBorderStyle() const
 {
     return border_ ? border_->GetStyleFour() : Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE));
+}
+
+Vector4<Vector2f> RSProperties::GetBorderDashParams() const
+{
+    return border_ ? border_->GetDashParamsFour() : Vector4<Vector2f>(Vector2f(0.f, 0.f));
 }
 
 const std::shared_ptr<RSBorder>& RSProperties::GetBorder() const
@@ -1115,6 +1132,16 @@ void RSProperties::SetOutlineStyle(Vector4<uint32_t> style)
     contentDirty_ = true;
 }
 
+void RSProperties::SetOutlineDashParams(const Vector4<Vector2f> dashParams)
+{
+    if (!outline_) {
+        outline_ = std::make_shared<RSBorder>();
+    }
+    outline_->SetDashParamsFour(dashParams);
+    SetDirty();
+    contentDirty_ = true;
+}
+
 void RSProperties::SetOutlineRadius(Vector4f radius)
 {
     if (!outline_) {
@@ -1139,6 +1166,11 @@ Vector4f RSProperties::GetOutlineWidth() const
 Vector4<uint32_t> RSProperties::GetOutlineStyle() const
 {
     return outline_ ? outline_->GetStyleFour() : Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE));
+}
+
+Vector4<Vector2f> RSProperties::GetOutlineDashParams() const
+{
+    return outline_ ? outline_->GetDashParamsFour() : Vector4<Vector2f>(Vector2f(0.f, 0.f));
 }
 
 Vector4f RSProperties::GetOutlineRadius() const

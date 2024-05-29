@@ -1214,6 +1214,27 @@ void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
     SetProperty<RSBorderStyleModifier, RSProperty<Vector4<uint32_t>>>(RSModifierType::BORDER_STYLE, styles);
 }
 
+// set dash params for border
+void RSNode::SetBorderDashParams(const Vector2f& dashParams)
+{
+    SetBorderDashParams(dashParams, dashParams, dashParams, dashParams);
+}
+
+// set dash params for border
+void RSNode::SetBorderDashParams(const Vector2f& dashParamsLeft, const Vector2f& dashParamsTop,
+                                 const Vector2f& dashParamsRight, const Vector2f& dashParamsBottom)
+{
+    Vector4<Vector2f> dashParams(dashParamsLeft, dashParamsTop, dashParamsRight, dashParamsBottom);
+    SetBorderDashParams(dashParams);
+}
+
+// set dash params for border
+void RSNode::SetBorderDashParams(const Vector4<Vector2f>& dashParams)
+{
+    SetProperty<RSBorderDashParamsModifier, RSProperty<Vector4<Vector2f>>>(
+        RSModifierType::BORDER_DASH_PARAMS, dashParams);
+}
+
 void RSNode::SetOuterBorderColor(const Vector4<Color>& color)
 {
     SetOutlineColor(color);
@@ -1252,6 +1273,12 @@ void RSNode::SetOutlineStyle(const Vector4<BorderStyle>& style)
                              static_cast<uint32_t>(style.z_), static_cast<uint32_t>(style.w_));
     SetProperty<RSOutlineStyleModifier, RSProperty<Vector4<uint32_t>>>(
         RSModifierType::OUTLINE_STYLE, styles);
+}
+
+void RSNode::SetOutlineDashParams(const Vector4<Vector2f>& dashParams)
+{
+    SetProperty<RSOutlineWidthModifier, RSAnimatableProperty<Vector4<Vector2f>>>(
+        RSModifierType::OUTLINE_DASH_PARAMS, dashParams);
 }
 
 void RSNode::SetOutlineRadius(const Vector4f& radius)

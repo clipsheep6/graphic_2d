@@ -189,11 +189,12 @@ void RSPropertiesFuzzTestInner02(RSProperties& properties)
 
 void RSPropertiesFuzzTestInner03(RSProperties& properties)
 {
-    float x10 = GetData<float>();
-    float y10 = GetData<float>();
-    float z10 = GetData<float>();
-    float w10 = GetData<float>();
-    Vector4f widthVector(x10, y10, z10, w10);
+    Vector2f x10 = {GetData<float>(), GetData<float>()};
+    Vector2f y10 = {GetData<float>(), GetData<float>()};
+    Vector2f z10 = {GetData<float>(), GetData<float>()};
+    Vector2f w10 = {GetData<float>(), GetData<float>()};
+    Vector4f widthVector(x10.x_, y10.x_, z10.x_, w10.x_);
+    Vector4<Vector2f> dashParams(x10, y10, z10, w10);
     uint32_t x11 = GetData<float>();
     uint32_t y11 = GetData<float>();
     uint32_t z11 = GetData<float>();
@@ -222,6 +223,10 @@ void RSPropertiesFuzzTestInner03(RSProperties& properties)
     float alpha = GetData<float>();
 
     properties.SetBorderWidth(widthVector);
+    properties.SetBorderDashParams(x10);
+    properties.SetBorderDashParams(dashParams);
+    properties.SetOutlineDashParams(x10);
+    properties.SetOutlineDashParams(dashParams);
     properties.SetBorderStyle(style);
     properties.SetBackgroundFilter(backgroundFilter);
     properties.SetFilter(filter);

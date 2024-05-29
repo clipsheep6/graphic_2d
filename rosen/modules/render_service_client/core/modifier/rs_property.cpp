@@ -282,6 +282,12 @@ void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
     UPDATE_TO_RENDER(RSUpdatePropertyVector4Color, value, type);
 }
 template<>
+void RSProperty<Vector4<Vector2f>>::UpdateToRender(const Vector4<Vector2f>& value,
+    PropertyUpdateType type) const
+{
+    UPDATE_TO_RENDER(RSUpdatePropertyVector4Vector2f, value, type);
+}
+template<>
 void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, PropertyUpdateType type) const
 {
     UPDATE_TO_RENDER(RSUpdatePropertyVector4f, value, type);
@@ -348,6 +354,11 @@ template<>
 RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const
 {
     return RSRenderPropertyType::PROPERTY_VECTOR4_COLOR;
+}
+template<>
+RSRenderPropertyType RSAnimatableProperty<Vector4<Vector2f>>::GetPropertyType() const
+{
+    return RSRenderPropertyType::PROPERTY_VECTOR4_VECTOR2F;
 }
 template<>
 RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const

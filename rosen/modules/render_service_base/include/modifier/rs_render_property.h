@@ -371,6 +371,9 @@ template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Vector4<Color>>::IsNearEqual(
     const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
 template<>
+RSB_EXPORT bool RSRenderAnimatableProperty<Vector4<Vector2f>>::IsNearEqual(
+    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<RRect>::IsNearEqual(
     const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
 template<>
@@ -387,6 +390,7 @@ extern template class RSRenderAnimatableProperty<Matrix3f>;
 extern template class RSRenderAnimatableProperty<Color>;
 extern template class RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>;
 extern template class RSRenderAnimatableProperty<Vector4<Color>>;
+extern template class RSRenderAnimatableProperty<Vector4<Vector2f>>;
 #endif
 } // namespace Rosen
 } // namespace OHOS

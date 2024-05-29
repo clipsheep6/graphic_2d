@@ -340,6 +340,34 @@ HWTEST_F(RSShowingPropertiesFreezerTest, GetBorderTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetBorderDashParamsTest
+ * @tc.desc: Verify the GetBorderDashParams
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSShowingPropertiesFreezerTest, GetBorderDashParamsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSShowingPropertiesFreezerTest GetBorderDashParamsTest start";
+    auto canvasNode = RSCanvasNode::Create();
+    canvasNode->SetBorderColor(SK_ColorRED);
+    auto result1 = canvasNode->GetShowingProperties().GetBorderColor();
+    EXPECT_TRUE(result1.has_value());
+    EXPECT_TRUE(result1.value()[0].GetRed() == SHOWING_COLOR_NUM);
+    Vector2f dashParam(SHOWING_FLOAT_NUM, SHOWING_FLOAT_NUM);
+    Vector2f dashParamZero(0.f, 0.f);
+    canvasNode->SetBorderDashParams(dashParam);
+    canvasNode->SetBorderDashParams(Vector4<Vector2f>(dashParam, dashParamZero, dashParamZero, dashParamZero));
+    auto result2 = canvasNode->GetShowingProperties().GetBorderDashParams();
+    EXPECT_TRUE(result2.has_value());
+    EXPECT_TRUE(result2->x_[0] == SHOWING_FLOAT_NUM);
+    EXPECT_TRUE(result2->x_[1] == SHOWING_FLOAT_NUM);
+    EXPECT_TRUE(result2->y_.IsNearEqual(dashParamZero));
+    EXPECT_TRUE(result2->z_.IsNearEqual(dashParamZero));
+    EXPECT_TRUE(result2->w_.IsNearEqual(dashParamZero));
+
+    GTEST_LOG_(INFO) << "RSShowingPropertiesFreezerTest GetBorderDashParamsTest end";
+}
+
+/**
  * @tc.name: GetFilterTest
  * @tc.desc: Verify the GetFilter
  * @tc.type:FUNC

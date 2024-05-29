@@ -420,7 +420,7 @@ void RSUifirstManager::UpdateSkipSyncNode()
         processingNodePartialSync_.insert(it->first); // partial sync
         std::vector<std::pair<NodeId, std::weak_ptr<RSSurfaceRenderNode>>> allSubSurfaceNodes;
         surfaceNode->GetAllSubSurfaceNodes(allSubSurfaceNodes);
-        for (auto& [id, node] : allSubSurfaceNodes) {
+        for (auto& [id, subSurfaceNode] : allSubSurfaceNodes) {
             processingNodeSkipSync_.insert(id); // skip sync
         }
     }
@@ -517,7 +517,7 @@ void RSUifirstManager::ClearSubthreadRes()
 void RSUifirstManager::ForceClearSubthreadRes()
 {
     noUifirstNodeFrameCount_ = 0;
-    RSSubThreadManager::Instance()->ForceReleaseResource();
+    RSSubThreadManager::Instance()->ReleaseTexture();
 }
 
 void RSUifirstManager::SetNodePriorty(std::list<NodeId>& result,

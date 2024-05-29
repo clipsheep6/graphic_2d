@@ -153,7 +153,7 @@ constexpr uint32_t WAIT_FOR_RELEASED_BUFFER_TIMEOUT = 3000;
 constexpr uint32_t WAIT_FOR_HARDWARE_THREAD_TASK_TIMEOUT = 3000;
 constexpr uint32_t WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT = 1000;
 constexpr uint32_t WATCHDOG_TIMEVAL = 5000;
-constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 3;
+constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
 constexpr int32_t SIMI_VISIBLE_RATE = 2;
 constexpr int32_t DEFAULT_RATE = 1;
 constexpr int32_t INVISBLE_WINDOW_RATE = 10;
@@ -204,7 +204,7 @@ void PerfRequest(int32_t perfRequestCode, bool onOffTag)
 }
 
 void DoScreenRcdTask(std::shared_ptr<RSProcessor>& processor, std::unique_ptr<RcdInfo>& rcdInfo,
-    ScreenInfo& screenInfo)
+    const ScreenInfo& screenInfo)
 {
     if (screenInfo.state != ScreenState::HDI_OUTPUT_ENABLE) {
         RS_LOGD("DoScreenRcdTask is not at HDI_OUPUT mode");
@@ -645,8 +645,7 @@ void RSMainThread::UpdateNeedDrawFocusChange(NodeId id)
     if (!node) {
         return;
     }
-    auto parentNode =
-        node ? RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock()) : nullptr;
+    auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock());
     // while node's parent isn't LEASH_WINDOW_NODE, itselt need SetNeedDrawFocusChange
     if (!parentNode || parentNode->GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         node->SetNeedDrawFocusChange(true);
@@ -1074,7 +1073,7 @@ void RSMainThread::ProcessSyncTransactionCount(std::unique_ptr<RSTransactionData
 {
     bool isNeedCloseSync = rsTransactionData->IsNeedCloseSync();
     auto hostPid = rsTransactionData->GetHostPid();
-    if (hostPid == -1 || ExtractPid(rsTransactionData->GetSyncId()) == static_cast<uint32_t>(hostPid)) {
+    if (hostPid == -1 || ExtractPid(rsTransactionData->GetSyncId()) == hostPid) {
         // Synchronous commands initiated directly from the SCB
         if (isNeedCloseSync) {
             syncTransactionCount_ += rsTransactionData->GetSyncTransactionNum();

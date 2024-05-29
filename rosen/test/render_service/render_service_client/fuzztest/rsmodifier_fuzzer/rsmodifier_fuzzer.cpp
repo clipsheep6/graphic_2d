@@ -113,7 +113,8 @@ bool DoAttachProperty(const uint8_t* data, size_t size)
     auto prop = std::make_shared<RSAnimatableProperty<float>>(value);
     auto modifier = std::make_shared<RSAlphaModifier>(prop);
     modifier->AttachProperty(prop);
-    std::unordered_map<int32_t, std::shared_ptr<RSModifierManager>>().swap(RSModifierManagerMap::Instance()->managerMap_);
+    std::unordered_map<int32_t, std::shared_ptr<RSModifierManager>>().swap(
+        RSModifierManagerMap::Instance()->managerMap_);
 
     return true;
 }
@@ -135,7 +136,8 @@ bool DoSetDirty(const uint8_t* data, size_t size)
     auto modifier = std::make_shared<RSAlphaModifier>(prop);
     bool dirty = GetData<bool>();
     modifier->SetDirty(dirty);
-    std::unordered_map<int32_t, std::shared_ptr<RSModifierManager>>().swap(RSModifierManagerMap::Instance()->managerMap_);
+    std::unordered_map<int32_t, std::shared_ptr<RSModifierManager>>().swap(
+        RSModifierManagerMap::Instance()->managerMap_);
 
     return true;
 }

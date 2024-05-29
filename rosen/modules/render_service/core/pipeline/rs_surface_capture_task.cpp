@@ -620,7 +620,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         return;
     }
     const auto& property = node.GetRenderProperties();
-    auto& geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = property.GetBoundsGeometry();
     if (!geoPtr) {
         RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());

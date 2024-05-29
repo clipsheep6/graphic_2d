@@ -313,6 +313,13 @@ void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>
         return;
     }
 #endif
+
+    CollectSurfaceForSubSurface(node, vec, isUniRender, onlyFirstLevel);
+}
+
+void RSSurfaceRenderNode::CollectSurfaceForSubSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+    std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel)
+{
     auto num = find(vec.begin(), vec.end(), shared_from_this());
     if (num != vec.end()) {
         return;
@@ -331,12 +338,18 @@ void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>
         if (onlyFirstLevel) {
             return;
         }
-        for (auto &nodes : node->GetSubSurfaceNodes()) {
-            for (auto &node : nodes.second) {
-                auto surfaceNode = node.lock();
-                if (surfaceNode != nullptr) {
-                    surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
-                }
+        CollectSurfacePre(vec, node, isUniRender, onlyFirstLevel);
+    }
+}
+
+void RSSurfaceRenderNode::CollectSurfacePre(std::vector<RSBaseRenderNode::SharedPtr>& vec,
+    const std::shared_ptr<RSBaseRenderNode>& node, bool isUniRender, bool onlyFirstLevel)
+{
+    for (auto& nodes : node->GetSubSurfaceNodes()) {
+        for (auto& node : nodes.second) {
+            auto surfaceNode = node.lock();
+            if (surfaceNode != nullptr) {
+                surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
             }
         }
     }

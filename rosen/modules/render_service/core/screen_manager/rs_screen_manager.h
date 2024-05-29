@@ -398,6 +398,10 @@ private:
     void OnScreenVBlankIdleEvent(uint32_t devId, uint64_t ns);
     void CleanAndReinit();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
+    void ConfigureVSyncSampler(ScreenId id);
+    sptr<OHOS::Rosen::VSyncSampler> CreateAndCheckVSyncSampler();
+    void SetScreenVsyncEnabledCallback(ScreenId id, bool enabled);
+    void UpdateDefaultScreenId(RSScreenManager& manager, ScreenId id);
     void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output);
@@ -435,6 +439,7 @@ private:
     int32_t GetScreenSupportedColorSpacesLocked(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const;
     int32_t GetScreenColorSpaceLocked(ScreenId id, GraphicCM_ColorSpaceType& colorSpace) const;
     int32_t SetScreenColorSpaceLocked(ScreenId id, GraphicCM_ColorSpaceType colorSpace);
+    void PostVsyncEnabledTask(ScreenId id, bool enabled);
 
 #ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     void RegisterSensorCallback();

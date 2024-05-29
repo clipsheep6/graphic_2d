@@ -43,6 +43,9 @@ public:
     void InitRenderContent();
 
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
+    bool ResetSurfaceIfNeeded(RSPaintFilterCanvas& canvas, int width, int height);
+    void CreateImageSnapshot(RSPaintFilterCanvas& canvas, int width, int height);
+    void DrawImage(RSPaintFilterCanvas& canvas);
 
     RSRenderNodeType GetType() const override
     {

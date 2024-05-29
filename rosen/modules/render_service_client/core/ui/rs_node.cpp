@@ -327,11 +327,12 @@ void RSNode::FallbackAnimationsToRoot()
         ROSEN_LOGE("Failed to move animation to root, root node is null!");
         return;
     }
-    for (auto& [unused, animation] : animations_) {
+    for (auto& [animationId, animation] : animations_) {
         if (animation && animation->GetRepeatCount() == -1) {
             continue;
         }
         std::unique_lock<std::mutex> lock(animationMutex_);
+        RSNodeMap::MutableInstance().RegisterAnimationInstanceId(animationId, id_, instanceId_);
         target->AddAnimationInner(std::move(animation));
     }
     std::unique_lock<std::mutex> lock(animationMutex_);
@@ -1106,7 +1107,9 @@ void RSNode::SetBackgroundShader(const std::shared_ptr<RSShader>& shader)
 // background
 void RSNode::SetBgImage(const std::shared_ptr<RSImage>& image)
 {
-    image->SetNodeId(GetId());
+    if (image) {
+        image->SetNodeId(GetId());
+    }
     SetProperty<RSBgImageModifier, RSProperty<std::shared_ptr<RSImage>>>(RSModifierType::BG_IMAGE, image);
 }
 
@@ -1255,6 +1258,54 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 {
     SetProperty<RSOutlineRadiusModifier, RSAnimatableProperty<Vector4f>>(
         RSModifierType::OUTLINE_RADIUS, radius);
+}
+
+void RSNode::SetUIBackgroundFilter(const OHOS::Rosen::Filter* backgroundFilter)
+{
+    // To do: generate composed filter here.
+}
+
+void RSNode::SetUICompositingFilter(const OHOS::Rosen::Filter* compositingFilter)
+{
+    // To do: generate composed filter here.
+}
+
+void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
+{
+    // To do: generate composed filter here. Now we just set pixel stretch in v1.0.
+    auto filterParas = foregroundFilter->GetAllPara();
+    for (const auto& filterPara : filterParas) {
+        if (filterPara->GetParaType() == FilterPara::PIXEL_STRETCH) {
+            auto pixelStretchPara = std::static_pointer_cast<PixelStretchPara>(filterPara);
+            auto stretchPercent = pixelStretchPara->GetStretchPercent();
+            SetPixelStretchPercent(stretchPercent, pixelStretchPara->GetTileMode());
+        }
+    }
+}
+
+void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
+{
+    // To do: generate composed visual effect here. Now we just set background brightness in v1.0.
+    auto visualEffectParas = visualEffect->GetAllPara();
+    for (const auto& visualEffectPara : visualEffectParas) {
+        if (visualEffectPara->GetParaType() != VisualEffectPara::BACKGROUND_COLOR_EFFECT) {
+            continue;
+        }
+        auto backgroundColorEffectPara = std::static_pointer_cast<BackgroundColorEffectPara>(visualEffectPara);
+        auto blender = backgroundColorEffectPara->GetBlender();
+        auto brightnessBlender = std::static_pointer_cast<BrightnessBlender>(blender);
+        if (brightnessBlender == nullptr) {
+            continue;
+        }
+        auto fraction = brightnessBlender->GetFraction();
+        SetBgBrightnessFract(fraction);
+        SetBgBrightnessParams({ brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(),
+            brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree(), brightnessBlender->GetSaturation(),
+            { brightnessBlender->GetPositiveCoeff().data_[0], brightnessBlender->GetPositiveCoeff().data_[1],
+                brightnessBlender->GetPositiveCoeff().data_[2] },
+            { brightnessBlender->GetNegativeCoeff().data_[0], brightnessBlender->GetNegativeCoeff().data_[1],
+                brightnessBlender->GetNegativeCoeff().data_[2] } });
+    }
 }
 
 void RSNode::SetForegroundEffectRadius(const float blurRadius)
@@ -1455,8 +1506,13 @@ void RSNode::SetFrameGravity(Gravity gravity)
 
 void RSNode::SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius)
 {
+    SetClipRRect(std::make_shared<RRect>(clipRect, clipRadius));
+}
+
+void RSNode::SetClipRRect(const std::shared_ptr<RRect>& rrect)
+{
     SetProperty<RSClipRRectModifier, RSAnimatableProperty<RRect>>(
-        RSModifierType::CLIP_RRECT, RRect(clipRect, clipRadius));
+        RSModifierType::CLIP_RRECT, rrect ? *rrect : RRect());
 }
 
 void RSNode::SetClipBounds(const std::shared_ptr<RSPath>& path)
@@ -1518,10 +1574,12 @@ void RSNode::SetPixelStretch(const Vector4f& stretchSize, Drawing::TileMode stre
         RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
 }
 
-void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent)
+void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent, Drawing::TileMode stretchTileMode)
 {
     SetProperty<RSPixelStretchPercentModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::PIXEL_STRETCH_PERCENT,
         stretchPercent);
+    SetProperty<RSPixelStretchTileModeModifier, RSProperty<int>>(
+        RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
 }
 
 void RSNode::SetFreeze(bool isFreeze)
@@ -1732,7 +1790,7 @@ void RSNode::SetPaintOrder(bool drawContentLast)
 
 void RSNode::ClearAllModifiers()
 {
-    std::unique_lock<std::recursive_mutex> lock(propertyMutex_);    
+    std::unique_lock<std::recursive_mutex> lock(propertyMutex_);
     for (auto [id, modifier] : modifiers_) {
         if (modifier) {
             modifier->DetachFromNode();
@@ -1801,6 +1859,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
         }
         auto deleteType = modifier->GetModifierType();
         bool isExist = false;
+        modifiers_.erase(iter);
         for (auto [id, value] : modifiers_) {
             if (value && value->GetModifierType() == deleteType) {
                 modifiersTypeMap_.emplace((int16_t)deleteType, value);
@@ -1808,12 +1867,11 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
                 break;
             }
         }
-        modifiers_.erase(iter);
         if (!isExist) {
             modifiersTypeMap_.erase((int16_t)deleteType);
         }
+        modifier->DetachFromNode();
     }
-    modifier->DetachFromNode();
     std::unique_ptr<RSCommand> command = std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
@@ -2173,8 +2231,11 @@ void RSNode::AddChild(SharedPtr child, int index)
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
     if (child->GetType() == RSUINodeType::SURFACE_NODE) {
-        ROSEN_LOGI("RSNode::AddChild, NodeId: %{public}" PRIu64 ", ChildId: %{public}" PRIu64, id_, childId);
-        RS_TRACE_NAME_FMT("RSNode::AddChild, NodeId: %" PRIu64 ", ChildId: %" PRIu64, id_, childId);
+        auto surfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(child);
+        ROSEN_LOGI("RSNode::AddChild, Id: %{public}" PRIu64 ", SurfaceNode:[Id: %{public}" PRIu64 ", name: %{public}s]",
+            id_, childId, surfaceNode->GetName().c_str());
+        RS_TRACE_NAME_FMT("RSNode::AddChild, Id: %" PRIu64 ", SurfaceNode:[Id: %" PRIu64 ", name: %s]",
+            id_, childId, surfaceNode->GetName().c_str());
     }
 }
 
@@ -2226,6 +2287,13 @@ void RSNode::RemoveChild(SharedPtr child)
     childId = child->GetHierarchyCommandNodeId();
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (child->GetType() == RSUINodeType::SURFACE_NODE) {
+        auto surfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(child);
+        ROSEN_LOGI("RSNode::RemoveChild, Id: %{public}" PRIu64 ", SurfaceNode:[Id: %{public}" PRIu64 ", "
+            "name: %{public}s]", id_, childId, surfaceNode->GetName().c_str());
+        RS_TRACE_NAME_FMT("RSNode::RemoveChild, Id: %" PRIu64 ", SurfaceNode:[Id: %" PRIu64 ", name: %s]",
+            id_, childId, surfaceNode->GetName().c_str());
+    }
 }
 
 void RSNode::RemoveChildByNodeId(NodeId childId)

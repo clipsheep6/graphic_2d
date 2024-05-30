@@ -137,6 +137,10 @@ HWTEST_F(RSAshmemHelperTest, CopyFromAshmemTest, TestSize.Level1)
     size_t size2 = 0;
     ashmemAllocator.CopyFromAshmem(size2);
     ASSERT_EQ(ashmemAllocator.CopyFromAshmem(size2), nullptr);
+    // for test
+    size_t size3 = 200000001;
+    ashmemAllocator.size_=200000002;
+    ASSERT_EQ(ashmemAllocator.CopyFromAshmem(size3), nullptr);
 }
 
 /**
@@ -183,6 +187,7 @@ HWTEST_F(RSAshmemHelperTest, DeallocTest, TestSize.Level1)
     rsAshmemAllocator->data_ =
         ::mmap(nullptr, rsAshmemAllocator->size_, PROT_READ, MAP_SHARED, rsAshmemAllocator->fd_, 0);
     void* wrongData = ::mmap(nullptr, rsAshmemAllocator->size_, PROT_READ, MAP_SHARED, rsAshmemAllocator->fd_, 0);
+    rsAshmemAllocator->Dealloc(nullptr);
     rsAshmemAllocator->Dealloc(wrongData);
     rsAshmemAllocator->Dealloc(rsAshmemAllocator->data_);
     EXPECT_EQ(rsAshmemAllocator->GetData(), nullptr);

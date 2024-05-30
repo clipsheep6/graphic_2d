@@ -99,6 +99,7 @@ HWTEST_F(RSEventDetectorTest, RSTimeOutDetectorTest, TestSize.Level1)
 HWTEST_F(RSEventDetectorTest, EventReportTest, TestSize.Level1)
 {
     auto rsTimeOutDetector = std::make_shared<RSTimeOutDetector>(1, "0");
+    rsTimeOutDetector->EventReport(1);
     rsTimeOutDetector->eventCallback_ = [](const RSSysEventMsg& eventMsg) {};
     rsTimeOutDetector->EventReport(1);
     EXPECT_TRUE(rsTimeOutDetector->eventCallback_ != nullptr);

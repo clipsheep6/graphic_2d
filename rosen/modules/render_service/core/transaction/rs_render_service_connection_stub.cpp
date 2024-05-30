@@ -474,6 +474,15 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            MarkPowerOffNeedProcessOneFrame();
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -506,9 +515,11 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             float scaleX = data.ReadFloat();
             float scaleY = data.ReadFloat();
             SurfaceCaptureType surfaceCaptureType = static_cast<SurfaceCaptureType>(data.ReadUint8());
+
+            auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
             bool isSync = data.ReadBool();
-            if (RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id)->GetType() ==
-                RSRenderNodeType::DISPLAY_NODE && !securityManager_.IsInterfaceCodeAccessible(code)) {
+            if (node && node->GetType() == RSRenderNodeType::DISPLAY_NODE &&
+                !securityManager_.IsInterfaceCodeAccessible(code)) {
                 RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest no permission to access TAKE_SURFACE_CAPTURE");
                 return ERR_INVALID_STATE;
             }

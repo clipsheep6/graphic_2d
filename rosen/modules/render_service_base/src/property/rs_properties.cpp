@@ -422,7 +422,8 @@ const std::shared_ptr<RSObjGeometry>& RSProperties::GetFrameGeometry() const
 bool RSProperties::UpdateGeometryByParent(const Drawing::Matrix* parentMatrix,
     const std::optional<Drawing::Point>& offset)
 {
-    auto prevAbsMatrix = prevAbsMatrix_;
+    static thread_local Drawing::Matrix prevAbsMatrix;
+    prevAbsMatrix.Swap(prevAbsMatrix_);
     boundsGeo_->UpdateMatrix(parentMatrix, offset);
     prevAbsMatrix_ = boundsGeo_->GetAbsMatrix();
     if (!RSSystemProperties::GetSkipGeometryNotChangeEnabled()) {
@@ -1331,6 +1332,34 @@ bool RSProperties::IsBgBrightnessValid() const
     return bgBrightnessParams_.has_value() && ROSEN_LNE(bgBrightnessFract_, 1.0);
 }
 
+std::string RSProperties::GetFgBrightnessDescription() const
+{
+    if (fgBrightnessParams_ == std::nullopt) {
+        return "fgBrightnessParams is nullptr";
+    }
+    std::string description = "ForegroundBrightness, rate: " + std::to_string(fgBrightnessParams_->rate_) +
+        " lightUpDegree: " + std::to_string(fgBrightnessParams_->lightUpDegree_) +
+        " cubicCoeff: " + std::to_string(fgBrightnessParams_->cubicCoeff_) +
+        " quadCoeff: " + std::to_string(fgBrightnessParams_->quadCoeff_) +
+        " saturation: " + std::to_string(fgBrightnessParams_->saturation_) +
+        " fgBrightnessFract: " + std::to_string(bgBrightnessFract_);
+    return description;
+}
+
+std::string RSProperties::GetBgBrightnessDescription() const
+{
+    if (bgBrightnessParams_ == std::nullopt) {
+        return "bgBrightnessParams is nullptr";
+    }
+    std::string description = "BackgroundBrightnessInternal, rate: " + std::to_string(bgBrightnessParams_->rate_) +
+        " lightUpDegree: " + std::to_string(bgBrightnessParams_->lightUpDegree_) +
+        " cubicCoeff: " + std::to_string(bgBrightnessParams_->cubicCoeff_) +
+        " quadCoeff: " + std::to_string(bgBrightnessParams_->quadCoeff_) +
+        " saturation: " + std::to_string(bgBrightnessParams_->saturation_) +
+        " fgBrightnessFract: " + std::to_string(bgBrightnessFract_);
+    return description;
+}
+
 void RSProperties::SetGreyCoef(const std::optional<Vector2f>& greyCoef)
 {
     greyCoef_ = greyCoef;
@@ -1703,7 +1732,7 @@ RRect RSProperties::GetClipRRect() const
 
 bool RSProperties::GetClipToRRect() const
 {
-    return clipRRect_.has_value();
+    return clipRRect_.has_value() && !clipRRect_->rect_.IsEmpty();
 }
 
 void RSProperties::SetClipBounds(const std::shared_ptr<RSPath>& path)
@@ -1768,11 +1797,17 @@ RectF RSProperties::GetLocalBoundsAndFramesRect() const
 
 RectF RSProperties::GetBoundsRect() const
 {
+    auto rect = RectF();
     if (boundsGeo_->IsEmpty()) {
-        return {0, 0, GetFrameWidth(), GetFrameHeight()};
+        if (!std::isinf(GetFrameWidth()) && !std::isinf(GetFrameHeight())) {
+            return {0, 0, GetFrameWidth(), GetFrameHeight()};
+        }
     } else {
-        return {0, 0, GetBoundsWidth(), GetBoundsHeight()};
+        if (!std::isinf(GetBoundsWidth()) && !std::isinf(GetBoundsHeight())) {
+            return {0, 0, GetBoundsWidth(), GetBoundsHeight()};
+        }
     }
+    return rect;
 }
 
 RectF RSProperties::GetFrameRect() const
@@ -2307,7 +2342,7 @@ void RSProperties::GenerateBackgroundBlurFilter()
         originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
 
-    if (RSSystemProperties::GetHpsBlurEnabled()) {
+    if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
             std::make_shared<RSHpsBlurShaderFilter>(backgroundBlurRadiusX_, 1.f, 1.f);
         originalFilter =
@@ -2392,7 +2427,7 @@ void RSProperties::GenerateForegroundBlurFilter()
         std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
 
-    if (RSSystemProperties::GetHpsBlurEnabled()) {
+    if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
             std::make_shared<RSHpsBlurShaderFilter>(foregroundBlurRadiusX_, 1.f, 1.f);
         originalFilter =
@@ -3613,6 +3648,7 @@ void RSProperties::OnApplyModifiers()
     }
     if (colorFilterNeedUpdate_) {
         GenerateColorFilter();
+        needFilter_ = needFilter_ || (colorFilter_ != nullptr);
     }
     if (pixelStretchNeedUpdate_ || geoDirty_) {
         CalculatePixelStretch();

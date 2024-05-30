@@ -146,7 +146,7 @@ HWTEST_F(RSTypefaceCacheTest, HandleDelayDestroyQueueTest001, TestSize.Level1)
     RSTypefaceCache::Instance().CacheDrawingTypeface(uniqueIdF, typeface);
     RSTypefaceCache::Instance().CacheDrawingTypeface(uniqueIdS, typeface);
     RSTypefaceCache::Instance().HandleDelayDestroyQueue();
-    EXPECT_FALSE(RSTypefaceCache::Instance().drawingTypefaceCache_.empty());
+    EXPECT_FALSE(RSTypefaceCache::Instance().typefaceHashCode_.empty());
 }
 } // namespace Rosen
 } // namespace OHOS

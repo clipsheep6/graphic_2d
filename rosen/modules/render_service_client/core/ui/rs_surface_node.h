@@ -165,6 +165,8 @@ private:
     void CreateTextureExportRenderNodeInRT() override;
     void SetIsTextureExportNode(bool isTextureExportNode);
     std::pair<std::string, std::string> SplitSurfaceNodeName(std::string surfaceNodeName);
+    static void ConfigureSurfaceNode(RSSurfaceNode::SharedPtr& node, RSTransactionProxy* transactionProxy,
+        const RSSurfaceRenderNodeConfig& config, const RSSurfaceNodeConfig& surfaceNodeConfig, const bool isWindow);
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<RSRenderSurface> surface_;
 #else

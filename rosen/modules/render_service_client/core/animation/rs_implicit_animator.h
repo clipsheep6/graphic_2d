@@ -99,6 +99,22 @@ private:
 
     void ExecuteWithoutAnimation(const std::function<void()>& callback);
 
+    std::shared_ptr<RSAnimation> HandleImplicitAnimationParams(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSImplicitAnimationParam>& params);
+    std::shared_ptr<RSAnimation> HandleImplicitAnimationKeyframe(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSImplicitAnimationParam>& params);
+    std::shared_ptr<RSAnimation> CreateAndConfigureSpringAnimation(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSImplicitAnimationParam>& params);
+    std::shared_ptr<RSAnimation> CreateAndCfgInterpolatSpringAnimation(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSImplicitAnimationParam>& params);
+    std::shared_ptr<RSAnimation> HandleImplicitAnimationCancel(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSImplicitAnimationParam>& params);
+
     std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve,
         const std::shared_ptr<AnimationFinishCallback>, std::shared_ptr<AnimationRepeatCallback>>>
         globalImplicitParams_;

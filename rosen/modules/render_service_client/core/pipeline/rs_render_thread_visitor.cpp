@@ -268,6 +268,11 @@ void RSRenderThreadVisitor::DrawDirtyRegion()
         }
     }
 
+    DrawDirtyRegionIfEnable(edgeAlpha);
+}
+
+void RSRenderThreadVisitor::DrawDirtyRegionIfEnable(const float edgeAlpha)
+{
     if (curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         const int strokeWidth = 4;
         std::map<NodeId, RectI> dirtyRegionRects_;
@@ -400,6 +405,33 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ROSEN_LOGE("ProcessRoot %{public}s: No RSSurface found", ptr->GetName().c_str());
         return;
     }
+    UpdateRsSurfaceState(surfaceNodeColorSpace, rsSurface);
+#ifdef ACE_ENABLE_VK
+    if (RSSystemProperties::IsUseVulkan()) {
+        auto skContext = RsVulkanContext::GetSingleton().CreateDrawingContext();
+        if (skContext == nullptr) {
+            ROSEN_LOGE("RSRenderThreadVisitor::ProcessRootRenderNode CreateDrawingContext is null");
+            return;
+        }
+        std::static_pointer_cast<RSSurfaceOhosVulkan>(rsSurface)->SetSkContext(skContext);
+    }
+#endif
+    uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
+    RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");
+#ifdef ROSEN_OHOS
+    FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseStart);
+#endif
+    ConstructCanvasWithNodeData(node, ptr, rsSurface);
+}
+
+#ifdef NEW_RENDER_CONTEXT
+void RSRenderThreadVisitor::UpdateRsSurfaceState(
+    GraphicColorGamut& surfaceNodeColorSpace, std::shared_ptr<RSRenderSurface>& rsSurface)
+#else
+void RSRenderThreadVisitor::UpdateRsSurfaceState(
+    GraphicColorGamut& surfaceNodeColorSpace, std::shared_ptr<RSSurface>& rsSurface)
+#endif
+{
     // Update queue size for each process loop in case it dynamically changes
     queueSize_ = rsSurface->GetQueueSize();
 
@@ -419,23 +451,16 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
     rsSurface->SetRenderContext(rc);
 #endif
+}
 
-#ifdef ACE_ENABLE_VK
-    if (RSSystemProperties::IsUseVulkan()) {
-        auto skContext = RsVulkanContext::GetSingleton().CreateDrawingContext();
-        if (skContext == nullptr) {
-            ROSEN_LOGE("RSRenderThreadVisitor::ProcessRootRenderNode CreateDrawingContext is null");
-            return;
-        }
-        std::static_pointer_cast<RSSurfaceOhosVulkan>(rsSurface)->SetSkContext(skContext);
-    }
+#ifdef NEW_RENDER_CONTEXT
+void RSRenderThreadVisitor::ConstructCanvasWithNodeData(
+    RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr, std::shared_ptr<RSRenderSurface>& rsSurface)
+#else
+void RSRenderThreadVisitor::ConstructCanvasWithNodeData(
+    RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr, std::shared_ptr<RSSurface>& rsSurface)
 #endif
-    uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
-    RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");
-#ifdef ROSEN_OHOS
-    FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseStart);
-#endif
-
+{
     const auto& property = node.GetRenderProperties();
     const float bufferWidth = node.GetSuggestedBufferWidth() * property.GetScaleX();
     const float bufferHeight = node.GetSuggestedBufferHeight() * property.GetScaleY();
@@ -453,19 +478,49 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
     auto surface = surfaceFrame->GetSurface();
+    if (!CheckSurfaceAndCanvas(surface)) {
+        return;
+    }
+#ifdef ROSEN_OHOS
+    std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
+    CreateListenedCanvas(overdrawListener, surface);
+#else
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
+#endif
+    canvas_->Save();
+    Drawing::Matrix gravityMatrix;
+    SetupCanvasAndDirtyManager(gravityMatrix, property, bufferWidth, bufferHeight);
+#ifdef NEW_RENDER_CONTEXT
+    UpdateDirtyAndSetEGLDamageRegion(rsSurface);
+#else
+    UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
+#endif
+    ProcessAndFlushCanvas(node, ptr, gravityMatrix, bufferWidth, bufferHeight);
+#ifdef ROSEN_OHOS
+    DrawAndMarkFrameEvents(overdrawListener);
+#endif
+    FlushSurfaceAndMarkFrameEvents(node, ptr, surfaceFrame, rsSurface);
+}
+
+bool RSRenderThreadVisitor::CheckSurfaceAndCanvas(const std::shared_ptr<Drawing::Surface>& surface)
+{
     if (surface == nullptr) {
         ROSEN_LOGE("surface null.");
-        return;
+        return false;
     }
     if (surface->GetCanvas() == nullptr) {
         ROSEN_LOGE("surface.GetCanvas is null.");
-        return;
+        return false;
     }
+    return true;
+}
 
 #ifdef ROSEN_OHOS
+void RSRenderThreadVisitor::CreateListenedCanvas(
+    std::shared_ptr<RSCanvasListener>& overdrawListener, std::shared_ptr<Drawing::Surface>& surface)
+{
     // if listenedCanvas is nullptr, that means disabled or listen failed
     std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
-    std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
 
     if (RSOverdrawController::GetInstance().IsEnabled()) {
         auto &oc = RSOverdrawController::GetInstance();
@@ -488,13 +543,13 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
     }
-#else
-    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
+}
 #endif
-    canvas_->Save();
 
+void RSRenderThreadVisitor::SetupCanvasAndDirtyManager(
+    Drawing::Matrix& gravityMatrix, const RSProperties& property, const float bufferWidth, const float bufferHeight)
+{
     canvas_->SetHighContrast(RSRenderThread::Instance().isHighContrastEnabled());
-
     // node's surface size already check, so here we do not need to check return
     // attention: currently surfaceW/H are float values transformed into int implicitly
     (void)curDirtyManager_->SetSurfaceSize(bufferWidth, bufferHeight);
@@ -503,7 +558,6 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     // reset matrix
     const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
     const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
-    Drawing::Matrix gravityMatrix;
     (void)RSPropertiesPainter::GetGravityMatrix(
         Gravity::RESIZE, RectF { 0.0f, 0.0f, bufferWidth, bufferHeight }, rootWidth, rootHeight, gravityMatrix);
 
@@ -513,12 +567,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         !(gravityMatrix == Drawing::Matrix())) {
         curDirtyManager_->ResetDirtyAsSurfaceSize();
     }
-#ifdef NEW_RENDER_CONTEXT
-    UpdateDirtyAndSetEGLDamageRegion(rsSurface);
-#else
-    UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
-#endif
+}
 
+void RSRenderThreadVisitor::ProcessAndFlushCanvas(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+    Drawing::Matrix& gravityMatrix, const float bufferWidth, const float bufferHeight)
+{
     if (isOpDropped_) {
         canvas_->ClipRect(Drawing::Rect(curDirtyRegion_.GetLeft(), curDirtyRegion_.GetTop(),
             curDirtyRegion_.GetRight(), curDirtyRegion_.GetBottom()), Drawing::ClipOp::INTERSECT, false);
@@ -562,8 +615,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
             ptr->GetName().c_str(), node.GetId());
         DrawDirtyRegion();
     }
+}
 
 #ifdef ROSEN_OHOS
+void RSRenderThreadVisitor::DrawAndMarkFrameEvents(std::shared_ptr<RSCanvasListener>& overdrawListener)
+{
     if (overdrawListener != nullptr) {
         overdrawListener->Draw();
     }
@@ -572,8 +628,17 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     fpainter.Draw(*canvas_);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseEnd);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::FlushStart);
+}
 #endif
 
+#ifdef NEW_RENDER_CONTEXT
+void RSRenderThreadVisitor::FlushSurfaceAndMarkFrameEvents(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+    std::unique_ptr<RSSurfaceFrame>& surfaceFrame, std::shared_ptr<RSRenderSurface>& rsSurface)
+#else
+void RSRenderThreadVisitor::FlushSurfaceAndMarkFrameEvents(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+    std::unique_ptr<RSSurfaceFrame>& surfaceFrame, std::shared_ptr<RSSurface>& rsSurface)
+#endif
+{
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->FlushFrame");
     ROSEN_LOGD("RSRenderThreadVisitor FlushFrame surfaceNodeId = %{public}" PRIu64 ", uiTimestamp = %{public}" PRIu64,
         node.GetRSSurfaceNodeId(), uiTimestamp_);
@@ -797,6 +862,12 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         node.SetContextAlpha(0.0f);
         return;
     }
+    UpdateSurfaceRenderNodeContext(node);
+    SyncRenderNodeChildrenToRenderService(node);
+}
+
+void RSRenderThreadVisitor::UpdateSurfaceRenderNodeContext(RSSurfaceRenderNode& node)
+{
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
     Drawing::Matrix invertMatrix;
@@ -838,7 +909,10 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ProcessOtherSurfaceRenderNode(node);
     }
 #endif
+}
 
+void RSRenderThreadVisitor::SyncRenderNodeChildrenToRenderService(RSSurfaceRenderNode& node)
+{
     // 1. add this node to parent's children list
     childSurfaceNodeIds_.emplace_back(node.GetId());
 

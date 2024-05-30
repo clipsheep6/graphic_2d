@@ -34,6 +34,10 @@ namespace Rosen {
 class RSDirtyRegionManager;
 class RSProperties;
 class RSRenderNode;
+class RSSurfaceNode;
+#ifdef ROSEN_OHOS
+class RSCanvasListener;
+#endif
 
 class RSRenderThreadVisitor : public RSNodeVisitor {
 public:
@@ -70,6 +74,34 @@ private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const Drawing::ColorQuad color, RSPaintStyle fillType, float alpha,
         int strokeWidth = 6);
     void DrawDirtyRegion();
+    void DrawDirtyRegionIfEnable(const float edgeAlpha);
+    void UpdateSurfaceRenderNodeContext(RSSurfaceRenderNode& node);
+    void SyncRenderNodeChildrenToRenderService(RSSurfaceRenderNode& node);
+
+    bool CheckSurfaceAndCanvas(const std::shared_ptr<Drawing::Surface>& surface);
+    void SetupCanvasAndDirtyManager(Drawing::Matrix& gravityMatrix, const RSProperties& property,
+        const float bufferWidth, const float bufferHeight);
+    void ProcessAndFlushCanvas(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+        Drawing::Matrix& gravityMatrix, const float bufferWidth, const float bufferHeight);
+#ifdef ROSEN_OHOS
+    void CreateListenedCanvas(
+        std::shared_ptr<RSCanvasListener>& overdrawListener, std::shared_ptr<Drawing::Surface>& surface);
+    void DrawAndMarkFrameEvents(std::shared_ptr<RSCanvasListener>& overdrawListener);
+#endif
+#ifdef NEW_RENDER_CONTEXT
+    void UpdateRsSurfaceState(GraphicColorGamut& surfaceNodeColorSpace, std::shared_ptr<RSRenderSurface>& rsSurface);
+    void ConstructCanvasWithNodeData(
+        RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr, std::shared_ptr<RSRenderSurface>& rsSurface);
+    void FlushSurfaceAndMarkFrameEvents(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+        std::unique_ptr<RSSurfaceFrame>& surfaceFrame, std::shared_ptr<RSRenderSurface>& rsSurface);
+#else
+    void UpdateRsSurfaceState(GraphicColorGamut& surfaceNodeColorSpace, std::shared_ptr<RSSurface>& rsSurface);
+    void ConstructCanvasWithNodeData(
+        RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr, std::shared_ptr<RSSurface>& rsSurface);
+    void FlushSurfaceAndMarkFrameEvents(RSRootRenderNode& node, std::shared_ptr<RSSurfaceNode>& ptr,
+        std::unique_ptr<RSSurfaceFrame>& surfaceFrame, std::shared_ptr<RSSurface>& rsSurface);
+#endif
+
     // Update damageRegion based on buffer age, and then set it through egl api
 #ifdef NEW_RENDER_CONTEXT
     void UpdateDirtyAndSetEGLDamageRegion(std::shared_ptr<RSRenderSurface>& surface);

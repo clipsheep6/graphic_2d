@@ -96,7 +96,13 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
             return nullptr;
         }
     }
+    ConfigureSurfaceNode(node, transactionProxy, config, surfaceNodeConfig, isWindow);
+    return node;
+}
 
+void RSSurfaceNode::ConfigureSurfaceNode(RSSurfaceNode::SharedPtr& node, RSTransactionProxy* transactionProxy,
+    const RSSurfaceRenderNodeConfig& config, const RSSurfaceNodeConfig& surfaceNodeConfig, const bool isWindow)
+{
     node->SetClipToFrame(true);
     // create node in RT (only when in divided render and isRenderServiceNode_ == false)
     // create node in RT if is TextureExport node
@@ -136,7 +142,6 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         node->SetFrameGravity(Gravity::RESIZE);
     }
     ROSEN_LOGD("RsDebug RSSurfaceNode::Create id:%{public}" PRIu64, node->GetId());
-    return node;
 }
 
 void RSSurfaceNode::CreateNodeInRenderThread()

@@ -47,7 +47,6 @@ private:
     std::shared_ptr<skia::textlayout::ParagraphBuilder> builder_;
     TextStyle baseStyle_;
 
-    std::stack<TextStyle> styleStack_;
     std::vector<PaintRecord> paints_;
 };
 } // namespace SPText

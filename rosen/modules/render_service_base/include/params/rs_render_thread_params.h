@@ -111,6 +111,16 @@ public:
         return pendingScreenRefreshRate_;
     }
 
+    void SetPendingConstraintRelativeTime(uint64_t relativeTime)
+    {
+        pendingConstraintRelativeTime_ = relativeTime;
+    }
+
+    uint64_t GetPendingConstraintRelativeTime() const
+    {
+        return pendingConstraintRelativeTime_;
+    }
+
     Occlusion::Region& GetAccumulatedDirtyRegion()
     {
         return accumulatedDirtyRegion_;
@@ -278,6 +288,16 @@ public:
         return isImplicitAnimationEnd_;
     }
 
+    void SetDiscardJankFrames(bool discardJankFrames)
+    {
+        discardJankFrames_ = discardJankFrames;
+    }
+
+    bool GetDiscardJankFrames() const
+    {
+        return discardJankFrames_;
+    }
+
 private:
     bool startVisit_ = false;
     bool hasCaptureImg_ = false;
@@ -285,6 +305,7 @@ private:
     // Used by hardware thred
     uint64_t timestamp_ = 0;
     uint32_t pendingScreenRefreshRate_ = 0;
+    uint64_t pendingConstraintRelativeTime_ = 0;
     // RSDirtyRectsDfx dfx
     std::vector<std::string> dfxTargetSurfaceNames_;
     bool isRegionDebugEnabled_ = false;
@@ -319,6 +340,7 @@ private:
 
     Drawing::Region clipRegion_;
     bool isImplicitAnimationEnd_ = false;
+    bool discardJankFrames_ = false;
 
     friend class RSMainThread;
     friend class RSUniRenderVisitor;

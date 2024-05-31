@@ -474,6 +474,15 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            MarkPowerOffNeedProcessOneFrame();
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -1311,7 +1320,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto type = data.ReadInt16();
             auto subType = data.ReadInt16();
-            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY) {
+            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY && type != RS_NODE_SYNCHRONOUS_GET_VALUE_FRACTION) {
                 ret = ERR_INVALID_STATE;
                 break;
             }

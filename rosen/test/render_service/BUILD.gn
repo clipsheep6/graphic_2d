@@ -45,6 +45,8 @@ group("test") {
     "render_service_base/fuzztest/rspropertydrawableutilities_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsrenderimage_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsrenderserviceconnectionproxy_fuzzer:fuzztest",
+    "render_service_base/fuzztest/rspropertydrawableframegeometry_fuzzer:fuzztest",
+    "render_service_base/fuzztest/rsrenderimage_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsshader_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsspringmodel_fuzzer:fuzztest",
     "render_service_base/fuzztest/rssurfaceframeohosgl_fuzzer:fuzztest",

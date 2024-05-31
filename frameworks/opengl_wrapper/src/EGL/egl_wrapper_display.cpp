@@ -511,7 +511,7 @@ EGLSurface EglWrapperDisplay::CreateEglSurface(EGLConfig config, NativeWindowTyp
 
 EGLBoolean EglWrapperDisplay::DestroyEglSurface(EGLSurface surf)
 {
-    WLOGD("");
+    WLOGE("lyly EglWrapperDisplay::DestroyEglSurface");
     std::lock_guard<std::recursive_mutex> lock(refLockMutex_);
 
     EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surf);
@@ -525,8 +525,10 @@ EGLBoolean EglWrapperDisplay::DestroyEglSurface(EGLSurface surf)
     EGLBoolean ret = EGL_FALSE;
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglDestroySurface) {
+        WLOGE("lyly egl.eglDestroySurface start");
         ret = table->egl.eglDestroySurface(disp_, sur);
         if (ret == EGL_TRUE) {
+            WLOGE("lyly EglWrapperSurface::Disconnect start");
             EglWrapperSurface::Disconnect(reinterpret_cast<OHNativeWindow*>(surfPtr->GetNativeWindow()));
             surfPtr->Destroy();
         } else {

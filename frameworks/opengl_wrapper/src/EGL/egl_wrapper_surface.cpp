@@ -41,6 +41,7 @@ EglWrapperSurface *EglWrapperSurface::GetWrapperSurface(EGLSurface surf)
 void EglWrapperSurface::Disconnect(OHNativeWindow *window)
 {
     if (window != nullptr) {
+        WLOGE("lyly NativeWindowDisconnect start");
         NativeWindowDisconnect(window);
     }
 }

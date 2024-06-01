@@ -244,6 +244,16 @@ bool RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canv
         tid_ = gettid();
     }
 
+    if (!CreateTexture(canvas, surfaceBuffer)) {
+        return false;
+    }
+    return true;
+}
+#endif
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+bool RSExtendImageObject::CreateTexture(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer)
+{
     // Create texture object
     if (texId_ == 0U) {
         glGenTextures(1, &texId_);

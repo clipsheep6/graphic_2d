@@ -826,6 +826,8 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
+    void ApplyModifiersPre();
+
     bool UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();

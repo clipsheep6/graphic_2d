@@ -90,8 +90,8 @@ void SetVkImageInfo(std::shared_ptr<OHOS::Rosen::Drawing::VKTextureInfo> vkImage
     vkImageInfo->sharingMode = imageInfo.sharingMode;
 }
 
-OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t height,
-    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM)
+OHOS::Rosen::Drawing::BackendTexture MakeBackendTexturePre(uint32_t& width, uint32_t& height,
+    VkFormat &format)
 {
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -111,7 +111,12 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
     };
+}
 
+OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t height,
+    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM)
+{
+    MakeBackendTexturePre(width, height, format);
     auto& vkContext = OHOS::Rosen::RsVulkanContext::GetSingleton().GetRsVulkanInterface();
     VkDevice device = vkContext.GetDevice();
     VkImage image = VK_NULL_HANDLE;
@@ -2173,7 +2178,7 @@ bool RSRenderNode::ChildHasSharedTransition() const
     return childHasSharedTransition_;
 }
 
-void RSRenderNode::ApplyModifiers()
+void RSRenderNode::ApplyModifiersPre()
 {
     if (UNLIKELY(!isFullChildrenListValid_)) {
         GenerateFullChildrenList();
@@ -2189,6 +2194,12 @@ void RSRenderNode::ApplyModifiers()
         return;
     }
     RecordCurDirtyTypes();
+}
+
+void RSRenderNode::ApplyModifiers()
+{
+    ApplyModifiersPre();
+    
     // Reset and re-apply all modifiers
     RSModifierContext context = { GetMutableRenderProperties() };
 

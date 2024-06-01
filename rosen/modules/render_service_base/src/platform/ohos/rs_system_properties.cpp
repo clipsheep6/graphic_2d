@@ -507,6 +507,15 @@ bool RSSystemProperties::GetMotionBlurEnabled()
     return enabled;
 }
 
+bool RSSystemProperties::GetMagnifierEnabled()
+{
+    // Determine whether the magnifier render should be enabled. The default value is 0,
+    // which means that it is unenabled.
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.magnifierEnabled", "1")).c_str()) != 0;
+    return enabled;
+}
+
 bool RSSystemProperties::GetKawaseEnabled()
 {
     static bool kawaseBlurEnabled =

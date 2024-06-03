@@ -29,6 +29,7 @@
 #include "event_handler.h"
 
 namespace OHOS::Rosen {
+class RSUniRenderVisitor;
 class RSSubThread {
 public:
     RSSubThread(RenderContext* context, uint32_t threadIndex) : threadIndex_(threadIndex), renderContext_(context) {}
@@ -61,7 +62,13 @@ private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
-
+    void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+        const std::shared_ptr<RSUniRenderVisitor>& visitor);
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+    bool RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+        const std::shared_ptr<RSUniRenderVisitor>& visitor, std::shared_ptr<RSBaseRenderNode>& nodeDrawable,
+        bool& needRequestVsync);
+#endif
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     uint32_t threadIndex_ = UNI_RENDER_THREAD_INDEX;

@@ -63,6 +63,11 @@ private:
 
     sptr<RSIRenderServiceConnection> CreateConnection(const sptr<RSIConnectionToken>& token) override;
     void RemoveConnection(sptr<IRemoteObject> token);
+    
+    void EnableMemoryCache();
+    bool InitializeScreenManager();
+    bool InitializeVSyncControllers();
+    bool RegisterWithSystemAbilityManager();
 
     RSMainThread* mainThread_ = nullptr;
     sptr<RSScreenManager> screenManager_;

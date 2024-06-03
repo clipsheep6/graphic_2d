@@ -64,6 +64,12 @@ private:
     RSSubThreadManager(const RSSubThreadManager &&) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &&) = delete;
+	
+    void PrepareRenderTasks(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+        std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList);
+    void AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
+        std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+        const std::shared_ptr<RSDisplayRenderNode>& node);
 
     RenderContext* renderContext_ = nullptr;
     uint32_t minLoadThreadIndex_ = 0;

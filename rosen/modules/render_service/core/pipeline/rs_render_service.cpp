@@ -51,12 +51,30 @@ RSRenderService::~RSRenderService() noexcept {}
 
 bool RSRenderService::Init()
 {
-    // enable cache
+    EnableMemoryCache();
+    if (!InitializeScreenManager()) {
+        return false;
+    }
+    if (!InitializeVSyncControllers()) {
+        return false;
+    }
+    if (!RegisterWithSystemAbilityManager()) {
+        return false;
+    }
+    RS_PROFILER_INIT(this);
+    return true;
+}
+
+void RSRenderService::EnableMemoryCache()
+{
     mallopt(M_OHOS_CONFIG, M_TCACHE_NORMAL_MODE);
     mallopt(M_OHOS_CONFIG, M_ENABLE_OPT_TCACHE);
     mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_ENABLE);
     mallopt(M_DELAYED_FREE, M_DELAYED_FREE_ENABLE);
+}
 
+bool RSRenderService::InitializeScreenManager()
+{
     RSMainThread::Instance();
     RSUniRenderJudgement::InitUniRenderConfig();
 #ifdef TP_FEATURE_ENABLE
@@ -74,7 +92,11 @@ bool RSRenderService::Init()
         RSHardwareThread::Instance().Start();
         StartRCDUpdateThread(RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext().get());
     }
+    return true;
+}
 
+bool RSRenderService::InitializeVSyncControllers()
+{
     auto generator = CreateVSyncGenerator();
 
     // The offset needs to be set
@@ -112,15 +134,17 @@ bool RSRenderService::Init()
     if (status != 0) {
         RS_LOGE("RSRenderService wait SAMGR error, return value [%d].", status);
     }
+    return true;
+}
 
+bool RSRenderService::RegisterWithSystemAbilityManager()
+{
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         RS_LOGE("RSRenderService GetSystemAbilityManager fail.");
         return false;
     }
     samgr->AddSystemAbility(RENDER_SERVICE, this);
-
-    RS_PROFILER_INIT(this);
     return true;
 }
 

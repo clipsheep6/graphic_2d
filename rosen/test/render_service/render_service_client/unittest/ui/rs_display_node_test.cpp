@@ -410,4 +410,23 @@ HWTEST_F(RSDisplayNodeTest, SetSecurityDisplay003, TestSize.Level1)
     ASSERT_TRUE(RSTransactionProxy::instance_ == nullptr);
     RSTransactionProxy::instance_ = new RSTransactionProxy();
 }
+
+/**
+ * @tc.name: SetScbNodePid
+ * @tc.desc: SetScbNodePid test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSDisplayNodeTest, SetScbNodePid, TestSize.Level1)
+{
+    RSDisplayNodeConfig config;
+    RSDisplayNode::SharedPtr displayNode = RSDisplayNode::Create(config);
+    EXPECT_TRUE(displayNode != nullptr);
+    std::vector<int32_t> oldScbPids = {};
+    int32_t currentScbPid = -1;
+    displayNode->SetScbNodePid(oldScbPids, currentScbPid);
+    oldScbPids.push_back(1);
+    oldScbPids.push_back(2);
+    displayNode->SetScbNodePid(oldScbPids, currentScbPid);
+}
+
 } // namespace OHOS::Rosen

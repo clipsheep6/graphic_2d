@@ -47,6 +47,7 @@ group("test") {
     "render_service_base/fuzztest/rsoverdrawcontroller_fuzzer:fuzztest",
     "render_service_base/fuzztest/rspath_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsproperty_fuzzer:fuzztest",
+    "render_service_base/fuzztest/rspropertydrawableboundsgeometry_fuzzer:fuzztest",
     "render_service_base/fuzztest/rspropertydrawableframegeometry_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsrenderimage_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsshadow_fuzzer:fuzztest",
@@ -88,7 +89,11 @@ group("test") {
     "render_service_client/unittest/transaction:unittest",
     "render_service_client/unittest/ui:unittest",
   ]
-
+  if (current_os != "ohos") {
+    deps += [
+      "render_service_base/fuzztest/rscolorpickercachetask_fuzzer:fuzztest",
+    ]
+  }
   if (tp_feature_enable) {
     deps += [ "render_service/unittest/touch_screen:unittest" ]
   }

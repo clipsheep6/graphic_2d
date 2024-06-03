@@ -62,7 +62,13 @@ public:
         int flags = 0,
         std::vector<NodeId> filteredAppVector = {});
 
+    void SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector);
+
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
+#endif
+
+#ifdef RS_ENABLE_VK
+    bool Set2DRenderCtrl(bool enable);
 #endif
 
     void RemoveVirtualScreen(ScreenId id);
@@ -102,6 +108,8 @@ public:
     bool SetVirtualMirrorScreenScaleMode(ScreenId id, ScreenScaleMode scaleMode);
 #ifndef ROSEN_ARKUI_X
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id);
+
+    void MarkPowerOffNeedProcessOneFrame();
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
 

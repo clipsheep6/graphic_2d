@@ -147,6 +147,12 @@ public:
         ScreenId mirrorId, int32_t flags, std::vector<NodeId> filteredAppVector = {});
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
+
+    void SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector);
+#endif
+
+#ifdef RS_ENABLE_VK
+    bool Set2DRenderCtrl(bool enable);
 #endif
 
     void RemoveVirtualScreen(ScreenId id);
@@ -176,6 +182,8 @@ public:
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id);
+
+    void MarkPowerOffNeedProcessOneFrame();
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
 

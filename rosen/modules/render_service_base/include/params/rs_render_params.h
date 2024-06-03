@@ -72,6 +72,9 @@ public:
     bool NeedSync() const;
     void SetNeedSync(bool needSync);
 
+    const std::shared_ptr<RSFilter>& GetForegroundFilterCache() const;
+    void SetForegroundFilterCache(const std::shared_ptr<RSFilter>& foregroundFilterCache);
+
     inline NodeId GetId() const
     {
         return id_;
@@ -105,7 +108,10 @@ public:
     bool ChildHasVisibleEffect() const;
 
     void SetCacheSize(Vector2f size);
-    Vector2f GetCacheSize() const;
+    inline Vector2f GetCacheSize() const
+    {
+        return cacheSize_;
+    }
 
     void SetDrawingCacheChanged(bool isChanged, bool lastFrameSynced);
     bool GetDrawingCacheChanged() const;
@@ -177,6 +183,7 @@ private:
     Drawing::Rect shadowRect_;
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
     DirtyRegionInfoForDFX dirtyRegionInfoForDFX_;
+    std::shared_ptr<RSFilter> foregroundFilterCache_ = nullptr;
     bool isOpincRootFlag_ = false;
     bool isOpincStateChanged_ = false;
     bool isOpincMarkCached_ = false;

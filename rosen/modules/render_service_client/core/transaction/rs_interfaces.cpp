@@ -81,6 +81,11 @@ ScreenId RSInterfaces::CreateVirtualScreen(
     return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
 }
 
+void RSInterfaces::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
+{
+    renderServiceClient_->SetVirtualScreenBlackList(id, blackListVector);
+}
+
 int32_t RSInterfaces::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
     return renderServiceClient_->SetVirtualScreenSurface(id, surface);
@@ -247,6 +252,12 @@ bool RSInterfaces::SetVirtualMirrorScreenScaleMode(ScreenId id, ScreenScaleMode 
 RSVirtualScreenResolution RSInterfaces::GetVirtualScreenResolution(ScreenId id)
 {
     return renderServiceClient_->GetVirtualScreenResolution(id);
+}
+
+void RSInterfaces::MarkPowerOffNeedProcessOneFrame()
+{
+    RS_LOGD("[UL_POWER]RSInterfaces::MarkPowerOffNeedProcessOneFrame.");
+    renderServiceClient_->MarkPowerOffNeedProcessOneFrame();
 }
 
 void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)

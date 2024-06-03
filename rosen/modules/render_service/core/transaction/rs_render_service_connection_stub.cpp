@@ -273,6 +273,20 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteUint64(id);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_BLACKLIST): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            // read the parcel data.
+            ScreenId id = data.ReadUint64();
+            std::vector<NodeId> blackListVector;
+            data.ReadUInt64Vector(&blackListVector);
+            SetVirtualScreenBlackList(id, blackListVector);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_SURFACE): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -472,6 +486,15 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             uint32_t height = data.ReadUint32();
             int32_t status = SetVirtualScreenResolution(id, width, height);
             reply.WriteInt32(status);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            MarkPowerOffNeedProcessOneFrame();
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS): {
@@ -1311,7 +1334,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto type = data.ReadInt16();
             auto subType = data.ReadInt16();
-            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY) {
+            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY && type != RS_NODE_SYNCHRONOUS_GET_VALUE_FRACTION) {
                 ret = ERR_INVALID_STATE;
                 break;
             }

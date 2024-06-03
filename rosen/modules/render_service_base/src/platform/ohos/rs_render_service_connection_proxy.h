@@ -70,6 +70,8 @@ public:
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
+    void SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector) override;
+
 #ifdef RS_ENABLE_VK
     bool Set2DRenderCtrl(bool enable) override;
 #endif
@@ -96,6 +98,8 @@ public:
     void SetShowRefreshRateEnabled(bool enable) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
+
+    void MarkPowerOffNeedProcessOneFrame() override;
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 

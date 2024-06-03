@@ -37,7 +37,6 @@
 #include "pipeline/rs_render_service_connection.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
@@ -46,9 +45,78 @@
 #include "render/rs_skia_filter.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
 
 namespace OHOS {
 namespace Rosen {
+
+void RSSurfaceCaptureTaskParallel::CheckModifiers(NodeId id,
+    sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY)
+{
+    RS_TRACE_NAME("RSSurfaceCaptureTaskParallel::CheckModifiers");
+    auto nodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(
+        RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id));
+    if (nodePtr == nullptr) {
+        RSSurfaceCaptureTaskParallel::Capture(id, callback, scaleX, scaleY);
+        return;
+    }
+
+    bool needSync = false;
+    if (nodePtr->IsLeashWindow() && nodePtr->GetLastFrameUifirstFlag() == MultiThreadCacheType::NONE) {
+        auto children = nodePtr->GetSortedChildren();
+        for (auto child : *children) {
+            auto childSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (childSurfaceNode && childSurfaceNode->IsMainWindowType() &&
+                childSurfaceNode->GetVisibleRegion().IsEmpty()) {
+                childSurfaceNode->ApplyModifiers();
+                childSurfaceNode->PrepareChildrenForApplyModifiers();
+                needSync = true;
+            }
+        }
+    } else if (nodePtr->IsMainWindowType() && nodePtr->GetVisibleRegion().IsEmpty()) {
+        auto curNode = nodePtr;
+        auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodePtr->GetParent().lock());
+        if (parentNode && parentNode->IsLeashWindow()) {
+            curNode = parentNode;
+        }
+        if (curNode->GetLastFrameUifirstFlag() == MultiThreadCacheType::NONE) {
+            nodePtr->ApplyModifiers();
+            nodePtr->PrepareChildrenForApplyModifiers();
+            needSync = true;
+        }
+    }
+
+    if (needSync) {
+        std::function<void()> syncTask = []() -> void {
+            RS_TRACE_NAME("RSSurfaceCaptureTaskParallel::SyncModifiers");
+            auto& pendingSyncNodes = RSMainThread::Instance()->GetContext().pendingSyncNodes_;
+            for (auto& [id, weakPtr] : pendingSyncNodes) {
+                if (auto node = weakPtr.lock()) {
+                    node->Sync();
+                }
+            }
+            pendingSyncNodes.clear();
+        };
+        RSUniRenderThread::Instance().PostSyncTask(syncTask);
+    }
+    RSSurfaceCaptureTaskParallel::Capture(id, callback, scaleX, scaleY);
+}
+
+void RSSurfaceCaptureTaskParallel::Capture(NodeId id,
+    sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY)
+{
+    std::function<void()> captureTask = [id, callback, scaleX, scaleY]() -> void {
+        RS_LOGD("RSSurfaceCaptureTaskParallel::Capture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]",
+            id);
+        RS_TRACE_NAME("RSSurfaceCaptureTaskParallel::TakeSurfaceCapture");
+        RSSurfaceCaptureTaskParallel task(id, scaleX, scaleY);
+        if (!task.Run(callback)) {
+            callback->OnSurfaceCapture(id, nullptr);
+        }
+    };
+    RSUniRenderThread::Instance().PostTask(captureTask);
+}
+
 bool RSSurfaceCaptureTaskParallel::Run(sptr<RSISurfaceCaptureCallback> callback)
 {
     if (ROSEN_EQ(scaleX_, 0.f) || ROSEN_EQ(scaleY_, 0.f) || scaleX_ < 0.f || scaleY_ < 0.f) {
@@ -73,7 +141,9 @@ bool RSSurfaceCaptureTaskParallel::Run(sptr<RSISurfaceCaptureCallback> callback)
             curNode = parentNode;
         }
         curNodeParams = static_cast<RSSurfaceRenderParams*>(curNode->GetRenderParams().get());
-        if (curNodeParams && curNodeParams->GetUifirstNodeEnableParam() == MultiThreadCacheType::LEASH_WINDOW) {
+        if (curNodeParams && (curNodeParams->GetUifirstNodeEnableParam() == MultiThreadCacheType::LEASH_WINDOW ||
+            curNodeParams->GetUifirstNodeEnableParam() == MultiThreadCacheType::NONFOCUS_WINDOW) &&
+            curNodeParams->GetShouldPaint()) {
             surfaceNodeDrawable = std::static_pointer_cast<DrawableV2::RSRenderNodeDrawable>(
                 DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(curNode));
         } else {

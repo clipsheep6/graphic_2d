@@ -2514,19 +2514,17 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
         if (!hwcNodePtr || !hwcNodePtr->IsOnTheTree() || hwcNodePtr->GetCalcRectInPrepare()) {
             continue;
         }
-        const auto& property = hwcNodePtr->GetRenderProperties();
-        auto matrix = property.GetBoundsGeometry()->GetMatrix();
         auto parent = hwcNodePtr->GetParent().lock();
-        bool findInRoot = parent ? parent->GetId() == rootNode.GetId() : false;
-        while (parent->GetType() != RSRenderNodeType::DISPLAY_NODE) {
+        Drawing::Matrix matrix;
+        do {
             const auto& property = parent->GetRenderProperties();
             matrix.PostConcat(property.GetBoundsGeometry()->GetMatrix());
             parent = parent->GetParent().lock();
             if (!parent) {
                 break;
             }
-            findInRoot = parent->GetId() == rootNode.GetId() ? true : findInRoot;
-        }
+            bool findInRoot = parent ? parent->GetId() == rootNode.GetId() : false;
+        } while (parent->GetType() != RSRenderNodeType::DISPLAY_NODE);
         if (!findInRoot) {
             continue;
         }

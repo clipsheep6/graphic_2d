@@ -268,11 +268,13 @@ void ImageSource::UnmapImage(void* image, size_t size)
 
 bool ImageSource::IsValidFormat(const PixelFormat& format)
 {
+    constexpr int graphicPixelFmtBlob = 38;
     return (format == PixelFormat::ARGB_8888) || (format == PixelFormat::BGRA_8888) ||
            (format == PixelFormat::RGBA_8888) || (format == PixelFormat::CMYK) || (format == PixelFormat::ALPHA_8) ||
            (format == PixelFormat::RGB_888) || (format == PixelFormat::RGB_565) || (format == PixelFormat::RGBA_F16) ||
            (format == PixelFormat::NV21) || (format == PixelFormat::NV12) || (format == PixelFormat::ASTC_4x4) ||
-           (format == PixelFormat::ASTC_6x6) || (format == PixelFormat::ASTC_8x8);
+           (format == PixelFormat::ASTC_6x6) || (format == PixelFormat::ASTC_8x8) ||
+           ((int)format == graphicPixelFmtBlob);
 }
 
 bool ImageSource::InitUnmarshalling(UnmarshallingContext& context)
@@ -438,7 +440,10 @@ void ImageSource::OnClientMarshalling(Media::PixelMap& map, uint64_t id)
         if (auto bufferHandle = surfaceBuffer->GetBufferHandle()) {
             const auto imageData = GenerateImageData(
                 reinterpret_cast<const uint8_t*>(surfaceBuffer->GetVirAddr()), bufferHandle->size, map);
-            CacheImage(id, imageData, UnmarshallingContext::headerLength, bufferHandle);
+            MessageParcel parcel2;
+            surfaceBuffer->WriteToMessageParcel(parcel2);
+            int bufferHandleSize = parcel2.GetReadableBytes();
+            CacheImage(id, imageData, bufferHandleSize, bufferHandle);
         }
     } else {
         const size_t size = map.isAstc_ ? map.pixelsSize_ :

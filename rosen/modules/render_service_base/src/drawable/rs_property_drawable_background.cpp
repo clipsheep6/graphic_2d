@@ -55,7 +55,7 @@ bool RSShadowDrawable::OnUpdate(const RSRenderNode& node)
 {
     const RSProperties& properties = node.GetRenderProperties();
     // skip shadow if not valid. ShadowMask is processed by foregound
-    if (!properties.IsShadowValid() || node.GetRenderProperties().GetShadowMask()) {
+    if (!properties.IsShadowValid() || properties.GetShadowMask()) {
         return false;
     }
 
@@ -121,7 +121,7 @@ Drawing::RecordingCanvas::DrawFunc RSShadowDrawable::CreateDrawFunc() const
 bool RSMaskShadowDrawable::OnUpdate(const RSRenderNode& node)
 {
     // skip shadow if not valid
-    if (!node.GetRenderProperties().IsShadowValid()) {
+    if (!node.GetRenderProperties().IsShadowValid() || node.GetRenderProperties().GetShadowMask()) {
         return false;
     }
     RSPropertyDrawCmdListUpdater updater(0, 0, this);

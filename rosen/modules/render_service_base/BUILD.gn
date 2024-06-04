@@ -46,12 +46,7 @@ if (!is_mingw && !is_mac && !is_cross_platform) {
     }
     part_name = "graphic_2d"
     subsystem_name = "graphic"
-    defines += [ "RUST_CXX_NO_EXCEPTIONS" ]
-    sources = [
-      "//third_party/rust/crates/cxx/include/cxx.h",
-      "//third_party/rust/crates/cxx/src/cxx.cc",
-    ]
-    deps = [ "//third_party/rust/crates/cxx:lib" ]
+    public_deps = [ "//third_party/rust/crates/cxx:cxx_cppdeps" ]
   }
 }
 
@@ -465,10 +460,7 @@ ohos_source_set("render_service_base_src") {
   if (!is_mingw && !is_mac && !is_cross_platform) {
     defines += [ "ENABLE_RUST" ]
     sources += get_target_outputs(":particle_cxx_gen")
-    include_dirs += [
-      "//third_party/rust/crates/cxx/include",
-      "${target_gen_dir}/rust/src",
-    ]
+    include_dirs += [ "${target_gen_dir}/rust/src" ]
     deps += [
       ":particle_cxx_cppdeps",
       ":particle_cxx_gen",

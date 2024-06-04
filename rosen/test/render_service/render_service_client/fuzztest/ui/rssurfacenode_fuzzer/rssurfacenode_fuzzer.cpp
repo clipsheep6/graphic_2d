@@ -148,7 +148,7 @@ bool DoClearChildren(const uint8_t* data, size_t size)
     return true;
 }
 
-bool DoSetAndGetSecurityLayer(const uint8_t* data, size_t size)
+bool DoSetAndGet(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
         return false;
@@ -165,103 +165,24 @@ bool DoSetAndGetSecurityLayer(const uint8_t* data, size_t size)
     bool isSecurityLayer = GetData<bool>();
     surfaceNode->SetSecurityLayer(isSecurityLayer);
     surfaceNode->GetSecurityLayer();
-    return true;
-}
-
-bool DoSetAndGetSkipLayer(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     bool isSkipLayer = GetData<bool>();
     surfaceNode->SetSkipLayer(isSkipLayer);
     surfaceNode->GetSkipLayer();
-    return true;
-}
-
-bool DoSetAndGetFingerprint(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     bool hasFingerprint = GetData<bool>();
     surfaceNode->SetFingerprint(hasFingerprint);
     surfaceNode->GetFingerprint();
-    return true;
-}
-
-bool DoSetAbilityBGAlpha(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     uint8_t alpha = GetData<uint8_t>();
     surfaceNode->SetAbilityBGAlpha(alpha);
-    return true;
-}
-
-bool DoSetIsNotifyUIBufferAvailable(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     bool available = GetData<bool>();
     surfaceNode->SetIsNotifyUIBufferAvailable(available);
-    return true;
-}
-
-bool DoMarkUIHidden(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     bool isHidden = GetData<bool>();
     surfaceNode->MarkUIHidden(isHidden);
+    GraphicColorGamut colorSpace = GetData<GraphicColorGamut>();
+    surfaceNode->SetColorSpace(colorSpace);
+    surfaceNode->GetColorSpace();
+    bool isBootAnimation = GetData<bool>();
+    surfaceNode->SetBootAnimation(isBootAnimation);
+    surfaceNode->GetBootAnimation();
     return true;
 }
 
@@ -475,26 +396,6 @@ bool DoSetForceHardwareAndFixRotation(const uint8_t* data, size_t size)
     return true;
 }
 
-bool DoSetAndGetBootAnimation(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
-    bool isBootAnimation = GetData<bool>();
-    surfaceNode->SetBootAnimation(isBootAnimation);
-    surfaceNode->GetBootAnimation();
-    return true;
-}
-
 bool DoSetTextureExport(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
@@ -530,26 +431,6 @@ bool DoGetSurfaceAndResetContextAlpha(const uint8_t* data, size_t size)
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     surfaceNode->GetSurface();
     surfaceNode->ResetContextAlpha();
-    return true;
-}
-
-bool DoSetAndGetColorSpace(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
-
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    // test
-    RSSurfaceNodeConfig config;
-    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
-    GraphicColorGamut colorSpace = GetData<GraphicColorGamut>();
-    surfaceNode->SetColorSpace(colorSpace);
-    surfaceNode->GetColorSpace();
     return true;
 }
 
@@ -895,12 +776,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoCreateNodeInRenderThread(data, size);
     OHOS::Rosen::DoRemoveChild(data, size);
     OHOS::Rosen::DoClearChildren(data, size);
-    OHOS::Rosen::DoSetAndGetSecurityLayer(data, size);
-    OHOS::Rosen::DoSetAndGetSkipLayer(data, size);
-    OHOS::Rosen::DoSetAndGetFingerprint(data, size);
-    OHOS::Rosen::DoSetAbilityBGAlpha(data, size);
-    OHOS::Rosen::DoSetIsNotifyUIBufferAvailable(data, size);
-    OHOS::Rosen::DoMarkUIHidden(data, size);
+    OHOS::Rosen::DoSetAndGet(data, size);
     OHOS::Rosen::DoSetBufferAvailableCallback(data, size);
     OHOS::Rosen::DoIsBufferAvailable(data, size);
     OHOS::Rosen::DoSetBoundsChangedCallback(data, size);
@@ -912,10 +788,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoAttachToDisplay(data, size);
     OHOS::Rosen::DoDetachToDisplayAndSetHardwareEnabled(data, size);
     OHOS::Rosen::DoSetForceHardwareAndFixRotation(data, size);
-    OHOS::Rosen::DoSetAndGetBootAnimation(data, size);
     OHOS::Rosen::DoSetTextureExport(data, size);
     OHOS::Rosen::DoGetSurfaceAndResetContextAlpha(data, size);
-    OHOS::Rosen::DoSetAndGetColorSpace(data, size);
     OHOS::Rosen::DoGetNameAndBundleName(data, size);
     OHOS::Rosen::DoSetContainerWindow(data, size);
     OHOS::Rosen::DoSetWindowIdAndSetFreeze(data, size);

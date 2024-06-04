@@ -285,7 +285,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_TRACE_NAME_FMT("RSUniRenderThread::Render() the number of total ProcessedNodes: %d",
             totalProcessedNodes);
         const RSNodeStatsType nodeStats = CreateRSNodeStatsItem(
-            totalProcessedNodes, surfaceNode->GetId(), surfaceNode->GetName());
+            RSRenderNodeDrawable::GetTotalProcessedNodeCount(), surfaceNode->GetId(), surfaceNode->GetName());
         RSNodeStats::GetInstance().AddNodeStats(nodeStats);
     }
 

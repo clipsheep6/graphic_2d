@@ -22,6 +22,8 @@ ohos_unittest("RSRenderServiceBaseRSDrawableTest") {
   module_out_path = module_output_path
 
   sources = [
+    "rs_property_drawable_foreground_test.cpp",
+    "rs_property_drawable_utils_test.cpp",
     "rs_drawable_test.cpp",
     "rs_misc_drawable_test.cpp",
     "rs_property_drawable_background_test.cpp",

@@ -327,8 +327,7 @@ bool RSBackgroundColorDrawable::OnUpdate(const RSRenderNode& node)
         if (Rosen::RSSystemProperties::GetDebugTraceLevel() >= TRACE_LEVEL_TWO) {
             RSPropertyDrawable::stagingPropertyDescription_ = properties.GetBgBrightnessDescription();
         }
-        auto blender = RSPropertyDrawableUtils::MakeDynamicBrightnessBlender(
-            properties.GetBgBrightnessParams().value(), properties.GetBgBrightnessFract());
+        auto blender = RSPropertyDrawableUtils::MakeDynamicBrightnessBlender(properties.GetBgBrightnessParams());
         brush.SetBlender(blender);
     }
 

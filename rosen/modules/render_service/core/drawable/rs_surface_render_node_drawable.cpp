@@ -242,6 +242,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     if (surfaceParams->IsMainWindowType()) {
         RSRenderNodeDrawable::ClearTotalProcessedNodeCount();
+        RSRenderNodeDrawable::ClearProcessedNodeCount();
         rscanvas->PushDirtyRegion(curSurfaceDrawRegion);
     }
 
@@ -280,10 +281,10 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     // Draw base pipeline end
     if (surfaceParams->IsMainWindowType()) {
         rscanvas->PopDirtyRegion();
-        int totalProcessedNodes = RSRenderNodeDrawable::GetTotalProcessedNodeCount();
-        AcquireFenceTracker::SetContainerNodeNum(totalProcessedNodes);
+        int processedNodes = RSRenderNodeDrawable::GetProcessedNodeCount();
+        AcquireFenceTracker::SetContainerNodeNum(processedNodes);
         RS_TRACE_NAME_FMT("RSUniRenderThread::Render() the number of total ProcessedNodes: %d",
-            totalProcessedNodes);
+            RSRenderNodeDrawable::GetTotalProcessedNodeCount());
         const RSNodeStatsType nodeStats = CreateRSNodeStatsItem(
             RSRenderNodeDrawable::GetTotalProcessedNodeCount(), surfaceNode->GetId(), surfaceNode->GetName());
         RSNodeStats::GetInstance().AddNodeStats(nodeStats);

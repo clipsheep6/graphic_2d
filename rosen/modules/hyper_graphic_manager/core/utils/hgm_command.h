@@ -79,6 +79,11 @@ enum DynamicModeType : int32_t {
     TOUCH_EXT_ENABLED = 2, // touch extend program
 };
 
+enum IdleModeType : int64_t {
+    IDLE_ALL = 0,
+    IDLE_NO_WEB = 1,
+};
+
 enum MultiAppStrategyType {
     USE_MAX,
     FOLLOW_FOCUS,
@@ -98,6 +103,7 @@ public:
         int32_t drawMin;
         int32_t drawMax;
         int32_t down;
+        int32_t idleMode;
     };
     // <"1", StrategyConfig>
     using StrategyConfigMap = std::unordered_map<std::string, StrategyConfig>;
@@ -130,7 +136,8 @@ public:
         // <appType, strategyName>
         std::unordered_map<int32_t, std::string> appTypes;
         // <bufferName, fps>
-        std::unordered_map<std::string, std::string> appBufferList;
+        std::vector<std::pair<std::string, uint32_t>> appBufferList;
+        std::vector<std::string> appBufferBlackList;
         SceneConfigMap sceneList;
         // <SCENE_APP_START_ANIMATION, placeholder>
         std::unordered_map<std::string, std::string> gameSceneList;

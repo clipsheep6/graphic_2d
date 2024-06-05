@@ -162,6 +162,8 @@ public:
     }
 private:
     void Reset();
+    bool GetNotSupportSurface();
+    uin32_t GetSurfaceExpectFps();
     void UpdateAppSupportStatus();
     void UpdateGuaranteedPlanVote(uint64_t timestamp);
     void ProcessLtpoVote(const FrameRateRange& finalRange, bool idleTimerExpired);
@@ -234,6 +236,7 @@ private:
     bool isNeedUpdateAppOffset_ = false;
     int32_t schedulePreferredFps_ = 60;
     int32_t schedulePreferredFpsChange_ = false;
+    int64_t currIdleMode_ = IdleModeType::IDLE_ALL;
 };
 } // namespace Rosen
 } // namespace OHOS

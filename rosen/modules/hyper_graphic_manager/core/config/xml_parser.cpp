@@ -18,6 +18,9 @@
 #include "config_policy_utils.h"
 
 namespace OHOS::Rosen {
+namespace {
+    constexpr uint32_t MAX_BUFFER_LENGTH = 10;
+}
 int32_t XMLParser::LoadConfiguration(const char* fileDir)
 {
     HGM_LOGI("XMLParser opening xml file");
@@ -203,6 +206,7 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         auto drawMin = ExtractPropertyValue("drawMin", *currNode);
         auto drawMax = ExtractPropertyValue("drawMax", *currNode);
         auto down = ExtractPropertyValue("down", *currNode);
+        auto idleMode = ExtractPropertyValue("idleMode", *currNode);
         if (!IsNumber(min) || !IsNumber(max) || !IsNumber(dynamicMode)) {
             return HGM_ERROR;
         }
@@ -215,12 +219,45 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         strategy.drawMin = IsNumber(drawMin) ? std::stoi(drawMin) : 0;
         strategy.drawMax = IsNumber(drawMax) ? std::stoi(drawMax) : 0;
         strategy.down = IsNumber(down) ? std::stoi(down) : strategy.max;
+        strategy.idleMode = IsNumber(idleMode) ? std::stoi(idleMode) : 0;
 
         mParsedData_->strategyConfigs_[name] = strategy;
         HGM_LOGI("HgmXMLParser ParseStrategyConfig name=%{public}s min=%{public}d drawMin=%{public}d",
                  name.c_str(), mParsedData_->strategyConfigs_[name].min, mParsedData_->strategyConfigs_[name].drawMin);
     }
 
+    return EXEC_SUCCESS;
+}
+
+int32_t XMLParser::ParseAppBufferList(xmlNode &node,
+    std::vector<std::pair<std::string, uint32_t>> &appBufferList, std::vector<std::string> &appBufferBlackList)
+{
+    std::unordered_map<std::string, std::string> config;
+    if (ParseSimplex(node, config) != EXEC_SUCCESS || config.empty()) {
+        return HGM_ERROR;
+    }
+    for (auto &it : config) {
+        if (!IsNumber(it.second)) {
+            continue;
+        }
+        auto temp = it.frist;
+        if (it.frist.size() > MAX_BUFFER_LENGTH) {
+            temp = it.frist.substr(0, MAX_BUFFER_LENGTH);
+        }
+
+        if (std::stoi(it.second) == 0) {
+            appBufferBlackList.emplace_back(temp);
+        } else {
+            appBufferList.emplace_back(make_pair(temp, std::stoi(it.second)));
+        }
+    }
+    if (appBufferList.empty()) {
+        return HGM_SUCCESS;
+    }
+    std::sort(appBufferList.begin(), appBufferList.end(),
+    [](const std::pair<std::string uint32_t>& a, const std::pair<std::string uint32_t>& b) {
+        return a.second > b.second;
+    )};
     return EXEC_SUCCESS;
 }
 
@@ -276,7 +313,8 @@ int32_t XMLParser::ParseSubScreenConfig(xmlNode &node, PolicyConfigData::ScreenS
     } else if (name == "app_types") {
         setResult = ParseAppTypes(*thresholdNode, screenSetting.appTypes);
     } else if (name == "additional_touch_rate_config") {
-        setResult = ParseSimplex(*thresholdNode, screenSetting.appBufferList);
+        setResult = ParseAppBufferList(*thresholdNode, screenSetting.appBufferList,
+            screenSetting.appBufferBlackList);
     } else {
         setResult = EXEC_SUCCESS;
     }

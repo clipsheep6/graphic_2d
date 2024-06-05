@@ -61,7 +61,8 @@ private:
     int32_t ParseMultiAppStrategy(xmlNode &node, PolicyConfigData::ScreenSetting &screenSetting);
     int32_t ParseAppTypes(xmlNode &node, std::unordered_map<int32_t, std::string> &appTypes);
     std::string ExtractPropertyValue(const std::string &propName, xmlNode &node);
-
+    int32_t ParseAppBufferList(xmlNode &node, std::vector<std::pair<std::string, uint32_t>> &appBufferList,
+                                std::vector<std::string> &appBufferBlackList);
     xmlDoc *xmlDocument_;
     std::unique_ptr<PolicyConfigData> mParsedData_ = nullptr;
 };

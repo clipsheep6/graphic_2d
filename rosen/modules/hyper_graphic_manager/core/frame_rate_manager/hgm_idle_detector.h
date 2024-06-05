@@ -63,6 +63,12 @@ public:
 
     void UpdateSurfaceTime(const std::string& name, uint64_t timestamp);
     bool GetSurFaceIdleState(uint64_t timestamp);
+
+    const std::unordered_map<std::string, uint64_t>& GetSurFaceBuffer()
+    {
+        std::lock_guard<std::mutex> lock(frameTimeMapMutex_);
+        return frameTimeMap_;
+    }
  
 private:
     bool appSupported_ = false;
@@ -70,6 +76,7 @@ private:
     uint64_t touchUpTime_ = 0;
     std::mutex appSupportedMutex_;
     std::mutex touchUpTimeMutex_;
+    std::mutex frameTimeMapMutex_;
     // FORMAT: <buffername, time>
     std::unordered_map<std::string, uint64_t> frameTimeMap_;
 };

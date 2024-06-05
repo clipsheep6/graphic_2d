@@ -41,6 +41,7 @@ namespace {
     constexpr uint32_t REPORT_VOTER_INFO_LIMIT = 10;
     constexpr int32_t LAST_TOUCH_CNT = 1;
 
+    constexpr uint32_t FPS_120HZ = 120;
     constexpr uint32_t FIRST_FRAME_TIME_OUT = 50000000; // 50ms
     constexpr uint32_t SCENE_BEFORE_XML = 1;
     constexpr uint32_t SCENE_AFTER_TOUCH = 3;
@@ -125,12 +126,20 @@ void HgmFrameRateManager::InitTouchManager()
         touchManager_.RegisterEnterStateCallback(TouchState::DOWN_STATE,
             [this] (TouchState lastState, TouchState newState) {
             if (lastState == TouchState::IDLE_STATE) {
-                multiAppStrategy_.HandleTouchInfo(touchManager_.GetPkgName(), newState);
+                HgmMultiAppStrategy::TouchInfo touchInfo = {
+                    .pkgname = touchManager_.GetPkgName(),
+                    .touchState = newState,
+                };
+                multiAppStrategy_.HandleTouchInfo(touchInfo);
             }
         });
         touchManager_.RegisterEnterStateCallback(TouchState::IDLE_STATE,
             [this] (TouchState lastState, TouchState newState) {
-            multiAppStrategy_.HandleTouchInfo(touchManager_.GetPkgName(), newState);
+            HgmMultiAppStrategy::TouchInfo touchInfo = {
+                .pkgname = touchManager_.GetPkgName(),
+                .touchState = newState,
+            };
+            multiAppStrategy_.HandleTouchInfo(touchInfo);
         });
         touchManager_.RegisterEnterStateCallback(TouchState::UP_STATE,
             [this] (TouchState lastState, TouchState newState) {
@@ -138,6 +147,9 @@ void HgmFrameRateManager::InitTouchManager()
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count());
             idleDetector_.SetTouchUpTime(curTime);
+            if (!GetNotSupportSurface()) {
+                touchManager_.HandleThirdFrameIdle();
+            }
         });
     });
 }
@@ -175,6 +187,7 @@ void HgmFrameRateManager::UpdateAppSupportStatus()
             }
         }
     }
+    currIdleMode_ = config.idleMode;
     idleDetector_.SetAppSupportStatus(flag);
 }
 
@@ -192,8 +205,60 @@ void HgmFrameRateManager::SetAceAnimatorVote(const std::shared_ptr<RSRenderFrame
     idleDetector_.SetAceAnimatorIdleStatus(true);
 }
 
+bool HgmFrameRateManager::GetNotSupportSurface()
+{
+    if (currIdleMode == IdleModeType::IDLE_ALL) {
+        return;
+    }
+    if (currIdleMode == IdleModeType::IDLE_NO_WEB) {
+        auto &buffer = idleDetector_.GetSurfaceBuffer();
+        auto &config = multiAppStrategy_.GetScreenSeting().appBufferBlackList;
+        if (buffer.empty() || config.empty()) {
+            return true;
+        }
+        for (auto &it : buffer) {
+            if (std::find(config.begin(), config.end(), it.first) == config.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+uin32_t HgmFrameRateManager::GetSurfaceExpectFps()
+{
+    uint32_t fps = FPS_120HZ;
+
+    auto &buffer = idleDetector_.GetSurfaceBuffer();
+    auto &config = multiAppStrategy_.GetScreenSeting().appBufferList;
+
+    if (buffer.empty() || config.empty() || buffer.size() > config.size()) {
+        return fps;
+    }
+
+    for (auto &member : buffer) {
+        auto key = member.first;
+        auto it = std::find_if(config.begin(), config.end(),
+        [&key](const std::pair<std::string, uint32_t>& pair) {
+            return pair.first == key;
+        });
+        if (it == config.end()) {
+            return fps;
+        }
+    }
+
+    for (auto &it : config) {
+        if (buffer.count(it,first)) {
+            fps = it.second;
+            break;
+        }
+    }
+    return fps;
+}
+
 void HgmFrameRateManager::UpdateGuaranteedPlanVote(uint64_t timestamp)
 {
+    static in32_t lastExpectFps = 0;
     if (!idleDetector_.GetAppSupportStatus()) {
         return;
     }
@@ -204,6 +269,8 @@ void HgmFrameRateManager::UpdateGuaranteedPlanVote(uint64_t timestamp)
     if (touchManager_.GetState() != TouchState::UP_STATE) {
         prepareCheck_ = false;
         startCheck_ = false;
+        lastTouchState_ == TouchState::DOWN_STATE;
+        lastExpectFps = 0;
     }
 
     if (touchManager_.GetState() == TouchState::UP_STATE && lastTouchState_ == TouchState::DOWN_STATE) {
@@ -228,6 +295,17 @@ void HgmFrameRateManager::UpdateGuaranteedPlanVote(uint64_t timestamp)
 
     if (idleDetector_.GetSurFaceIdleState(timestamp) && idleDetector_.GetAceAnimatorIdleStatus()) {
         touchManager_.HandleThirdFrameIdle();
+    } else {
+        uint32_t fps = GetSurfaceExpectFps();
+        if (fps == lastExpectFps) {
+            return;
+        }
+        lastExpectFps = fps;
+        HgmMultiAppStrategy::TouchInfo touchInfo = {
+            .touchState = TouchState::UP_STATE,
+            .expectFps = fps;
+        };
+        multiAppStrategy_.HandleTouchInfo(touchInfo);
     }
 }
 

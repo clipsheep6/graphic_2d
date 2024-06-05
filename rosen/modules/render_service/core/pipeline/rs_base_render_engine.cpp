@@ -292,7 +292,8 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
         RS_LOGE("RSBaseRenderEngine::RequestFrame: surface is null!");
         return nullptr;
     }
-    RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::RequestFrame(RSSurface)");
+    RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::RequestFrame(RSSurface)[width:" + std::std::to_string(config.width) +
+        "]," + "[height:" + std::std::to_string(config.height) + "]");
 #ifdef RS_ENABLE_VK
     RSTagTracker tagTracker(skContext_.get(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
 #endif
@@ -346,6 +347,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 #endif
 #endif
     auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC, isProtected);
+    RS_LOGD("RSBaseRenderEngine::RequestFrame, width:%{public}d, height:%{public}d", config.width, config.height);
     RS_OPTIONAL_TRACE_END();
     if (surfaceFrame == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: request SurfaceFrame failed!");

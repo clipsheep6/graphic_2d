@@ -1648,7 +1648,6 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest049, TestSize.Level
     OH_Drawing_SetTypographyTextLineStyleOnly(typoStyle, linestyleOnly);
 }
 
-
 /*
  * @tc.name: OH_Drawing_TypographyTest050
  * @tc.desc: test for getting numbers for textstyle

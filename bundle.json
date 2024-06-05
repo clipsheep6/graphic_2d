@@ -88,6 +88,7 @@
           "egl",
           "opengles",
           "node",
+          "rust_crates_cxx",
           "vulkan-headers",
           "vulkan-loader",
           "hiview",
@@ -114,6 +115,7 @@
           "jsoncpp",
           "egl",
           "opengles",
+          "rust_crates_cxx",
           "vulkan-headers",
           "vulkan-loader"
         ]

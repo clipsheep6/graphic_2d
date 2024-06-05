@@ -46,7 +46,7 @@ if (!is_mingw && !is_mac && !is_cross_platform) {
     }
     part_name = "graphic_2d"
     subsystem_name = "graphic"
-    public_deps = [ "//third_party/rust/crates/cxx:cxx_cppdeps" ]
+    public_external_deps = [ "rust_crates_cxx:cxx_cppdeps" ]
   }
 }
 

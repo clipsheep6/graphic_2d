@@ -13,7 +13,8 @@
 
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
-import("//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
+import(
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 module_output_path = "graphic/rosen_engine/render_service_base/memory"
 
@@ -69,6 +70,7 @@ ohos_unittest("RSRenderServiceBaseMemoryTest") {
     "c_utils:utils",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "skia:skia_canvaskit",
   ]
 
   subsystem_name = "graphic"

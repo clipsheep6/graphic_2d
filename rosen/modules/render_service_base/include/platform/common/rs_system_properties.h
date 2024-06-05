@@ -175,7 +175,6 @@ public:
     static bool GetColorPickerPartialEnabled();
     static bool GetMaskLinearBlurEnabled();
     static bool GetMotionBlurEnabled();
-    static bool GetDynamicBrightnessEnabled();
     static bool GetKawaseEnabled();
     static bool GetHpsBlurEnabled();
     static float GetKawaseRandomColorFactor();

@@ -1350,14 +1350,14 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
         if (brightnessBlender == nullptr) {
             continue;
         }
-        SetBgBrightnessRates({ brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(),
-            brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree()});
-        SetBgBrightnessSaturation(brightnessBlender->GetSaturation());
-        SetBgBrightnessPosCoeff({ brightnessBlender->GetPositiveCoeff().data_[0],
-            brightnessBlender->GetPositiveCoeff().data_[1], brightnessBlender->GetPositiveCoeff().data_[2] });
-        SetBgBrightnessNegCoeff({ brightnessBlender->GetNegativeCoeff().data_[0],
-            brightnessBlender->GetNegativeCoeff().data_[1], brightnessBlender->GetNegativeCoeff().data_[2] });
-        SetBgBrightnessFract(brightnessBlender->GetFraction());
+        auto fraction = brightnessBlender->GetFraction();
+        SetBgBrightnessFract(fraction);
+        SetBgBrightnessParams({ brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(),
+            brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree(), brightnessBlender->GetSaturation(),
+            { brightnessBlender->GetPositiveCoeff().data_[0], brightnessBlender->GetPositiveCoeff().data_[1],
+                brightnessBlender->GetPositiveCoeff().data_[2] },
+            { brightnessBlender->GetNegativeCoeff().data_[0], brightnessBlender->GetNegativeCoeff().data_[1],
+                brightnessBlender->GetNegativeCoeff().data_[2] } });
     }
 }
 
@@ -1454,30 +1454,10 @@ void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
         RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
 }
 
-void RSNode::SetFgBrightnessRates(const Vector4f& rates)
+void RSNode::SetFgBrightnessParams(const RSDynamicBrightnessPara& params)
 {
-    SetProperty<RSFgBrightnessRatesModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_RATES, rates);
-}
-
-void RSNode::SetFgBrightnessSaturation(const float& saturation)
-{
-    SetProperty<RSFgBrightnessSaturationModifier,
-        RSAnimatableProperty<float>>(RSModifierType::FG_BRIGHTNESS_SATURATION, saturation);
-}
-
-void RSNode::SetFgBrightnessPosCoeff(const Vector3f& coeff)
-{
-    Vector4f coeff4f {coeff.x_, coeff.y_, coeff.z_, 0.0};
-    SetProperty<RSFgBrightnessPosCoeffModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_POSCOEFF, coeff4f);
-}
-
-void RSNode::SetFgBrightnessNegCoeff(const Vector3f& coeff)
-{
-    Vector4f coeff4f {coeff.x_, coeff.y_, coeff.z_, 0.0};
-    SetProperty<RSFgBrightnessNegCoeffModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_NEGCOEFF, coeff4f);
+    SetProperty<RSFgBrightnessParamsModifier,
+        RSProperty<RSDynamicBrightnessPara>>(RSModifierType::FG_BRIGHTNESS_PARAMS, params);
 }
 
 void RSNode::SetFgBrightnessFract(const float& fract)
@@ -1486,30 +1466,10 @@ void RSNode::SetFgBrightnessFract(const float& fract)
         RSAnimatableProperty<float>>(RSModifierType::FG_BRIGHTNESS_FRACTION, fract);
 }
 
-void RSNode::SetBgBrightnessRates(const Vector4f& rates)
+void RSNode::SetBgBrightnessParams(const RSDynamicBrightnessPara& params)
 {
-    SetProperty<RSBgBrightnessRatesModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_RATES, rates);
-}
-
-void RSNode::SetBgBrightnessSaturation(const float& saturation)
-{
-    SetProperty<RSBgBrightnessSaturationModifier,
-        RSAnimatableProperty<float>>(RSModifierType::BG_BRIGHTNESS_SATURATION, saturation);
-}
-
-void RSNode::SetBgBrightnessPosCoeff(const Vector3f& coeff)
-{
-    Vector4f coeff4f {coeff.x_, coeff.y_, coeff.z_, 0.0};
-    SetProperty<RSBgBrightnessPosCoeffModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_POSCOEFF, coeff4f);
-}
-
-void RSNode::SetBgBrightnessNegCoeff(const Vector3f& coeff)
-{
-    Vector4f coeff4f {coeff.x_, coeff.y_, coeff.z_, 0.0};
-    SetProperty<RSBgBrightnessNegCoeffModifier,
-        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_NEGCOEFF, coeff4f);
+    SetProperty<RSBgBrightnessParamsModifier,
+        RSProperty<RSDynamicBrightnessPara>>(RSModifierType::BG_BRIGHTNESS_PARAMS, params);
 }
 
 void RSNode::SetBgBrightnessFract(const float& fract)

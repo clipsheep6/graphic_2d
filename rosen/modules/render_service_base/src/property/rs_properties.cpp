@@ -106,16 +106,10 @@ constexpr static std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::
     [](RSProperties* prop) { prop->SetLinearGradientBlurPara({}); },     // LINEAR_GRADIENT_BLUR_PARA
     [](RSProperties* prop) { prop->SetDynamicLightUpRate({}); },         // DYNAMIC_LIGHT_UP_RATE
     [](RSProperties* prop) { prop->SetDynamicLightUpDegree({}); },       // DYNAMIC_LIGHT_UP_DEGREE
-    [](RSProperties* prop) { prop->SetFgBrightnessRates({}); },          // FG_BRIGHTNESS_RATESS
-    [](RSProperties* prop) { prop->SetFgBrightnessSaturation({}); },     // FG_BRIGHTNESS_SATURATION
-    [](RSProperties* prop) { prop->SetFgBrightnessPosCoeff({}); },       // FG_BRIGHTNESS_POSCOEFF
-    [](RSProperties* prop) { prop->SetFgBrightnessNegCoeff({}); },       // FG_BRIGHTNESS_NEGCOEFF
-    [](RSProperties* prop) { prop->SetFgBrightnessFract({}); },          // FG_BRIGHTNESS_FRACTION
-    [](RSProperties* prop) { prop->SetBgBrightnessRates({}); },          // BG_BRIGHTNESS_RATES
-    [](RSProperties* prop) { prop->SetBgBrightnessSaturation({}); },     // BG_BRIGHTNESS_SATURATION
-    [](RSProperties* prop) { prop->SetBgBrightnessPosCoeff({}); },       // BG_BRIGHTNESS_POSCOEFF
-    [](RSProperties* prop) { prop->SetBgBrightnessNegCoeff({}); },       // BG_BRIGHTNESS_NEGCOEFF
-    [](RSProperties* prop) { prop->SetBgBrightnessFract({}); },          // BG_BRIGHTNESS_FRACTION
+    [](RSProperties* prop) { prop->SetFgBrightnessParams({}); },         // FG_BRIGHTNESS_PARAMS
+    [](RSProperties* prop) { prop->SetFgBrightnessFract(1.0); },         // FG_BRIGHTNESS_FRACTION
+    [](RSProperties* prop) { prop->SetBgBrightnessParams({}); },         // BG_BRIGHTNESS_PARAMS
+    [](RSProperties* prop) { prop->SetBgBrightnessFract(1.0); },         // BG_BRIGHTNESS_FRACTION
     [](RSProperties* prop) { prop->SetFrameGravity(Gravity::DEFAULT); }, // FRAME_GRAVITY
     [](RSProperties* prop) { prop->SetClipRRect({}); },                  // CLIP_RRECT
     [](RSProperties* prop) { prop->SetClipBounds({}); },                 // CLIP_BOUNDS
@@ -1360,10 +1354,10 @@ void RSProperties::SetDynamicLightUpDegree(const std::optional<float>& lightUpDe
     contentDirty_ = true;
 }
 
-void RSProperties::SetFgBrightnessRates(const std::optional<Vector4f>& rates)
+void RSProperties::SetFgBrightnessParams(const std::optional<RSDynamicBrightnessPara>& params)
 {
-    fgBrightnessParams_.rates_ = rates;
-    if (rates.has_value()) {
+    fgBrightnessParams_ = params;
+    if (params.has_value()) {
         isDrawn_ = true;
     }
     filterNeedUpdate_ = true;
@@ -1371,84 +1365,29 @@ void RSProperties::SetFgBrightnessRates(const std::optional<Vector4f>& rates)
     contentDirty_ = true;
 }
 
-std::optional<Vector4f> RSProperties::GetFgBrightnessRates() const
-{
-    return fgBrightnessParams_.rates_;
-}
-
-void RSProperties::SetFgBrightnessSaturation(const std::optional<float>& saturation)
-{
-    fgBrightnessParams_.saturation_ = saturation;
-    if (saturation.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<float> RSProperties::GetFgBrightnessSaturation() const
-{
-    return fgBrightnessParams_.saturation_;
-}
-
-void RSProperties::SetFgBrightnessPosCoeff(const std::optional<Vector4f>& coeff)
-{
-    fgBrightnessParams_.posCoeff_ = coeff;
-    if (coeff.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<Vector4f> RSProperties::GetFgBrightnessPosCoeff() const
-{
-    return fgBrightnessParams_.posCoeff_;
-}
-
-void RSProperties::SetFgBrightnessNegCoeff(const std::optional<Vector4f>& coeff)
-{
-    fgBrightnessParams_.negCoeff_ = coeff;
-    if (coeff.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<Vector4f> RSProperties::GetFgBrightnessNegCoeff() const
-{
-    return fgBrightnessParams_.negCoeff_;
-}
-
-void RSProperties::SetFgBrightnessFract(const std::optional<float>& fraction)
-{
-    fgBrightnessParams_.fraction_ = fraction;
-    if (fraction.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<float> RSProperties::GetFgBrightnessFract() const
-{
-    return fgBrightnessParams_.fraction_;
-}
-
-RSDynamicBrightnessPara RSProperties::GetFgBrightnessParams() const
+std::optional<RSDynamicBrightnessPara> RSProperties::GetFgBrightnessParams() const
 {
     return fgBrightnessParams_;
 }
 
-void RSProperties::SetBgBrightnessRates(const std::optional<Vector4f>& rates)
+void RSProperties::SetFgBrightnessFract(float fraction)
 {
-    bgBrightnessParams_.rates_ = rates;
-    if (rates.has_value()) {
+    fgBrightnessFract_ = fraction;
+    isDrawn_ = true;
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+float RSProperties::GetFgBrightnessFract() const
+{
+    return fgBrightnessFract_;
+}
+
+void RSProperties::SetBgBrightnessParams(const std::optional<RSDynamicBrightnessPara>& params)
+{
+    bgBrightnessParams_ = params;
+    if (params.has_value()) {
         isDrawn_ = true;
     }
     filterNeedUpdate_ = true;
@@ -1456,117 +1395,60 @@ void RSProperties::SetBgBrightnessRates(const std::optional<Vector4f>& rates)
     contentDirty_ = true;
 }
 
-std::optional<Vector4f> RSProperties::GetBgBrightnessRates() const
-{
-    return bgBrightnessParams_.rates_;
-}
-
-void RSProperties::SetBgBrightnessSaturation(const std::optional<float>& saturation)
-{
-    bgBrightnessParams_.saturation_ = saturation;
-    if (saturation.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<float> RSProperties::GetBgBrightnessSaturation() const
-{
-    return bgBrightnessParams_.saturation_;
-}
-
-void RSProperties::SetBgBrightnessPosCoeff(const std::optional<Vector4f>& coeff)
-{
-    bgBrightnessParams_.posCoeff_ = coeff;
-    if (coeff.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<Vector4f> RSProperties::GetBgBrightnessPosCoeff() const
-{
-    return bgBrightnessParams_.posCoeff_;
-}
-
-void RSProperties::SetBgBrightnessNegCoeff(const std::optional<Vector4f>& coeff)
-{
-    bgBrightnessParams_.negCoeff_ = coeff;
-    if (coeff.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<Vector4f> RSProperties::GetBgBrightnessNegCoeff() const
-{
-    return bgBrightnessParams_.negCoeff_;
-}
-
-void RSProperties::SetBgBrightnessFract(const std::optional<float>& fraction)
-{
-    bgBrightnessParams_.fraction_ = fraction;
-    if (fraction.has_value()) {
-        isDrawn_ = true;
-    }
-    filterNeedUpdate_ = true;
-    SetDirty();
-    contentDirty_ = true;
-}
-
-std::optional<float> RSProperties::GetBgBrightnessFract() const
-{
-    return bgBrightnessParams_.fraction_;
-}
-
-RSDynamicBrightnessPara RSProperties::GetBgBrightnessParams() const
+std::optional<RSDynamicBrightnessPara> RSProperties::GetBgBrightnessParams() const
 {
     return bgBrightnessParams_;
 }
 
+void RSProperties::SetBgBrightnessFract(float fraction)
+{
+    bgBrightnessFract_ = fraction;
+    isDrawn_ = true;
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+float RSProperties::GetBgBrightnessFract() const
+{
+    return bgBrightnessFract_;
+}
+
 bool RSProperties::IsFgBrightnessValid() const
 {
-    return fgBrightnessParams_.HasFullValues() && ROSEN_LNE(fgBrightnessParams_.fraction_.value(), 1.0);
+    return fgBrightnessParams_.has_value() && ROSEN_LNE(fgBrightnessFract_, 1.0);
 }
 
 bool RSProperties::IsBgBrightnessValid() const
 {
-    return bgBrightnessParams_.HasFullValues() && ROSEN_LNE(bgBrightnessParams_.fraction_.value(), 1.0);
+    return bgBrightnessParams_.has_value() && ROSEN_LNE(bgBrightnessFract_, 1.0);
 }
 
 std::string RSProperties::GetFgBrightnessDescription() const
 {
-    if (!fgBrightnessParams_.HasFullValues()) {
-        return "fgBrightnessParams_ contains nullopt";
+    if (fgBrightnessParams_ == std::nullopt) {
+        return "fgBrightnessParams is nullptr";
     }
-    std::string description =
-        "ForegroundBrightness, cubicCoeff: " + std::to_string(fgBrightnessParams_.rates_->x_) +
-        " quadCoeff: " + std::to_string(fgBrightnessParams_.rates_->y_) +
-        " rate: " + std::to_string(fgBrightnessParams_.rates_->z_) +
-        " lightUpDegree: " + std::to_string(fgBrightnessParams_.rates_->w_) +
-        " saturation: " + std::to_string(fgBrightnessParams_.saturation_.value()) +
-        " fgBrightnessFract: " + std::to_string(fgBrightnessParams_.fraction_.value());
+    std::string description = "ForegroundBrightness, rate: " + std::to_string(fgBrightnessParams_->rate_) +
+        " lightUpDegree: " + std::to_string(fgBrightnessParams_->lightUpDegree_) +
+        " cubicCoeff: " + std::to_string(fgBrightnessParams_->cubicCoeff_) +
+        " quadCoeff: " + std::to_string(fgBrightnessParams_->quadCoeff_) +
+        " saturation: " + std::to_string(fgBrightnessParams_->saturation_) +
+        " fgBrightnessFract: " + std::to_string(bgBrightnessFract_);
     return description;
 }
 
 std::string RSProperties::GetBgBrightnessDescription() const
 {
-    if (!bgBrightnessParams_.HasFullValues()) {
-        return "bgBrightnessParams_ contains nullopt";
+    if (bgBrightnessParams_ == std::nullopt) {
+        return "bgBrightnessParams is nullptr";
     }
-    std::string description =
-        "BackgroundBrightnessInternal, cubicCoeff: " + std::to_string(bgBrightnessParams_.rates_->x_) +
-        " quadCoeff: " + std::to_string(bgBrightnessParams_.rates_->y_) +
-        " rate: " + std::to_string(bgBrightnessParams_.rates_->z_) +
-        " lightUpDegree: " + std::to_string(bgBrightnessParams_.rates_->w_) +
-        " saturation: " + std::to_string(bgBrightnessParams_.saturation_.value()) +
-        " fgBrightnessFract: " + std::to_string(bgBrightnessParams_.fraction_.value());
+    std::string description = "BackgroundBrightnessInternal, rate: " + std::to_string(bgBrightnessParams_->rate_) +
+        " lightUpDegree: " + std::to_string(bgBrightnessParams_->lightUpDegree_) +
+        " cubicCoeff: " + std::to_string(bgBrightnessParams_->cubicCoeff_) +
+        " quadCoeff: " + std::to_string(bgBrightnessParams_->quadCoeff_) +
+        " saturation: " + std::to_string(bgBrightnessParams_->saturation_) +
+        " fgBrightnessFract: " + std::to_string(bgBrightnessFract_);
     return description;
 }
 

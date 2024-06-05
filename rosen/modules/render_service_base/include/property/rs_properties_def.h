@@ -115,21 +115,24 @@ enum class RSColorBlendApplyType : int16_t {
 };
 
 struct RSDynamicBrightnessPara {
-    float rate_ = 1.0;
-    float lightUpDegree_ = 0.0;
-    float cubicCoeff_ = 0.0;
-    float quadCoeff_ = 0.0;
-    float saturation_ = 1.0;
-    std::array<float, RGB_NUM> posRGB_ = {0.0, 0.0, 0.0};
-    std::array<float, RGB_NUM> negRGB_ = {0.0, 0.0, 0.0};
+    std::optional<Vector4f> rates_ = std::nullopt;
+    std::optional<float> saturation_ = std::nullopt;
+    std::optional<Vector4f> posCoeff_ = std::nullopt;
+    std::optional<Vector4f> negCoeff_ = std::nullopt;
+    std::optional<float> fraction_ = std::nullopt;
+
+    bool inline HasFullValues() const
+    {
+        return rates_.has_value() && saturation_.has_value() && posCoeff_.has_value() &&
+            negCoeff_.has_value() && fraction_.has_value();
+    }
 
     bool operator==(const RSDynamicBrightnessPara& other) const
     {
-        return (rate_ == other.rate_ && lightUpDegree_ == other.lightUpDegree_ && cubicCoeff_ == other.cubicCoeff_ &&
-            quadCoeff_ == other.quadCoeff_ && saturation_ == other.saturation_ && posRGB_ == other.posRGB_ &&
-            negRGB_ == other.negRGB_);
+        return (rates_ == other.rates_ && saturation_ == other.saturation_ && posCoeff_ == other.posCoeff_ &&
+            negCoeff_ == other.negCoeff_ && fraction_ == other.fraction_);
     }
-} ;
+};
 
 class Decoration final {
 public:

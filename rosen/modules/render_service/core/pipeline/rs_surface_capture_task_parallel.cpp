@@ -166,9 +166,7 @@ bool RSSurfaceCaptureTaskParallel::Run(sptr<RSISurfaceCaptureCallback> callback)
         pixelmap = CreatePixelMapBySurfaceNode(curNode, visitor_->IsUniRender());
         visitor_->IsDisplayNode(false);
     } else if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
-        visitor_->SetHasingSecurityOrSkipOrProtectedLayer(FindSecurityOrSkipOrProtectedLayer());
-        pixelmap = CreatePixelMapByDisplayNode(displayNode, visitor_->IsUniRender(),
-            visitor_->GetHasingSecurityOrSkipOrProtectedLayer());
+        pixelmap = CreatePixelMapByDisplayNode(displayNode, visitor_->IsUniRender());
         visitor_->IsDisplayNode(true);
         displayNodeDrawable = std::static_pointer_cast<DrawableV2::RSRenderNodeDrawable>(
             DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(displayNode));

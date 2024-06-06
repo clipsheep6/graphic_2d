@@ -46,13 +46,15 @@ public:
         const RSAnimationTimingCurve& timingCurve);
 
     void SetDurationKeyframe(bool isDuration);
-
-    bool IsSupportInteractiveAnimator() override { return false; }
 protected:
     void OnStart() override;
 
     void InitInterpolationValue() override;
 
+    bool IsSupportInteractiveAnimator() override
+    {
+        return false;
+    }
 private:
     void StartRenderAnimation(const std::shared_ptr<RSRenderKeyframeAnimation>& animation);
 

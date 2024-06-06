@@ -36,6 +36,14 @@ enum class RSInteractiveAnimationState {
 class RSC_EXPORT RSInteractiveImplictAnimator : public std::enable_shared_from_this<RSInteractiveImplictAnimator> {
 public:
     virtual ~RSInteractiveImplictAnimator();
+
+    /*
+     * @brief create interactiveIplictAnimator object only this way
+     * @param timingProtocol property set change create animation use this timingProtocal when AddAnimation
+     * @param timingCurve property set change create animation use this timingCurve when AddAnimation
+     * @return Returns interactiveIplictAnimator object
+     *
+     */
     static std::shared_ptr<RSInteractiveImplictAnimator> Create(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
 
@@ -44,22 +52,20 @@ public:
      * @param callback use property set change or RSNode::Animate to create aniamtion
      *                 property set use animator protocal and curve create animation
      *                 RSNode::Animate use self Animate protocal and curve crate aniamtion
+     * @param isSupportPropertyChangeCreate default is true can use both to create animation
+     *                 isAddImplictAnimation is false just can use RSNode::Animate to crate animation
+     * @return Returns size_t the number of this callback create animations
      *
      */
-    size_t AddImplictAnimation(std::function<void()> callback);
+    size_t AddAnimation(std::function<void()> callback, bool isSupportPropertyChangeCreate = true);
 
-    /*
-     * @brief add animations form callback
-     * @param callback use RSNode::Animate to create aniamtion
-     *                 just use RSNode::Animate can create animation
-     *                 RSNode::Animate use self Animate protocal and curve crate aniamtion
-     *
-     */
-    size_t AddAnimation(std::function<void()> callback);
-
-    // aniamtor operation
+    // aniamtor operation to start all animations in animator
     int32_t StartAnimation();
+
+    // aniamtor operation to pause all animations in animator
     void PauseAnimation();
+
+    // aniamtor operation to continue all animations in animator
     void ContinueAnimation();
 
     /*
@@ -70,6 +76,8 @@ public:
      *                  START all animaton in animator finish on endvalue and sync stagevalue
      */
     void FinishAnimation(RSInteractiveAnimationPosition position);
+
+    // animation reverse play to start position
     void ReverseAnimation();
 
     /*
@@ -79,21 +87,39 @@ public:
      * @param fraction animation value faraction
      */
     void SetFraction(float fraction);
+
+    /*
+     * @brief get value fraction for first animation support interactiveImplictAnimator
+     * @return Returns the fraction of animation value
+     *
+     */
     float GetFraction();
 
+    // return animator current status
     RSInteractiveAnimationState GetStatus() const
     {
         return state_;
     }
+
+    // estimate animator is in running status
+    bool IsRunning();
+
+    // estimate animator is in pause status
+    bool IsPaused();
+
+    // estimate animator is in finish status
+    bool IsFinished();
 
     /*
      * @brief set callback of all animation finish
      * @param finishCallback all animations in animator use this finishcallback, just one
      */
     void SetFinishCallBack(const std::function<void()>& finishCallback);
+
 protected:
     explicit RSInteractiveImplictAnimator(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
+
 private:
     static InteractiveImplictAnimatorId GenerateId();
     const InteractiveImplictAnimatorId id_;

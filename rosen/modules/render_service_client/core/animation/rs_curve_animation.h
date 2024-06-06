@@ -36,11 +36,10 @@ public:
     void SetTimingCurve(const RSAnimationTimingCurve& timingCurve);
 
     const RSAnimationTimingCurve& GetTimingCurve() const;
-
-    bool IsSupportInteractiveAnimator() override;
 protected:
     void OnStart() override;
 
+    bool IsSupportInteractiveAnimator() override;
 private:
     void StartRenderAnimation(const std::shared_ptr<RSRenderCurveAnimation>& animation);
 

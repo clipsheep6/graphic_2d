@@ -58,9 +58,6 @@ public:
     void SetPathNeedAddOrigin(bool needAddOrigin);
 
     bool GetPathNeedAddOrigin() const;
-
-    bool IsSupportInteractiveAnimator() override { return false; }
-
 protected:
     void OnStart() override;
 
@@ -78,6 +75,10 @@ protected:
 
     void SetPropertyOnAllAnimationFinish() override {}
 
+    bool IsSupportInteractiveAnimator() override
+    {
+        return false;
+    }
 private:
     void ReplaceSubString(std::string& sourceStr, const std::string& subStr, const std::string& newStr) const;
 

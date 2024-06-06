@@ -76,20 +76,6 @@ public:
     bool IsPaused() const;
 
     bool IsFinished() const;
-
-    bool IsUiAnimation() const;
-
-    void InteractivePause();
-
-    void InteractiveContinue();
-
-    void InteractiveFinish(RSInteractiveAnimationPosition pos);
-
-    void InteractiveReverse();
-
-    void InteractiveSetFraction(float fraction);
-
-    virtual bool IsSupportInteractiveAnimator() { return true; }
 protected:
     enum class AnimationState {
         INITIALIZED,
@@ -127,6 +113,22 @@ protected:
         return nullptr;
     }
 
+    bool IsUiAnimation() const;
+
+    void InteractivePause();
+
+    void InteractiveContinue();
+
+    void InteractiveFinish(RSInteractiveAnimationPosition position);
+
+    void InteractiveReverse();
+
+    void InteractiveSetFraction(float fraction);
+
+    virtual bool IsSupportInteractiveAnimator()
+    {
+        return true;
+    }
 private:
     static AnimationId GenerateId();
     const AnimationId id_;

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "animation/rs_animation_common.h"
+#include "animation/rs_render_animation.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 
@@ -33,10 +34,10 @@ public:
         (InteractiveImplictAnimatorId id, const std::weak_ptr<RSContext>& context = {});
     ~RSRenderInteractiveImplictAnimator() = default;
 
-    void AddAnimations(std::vector<std::pair<NodeId, AnimationId>> animations);
+    void AddAnimations(std::vector<std::pair<NodeId, AnimationId>>& animations);
     void PauseAnimator();
     void ContinueAnimator();
-    void FinishAnimator(RSInteractiveAnimationPosition finishPos);
+    void FinishAnimator(RSInteractiveAnimationPosition finishPosition);
     void ReverseAnimator();
     void SetFractionAnimator(float fraction);
 
@@ -45,6 +46,7 @@ public:
         return id_;
     }
 private:
+    std::shared_ptr<OHOS::Rosen::RSRenderAnimation> FindAnimation(NodeId nodeId, AnimationId animationId);
     RSRenderInteractiveImplictAnimator() = default;
     InteractiveImplictAnimatorId id_ = 0;
     std::weak_ptr<RSContext> context_ = {};

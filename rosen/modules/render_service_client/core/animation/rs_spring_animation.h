@@ -42,12 +42,13 @@ public:
     void SetZeroThreshold(const float zeroThreshold) override;
 
     void SetInitialVelocity(const std::shared_ptr<RSPropertyBase>& velocity) override;
-
-    bool IsSupportInteractiveAnimator() override { return false; }
-
 protected:
     void OnStart() override;
 
+    bool IsSupportInteractiveAnimator() override
+    {
+        return false;
+    }
 private:
     void StartRenderAnimation(const std::shared_ptr<RSRenderSpringAnimation>& animation);
 

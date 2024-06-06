@@ -149,6 +149,7 @@ private:
 #endif
     void PeriodCheckLocked(int64_t hardwareVsyncInterval);
     VsyncError SetExpectNextVsyncTimeInternal(int64_t expectNextVsyncTime);
+    void UpdateChangeRefreshRatesLocked(const ListenerRefreshRateData &listenerRefreshRates);
 
     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
     int64_t period_;

@@ -94,7 +94,9 @@ bool GEWaterRippleFilter::InitWaterRippleEffect()
         uniform half2 rippleCenter;
 
         const half basicSlope = 0.5;
+
         const half gAmplSupress = 0.008;
+
         const half waveFreq = 31.0;
         const half wavePropRatio = 2.0;
         const half ampSupArea = 0.5;
@@ -138,6 +140,7 @@ bool GEWaterRippleFilter::InitWaterRippleEffect()
             half3 norm = vec3(circles, hIntense);
             half2 expandUV = (uv - intensity * norm.xy) * iResolution.xy;
             half3 color = image.eval(expandUV).rgb;
+
             color += 5. * clamp(dot(norm, normalize(vec3(0., -4., 0.5))), 0., 1.);
             
             return half4(color, 1.0);

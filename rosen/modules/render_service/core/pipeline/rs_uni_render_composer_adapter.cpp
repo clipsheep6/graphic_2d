@@ -136,6 +136,9 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& no
         matrix.Get(Drawing::Matrix::Index::TRANS_Y), matrix.Get(Drawing::Matrix::Index::PERSP_0),
         matrix.Get(Drawing::Matrix::Index::PERSP_1), matrix.Get(Drawing::Matrix::Index::PERSP_2)};
     info.gravity = static_cast<int32_t>(Gravity::RESIZE);
+
+    info.displayNit = 500; // default brightness
+    info.brightnessRatio = 1.0f; // no ratio
     return info;
 }
 
@@ -165,6 +168,9 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSRcdSurfaceRenderNode&
     info.needClient = false;
     info.matrix = GraphicMatrix {1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f};
     info.gravity = static_cast<int32_t>(Gravity::RESIZE);
+
+    info.displayNit = 500; // default brightness
+    info.brightnessRatio = 1.0f; // no ratio
     return info;
 }
 
@@ -195,6 +201,8 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     layer->SetMatrix(info.matrix);
     layer->SetGravity(info.gravity);
     SetMetaDataInfoToLayer(layer, info.buffer, surface);
+    layer->SetDisplayNit(info.displayNit);
+    layer->SetBrightnessRatio(info.brightnessRatio);
 }
 
 void RSUniRenderComposerAdapter::SetBufferColorSpace(RSDisplayRenderNode& node)
@@ -513,6 +521,9 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& no
     const auto& property = node.GetRenderProperties();
     info.boundRect = { 0, 0,
         static_cast<int32_t>(property.GetBoundsWidth()), static_cast<int32_t>(property.GetBoundsHeight())};
+
+    info.displayNit = node.GetDisplayNit();
+    info.brightnessRatio = node.GetBrightnessRatio();
     return info;
 }
 

@@ -71,6 +71,10 @@ void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfac
         layerInfo.buffer->GetSurfaceBufferWidth(), layerInfo.buffer->GetSurfaceBufferHeight(), layerInfo.alpha);
     LayerInfoPtr layer = GetLayerInfo(
         params, layerInfo.buffer, layerInfo.preBuffer, node.GetConsumer(), layerInfo.acquireFence);
+
+    layer->SetDisplayNit(node.GetDisplayNit());
+    layer->SetBrightnessRatio(node.GetBrightnessRatio());
+
     uniComposerAdapter_->SetMetaDataInfoToLayer(layer, params.GetBuffer(), node.GetConsumer());
     layers_.emplace_back(layer);
 }

@@ -257,6 +257,11 @@ public:
     void SetFgBrightnessFract(float fraction);
     float GetFgBrightnessFract() const;
 
+    void SetWaterRippleParams(const std::optional<RSWaterRipplePara>& params);
+    std::optional<RSWaterRipplePara> GetWaterRippleParams() const;
+    void SetWaterRippleProgress(const float& progress);
+    float GetWaterRippleProgress() const;
+
     void SetBgBrightnessParams(const std::optional<RSDynamicBrightnessPara>& params);
     std::optional<RSDynamicBrightnessPara> GetBgBrightnessParams() const;
     void SetBgBrightnessFract(float fraction);
@@ -427,6 +432,7 @@ public:
     bool IsDynamicDimValid() const;
     bool IsFgBrightnessValid() const;
     bool IsBgBrightnessValid() const;
+    bool IsWaterRippleValid() const;
     std::string GetFgBrightnessDescription() const;
     std::string GetBgBrightnessDescription() const;
 
@@ -525,6 +531,7 @@ private:
     void GenerateForegroundMaterialBlurFilter();
     std::shared_ptr<Drawing::ColorFilter> GetMaterialColorFilter(float sat, float brightness);
     void GenerateAIBarFilter();
+    void GenerateWaterRippleFilter();
     void GenerateLinearGradientBlurFilter();
 
     bool NeedClip() const;
@@ -560,6 +567,8 @@ private:
     float fgBrightnessFract_ = 1.0f;
     std::optional<RSDynamicBrightnessPara> bgBrightnessParams_ = std::nullopt;
     float bgBrightnessFract_ = 1.0f;
+    std::optional<RSWaterRipplePara> waterRippleParams_ = std::nullopt;
+    float waterRippleProgress_ = 0.0f;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

@@ -131,6 +131,15 @@ struct RSDynamicBrightnessPara {
     }
 } ;
 
+struct RSWaterRipplePara {
+    float waveNum = 0.0f;           // 导数波形的全局振幅抑制
+    Vector2f rippleCenter = Vector2f(0.5, 0.7); // 波源中心位置
+    bool operator==(const RSWaterRipplePara& other) const
+    {
+        return (waveNum == other.waveNum && rippleCenter == other.rippleCenter);
+    }
+};
+
 class Decoration final {
 public:
     Decoration() {}

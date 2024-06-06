@@ -490,28 +490,15 @@ std::shared_ptr<Drawing::RuntimeShaderBuilder> GELinearGradientBlurShaderFilter:
             uniform shader srcImageShader;
             uniform shader blurImageShader;
             uniform shader gradientShader;
-            half4 meanFilter(float2 coord)
+
+            half4 main(float2 coord)
             {
-                vec3 srcColor = vec3(srcImageShader.eval(coord).r,
-                    srcImageShader.eval(coord).g, srcImageShader.eval(coord).b);
-                vec3 blurColor = vec3(blurImageShader.eval(coord).r,
-                    blurImageShader.eval(coord).g, blurImageShader.eval(coord).b);
+                vec3 srcColor = srcImageShader.eval(coord).rgb;
+                vec3 blurColor = blurImageShader.eval(coord).rgb;
                 float gradient = gradientShader.eval(coord).a;
 
                 vec3 color = blurColor * gradient + srcColor * (1 - gradient);
                 return vec4(color, 1.0);
-            }
-            half4 main(float2 coord)
-            {
-                if (abs(gradientShader.eval(coord).a) < 0.001) {
-                    return srcImageShader.eval(coord);
-                }
-
-                if (abs(gradientShader.eval(coord).a) > 0.999) {
-                    return blurImageShader.eval(coord);
-                }
-
-                return meanFilter(coord);
             }
         )";
         maskBlurShaderEffect_ = Drawing::RuntimeEffect::CreateForShader(prog);

@@ -36,7 +36,7 @@ GEWaterRippleFilter::GEWaterRippleFilter(const Drawing::GEWaterRippleFilterParam
     rippleCenterY_(params.rippleCenterY)
 {
     if (!InitWaterRippleEffect()) {
-        LOGE("GEWaterRippleFilter::GEWaterRippleFilter failed when initializing RingEffect.");
+        LOGE("GEWaterRippleFilter::GEWaterRippleFilter failed when initializing WaterRippleEffect.");
         return;
     }
 }
@@ -92,21 +92,21 @@ bool GEWaterRippleFilter::InitWaterRippleEffect()
         uniform half progress;
         uniform half waveNum;
         uniform half2 rippleCenter;
- 
+
         const half basicSlope = 0.5;
-        const half gAmplSupress = 0.003;
+        const half gAmplSupress = 0.006;
         const half waveFreq = 31.0;
         const half wavePropRatio = 2.0;
         const half ampSupArea = 0.2;
         const half intensity = 0.15;
- 
+
         half calcWave(half dis)
         {  	
             half preWave = (waveNum == 1.) ? 1. : smoothstep(0., -0.3, dis);
             half waveForm = (waveNum == 1.) ? smoothstep(-0.4, -0.2, dis) * smoothstep(0., -0.2, dis) : (waveNum == 2.) ? smoothstep(-0.6, -0.3, dis) * preWave : smoothstep(-0.9, -0.6, dis) * step(abs(dis + 0.45), 0.45) * preWave;
             return sin(waveFreq * dis) * waveForm;
         }
- 
+
         half waveGenerator(half propDis, half t)
         {   
             half dis = propDis - wavePropRatio * t;
@@ -115,30 +115,30 @@ bool GEWaterRippleFilter::InitWaterRippleEffect()
             half d2 = dis + h; 
             return (calcWave(d2) - calcWave(d1)) / (2. * h);
         }
- 
+
         half4 main(vec2 fragCoord)
         {
             half shortEdge = min(iResolution.x, iResolution.y);
             half2 uv = fragCoord.xy / iResolution.xy;
             half2 uvHomo = fragCoord.xy / shortEdge;
             half2 resRatio = iResolution.xy / shortEdge;
- 
+
             half progSlope = basicSlope + 0.1 * waveNum;
             half t = progSlope * progress;
             half ampDecayByT = pow((1. - t), 5.);
-            half layerSup = 0.8 + (0.2 - 0.5*t) * step(t, 0.4);
- 
+
             half2 waveCenter = rippleCenter * resRatio;
             half propDis = distance(uvHomo, waveCenter);
             half2 v = uvHomo - waveCenter;
             
             half ampSupByDis = smoothstep(0., ampSupArea, propDis);
-            half2 circles = normalize(v) * (waveGenerator(propDis, t) * ampDecayByT * ampSupByDis * gAmplSupress);
-            half3 norm = vec3(circles, sqrt(1. - dot(circles, circles)));
-            
+            half hIntense = waveGenerator(propDis, t) * ampDecayByT * ampSupByDis * gAmplSupress;
+            half2 circles = normalize(v) * hIntense;
+
+            half3 norm = vec3(circles, hIntense);
             half2 expandUV = (uv - intensity * norm.xy) * iResolution.xy;
-            half3 color = image.eval(expandUV).rgb * layerSup;
-            color += 6. * pow(dot(norm.yz, vec2(0.894427, 0.4472)), 7.);
+            half3 color = image.eval(expandUV).rgb;
+            color += 6. * clamp(dot(norm, normalize(vec3(0., -4., 1.5))), 0., 1.);
             
             return half4(color, 1.0);
         }

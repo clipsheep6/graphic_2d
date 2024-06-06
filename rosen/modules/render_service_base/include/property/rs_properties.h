@@ -252,15 +252,29 @@ public:
     void SetDynamicLightUpDegree(const std::optional<float>& lightUpDegree);
     void SetDynamicDimDegree(const std::optional<float>& DimDegree);
 
-    void SetFgBrightnessParams(const std::optional<RSDynamicBrightnessPara>& params);
-    std::optional<RSDynamicBrightnessPara> GetFgBrightnessParams() const;
-    void SetFgBrightnessFract(float fraction);
-    float GetFgBrightnessFract() const;
+    void SetFgBrightnessRates(const std::optional<Vector4f>& rates);
+    std::optional<Vector4f> GetFgBrightnessRates() const;
+    void SetFgBrightnessSaturation(const std::optional<float>& saturation);
+    std::optional<float> GetFgBrightnessSaturation() const;
+    void SetFgBrightnessPosCoeff(const std::optional<Vector4f>& coeff);
+    std::optional<Vector4f> GetFgBrightnessPosCoeff() const;
+    void SetFgBrightnessNegCoeff(const std::optional<Vector4f>& coeff);
+    std::optional<Vector4f> GetFgBrightnessNegCoeff() const;
+    void SetFgBrightnessFract(const std::optional<float>& fraction);
+    std::optional<float> GetFgBrightnessFract() const;
+    RSDynamicBrightnessPara GetFgBrightnessParams() const;
 
-    void SetBgBrightnessParams(const std::optional<RSDynamicBrightnessPara>& params);
-    std::optional<RSDynamicBrightnessPara> GetBgBrightnessParams() const;
-    void SetBgBrightnessFract(float fraction);
-    float GetBgBrightnessFract() const;
+    void SetBgBrightnessRates(const std::optional<Vector4f>& rates);
+    std::optional<Vector4f> GetBgBrightnessRates() const;
+    void SetBgBrightnessSaturation(const std::optional<float>& saturation);
+    std::optional<float> GetBgBrightnessSaturation() const;
+    void SetBgBrightnessPosCoeff(const std::optional<Vector4f>& coeff);
+    std::optional<Vector4f> GetBgBrightnessPosCoeff() const;
+    void SetBgBrightnessNegCoeff(const std::optional<Vector4f>& coeff);
+    std::optional<Vector4f> GetBgBrightnessNegCoeff() const;
+    void SetBgBrightnessFract(const std::optional<float>& fraction);
+    std::optional<float> GetBgBrightnessFract() const;
+    RSDynamicBrightnessPara GetBgBrightnessParams() const;
 
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
     void SetMotionBlurPara(const std::shared_ptr<MotionBlurParam>& para);
@@ -556,10 +570,8 @@ private:
     int colorBlendMode_ = 0;
     int colorBlendApplyType_ = 0;
 
-    std::optional<RSDynamicBrightnessPara> fgBrightnessParams_ = std::nullopt;
-    float fgBrightnessFract_ = 1.0f;
-    std::optional<RSDynamicBrightnessPara> bgBrightnessParams_ = std::nullopt;
-    float bgBrightnessFract_ = 1.0f;
+    RSDynamicBrightnessPara fgBrightnessParams_;
+    RSDynamicBrightnessPara bgBrightnessParams_;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

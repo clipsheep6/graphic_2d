@@ -118,13 +118,15 @@ HWTEST_F(RSChildrenDrawableTest, RSBeginBlenderDrawable, TestSize.Level1)
     RSRenderNode node(id);
     ASSERT_EQ(DrawableV2::RSBeginBlenderDrawable::OnGenerate(node), nullptr);
 
-    std::optional<RSDynamicBrightnessPara> params = { RSDynamicBrightnessPara() };
-    node.GetMutableRenderProperties().SetFgBrightnessParams(params);
+    Vector4f value {0.0f, 0.0f, 0.0f, 0.0f};
+    node.GetMutableRenderProperties().SetFgBrightnessRates(value);
+    node.GetMutableRenderProperties().SetFgBrightnessSaturation(0.0f);
+    node.GetMutableRenderProperties().SetFgBrightnessPosCoeff(value);
+    node.GetMutableRenderProperties().SetFgBrightnessNegCoeff(value);
     node.GetMutableRenderProperties().SetFgBrightnessFract(0.0f);
     ASSERT_NE(DrawableV2::RSBeginBlenderDrawable::OnGenerate(node), nullptr);
     
-    std::optional<RSDynamicBrightnessPara> paramsTwo = std::nullopt;
-    node.GetMutableRenderProperties().SetFgBrightnessParams(paramsTwo);
+    node.GetMutableRenderProperties().SetFgBrightnessFract(std::nullopt);
     node.GetMutableRenderProperties().SetColorBlendMode(12);
     auto drawable = std::static_pointer_cast<DrawableV2::RSBeginBlenderDrawable>(
         DrawableV2::RSBeginBlenderDrawable::OnGenerate(node));

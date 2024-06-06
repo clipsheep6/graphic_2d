@@ -1119,7 +1119,7 @@ public:
     {
         return overDrawBufferNodeCornerRadius_;
     }
-    
+
     bool HasSubSurfaceNodes() const;
     void SetIsSubSurfaceNode(bool isSubSurfaceNode);
     bool IsSubSurfaceNode() const;
@@ -1140,8 +1140,29 @@ public:
         return doDirectComposition_;
     }
 
+    void SetDisplayNit(int32_t displayNit)
+    {
+        displayNit_ = displayNit;
+    }
+
+    int32_t GetDisplayNit() const
+    {
+        return displayNit_;
+    }
+
+    void SetBrightnessRatio(float brightnessRatio)
+    {
+        brightnessRatio_ = brightnessRatio;
+    }
+
+    float GetBrightnessRatio() const
+    {
+        return brightnessRatio_;
+    }
+
     void SetSkipDraw(bool skip);
     bool GetSkipDraw() const;
+
 protected:
     void OnSync() override;
     void OnSkipSync() override;
@@ -1270,6 +1291,10 @@ private:
     // valid filter nodes within, including itself
     std::vector<std::shared_ptr<RSRenderNode>> filterNodes_;
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> drawingCacheNodes_;
+
+    // hdr
+    int32_t displayNit_ = 500; // default sdr luminance
+    float brightnessRatio_ = 1.0f; // no ratio by default
 
     struct OpaqueRegionBaseInfo
     {

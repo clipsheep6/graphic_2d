@@ -72,6 +72,12 @@ public:
 
     virtual void SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector = {}) = 0;
 
+    virtual int32_t SetCastScreenEnableSkipWindow(ScreenId id, bool enable) = 0;
+
+    virtual bool GetCastScreenBlackList() = 0;
+
+    virtual std::unordered_set<uint64_t> GetCastScreenEnableSkipWindow(ScreenId id) = 0;
+
     virtual std::unordered_set<uint64_t> GetVirtualScreenBlackList(ScreenId id) = 0;
 
     virtual int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) = 0;
@@ -253,6 +259,12 @@ public:
         std::vector<uint64_t> filteredAppVector) override;
 
     void SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector) override;
+
+    int32_t SetCastScreenEnableSkipWindow(ScreenId id, bool enable) override;
+
+    bool GetCastScreenEnableSkipWindow(ScreenId id) override;
+
+    std::unordered_set<uint64_t> GetCastScreenEnableSkipWindow(ScreenId id) override;
 
     std::unordered_set<uint64_t> GetVirtualScreenBlackList(ScreenId id) override;
 
@@ -463,6 +475,7 @@ private:
     std::vector<ScreenId> connectedIds_;
     std::unordered_map<ScreenId, uint32_t> screenPowerStatus_;
     std::unordered_map<ScreenId, uint32_t> screenBacklight_;
+    std::unordered_set<NodeId> castScreenBlackLists_ = {};
 
     static std::once_flag createFlag_;
     static sptr<OHOS::Rosen::RSScreenManager> instance_;

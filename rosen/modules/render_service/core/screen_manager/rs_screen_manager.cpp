@@ -864,15 +864,46 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     return newId;
 }
 
+std::unordered_set<NodeId> RSScreenManager::GetCastScreenBlackList()
+{
+    return castScreenBlackLists_;
+}
+
 void RSScreenManager::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId> blackList)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    std::unordered_set<NodeId> screenBlackList(blackList.begin(), blackList.end());
+    if (id == INVALID_SCREEN_ID) {
+        RS_LOGD("RSScreenManager %{public}s: CastScreenBlackLists.", __func__);
+        castScreenBlackLists_ = screenBlackList;
+        return;
+    }
     if (screens_.find(id) == screens_.end() || screens_[id] == nullptr) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return;
     }
-    std::unordered_set<NodeId> screenBlackList(blackList.begin(), blackList.end());
     screens_.at(id)->SetBlackList(screenBlackList);
+}
+
+int32_t RSScreenManager::SetCastScreenEnableSkipWindow(ScreenId id, bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.find(id) == screens_.end() || screens_[id] == nullptr) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return SCREEN_NOT_FOUND;
+    }
+    screens_.at(id)->SetCastScreenEnableSkipWindow(enable);
+    return SUCCESS;
+}
+
+bool RSScreenManager::GetCastScreenEnableSkipWindow(ScreenId id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.find(id) == screens_.end() || screens_[id] == nullptr) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return false;
+    }
+    return screens_.at(id)->GetCastScreenEnableSkipWindow();
 }
 
 std::unordered_set<NodeId> RSScreenManager::GetVirtualScreenBlackList(ScreenId id)

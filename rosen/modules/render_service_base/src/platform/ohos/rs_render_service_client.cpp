@@ -338,6 +338,16 @@ void RSRenderServiceClient::SetVirtualScreenBlackList(ScreenId id, std::vector<N
     renderService->SetVirtualScreenBlackList(id, blackListVector);
 }
 
+int32_t RSRenderServiceClient::SetCastScreenEnableSkipWindow(ScreenId id, bool enable)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+
+    return renderService->SetCastScreenEnableSkipWindow(id, enable);
+}
+
 int32_t RSRenderServiceClient::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();

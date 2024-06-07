@@ -3971,5 +3971,11 @@ void SharedTransitionParam::InternalUnregisterSelf()
     }
 }
 
+// test word tools
+// surface
+// SURFACE
+// skia
+// SKIA
+
 } // namespace Rosen
 } // namespace OHOS

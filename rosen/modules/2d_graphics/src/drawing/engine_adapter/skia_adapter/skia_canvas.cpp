@@ -15,11 +15,7 @@
 
 #include "skia_canvas.h"
 
-#if defined(NEW_SKIA)
 #include "modules/svg/include/SkSVGDOM.h"
-#else
-#include "experimental/svg/model/SkSVGDOM.h"
-#endif
 
 #ifdef ACE_ENABLE_GPU
 #include "skia_gpu_context.h"
@@ -589,14 +585,21 @@ void SkiaCanvas::DrawImageNine(const Image* image, const RectI& center, const Re
 }
 
 void SkiaCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
-    FilterMode filter, const Brush* brush)
+    FilterMode filter)
 {
+    if (!skCanvas_) {
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
+        skiaPaint_.Reset();
+        return;
+    }
+
     auto skImageImpl = image->GetImpl<SkiaImage>();
     sk_sp<SkImage> img = nullptr;
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
             LOGD("img is null, return on line %{public}d", __LINE__);
+            skiaPaint_.Reset();
             return;
         }
     }
@@ -618,13 +621,16 @@ void SkiaCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, co
 
     SkFilterMode skFilterMode = static_cast<SkFilterMode>(filter);
 
-    std::unique_ptr<SkPaint> paint = nullptr;
-    if (brush != nullptr) {
-        paint = std::make_unique<SkPaint>();
-        SkiaPaint::BrushToSkPaint(*brush, *paint);
+    SortedPaints& paints = skiaPaint_.GetSortedPaints();
+    if (paints.count_ == 0) {
+        skCanvas_->drawImageLattice(img.get(), skLattice, *skDst, skFilterMode);
+        return;
     }
 
-    skCanvas_->drawImageLattice(img.get(), skLattice, *skDst, skFilterMode, paint.get());
+    for (int i = 0; i < paints.count_; i++) {
+        SkPaint* paint = paints.paints_[i];
+        skCanvas_->drawImageLattice(img.get(), skLattice, *skDst, skFilterMode, paint);
+    }
 }
 
 bool SkiaCanvas::OpCalculateBefore(const Matrix& matrix)
@@ -971,9 +977,9 @@ void SkiaCanvas::ClipIRect(const RectI& rect, ClipOp op)
         LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
-    const SkRect* clipRect = reinterpret_cast<const SkRect*>(&rect);
+    SkRect clipRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
     SkClipOp clipOp = static_cast<SkClipOp>(op);
-    skCanvas_->clipRect(*clipRect, clipOp, false);
+    skCanvas_->clipRect(clipRect, clipOp, false);
 }
 
 void SkiaCanvas::ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias)

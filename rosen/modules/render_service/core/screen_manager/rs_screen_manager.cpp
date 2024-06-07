@@ -423,8 +423,7 @@ void RSScreenManager::CleanAndReinit()
 bool RSScreenManager::TrySimpleProcessHotPlugEvents()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (pendingHotPlugEvents_.empty() && connectedIds_.empty()) {
-        isHwcDead_ = false;
+    if (!isHwcDead_ && pendingHotPlugEvents_.empty() && connectedIds_.empty()) {
         mipiCheckInFirstHotPlugEvent_ = true;
         return true;
     }
@@ -865,15 +864,16 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     return newId;
 }
 
-void RSScreenManager::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId> blackList)
+int32_t RSScreenManager::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId> blackList)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (screens_.find(id) == screens_.end() || screens_[id] == nullptr) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
-        return;
+        return SCREEN_NOT_FOUND;
     }
     std::unordered_set<NodeId> screenBlackList(blackList.begin(), blackList.end());
     screens_.at(id)->SetBlackList(screenBlackList);
+    return SUCCESS;
 }
 
 std::unordered_set<NodeId> RSScreenManager::GetVirtualScreenBlackList(ScreenId id)
@@ -947,6 +947,10 @@ void RSScreenManager::RemoveVirtualScreenLocked(ScreenId id)
     RS_LOGD("RSScreenManager %{public}s: remove virtual screen(id %{public}" PRIu64 ").", __func__, id);
 
     ReuseVirtualScreenIdLocked(id);
+
+    if (disableRenderControlScreens_.find(id) != disableRenderControlScreens_.end()) {
+        disableRenderControlScreens_.erase(id);
+    }
 }
 
 void RSScreenManager::SetScreenActiveMode(ScreenId id, uint32_t modeId)
@@ -1721,6 +1725,19 @@ bool RSScreenManager::IsScreenPowerOff(ScreenId id) const
     }
     return screenPowerStatus_.at(id) == GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_SUSPEND ||
         screenPowerStatus_.at(id) == GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_OFF;
+}
+
+void RSScreenManager::DisablePowerOffRenderControl(ScreenId id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    RS_LOGD("RSScreenManager Add Screen_%{public}" PRIu64 " for disable power-off render control.", id);
+    disableRenderControlScreens_.insert(id);
+}
+
+int RSScreenManager::GetDisableRenderControlScreensCount() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return disableRenderControlScreens_.size();
 }
 } // namespace impl
 

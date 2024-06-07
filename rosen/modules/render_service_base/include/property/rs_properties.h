@@ -213,17 +213,25 @@ public:
     void SetBorderColor(Vector4<Color> color);
     void SetBorderWidth(Vector4f width);
     void SetBorderStyle(Vector4<uint32_t> style);
+    void SetBorderDashWidth(const Vector4f& dashWidth);
+    void SetBorderDashGap(const Vector4f& dashGap);
     Vector4<Color> GetBorderColor() const;
     Vector4f GetBorderWidth() const;
     Vector4<uint32_t> GetBorderStyle() const;
+    Vector4f GetBorderDashWidth() const;
+    Vector4f GetBorderDashGap() const;
     const std::shared_ptr<RSBorder>& GetBorder() const;
     void SetOutlineColor(Vector4<Color> color);
     void SetOutlineWidth(Vector4f width);
     void SetOutlineStyle(Vector4<uint32_t> style);
+    void SetOutlineDashWidth(const Vector4f& dashWidth);
+    void SetOutlineDashGap(const Vector4f& dashGap);
     void SetOutlineRadius(Vector4f radius);
     Vector4<Color> GetOutlineColor() const;
     Vector4f GetOutlineWidth() const;
     Vector4<uint32_t> GetOutlineStyle() const;
+    Vector4f GetOutlineDashWidth() const;
+    Vector4f GetOutlineDashGap() const;
     Vector4f GetOutlineRadius() const;
     const std::shared_ptr<RSBorder>& GetOutline() const;
     bool GetBorderColorIsTransparent() const;
@@ -231,6 +239,10 @@ public:
     void SetForegroundEffectRadius(const float foregroundEffectRadius);
     float GetForegroundEffectRadius() const;
     bool IsForegroundEffectRadiusValid() const;
+    void SetForegroundEffectDirty(bool dirty);
+    bool GetForegroundEffectDirty() const;
+    void SetForegroundFilterCache(const std::shared_ptr<RSFilter>& foregroundFilterCache);
+    const std::shared_ptr<RSFilter>& GetForegroundFilterCache() const;
 
     // filter properties
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
@@ -586,6 +598,8 @@ private:
     bool isSpherizeValid_ = false;
     float lightUpEffectDegree_ = 1.0f;
     std::shared_ptr<RSFilter> foregroundFilter_ = nullptr; // view content filter
+    std::shared_ptr<RSFilter> foregroundFilterCache_ = nullptr; // view content filter via cache
+    bool foregroundEffectDirty_ = false;
 
     // filter property
     float backgroundBlurRadius_ = 0.f;
@@ -657,6 +671,7 @@ private:
     std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;
     static const bool FilterCacheEnabled;
 #endif
+    static const bool IS_UNI_RENDER;
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
 

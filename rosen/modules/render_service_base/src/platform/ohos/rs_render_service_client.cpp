@@ -239,7 +239,7 @@ private:
 };
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
-    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
+    float scaleX, float scaleY, bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -265,7 +265,8 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     if (surfaceCaptureCbDirector_ == nullptr) {
         surfaceCaptureCbDirector_ = new SurfaceCaptureCallbackDirector(this);
     }
-    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_, scaleX, scaleY, surfaceCaptureType, isSync);
+    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_, scaleX, scaleY,
+        useDma, surfaceCaptureType, isSync);
     return true;
 }
 
@@ -327,14 +328,14 @@ ScreenId RSRenderServiceClient::CreateVirtualScreen(
     return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
 }
 
-void RSRenderServiceClient::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
+int32_t RSRenderServiceClient::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
-        return;
+        return RENDER_SERVICE_NULL;
     }
 
-    renderService->SetVirtualScreenBlackList(id, blackListVector);
+    return renderService->SetVirtualScreenBlackList(id, blackListVector);
 }
 
 int32_t RSRenderServiceClient::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
@@ -525,6 +526,16 @@ void RSRenderServiceClient::MarkPowerOffNeedProcessOneFrame()
     }
 
     renderService->MarkPowerOffNeedProcessOneFrame();
+}
+
+void RSRenderServiceClient::DisablePowerOffRenderControl(ScreenId id)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return;
+    }
+
+    renderService->DisablePowerOffRenderControl(id);
 }
 
 void RSRenderServiceClient::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
@@ -1244,6 +1255,14 @@ void RSRenderServiceClient::SetCacheEnabledForRotation(bool isEnabled)
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
         renderService->SetCacheEnabledForRotation(isEnabled);
+    }
+}
+
+void RSRenderServiceClient::ChangeSyncCount(int32_t hostPid)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->ChangeSyncCount(hostPid);
     }
 }
 

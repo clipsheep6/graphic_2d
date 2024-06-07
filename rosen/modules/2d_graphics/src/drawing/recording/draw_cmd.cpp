@@ -803,15 +803,12 @@ REGISTER_UNMARSHALLING_FUNC(DrawImageLattice, DrawOpItem::IMAGE_LATTICE_OPITEM, 
 
 DrawImageLatticeOpItem::DrawImageLatticeOpItem(
     const DrawCmdList& cmdList, DrawImageLatticeOpItem::ConstructorHandle* handle)
-    : DrawOpItem(IMAGE_LATTICE_OPITEM), lattice_(handle->lattice), dst_(handle->dst), filter_(handle->filter),
-    hasBrush_(handle->hasBrush)
+    : DrawWithPaintOpItem(cmdList, handle->paintHandle, IMAGE_LATTICE_OPITEM), lattice_(handle->lattice),
+    dst_(handle->dst), filter_(handle->filter)
 {
     image_ = CmdListHelper::GetImageFromCmdList(cmdList, handle->image);
     if (DrawOpItem::holdDrawingImagefunc_) {
         DrawOpItem::holdDrawingImagefunc_(image_);
-    }
-    if (hasBrush_) {
-        BrushHandleToBrush(handle->brushHandle, cmdList, brush_);
     }
 }
 
@@ -823,13 +820,10 @@ std::shared_ptr<DrawOpItem> DrawImageLatticeOpItem::Unmarshalling(const DrawCmdL
 
 void DrawImageLatticeOpItem::Marshalling(DrawCmdList& cmdList)
 {
+    PaintHandle paintHandle;
+    GenerateHandleFromPaint(cmdList, paint_, paintHandle);
     auto imageHandle = CmdListHelper::AddImageToCmdList(cmdList, *image_);
-    BrushHandle brushHandle;
-    if (hasBrush_) {
-        BrushToBrushHandle(brush_, cmdList, brushHandle);
-    }
-
-    cmdList.AddOp<ConstructorHandle>(imageHandle, lattice_, dst_, filter_, brushHandle, hasBrush_);
+    cmdList.AddOp<ConstructorHandle>(imageHandle, lattice_, dst_, filter_, paintHandle);
 }
 
 void DrawImageLatticeOpItem::Playback(Canvas* canvas, const Rect* rect)
@@ -838,8 +832,8 @@ void DrawImageLatticeOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGD("DrawImageNineOpItem image is null");
         return;
     }
-    Brush* brushPtr = hasBrush_ ? &brush_ : nullptr;
-    canvas->DrawImageLattice(image_.get(), lattice_, dst_, filter_, brushPtr);
+    canvas->AttachPaint(paint_);
+    canvas->DrawImageLattice(image_.get(), lattice_, dst_, filter_);
 }
 
 /* DrawAtlasOpItem */
@@ -1065,13 +1059,7 @@ void SimplifyPaint(ColorQuad colorQuad, Paint& paint)
 DrawTextBlobOpItem::DrawTextBlobOpItem(const DrawCmdList& cmdList, DrawTextBlobOpItem::ConstructorHandle* handle)
     : DrawWithPaintOpItem(cmdList, handle->paintHandle, TEXT_BLOB_OPITEM), x_(handle->x), y_(handle->y)
 {
-    std::shared_ptr<Drawing::Typeface> typeface = nullptr;
-    if (DrawOpItem::customTypefaceQueryfunc_) {
-        typeface = DrawOpItem::customTypefaceQueryfunc_(handle->globalUniqueId);
-    }
-
-    TextBlob::Context ctx {typeface, false};
-    textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle->textBlob, &ctx);
+    textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle->textBlob, handle->globalUniqueId);
 }
 
 std::shared_ptr<DrawOpItem> DrawTextBlobOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
@@ -1228,7 +1216,7 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
 
 bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(DrawCmdList& cmdList, Canvas* canvas)
 {
-    std::shared_ptr<TextBlob> textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, textBlob);
+    std::shared_ptr<TextBlob> textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, textBlob, globalUniqueId);
     if (!textBlob_) {
         LOGD("textBlob nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return false;

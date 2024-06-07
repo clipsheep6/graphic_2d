@@ -165,6 +165,7 @@ constexpr const char* WALLPAPER_VIEW = "WallpaperView";
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 constexpr const char* MEM_MGR = "MemMgr";
 constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
+const std::string PERF_FOR_BLUR_IF_NEEDED_TASK_NAME = "PerfForBlurIfNeeded";
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
@@ -369,10 +370,8 @@ void RSMainThread::Init()
         SKResourceManager::Instance().ReleaseResource();
         // release node memory
         if (RSRenderNodeGC::Instance().GetNodeSize() > 0) {
-            RSBackgroundThread::Instance().PostTask([] () {
-                RS_TRACE_NAME("ReleaseRSRenderNodeMemory");
-                RSRenderNodeGC::Instance().ReleaseNodeMemory();
-            });
+            RS_TRACE_NAME("ReleaseRSRenderNodeMemory");
+            RSRenderNodeGC::Instance().ReleaseNodeMemory();
         }
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
         RSUploadResourceThread::Instance().OnRenderEnd();
@@ -515,11 +514,7 @@ void RSMainThread::Init()
             RSMainThread::Instance()->SetForceUpdateUniRenderFlag(forceUpdate);
             RSMainThread::Instance()->SetIdleTimerExpiredFlag(idleTimerExpired);
             RS_TRACE_NAME_FMT("DVSyncIsOn: %d", this->rsVSyncDistributor_->IsDVsyncOn());
-            if (forceUpdate) {
-                RSMainThread::Instance()->RequestNextVSync("ltpoForceUpdate");
-            } else {
-                RSMainThread::Instance()->RequestNextVSync();
-            }
+            RSMainThread::Instance()->RequestNextVSync("ltpoForceUpdate");
         });
     });
     frameRateMgr_->Init(rsVSyncController_, appVSyncController_, vsyncGenerator_);
@@ -1068,6 +1063,16 @@ void RSMainThread::ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& 
 {
     context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
     rsTransactionData->Process(*context_);
+}
+
+void RSMainThread::ProcessSubSyncTransactionCount(int32_t hostPid)
+{
+    auto count = subSyncTransactionCounts_[hostPid];
+    count--;
+    count == 0 ? subSyncTransactionCounts_.erase(hostPid) : subSyncTransactionCounts_[hostPid] = count;
+    if (syncTransactionCount_ == 0 && subSyncTransactionCounts_.empty()) {
+        ProcessAllSyncTransactionData();
+    }
 }
 
 void RSMainThread::ProcessSyncTransactionCount(std::unique_ptr<RSTransactionData>& rsTransactionData)
@@ -1842,7 +1847,6 @@ bool RSMainThread::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNod
     if (!RSMainThread::Instance()->WaitHardwareThreadTaskExecute()) {
         RS_LOGW("RSMainThread::DoDirectComposition: hardwareThread task has too many to Execute");
     }
-    processor->ProcessDisplaySurface(*displayNode);
     for (auto& surfaceNode : hardwareEnabledNodes_) {
         if (!surfaceNode->IsHardwareForcedDisabled()) {
             auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetStagingRenderParams().get());
@@ -1852,15 +1856,17 @@ bool RSMainThread::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNod
     auto rcdInfo = std::make_unique<RcdInfo>();
     DoScreenRcdTask(processor, rcdInfo, screenInfo);
     if (waitForRT) {
-        RSUniRenderThread::Instance().PostSyncTask([processor]() {
+        RSUniRenderThread::Instance().PostSyncTask([processor, displayNode]() {
             RS_TRACE_NAME("DoDirectComposition PostProcess");
             auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
             hgmCore.SetDirectCompositionFlag(true);
+            processor->ProcessDisplaySurface(*displayNode);
             processor->PostProcess();
         });
     } else {
         auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         hgmCore.SetDirectCompositionFlag(true);
+        processor->ProcessDisplaySurface(*displayNode);
         processor->PostProcess();
     }
 
@@ -3180,7 +3186,7 @@ void RSMainThread::ForceRefreshForUni()
 
 void RSMainThread::PerfForBlurIfNeeded()
 {
-    handler_->RemoveTask("PerfForBlurIfNeeded");
+    handler_->RemoveTask(PERF_FOR_BLUR_IF_NEEDED_TASK_NAME);
     static uint64_t prePerfTimestamp = 0;
     static int preBlurCnt = 0;
     static int cnt = 0;
@@ -3205,7 +3211,7 @@ void RSMainThread::PerfForBlurIfNeeded()
         }
     };
     // delay 100ms
-    handler_->PostTask(task, "PerfForBlurIfNeeded", 100);
+    handler_->PostTask(task, PERF_FOR_BLUR_IF_NEEDED_TASK_NAME, 100);
     int blurCnt = isUniRender_ ? RSPropertyDrawableUtils::GetAndResetBlurCnt() :
         RSPropertiesPainter::GetAndResetBlurCnt();
     // clamp blurCnt to 0~3.
@@ -3482,6 +3488,7 @@ void RSMainThread::UpdateUIFirstSwitch()
 {
     if (RSSystemProperties::GetUIFirstForceEnabled()) {
         isUiFirstOn_ = true;
+        RSUifirstManager::Instance().SetUiFirstSwitch(isUiFirstOn_);
         return;
     }
 

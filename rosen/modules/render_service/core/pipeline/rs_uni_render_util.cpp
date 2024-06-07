@@ -402,18 +402,11 @@ void RSUniRenderUtil::SrcRectScaleFit(BufferDrawParam& params, const sptr<Surfac
     }
     uint32_t srcWidth = static_cast<uint32_t>(params.srcRect.GetWidth());
     uint32_t srcHeight = static_cast<uint32_t>(params.srcRect.GetHeight());
-    uint32_t newWidth = static_cast<uint32_t>(params.srcRect.GetWidth());
-    uint32_t newHeight = static_cast<uint32_t>(params.srcRect.GetHeight());
+    uint32_t newWidth;
+    uint32_t newHeight;
     // Canvas is able to handle the situation when the window is out of screen, using bounds instead of dst.
     uint32_t boundsWidth = static_cast<uint32_t>(localBounds.GetWidth());
     uint32_t boundsHeight = static_cast<uint32_t>(localBounds.GetHeight());
-
-    // If transformType is not a multiple of 180, need to change the correspondence between width & height.
-    GraphicTransformType transformType = RSBaseRenderUtil::GetRotateTransform(surface->GetTransform());
-    if (transformType == GraphicTransformType::GRAPHIC_ROTATE_270 ||
-        transformType == GraphicTransformType::GRAPHIC_ROTATE_90) {
-        std::swap(boundsWidth, boundsHeight);
-    }
     if (boundsWidth == 0 || boundsHeight == 0) {
         return;
     }
@@ -539,7 +532,9 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     const RSProperties& property = node.GetRenderProperties();
 
     params.threadIndex = threadIndex;
-    params.useBilinearInterpolation = nodeParams->NeedBilinearInterpolation(); // TO-DO
+    if (isRenderThread) {
+        params.useBilinearInterpolation = nodeParams->NeedBilinearInterpolation(); // TO-DO
+    }
     params.useCPU = forceCPU;
     params.paint.SetAntiAlias(true);
     Drawing::Filter filter;

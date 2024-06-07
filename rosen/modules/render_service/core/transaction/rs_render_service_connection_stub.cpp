@@ -284,7 +284,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ScreenId id = data.ReadUint64();
             std::vector<NodeId> blackListVector;
             data.ReadUInt64Vector(&blackListVector);
-            SetVirtualScreenBlackList(id, blackListVector);
+            int32_t status = SetVirtualScreenBlackList(id, blackListVector);
+            reply.WriteInt32(status);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_SURFACE): {
@@ -497,6 +498,16 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             MarkPowerOffNeedProcessOneFrame();
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_RENDER_CONTROL_SCREEN): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            DisablePowerOffRenderControl(id);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -528,6 +539,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             float scaleX = data.ReadFloat();
             float scaleY = data.ReadFloat();
+            bool useDma = data.ReadBool();
             SurfaceCaptureType surfaceCaptureType = static_cast<SurfaceCaptureType>(data.ReadUint8());
 
             auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
@@ -537,7 +549,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest no permission to access TAKE_SURFACE_CAPTURE");
                 return ERR_INVALID_STATE;
             }
-            TakeSurfaceCapture(id, cb, scaleX, scaleY, surfaceCaptureType, isSync);
+            TakeSurfaceCapture(id, cb, scaleX, scaleY, useDma, surfaceCaptureType, isSync);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_APPLICATION_AGENT): {
@@ -1483,6 +1495,16 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto isEnabled = data.ReadBool();
             SetCacheEnabledForRotation(isEnabled);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CHANGE_SYNCHRONIZE_COUNT): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto hostPid = data.ReadInt32();
+            ChangeSyncCount(hostPid);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO) : {

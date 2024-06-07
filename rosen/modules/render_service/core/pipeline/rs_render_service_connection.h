@@ -98,7 +98,7 @@ private:
         int32_t flags = 0,
         std::vector<NodeId> filteredAppVector = {}) override;
 
-    void SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector) override;
+    int32_t SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector) override;
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
@@ -132,10 +132,12 @@ private:
 
     void MarkPowerOffNeedProcessOneFrame() override;
 
+    void DisablePowerOffRenderControl(ScreenId id) override;
+
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
-        SurfaceCaptureType surfaceCaptureType, bool isSync) override;
+        bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync) override;
 
     void TakeSurfaceCaptureForUIWithUni(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY, bool isSync);
@@ -254,6 +256,8 @@ private:
     void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt) override;
 
     void SetCacheEnabledForRotation(bool isEnabled) override;
+
+    void ChangeSyncCount(int32_t hostPid) override;
 
     std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo() override;
 

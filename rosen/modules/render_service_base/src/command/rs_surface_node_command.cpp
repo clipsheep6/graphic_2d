@@ -55,6 +55,15 @@ void SurfaceNodeCommandHelper::CreateWithConfig(
     context.GetMutableNodeMap().RegisterRenderNode(node);
 }
 
+std::shared_ptr<RSSurfaceRenderNode> SurfaceNodeCommandHelper::CreateWithConfigInRS(
+    const RSSurfaceRenderNodeConfig& config, RSContext& context)
+{
+    auto node = std::shared_ptr<RSSurfaceRenderNode>(new RSSurfaceRenderNode(config,
+        context.weak_from_this()), RSRenderNodeGC::NodeDestructor);
+    context.GetMutableNodeMap().RegisterRenderNode(node);
+    return node;
+}
+
 void SurfaceNodeCommandHelper::SetContextMatrix(
     RSContext& context, NodeId id, const std::optional<Drawing::Matrix>& matrix)
 {
@@ -284,6 +293,13 @@ void SurfaceNodeCommandHelper::SetHDRPresent(RSContext& context, NodeId nodeId, 
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
         node->SetHDRPresent(ancoForceDoDirect);
+    }
+}
+
+void SurfaceNodeCommandHelper::SetSkipDraw(RSContext& context, NodeId nodeId, bool skip)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
+        node->SetSkipDraw(skip);
     }
 }
 } // namespace Rosen

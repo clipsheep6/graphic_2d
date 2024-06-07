@@ -70,7 +70,7 @@ public:
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
-    void SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector) override;
+    int32_t SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector) override;
 
 #ifdef RS_ENABLE_VK
     bool Set2DRenderCtrl(bool enable) override;
@@ -101,12 +101,14 @@ public:
 
     void MarkPowerOffNeedProcessOneFrame() override;
 
+    void DisablePowerOffRenderControl(ScreenId id) override;
+
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) override;
 
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
-        SurfaceCaptureType surfaceCaptureType, bool isSync) override;
+        bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync) override;
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) override;
 
@@ -220,6 +222,8 @@ public:
     void SetCacheEnabledForRotation(bool isEnabled) override;
 
     void SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback) override;
+
+    void ChangeSyncCount(int32_t hostPid) override;
 
     void RunOnRemoteDiedCallback() override;
 

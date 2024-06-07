@@ -71,7 +71,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
 
     auto uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams().get();
-    if ((!uniParam || uniParam->IsOpDropped()) && QuickReject(canvas, params->GetLocalDrawRect())) {
+    if ((!uniParam || uniParam->IsOpDropped()) && GetOpDropped() && QuickReject(canvas, params->GetLocalDrawRect())) {
         return;
     }
 
@@ -85,8 +85,9 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     SetSurfaceClearFunc({ threadIdx, clearFunc }, threadId);
 
     auto& bounds = params->GetBounds();
+    auto surfaceParams = params->GetCanvasDrawingSurfaceParams();
     std::lock_guard<std::mutex> lockTask(taskMutex_);
-    if (!InitSurface(bounds.GetWidth(), bounds.GetHeight(), *paintFilterCanvas)) {
+    if (!InitSurface(surfaceParams.width, surfaceParams.height, *paintFilterCanvas)) {
         RS_LOGE("Failed to init surface!");
         return;
     }
@@ -152,12 +153,7 @@ void RSCanvasDrawingRenderNodeDrawable::DrawRenderContent(Drawing::Canvas& canva
     Drawing::Paint paint;
     paint.SetStyle(Drawing::Paint::PaintStyle::PAINT_FILL);
     canvas.AttachPaint(paint);
-    if (canvas.GetRecordingState()) {
-        auto cpuImage = image_->MakeRasterImage();
-        canvas.DrawImage(*cpuImage, 0.f, 0.f, samplingOptions);
-    } else {
-        canvas.DrawImage(*image_, 0.f, 0.f, samplingOptions);
-    }
+    canvas.DrawImage(*image_, 0.f, 0.f, samplingOptions);
     canvas.DetachPaint();
 }
 
@@ -168,6 +164,14 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
 void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
 {
+    {
+        // check params, if params is invalid, do not post the task
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        if (!surface_ || !canvas_) {
+            return;
+        }
+    }
+
     auto nodeId = nodeId_;
     auto ctx = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetContext();
     auto rect = GetRenderParams()->GetBounds();
@@ -191,14 +195,6 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         canvasDrawingParams->SetNeedProcess(false);
         canvasDrawingNode->SetDrawCmdListsVisited(true);
     };
-
-    {
-        // check params, if params is invalid, do not post the task
-        std::lock_guard<std::mutex> lockTask(taskMutex_);
-        if (!surface_ || !canvas_) {
-            return;
-        }
-    }
     RSTaskDispatcher::GetInstance().PostTask(threadId_, task, false);
 }
 
@@ -434,10 +430,18 @@ void RSCanvasDrawingRenderNodeDrawable::ReleaseCaptureImage(std::shared_ptr<Draw
 void RSCanvasDrawingRenderNodeDrawable::DrawCaptureImage(RSPaintFilterCanvas& canvas)
 {
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    if (!image_ || !backendTexture_.IsValid()) {
+    if (!image_) {
+        OnDraw(canvas);
         return;
     }
     std::lock_guard<std::mutex> lock(imageMutex_);
+    if (image_ && !image_->IsTextureBacked()) {
+        canvas.DrawImage(*image_, 0, 0, Drawing::SamplingOptions());
+        return;
+    }
+    if (!backendTexture_.IsValid()) {
+        return;
+    }
     if (captureImage_ && captureImage_->IsValid(canvas.GetGPUContext().get())) {
         canvas.DrawImage(*captureImage_, 0, 0, Drawing::SamplingOptions());
         return;
@@ -461,10 +465,10 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurface(int width, int height, RSPa
         Drawing::ImageInfo { width, height, Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
 
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    auto gpuContext = canvas.GetGPUContext();
+    auto gpuContext = canvas.GetRecordingState() ? nullptr : canvas.GetGPUContext();
     isGpuSurface_ = true;
     if (gpuContext == nullptr) {
-        RS_LOGD("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
+        RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
         isGpuSurface_ = false;
         surface_ = Drawing::Surface::MakeRaster(info);
     } else {

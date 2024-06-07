@@ -836,7 +836,7 @@ bool RSSystemProperties::GetBlurExtraFilterEnabled()
 bool RSSystemProperties::GetPurgeBetweenFramesEnabled()
 {
     static bool purgeResourcesEveryEnabled =
-        (std::atoi(system::GetParameter("persist.sys.graphic.mem.purge_between_frames_enabled", "0").c_str()) != 0);
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.purge_between_frames_enabled", "1").c_str()) != 0);
     return purgeResourcesEveryEnabled;
 }
 
@@ -992,7 +992,7 @@ bool RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
 
 bool RSSystemProperties::GetSkipDisplayIfScreenOffEnabled()
 {
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.graphic.screenoffskipdisplayenabled", "1");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.graphic.screenoffskipdisplayenabled", "0");
     int changed = 0;
     const char *num = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(num, 1) != 0;

@@ -70,7 +70,7 @@ public:
         int flags = 0,
         std::vector<uint64_t> filteredAppVector = {}) = 0;
 
-    virtual void SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector = {}) = 0;
+    virtual int32_t SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector = {}) = 0;
 
     virtual std::unordered_set<uint64_t> GetVirtualScreenBlackList(ScreenId id) = 0;
 
@@ -194,6 +194,10 @@ public:
 
     virtual bool IsScreenPowerOff(ScreenId id) const = 0;
 
+    virtual void DisablePowerOffRenderControl(ScreenId id) = 0;
+    
+    virtual int GetDisableRenderControlScreensCount() const = 0;
+
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     virtual float GetScreenBrightnessNits(ScreenId id) = 0;
 #endif
@@ -252,7 +256,7 @@ public:
         int32_t flags,
         std::vector<uint64_t> filteredAppVector) override;
 
-    void SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector) override;
+    int32_t SetVirtualScreenBlackList(ScreenId id, std::vector<uint64_t> blackListVector) override;
 
     std::unordered_set<uint64_t> GetVirtualScreenBlackList(ScreenId id) override;
 
@@ -381,6 +385,10 @@ public:
 
     bool IsScreenPowerOff(ScreenId id) const override;
 
+    void DisablePowerOffRenderControl(ScreenId id) override;
+
+    int GetDisableRenderControlScreensCount() const override;
+
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     float GetScreenBrightnessNits(ScreenId id) override;
 #endif
@@ -469,6 +477,7 @@ private:
 
     uint64_t frameId_ = 0;
     std::atomic<bool> powerOffNeedProcessOneFrame_ = false;
+    std::unordered_set<ScreenId> disableRenderControlScreens_ = {};
 
 #ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     SensorUser user;

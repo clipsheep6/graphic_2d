@@ -81,9 +81,14 @@ ScreenId RSInterfaces::CreateVirtualScreen(
     return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
 }
 
-void RSInterfaces::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
+int32_t RSInterfaces::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
 {
-    renderServiceClient_->SetVirtualScreenBlackList(id, blackListVector);
+    return renderServiceClient_->SetVirtualScreenBlackList(id, blackListVector);
+}
+
+int32_t EnableSkipWindow(ScreenId id, bool enable)
+{
+    return 0;
 }
 
 int32_t RSInterfaces::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
@@ -110,29 +115,29 @@ int32_t RSInterfaces::SetScreenChangeCallback(const ScreenChangeCallback &callba
 }
 
 bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSSurfaceNode> node,
-    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY, bool useDma)
 {
     if (!node) {
         ROSEN_LOGW("node is nullptr");
         return false;
     }
-    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY);
+    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY, useDma);
 }
 
 bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
-    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY, bool useDma)
 {
     if (!node) {
         ROSEN_LOGW("node is nullptr");
         return false;
     }
-    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY);
+    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY, useDma);
 }
 
 bool RSInterfaces::TakeSurfaceCapture(NodeId id,
-    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY, bool useDma)
 {
-    return renderServiceClient_->TakeSurfaceCapture(id, callback, scaleX, scaleY);
+    return renderServiceClient_->TakeSurfaceCapture(id, callback, scaleX, scaleY, useDma);
 }
 
 #ifndef ROSEN_ARKUI_X
@@ -200,7 +205,7 @@ bool RSInterfaces::TakeSurfaceCaptureForUI(std::shared_ptr<RSNode> node,
             node->SetTakeSurfaceForUIFlag();
         }
         return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY,
-            SurfaceCaptureType::UICAPTURE, isSync);
+            false, SurfaceCaptureType::UICAPTURE, isSync);
     } else {
         return TakeSurfaceCaptureForUIWithoutUni(node->GetId(), callback, scaleX, scaleY);
     }
@@ -208,8 +213,25 @@ bool RSInterfaces::TakeSurfaceCaptureForUI(std::shared_ptr<RSNode> node,
 
 bool RSInterfaces::RegisterTypeface(std::shared_ptr<Drawing::Typeface>& typeface)
 {
+    static std::function<std::shared_ptr<Drawing::Typeface> (uint64_t)> customTypefaceQueryfunc =
+            [](uint64_t globalUniqueId) -> std::shared_ptr<Drawing::Typeface> {
+        return RSTypefaceCache::Instance().GetDrawingTypefaceCache(globalUniqueId);
+    };
+
+    static std::once_flag onceFlag;
+    std::call_once(onceFlag, []() {
+        Drawing::DrawOpItem::SetTypefaceQueryCallBack(customTypefaceQueryfunc);
+    });
+
     if (RSSystemProperties::GetUniRenderEnabled()) {
-        return renderServiceClient_->RegisterTypeface(typeface);
+        bool result = renderServiceClient_->RegisterTypeface(typeface);
+        if (result) {
+            RS_LOGD("RSInterfaces::RegisterTypeface: register typeface[%{public}u]",
+                    typeface->GetUniqueID());
+            uint64_t globalUniqueId = RSTypefaceCache::GenGlobalUniqueId(typeface->GetUniqueID());
+            RSTypefaceCache::Instance().CacheDrawingTypeface(globalUniqueId, typeface);
+        }
+        return result;
     }
 
     RS_LOGD("RSInterfaces::RegisterTypeface: register typeface[%{public}u]",
@@ -222,7 +244,12 @@ bool RSInterfaces::RegisterTypeface(std::shared_ptr<Drawing::Typeface>& typeface
 bool RSInterfaces::UnRegisterTypeface(std::shared_ptr<Drawing::Typeface>& typeface)
 {
     if (RSSystemProperties::GetUniRenderEnabled()) {
-        return renderServiceClient_->UnRegisterTypeface(typeface);
+        bool result = renderServiceClient_->UnRegisterTypeface(typeface);
+        if (result) {
+            uint64_t globalUniqueId = RSTypefaceCache::GenGlobalUniqueId(typeface->GetUniqueID());
+            RSTypefaceCache::Instance().RemoveDrawingTypefaceByGlobalUniqueId(globalUniqueId);
+        }
+        return result;
     }
 
     RS_LOGD("RSInterfaces::UnRegisterTypeface: unregister typeface[%{public}u]",
@@ -258,6 +285,12 @@ void RSInterfaces::MarkPowerOffNeedProcessOneFrame()
 {
     RS_LOGD("[UL_POWER]RSInterfaces::MarkPowerOffNeedProcessOneFrame.");
     renderServiceClient_->MarkPowerOffNeedProcessOneFrame();
+}
+
+void RSInterfaces::DisablePowerOffRenderControl(ScreenId id)
+{
+    RS_LOGD("RSInterfaces::DisablePowerOffRenderControl.");
+    renderServiceClient_->DisablePowerOffRenderControl(id);
 }
 
 void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
@@ -534,6 +567,11 @@ void RSInterfaces::ReportGameStateData(GameStateData info)
 void RSInterfaces::EnableCacheForRotation()
 {
     renderServiceClient_->SetCacheEnabledForRotation(true);
+}
+
+void RSInterfaces::ChangeSyncCount(int32_t hostPid)
+{
+    renderServiceClient_->ChangeSyncCount(hostPid);
 }
 
 void RSInterfaces::NotifyLightFactorStatus(bool isSafe)

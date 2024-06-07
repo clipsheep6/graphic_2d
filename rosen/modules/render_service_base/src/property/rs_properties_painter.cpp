@@ -27,6 +27,7 @@
 #include "render/rs_blur_filter.h"
 #include "render/rs_drawing_filter.h"
 #include "render/rs_foreground_effect_filter.h"
+#include "render/rs_kawase_blur_shader_filter.h"
 #include "render/rs_linear_gradient_blur_shader_filter.h"
 #include "render/rs_skia_filter.h"
 #include "render/rs_magnifier_shader_filter.h"
@@ -655,7 +656,21 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto surface = canvas.GetSurface();
     if (surface == nullptr) {
         ROSEN_LOGD("RSPropertiesPainter::DrawFilter surface null");
-        Drawing::Brush brush = filter->GetBrush();
+        Drawing::Brush brush;
+        brush.SetAntiAlias(true);
+        Drawing::Filter filterForBrush;
+        auto imageFilter = filter->GetImageFilter();
+        std::shared_ptr<RSShaderFilter> kawaseShaderFilter =
+            filter->GetShaderFilterWithType(RSShaderFilter::KAWASE);
+        if (kawaseShaderFilter != nullptr) {
+            auto tmpFilter = std::static_pointer_cast<RSKawaseBlurShaderFilter>(kawaseShaderFilter);
+            auto radius = tmpFilter->GetRadius();
+            std::shared_ptr<Drawing::ImageFilter> blurFilter = Drawing::ImageFilter::CreateBlurImageFilter(
+                radius, radius, Drawing::TileMode::CLAMP, nullptr);
+            imageFilter = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter, blurFilter);
+        }
+        filterForBrush.SetImageFilter(imageFilter);
+        brush.SetFilter(filterForBrush);
         Drawing::SaveLayerOps slr(nullptr, &brush, Drawing::SaveLayerOps::Flags::INIT_WITH_PREVIOUS);
         canvas.SaveLayer(slr);
         filter->PostProcess(canvas);
@@ -934,6 +949,27 @@ void RSPropertiesPainter::GetPixelStretchDirtyRect(RectI& dirtyPixelStretch,
     dirtyPixelStretch.top_ = std::floor(drawingRect.GetTop());
     dirtyPixelStretch.width_ = std::ceil(drawingRect.GetWidth()) + PARAM_DOUBLE;
     dirtyPixelStretch.height_ = std::ceil(drawingRect.GetHeight()) + PARAM_DOUBLE;
+}
+
+void RSPropertiesPainter::GetForegroundEffectDirtyRect(RectI& dirtyForegroundEffect,
+    const RSProperties& properties, const bool isAbsCoordinate)
+{
+    auto& foregroundFilter = properties.GetForegroundFilterCache();
+    if (!foregroundFilter || foregroundFilter->GetFilterType() != RSFilter::FOREGROUND_EFFECT) {
+        return;
+    }
+    float dirtyExtension =
+        std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
+    auto boundsRect = properties.GetBoundsRect();
+    auto scaledBounds = boundsRect.MakeOutset(dirtyExtension);
+    auto& geoPtr = properties.GetBoundsGeometry();
+    Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
+    auto drawingRect = Rect2DrawingRect(scaledBounds);
+    matrix.MapRect(drawingRect, drawingRect);
+    dirtyForegroundEffect.left_ = std::floor(drawingRect.GetLeft());
+    dirtyForegroundEffect.top_ = std::floor(drawingRect.GetTop());
+    dirtyForegroundEffect.width_ = std::ceil(drawingRect.GetWidth()) + PARAM_DOUBLE;
+    dirtyForegroundEffect.height_ = std::ceil(drawingRect.GetHeight()) + PARAM_DOUBLE;
 }
 
 void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -1914,7 +1950,7 @@ std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeDynamicDimShader
         {
             vec3 hsv = rgb2hsv(imageShader.eval(coord).rgb);
             float value = max(0.8, dynamicDimDeg); // 0.8 is min saturation ratio.
-            hsv.y = hsv.y * value;
+            hsv.y = hsv.y * (1.75 - value * 0.75); // saturation value [1.0 , 1.15].
             hsv.z = min(hsv.z * dynamicDimDeg, 1.0);
             return vec4(hsv2rgb(hsv), 1.0);
         }

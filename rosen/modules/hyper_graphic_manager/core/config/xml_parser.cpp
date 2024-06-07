@@ -18,9 +18,6 @@
 #include "config_policy_utils.h"
 
 namespace OHOS::Rosen {
-namespace {
-    constexpr uint32_t MAX_BUFFER_LENGTH = 10;
-}
 int32_t XMLParser::LoadConfiguration(const char* fileDir)
 {
     HGM_LOGI("XMLParser opening xml file");
@@ -219,7 +216,6 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         auto drawMin = ExtractPropertyValue("drawMin", *currNode);
         auto drawMax = ExtractPropertyValue("drawMax", *currNode);
         auto down = ExtractPropertyValue("down", *currNode);
-        auto idleMode = ExtractPropertyValue("idleMode", *currNode);
         if (!IsNumber(min) || !IsNumber(max) || !IsNumber(dynamicMode)) {
             return HGM_ERROR;
         }
@@ -232,7 +228,6 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         strategy.drawMin = IsNumber(drawMin) ? std::stoi(drawMin) : 0;
         strategy.drawMax = IsNumber(drawMax) ? std::stoi(drawMax) : 0;
         strategy.down = IsNumber(down) ? std::stoi(down) : strategy.max;
-        strategy.idleMode = IsNumber(idleMode) ? std::stoi(idleMode) : 0;
         ParseAppBufferStrategyList(*currNode, strategy);
         mParsedData_->strategyConfigs_[name] = strategy;
         HGM_LOGI("HgmXMLParser ParseStrategyConfig name=%{public}s min=%{public}d drawMin=%{public}d",
@@ -257,7 +252,6 @@ int32_t XMLParser::ParseAppBufferList(xmlNode &node)
         if (currNode->type != XML_ELEMENT_NODE) {
             continue;
         }
-
         auto name = ExtractPropertyValue("name", *currNode);   
         appBufferList_.push_back(name);
     }

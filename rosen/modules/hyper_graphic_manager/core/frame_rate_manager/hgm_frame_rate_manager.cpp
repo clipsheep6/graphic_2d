@@ -232,7 +232,6 @@ uin32_t HgmFrameRateManager::GetSurfaceUpExpectFps()
     uint32_t fps = FPS_120HZ;
 
     auto &buffer = idleDetector_.GetSurfaceBuffer();
-
     if (buffer.empty() || appBufferList_.empty() || buffer.size() > appBufferList_.size()) {
         return fps;
     }

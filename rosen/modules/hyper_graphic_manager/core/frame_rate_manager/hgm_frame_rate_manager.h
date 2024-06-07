@@ -236,8 +236,6 @@ private:
     bool isNeedUpdateAppOffset_ = false;
     int32_t schedulePreferredFps_ = 60;
     int32_t schedulePreferredFpsChange_ = false;
-    int64_t currIdleMode_ = IdleModeType::IDLE_ALL;
-    // <bufferName, fps>
     std::vector<std::pair<std::string, uint32_t>> appBufferList_;
     std::vector<std::string> appBufferBlackList_;
 };

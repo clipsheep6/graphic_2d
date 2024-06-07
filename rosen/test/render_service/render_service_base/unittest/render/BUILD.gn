@@ -76,6 +76,7 @@ ohos_unittest("RSRenderServiceBaseRenderTest") {
   ]
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "init:libbegetutil",
     "skia:skia_canvaskit",
   ]

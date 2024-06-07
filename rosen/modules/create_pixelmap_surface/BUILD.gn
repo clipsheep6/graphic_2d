@@ -46,6 +46,8 @@ ohos_source_set("create_pixelmap_surface_src") {
     "$graphic_2d_root/utils/sync_fence:sync_fence",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   subsystem_name = "graphic"
   part_name = "graphic_2d"
 }

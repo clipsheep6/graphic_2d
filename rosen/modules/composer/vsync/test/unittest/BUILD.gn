@@ -150,6 +150,7 @@ ohos_static_library("vsync_test_common") {
   public_external_deps = [
     "c_utils:utils",
     "graphic_surface:surface",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "graphic"

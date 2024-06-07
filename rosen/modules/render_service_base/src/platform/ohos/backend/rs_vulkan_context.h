@@ -186,6 +186,15 @@ public:
         return hbackendContext_.fQueue;
     }
 
+    enum SupportFeatures {
+        NONE_FEATURE     = 0x0,
+        OVERDRAW_FEATURE = 0x1,
+    };
+
+    uint32_t SupportFeatures() const
+    {
+        return deviceSupportFeatures_;
+    }
 friend class RsVulkanContext;
 private:
     std::mutex vkMutex_;
@@ -225,6 +234,7 @@ private:
     PFN_vkVoidFunction AcquireProc(const char* proc_name, const VkDevice& device) const;
     std::shared_ptr<Drawing::GPUContext> CreateNewDrawingContext(bool isProtected = false);
     std::shared_ptr<MemoryHandler> memHandler_;
+    uint32_t deviceSupportFeatures_;
 };
 
 class RsVulkanContext {

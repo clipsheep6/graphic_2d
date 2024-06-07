@@ -157,6 +157,7 @@ napi_value FilterNapi::CreateFilter(napi_env env, napi_callback_info info)
     napi_property_descriptor resultFuncs[] = {
         DECLARE_NAPI_FUNCTION("blur", SetBlur),
         DECLARE_NAPI_FUNCTION("pixelStretch", SetPixelStretch),
+        DECLARE_NAPI_FUNCTION("waterRipple", SetWaterRipple),
     };
     NAPI_CALL(env, napi_define_properties(env, object, sizeof(resultFuncs) / sizeof(resultFuncs[0]), resultFuncs));
     return object;
@@ -280,6 +281,96 @@ napi_value FilterNapi::SetPixelStretch(napi_env env, napi_callback_info info)
     }
     filterObj->AddPara(para);
 
+    return thisVar;
+}
+
+static bool GetRippleCenter(napi_env env, napi_value param, std::shared_ptr<WaterRipplePara>& para)
+{
+    napi_valuetype valueType = napi_undefined;
+    valueType = UIEffectNapiUtils::getType(env, param);
+    if (valueType == napi_undefined) {
+        return true;
+    }
+    uint32_t arraySize = 0;
+    if (!IsArrayForNapiValue(env, param, arraySize)) {
+        FILTER_LOG_E("GetRippleCenter get args fail, not array");
+        return false;
+    }
+    if (arraySize < NUM_2) {
+        FILTER_LOG_E("GetRippleCenter coordinates num less than 2");
+        return false;
+    }
+ 
+    Vector2f tmpRippleCenter_{ 0.f, 0.f };
+ 
+    for (size_t i = 0; i < NUM_2; i++) {
+        napi_value jsValue;
+        if ((napi_get_element(env, param, i, &jsValue)) != napi_ok) {
+            FILTER_LOG_E("GetRippleCenter get args fail");
+            return false;
+        }
+        double value = 0.0;
+        if (napi_get_value_double(env, jsValue, &value) == napi_ok) {
+            tmpRippleCenter_[i] = value;
+        } else {
+            FILTER_LOG_E("GetRippleCenter region coordinates not double");
+            return false;
+        }
+    }
+ 
+    para->SetRippleCenter(tmpRippleCenter_);
+    return true;
+}
+ 
+napi_value FilterNapi::SetWaterRipple(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    napi_status status;
+    napi_value thisVar = nullptr;
+    napi_value argValue[NUM_3] = {0};
+    size_t argCount = NUM_3;
+    UIEFFECT_JS_ARGS(env, info, status, argCount, argValue, thisVar);
+    UIEFFECT_NAPI_CHECK_RET_D(UIEFFECT_IS_OK(status), nullptr, FILTER_LOG_E("fail to napi_get_water_ripple_info"));
+ 
+    std::shared_ptr<WaterRipplePara> para = std::make_shared<WaterRipplePara>();
+ 
+    float progress = 0.0f;
+    float waveNum = 0.0f;
+ 
+    if (argCount != NUM_3) {
+        FILTER_LOG_E("Args number less than 3");
+    }
+    
+    if (UIEffectNapiUtils::getType(env, argValue[NUM_0]) == napi_number) {
+        double tmp = 0.0f;
+        if (UIEFFECT_IS_OK(napi_get_value_double(env, argValue[NUM_0], &tmp))) {
+            if (tmp >= 0) {
+                progress = static_cast<float>(tmp);
+            }
+        }
+    }
+    
+    if (UIEffectNapiUtils::getType(env, argValue[NUM_1]) == napi_number) {
+        double tmp = 0.0f;
+        if (UIEFFECT_IS_OK(napi_get_value_double(env, argValue[NUM_1], &tmp))) {
+            if (tmp >= 0) {
+                waveNum = static_cast<float>(tmp);
+            }
+        }
+    }
+    para->SetProgress(progress);
+    para->SetWaveNum(waveNum);
+    UIEFFECT_NAPI_CHECK_RET_D(GetRippleCenter(env, argValue[NUM_2], para),
+        nullptr, FILTER_LOG_E("fail to parse coordinates"));
+    Filter* filterObj = nullptr;
+    NAPI_CALL(env, napi_unwrap(env, thisVar, reinterpret_cast<void**>(&filterObj)));
+    if (filterObj == nullptr) {
+        FILTER_LOG_E("filterNapi is nullptr");
+        return thisVar;
+    }
+    filterObj->AddPara(para);
+ 
     return thisVar;
 }
 

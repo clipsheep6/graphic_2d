@@ -1301,6 +1301,17 @@ void RSNode::SetUIBackgroundFilter(const OHOS::Rosen::Filter* backgroundFilter)
             SetBackgroundBlurRadiusX(blurRadius);
             SetBackgroundBlurRadiusY(blurRadius);
         }
+        if (filterPara->GetParaType() == FilterPara::WATER_RIPPLE) {
+            auto waterRipplePara = std::static_pointer_cast<WaterRipplePara>(filterPara);
+            auto waveNum = waterRipplePara->GetWaveNum();
+            auto rippleCenter = waterRipplePara->GetRippleCenter();
+            auto progress = waterRipplePara->GetProgress();
+            RSWaterRipplePara rs_water_ripple_param = {
+                waveNum,
+                rippleCenter,
+            };
+            SetWaterRippleParams(rs_water_ripple_param, progress);
+        }
     }
 }
 
@@ -1633,6 +1644,14 @@ void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent, Drawing::Til
         stretchPercent);
     SetProperty<RSPixelStretchTileModeModifier, RSProperty<int>>(
         RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
+}
+
+void RSNode::SetWaterRippleParams(const RSWaterRipplePara& params, float progress)
+{
+    SetProperty<RSWaterRippleParamsModifier,
+        RSProperty<RSWaterRipplePara>>(RSModifierType::WATER_RIPPLE_PARAMS, params);
+    SetProperty<RSWaterRippleProgressModifier,
+        RSAnimatableProperty<float>>(RSModifierType::WATER_RIPPLE_PROGRESS, progress);
 }
 
 void RSNode::SetFreeze(bool isFreeze)

@@ -43,7 +43,7 @@ public:
     struct TouchInfo {
         std::string pkgName;
         TouchState touchState;
-        uin32_t expectFps;
+        uin32_t upExpectFps;
     };
 
     HgmErrCode HandlePkgsEvent(const std::vector<std::string>& pkgs);

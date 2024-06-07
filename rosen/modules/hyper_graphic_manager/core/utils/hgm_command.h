@@ -104,6 +104,9 @@ public:
         int32_t drawMax;
         int32_t down;
         int32_t idleMode;
+        // <bufferName, fps>
+        std::vector<std::pair<std::string, uint32_t>> appBufferList;
+        std::vector<std::string> appBufferBlackList;
     };
     // <"1", StrategyConfig>
     using StrategyConfigMap = std::unordered_map<std::string, StrategyConfig>;
@@ -135,9 +138,6 @@ public:
         std::string multiAppStrategyName;
         // <appType, strategyName>
         std::unordered_map<int32_t, std::string> appTypes;
-        // <bufferName, fps>
-        std::vector<std::pair<std::string, uint32_t>> appBufferList;
-        std::vector<std::string> appBufferBlackList;
         SceneConfigMap sceneList;
         // <SCENE_APP_START_ANIMATION, placeholder>
         std::unordered_map<std::string, std::string> gameSceneList;

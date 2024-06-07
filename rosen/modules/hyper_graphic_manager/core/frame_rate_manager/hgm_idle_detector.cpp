@@ -49,7 +49,7 @@ bool HgmIdleDetector::GetSurFaceIdleState(uint64_t timestamp)
     if (frameTimeMap_.empty()) {
         return idle;
     }
-    std::lock_guard<std::mutex> lock(frameTimeMapMutex_);
+    std::lock_guard<std::mutex> lock(frameTimeMapMutex_); 
     for (auto it = frameTimeMap_.begin(); it != frameTimeMap_.end();) {
         if ((timestamp - it->second) > BUFFER_IDLE_TIME_OUT) {
             it = frameTimeMap_.erase(it);

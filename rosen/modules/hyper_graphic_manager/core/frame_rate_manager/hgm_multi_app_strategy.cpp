@@ -73,7 +73,7 @@ void HgmMultiAppStrategy::HandleTouchInfo(TouchInfo& touchInfo)
 {
     RS_TRACE_NAME_FMT("[HandleTouchInfo] pkgName:%s, touchState:%d", touchInfo.pkgName.c_str(), touchInfo.touchState);
     HGM_LOGD("touch info update, pkgName:%{public}s, touchState:%{public}d", touchInfo.pkgName.c_str(), touchInfo.touchState);
-    touchInfo_ = { touchInfo.pkgName, touchInfo.touchState, touchInfo.expectFps };
+    touchInfo_ = { touchInfo.pkgName, touchInfo.touchState, touchInfo.upExpectFps };
     if (touchInfo.pkgName == "" && !pkgs_.empty()) {
         auto [focusPkgName, pid, appType] = AnalyzePkgParam(pkgs_.front());
         touchInfo_.pakName = focusPkgName;
@@ -392,13 +392,13 @@ void HgmMultiAppStrategy::UpdateStrategyByTouch(
 
         auto touchInfo = std::move(uniqueTouchInfo_);
         if (touchInfo->touchState == TouchState::DOWN_STATE) {
-            strategy.min = OLED_120_HZ;
-            strategy.max = OLED_120_HZ;
-        } else if (touchInfo->touchState = TouchState::UP_STATE && touchInfo->expectFps > 0) {
-            RS_TRACE_NAME_FMT("[UpdateStrategyByTouch] state:%d, expectFps:%d force update",
-                touchInfo->touchState, touchInfo->expectFps);
-            strategy.min = touchInfo->expectFps;
-            strategy.max = touchInfo->expectFps;
+            strategy.min = settingStrategy.down;
+            strategy.max = settingStrategy.down;
+        } else if (touchInfo->touchState = TouchState::UP_STATE && touchInfo->upExpectFps > 0) {
+            RS_TRACE_NAME_FMT("[UpdateStrategyByTouch] state:%d, upExpectFps:%d force update",
+                touchInfo->touchState, touchInfo->upExpectFps);
+            strategy.min = touchInfo->upExpectFps;
+            strategy.max = touchInfo->upExpectFps;
         }
     } else {
         if (pkgName != uniqueTouchInfo_->pakName) {

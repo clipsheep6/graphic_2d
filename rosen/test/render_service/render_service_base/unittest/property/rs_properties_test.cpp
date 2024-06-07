@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,6 +80,9 @@ HWTEST_F(RSPropertiesTest, SetBgImageInnerRect001, TestSize.Level1)
     RSProperties properties;
     properties.SetBgImageInnerRect(rect);
     EXPECT_EQ(properties.GetBgImageInnerRect(), rect);
+
+    properties.SetBgImageInnerRect(rect);
+    EXPECT_EQ(properties.contentDirty_, true);
 }
 
 /**
@@ -240,6 +243,11 @@ HWTEST_F(RSPropertiesTest, SetShadowRadius001, TestSize.Level1)
     properties.SetShadowRadius(radius);
     radius = 1.0f;
     properties.SetShadowRadius(radius);
+
+    properties.shadow_->elevation_ = -1.f;
+    radius = -1.0f;
+    properties.SetShadowRadius(radius);
+    EXPECT_FALSE(properties.shadow_->IsValid());
 }
 
 /**
@@ -287,6 +295,10 @@ HWTEST_F(RSPropertiesTest, SetClipBounds001, TestSize.Level1)
     ASSERT_TRUE(properties.GetClipBounds() == path);
     properties.SetClipBounds(path);
     ASSERT_TRUE(properties.GetClipBounds() == path);
+
+    path = nullptr;
+    properties.SetClipBounds(path);
+    EXPECT_TRUE(path == nullptr);
 }
 
 /**
@@ -302,6 +314,9 @@ HWTEST_F(RSPropertiesTest, SetClipToBounds001, TestSize.Level1)
     ASSERT_TRUE(properties.GetClipToBounds() == true);
     properties.SetClipToBounds(true);
     ASSERT_TRUE(properties.GetClipToBounds() == true);
+
+    properties.SetClipToBounds(false);
+    EXPECT_TRUE(properties.geoDirty_);
 }
 
 /**
@@ -380,6 +395,9 @@ HWTEST_F(RSPropertiesTest, CreateFilterCacheManagerIfNeed001, TestSize.Level1)
     properties.filter_ = std::make_shared<RSFilter>();
     properties.CreateFilterCacheManagerIfNeed();
     EXPECT_TRUE(properties.filter_ != nullptr);
+
+    properties.CreateFilterCacheManagerIfNeed();
+    EXPECT_TRUE(properties.filter_ != nullptr);
 }
 
 /**
@@ -453,6 +471,55 @@ HWTEST_F(RSPropertiesTest, OnApplyModifiers001, TestSize.Level1)
     properties.motionBlurPara_ = std::make_shared<MotionBlurParam>(1.f, scaleAnchor);
     properties.OnApplyModifiers();
     EXPECT_TRUE(properties.filter_ != nullptr);
+
+    properties.geoDirty_ = true;
+    properties.frameGeo_->SetX(INFINITY);
+    properties.boundsGeo_->SetX(-INFINITY);
+    properties.OnApplyModifiers();
+    EXPECT_TRUE(properties.clipToFrame_);
+
+    properties.frameGeo_->SetY(INFINITY);
+    properties.boundsGeo_->SetY(-INFINITY);
+    properties.OnApplyModifiers();
+    EXPECT_TRUE(!properties.clipToFrame_);
+}
+
+/**
+ * @tc.name: UpdateFilter001
+ * @tc.desc: test results of UpdateFilter
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, UpdateFilter001, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.shadow_ = std::make_optional<RSShadow>();
+    properties.shadow_->colorStrategy_ = SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_AVERAGE;
+    properties.UpdateFilter();
+    EXPECT_TRUE(properties.filterNeedUpdate_);
+
+    properties.foregroundEffectRadius_ = 0.1f;
+    properties.UpdateFilter();
+    EXPECT_TRUE(properties.foregroundFilter_);
+
+    properties.foregroundEffectRadius_ = -0.1f;
+    properties.isSpherizeValid_ = true;
+    properties.UpdateFilter();
+    EXPECT_TRUE(properties.foregroundFilter_);
+
+    properties.isSpherizeValid_ = false;
+    properties.shadow_->imageMask_ = true;
+    properties.UpdateFilter();
+    EXPECT_TRUE(properties.foregroundFilter_);
+
+    properties.shadow_->imageMask_ = false;
+    properties.UpdateFilter();
+    EXPECT_TRUE(!properties.foregroundFilter_);
+
+    Vector2f scaleAnchor = Vector2f(0.f, 0.f);
+    properties.motionBlurPara_ = std::make_shared<MotionBlurParam>(1.f, scaleAnchor);
+    properties.UpdateFilter();
+    EXPECT_TRUE(properties.foregroundFilter_);
 }
 
 /**
@@ -895,11 +962,31 @@ HWTEST_F(RSPropertiesTest, SetParticles001, TestSize.Level1)
 {
     RSProperties properties;
     RSRenderParticleVector particles;
-    auto particleParams = std::make_shared<ParticleRenderParams>();
-    std::shared_ptr<RSRenderParticle> newv = std::make_shared<RSRenderParticle>(particleParams);
-    properties.particles_.renderParticleVector_.push_back(newv);
     properties.SetParticles(particles);
     EXPECT_EQ(properties.particles_.renderParticleVector_.size(), 0);
+
+    auto particleParams = std::make_shared<ParticleRenderParams>();
+    std::shared_ptr<RSRenderParticle> newv = std::make_shared<RSRenderParticle>(particleParams);
+    particles.renderParticleVector_.push_back(newv);
+    properties.SetParticles(particles);
+    EXPECT_EQ(properties.particles_.GetParticleSize(), 1);
+}
+
+/**
+ * @tc.name: SetForegroundColor001
+ * @tc.desc: test results of SetForegroundColor
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, SetForegroundColor001, TestSize.Level1)
+{
+    RSProperties properties;
+    Color color;
+    properties.SetForegroundColor(color);
+    EXPECT_EQ(properties.contentDirty_, true);
+
+    properties.SetForegroundColor(color);
+    EXPECT_EQ(properties.contentDirty_, true);
 }
 
 /**
@@ -929,6 +1016,11 @@ HWTEST_F(RSPropertiesTest, GetBorderColorIsTransparent001, TestSize.Level1)
     properties.border_ = std::make_shared<RSBorder>();
     bool res = properties.GetBorderColorIsTransparent();
     EXPECT_NE(res, false);
+
+    Color color(255, 255, 255, 255);
+    properties.border_->colors_.push_back(color);
+    res = properties.GetBorderColorIsTransparent();
+    EXPECT_NE(res, true);
 
     properties.border_ = nullptr;
     res = properties.GetBorderColorIsTransparent();
@@ -1041,9 +1133,12 @@ void CheckDashParams(RSProperties& properties)
 {
     Vector4f zeroData(0.f, 0.f, 0.f, 0.f);
     Vector4f posData(1.f, 1.f, 1.f, 1.f);
+    properties.border_ = nullptr;
     properties.SetBorderDashWidth(zeroData);
+    properties.border_ = nullptr;
     properties.SetBorderDashGap(zeroData);
     properties.SetOutlineDashWidth(zeroData);
+    properties.outline_ = nullptr;
     properties.SetOutlineDashGap(zeroData);
 
     properties.SetBorderDashWidth(posData);
@@ -1128,6 +1223,77 @@ HWTEST_F(RSPropertiesTest, SetGet002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetBorderColor001
+ * @tc.desc: test results of SetBorderColor
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, SetBorderColor001, TestSize.Level1)
+{
+    RSProperties properties;
+    Color color(0, 0, 0, 0);
+    Vector4<Color> borderColor = {color, color, color, color};
+    properties.SetBorderColor(borderColor);
+    EXPECT_TRUE(properties.contentDirty_);
+}
+
+/**
+ * @tc.name: SetForegroundFilterCache001
+ * @tc.desc: test results of SetForegroundFilterCache
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, SetForegroundFilterCache001, TestSize.Level1)
+{
+    RSProperties properties;
+    std::shared_ptr<RSFilter> foregroundFilterCache;
+    properties.SetForegroundFilterCache(foregroundFilterCache);
+    EXPECT_TRUE(foregroundFilterCache == nullptr);
+
+    foregroundFilterCache = std::make_shared<RSFilter>();
+    properties.SetForegroundFilterCache(foregroundFilterCache);
+    EXPECT_TRUE(properties.isDrawn_);
+}
+
+/**
+ * @tc.name: GetFgBrightnessDescription001
+ * @tc.desc: test results of GetFgBrightnessDescription
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, GetFgBrightnessDescription001, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.fgBrightnessParams_ = std::nullopt;
+    properties.GetFgBrightnessDescription();
+    EXPECT_TRUE(properties.fgBrightnessParams_ == std::nullopt);
+
+    RSDynamicBrightnessPara value;
+    properties.fgBrightnessParams_ = value;
+    properties.GetFgBrightnessDescription();
+    EXPECT_TRUE(properties.fgBrightnessParams_ != std::nullopt);
+}
+
+/**
+ * @tc.name: GetBgBrightnessDescription001
+ * @tc.desc: test results of GetBgBrightnessDescription
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, GetBgBrightnessDescription001, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.bgBrightnessParams_ = std::nullopt;
+    properties.GetBgBrightnessDescription();
+    EXPECT_TRUE(properties.bgBrightnessParams_ == std::nullopt);
+
+    RSDynamicBrightnessPara value;
+    properties.bgBrightnessParams_ = value;
+    properties.GetBgBrightnessDescription();
+    EXPECT_TRUE(properties.bgBrightnessParams_ != std::nullopt);
+}
+
+/**
  * @tc.name: SetGet003
  * @tc.desc: test results of SetGet003
  * @tc.type:FUNC
@@ -1140,6 +1306,12 @@ HWTEST_F(RSPropertiesTest, SetGet003, TestSize.Level1)
     Vector4<Color> outLineColor = { color, color, color, color };
     properties.SetOutlineColor(outLineColor);
     EXPECT_EQ(properties.GetOutlineColor(), outLineColor);
+
+    Color colorNew(0, 0, 0);
+    Vector4<Color> outLineColorNew = { colorNew, colorNew, colorNew, colorNew };
+    properties.SetOutlineColor(outLineColorNew);
+    EXPECT_EQ(properties.GetOutlineColor(), outLineColorNew);
+
     Vector4f zeroWidth = { 0, 0, 0, 0 };
     Vector4f width = { 1.0, 1.0, 1.0, 1.0 };
     properties.SetOutlineWidth(zeroWidth);
@@ -1178,6 +1350,15 @@ HWTEST_F(RSPropertiesTest, SetEmitterUpdater001, TestSize.Level1)
     properties.backref_ = node;
     properties.SetEmitterUpdater(para);
     EXPECT_EQ(properties.emitterUpdater_.empty(), false);
+
+    auto renderNode = properties.backref_.lock();
+    PropertyId propertyId = 0;
+    AnimationId animationId = 0;
+    renderNode->animationManager_.particleAnimations_.insert({ propertyId, animationId });
+    auto renderAnimation = std::make_shared<RSRenderAnimation>();
+    renderNode->animationManager_.animations_.insert({ animationId, renderAnimation });
+    properties.SetEmitterUpdater(para);
+    EXPECT_EQ(renderNode->animationManager_.animations_.empty(), false);
 }
 
 /**
@@ -1343,6 +1524,14 @@ HWTEST_F(RSPropertiesTest, SetLinearGradientBlurPara001, TestSize.Level1)
     EXPECT_NE(properties.linearGradientBlurPara_, nullptr);
     EXPECT_EQ(properties.GetLinearGradientBlurPara(), para);
     properties.IfLinearGradientBlurInvalid();
+
+    para->blurRadius_ = 0.f;
+    properties.SetLinearGradientBlurPara(para);
+    EXPECT_NE(properties.linearGradientBlurPara_, nullptr);
+
+    para = nullptr;
+    properties.SetLinearGradientBlurPara(para);
+    EXPECT_EQ(properties.linearGradientBlurPara_, nullptr);
 }
 
 /**
@@ -1354,7 +1543,11 @@ HWTEST_F(RSPropertiesTest, SetLinearGradientBlurPara001, TestSize.Level1)
 HWTEST_F(RSPropertiesTest, SetDynamicLightUpRate001, TestSize.Level1)
 {
     RSProperties properties;
-    std::optional<float> rate = std::optional<float>(1.f);
+    std::optional<float> rate;
+    properties.SetDynamicLightUpRate(rate);
+    EXPECT_TRUE(!rate.has_value());
+
+    rate = std::optional<float>(1.f);
     properties.SetDynamicLightUpRate(rate);
     EXPECT_EQ(properties.filterNeedUpdate_, true);
     ASSERT_TRUE(properties.GetDynamicLightUpRate().has_value());
@@ -1371,7 +1564,11 @@ HWTEST_F(RSPropertiesTest, SetDynamicLightUpRate001, TestSize.Level1)
 HWTEST_F(RSPropertiesTest, SetDynamicLightUpDegree001, TestSize.Level1)
 {
     RSProperties properties;
-    std::optional<float> lightUpDegree = std::optional<float>(1.f);
+    std::optional<float> lightUpDegree;
+    properties.SetDynamicLightUpRate(lightUpDegree);
+    EXPECT_TRUE(!lightUpDegree.has_value());
+
+    lightUpDegree = std::optional<float>(1.f);
     properties.SetDynamicLightUpDegree(lightUpDegree);
     EXPECT_EQ(properties.filterNeedUpdate_, true);
     ASSERT_TRUE(properties.GetDynamicLightUpDegree().has_value());
@@ -1445,6 +1642,10 @@ HWTEST_F(RSPropertiesTest, SetNGetDynamicDimDegree001, TestSize.Level1)
     ASSERT_TRUE(properties.GetDynamicDimDegree().has_value());
     EXPECT_EQ(properties.GetDynamicDimDegree().value(), dimDegree.value());
     EXPECT_TRUE(properties.IsDynamicDimValid());
+
+    std::optional<float> degree;
+    properties.SetDynamicDimDegree(degree);
+    EXPECT_TRUE(!degree.has_value());
 }
 
 /**
@@ -1460,6 +1661,10 @@ HWTEST_F(RSPropertiesTest, SetFilter001, TestSize.Level1)
     properties.SetFilter(filter);
     EXPECT_NE(properties.filter_, nullptr);
     EXPECT_EQ(properties.GetFilter(), filter);
+
+    filter = nullptr;
+    properties.SetFilter(filter);
+    EXPECT_EQ(properties.filter_, nullptr);
 }
 
 /**
@@ -1594,6 +1799,9 @@ HWTEST_F(RSPropertiesTest, SetShadowIsFilled001, TestSize.Level1)
     RSProperties properties;
     properties.SetShadowIsFilled(true);
     EXPECT_EQ(properties.contentDirty_, true);
+
+    properties.SetShadowIsFilled(true);
+    EXPECT_EQ(properties.contentDirty_, true);
 }
 
 /**
@@ -1657,6 +1865,10 @@ HWTEST_F(RSPropertiesTest, SetClipRRect001, TestSize.Level1)
     EXPECT_EQ(properties.geoDirty_, true);
     EXPECT_EQ(properties.GetClipRRect(), clipRRect);
     EXPECT_TRUE(properties.GetClipToRRect());
+
+    RRect clipRRectNew;
+    properties.SetClipRRect(clipRRectNew);
+    EXPECT_TRUE(properties.clipRRect_.has_value());
 }
 
 /**
@@ -1670,7 +1882,12 @@ HWTEST_F(RSPropertiesTest, SetClipToFrame001, TestSize.Level1)
     RSProperties properties;
     properties.SetClipToFrame(true);
     EXPECT_EQ(properties.isDrawn_, true);
-    ASSERT_TRUE(properties.GetClipToFrame() == true);
+    EXPECT_TRUE(properties.GetClipToFrame() == true);
+    properties.SetClipToFrame(true);
+    EXPECT_TRUE(properties.GetClipToFrame() == true);
+
+    properties.SetClipToFrame(false);
+    EXPECT_TRUE(!properties.clipToFrame_);
 }
 
 /**
@@ -2132,6 +2349,10 @@ HWTEST_F(RSPropertiesTest, GenerateBackgroundMaterialBlurFilter001, TestSize.Lev
     properties.backgroundColorMode_ = BLUR_COLOR_MODE::AVERAGE;
     properties.GenerateBackgroundMaterialBlurFilter();
     EXPECT_EQ(vectorValue.x_, 1.f);
+
+    properties.backgroundColorMode_ = BLUR_COLOR_MODE::FASTAVERAGE;
+    properties.GenerateBackgroundMaterialBlurFilter();
+    EXPECT_EQ(vectorValue.x_, 1.f);
 }
 
 /**
@@ -2256,8 +2477,9 @@ HWTEST_F(RSPropertiesTest, GenerateForegroundFilter001, TestSize.Level1)
     std::vector<std::pair<float, float>> fractionStops;
     GradientDirection direction;
     properties.linearGradientBlurPara_ = std::make_shared<RSLinearGradientBlurPara>(-1.f, fractionStops, direction);
+    properties.linearGradientBlurPara_->blurRadius_ = 1.f;
     properties.GenerateForegroundFilter();
-    EXPECT_TRUE(properties.linearGradientBlurPara_ == nullptr);
+    EXPECT_TRUE(properties.linearGradientBlurPara_);
 }
 
 /**
@@ -2329,6 +2551,10 @@ HWTEST_F(RSPropertiesTest, CheckEmptyBounds001, TestSize.Level1)
     RSProperties properties;
     properties.CheckEmptyBounds();
     EXPECT_EQ(properties.hasBounds_, false);
+
+    properties.hasBounds_ = true;
+    properties.CheckEmptyBounds();
+    EXPECT_EQ(properties.hasBounds_, true);
 }
 
 /**
@@ -2344,6 +2570,10 @@ HWTEST_F(RSPropertiesTest, SetMask001, TestSize.Level1)
     properties.SetMask(mask);
     EXPECT_EQ(properties.GetMask(), mask);
     EXPECT_EQ(properties.contentDirty_, true);
+
+    mask = nullptr;
+    properties.SetMask(mask);
+    EXPECT_EQ(properties.GetMask(), nullptr);
 }
 
 /**
@@ -2356,6 +2586,10 @@ HWTEST_F(RSPropertiesTest, SetNGetSpherize001, TestSize.Level1)
 {
     RSProperties properties;
     float spherizeDegree{1.f};
+    properties.SetSpherize(spherizeDegree);
+    EXPECT_EQ(properties.GetSpherize(), spherizeDegree);
+
+    spherizeDegree = 0.001f;
     properties.SetSpherize(spherizeDegree);
     EXPECT_EQ(properties.GetSpherize(), spherizeDegree);
 }
@@ -2762,9 +2996,17 @@ HWTEST_F(RSPropertiesTest, CalculateFrameOffset001, TestSize.Level1)
     EXPECT_NE(properties.isDrawn_, true);
 
     properties.frameGeo_->SetX(-INFINITY);
-    properties.frameGeo_->SetY(-INFINITY);
     properties.boundsGeo_->SetX(-INFINITY);
+    properties.CalculateFrameOffset();
+    EXPECT_EQ(properties.isDrawn_, true);
+
+    properties.frameGeo_->SetY(-INFINITY);
     properties.boundsGeo_->SetY(-INFINITY);
+    properties.CalculateFrameOffset();
+    EXPECT_EQ(properties.isDrawn_, true);
+
+    properties.frameGeo_->SetX(0);
+    properties.frameGeo_->SetY(0);
     properties.CalculateFrameOffset();
     EXPECT_EQ(properties.isDrawn_, true);
 }
@@ -2778,6 +3020,9 @@ HWTEST_F(RSPropertiesTest, CalculateFrameOffset001, TestSize.Level1)
 HWTEST_F(RSPropertiesTest, SetHaveEffectRegion001, TestSize.Level1)
 {
     RSProperties properties;
+    properties.SetHaveEffectRegion(false);
+    EXPECT_NE(properties.isDrawn_, true);
+
     properties.backgroundFilterCacheManager_ = std::make_unique<RSFilterCacheManager>();
     properties.backgroundFilterCacheManager_->cachedSnapshot_ =
         std::make_shared<RSPaintFilterCanvas::CachedEffectData>();
@@ -2818,6 +3063,36 @@ HWTEST_F(RSPropertiesTest, CheckGreyCoef001, TestSize.Level1)
     auto newVect = std::make_shared<Vector2f>(-1.f, -1.f);
     std::optional<Vector2f> parentPosition = *newVect;
     properties.SetGreyCoef(parentPosition);
+    properties.CheckGreyCoef();
+    EXPECT_EQ(properties.greyCoef_, std::nullopt);
+}
+
+/**
+ * @tc.name: CheckGreyCoef002
+ * @tc.desc: test results of CheckGreyCoef
+ * @tc.type: FUNC
+ * @tc.require: issueI9W24N
+ */
+HWTEST_F(RSPropertiesTest, CheckGreyCoef002, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.greyCoef_ = Vector2f(1.0f, 2.0f);
+    properties.CheckGreyCoef();
+    EXPECT_NE(properties.greyCoef_, std::nullopt);
+
+    properties.greyCoef_->y_ = 128.f;
+    properties.CheckGreyCoef();
+    EXPECT_EQ(properties.greyCoef_, std::nullopt);
+
+    properties.greyCoef_->y_ = -0.1f;
+    properties.CheckGreyCoef();
+    EXPECT_EQ(properties.greyCoef_, std::nullopt);
+
+    properties.greyCoef_->x_ = 128.f;
+    properties.CheckGreyCoef();
+    EXPECT_EQ(properties.greyCoef_, std::nullopt);
+
+    properties.greyCoef_->x_ = -0.1f;
     properties.CheckGreyCoef();
     EXPECT_EQ(properties.greyCoef_, std::nullopt);
 }

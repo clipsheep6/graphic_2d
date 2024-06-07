@@ -596,7 +596,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDirtyRegionTest05, TestSize.Level1)
  * @tc.name: Process
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, Process, TestSize.Level1)
 {
@@ -612,7 +612,7 @@ HWTEST_F(RSRenderNodeTest, Process, TestSize.Level1)
  * @tc.name: SendCommandFromRT
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, SendCommandFromRT, TestSize.Level1)
 {
@@ -627,7 +627,7 @@ HWTEST_F(RSRenderNodeTest, SendCommandFromRT, TestSize.Level1)
  * @tc.name: InternalRemoveSelfFromDisappearingChildren
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, InternalRemoveSelfFromDisappearingChildren, TestSize.Level1)
 {
@@ -640,7 +640,7 @@ HWTEST_F(RSRenderNodeTest, InternalRemoveSelfFromDisappearingChildren, TestSize.
  * @tc.name: DestroyRSRenderNode
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, DestroyRSRenderNode, TestSize.Level1)
 {
@@ -653,7 +653,7 @@ HWTEST_F(RSRenderNodeTest, DestroyRSRenderNode, TestSize.Level1)
  * @tc.name: FallbackAnimationsToRoot
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, FallbackAnimationsToRoot, TestSize.Level1)
 {
@@ -669,7 +669,7 @@ HWTEST_F(RSRenderNodeTest, FallbackAnimationsToRoot, TestSize.Level1)
  * @tc.name: ActivateDisplaySync
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, ActivateDisplaySync, TestSize.Level1)
 {
@@ -684,7 +684,7 @@ HWTEST_F(RSRenderNodeTest, ActivateDisplaySync, TestSize.Level1)
  * @tc.name: UpdateDisplaySyncRange
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDisplaySyncRange, TestSize.Level1)
 {
@@ -699,7 +699,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDisplaySyncRange, TestSize.Level1)
  * @tc.name: Animate
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, Animate, TestSize.Level1)
 {
@@ -717,7 +717,7 @@ HWTEST_F(RSRenderNodeTest, Animate, TestSize.Level1)
  * @tc.name: IsClipBound
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsClipBound, TestSize.Level1)
 {
@@ -730,7 +730,7 @@ HWTEST_F(RSRenderNodeTest, IsClipBound, TestSize.Level1)
  * @tc.name: GetRenderContent
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetRenderContent, TestSize.Level1)
 {
@@ -742,7 +742,7 @@ HWTEST_F(RSRenderNodeTest, GetRenderContent, TestSize.Level1)
  * @tc.name: GetStagingRenderParams
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetStagingRenderParams, TestSize.Level1)
 {
@@ -754,7 +754,7 @@ HWTEST_F(RSRenderNodeTest, GetStagingRenderParams, TestSize.Level1)
  * @tc.name: CollectAndUpdateLocalShadowRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalShadowRect, TestSize.Level1)
 {
@@ -770,7 +770,7 @@ HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalShadowRect, TestSize.Level1)
  * @tc.name: CollectAndUpdateLocalOutlineRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalOutlineRect, TestSize.Level1)
 {
@@ -786,7 +786,7 @@ HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalOutlineRect, TestSize.Level1)
  * @tc.name: CollectAndUpdateLocalPixelStretchRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalPixelStretchRect, TestSize.Level1)
 {
@@ -802,7 +802,7 @@ HWTEST_F(RSRenderNodeTest, CollectAndUpdateLocalPixelStretchRect, TestSize.Level
  * @tc.name: UpdateBufferDirtyRegion
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateBufferDirtyRegion, TestSize.Level1)
 {
@@ -818,7 +818,7 @@ HWTEST_F(RSRenderNodeTest, UpdateBufferDirtyRegion, TestSize.Level1)
  * @tc.name: UpdateSelfDrawRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateSelfDrawRect, TestSize.Level1)
 {
@@ -831,7 +831,7 @@ HWTEST_F(RSRenderNodeTest, UpdateSelfDrawRect, TestSize.Level1)
  * @tc.name: GetSelfDrawRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetSelfDrawRect, TestSize.Level1)
 {
@@ -843,7 +843,7 @@ HWTEST_F(RSRenderNodeTest, GetSelfDrawRect, TestSize.Level1)
  * @tc.name: GetAbsDrawRect
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetAbsDrawRect, TestSize.Level1)
 {
@@ -855,7 +855,7 @@ HWTEST_F(RSRenderNodeTest, GetAbsDrawRect, TestSize.Level1)
  * @tc.name: CheckAndUpdateGeoTrans001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CheckAndUpdateGeoTrans001, TestSize.Level1)
 {
@@ -868,7 +868,7 @@ HWTEST_F(RSRenderNodeTest, CheckAndUpdateGeoTrans001, TestSize.Level1)
  * @tc.name: CheckAndUpdateGeoTrans002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CheckAndUpdateGeoTrans002, TestSize.Level1)
 {
@@ -889,7 +889,7 @@ HWTEST_F(RSRenderNodeTest, CheckAndUpdateGeoTrans002, TestSize.Level1)
  * @tc.name: UpdateAbsDirtyRegion001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion001, TestSize.Level1)
 {
@@ -904,7 +904,7 @@ HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion001, TestSize.Level1)
  * @tc.name: UpdateAbsDirtyRegion002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion002, TestSize.Level1)
 {
@@ -922,7 +922,7 @@ HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion002, TestSize.Level1)
  * @tc.name: UpdateAbsDirtyRegion003
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion003, TestSize.Level1)
 {
@@ -942,7 +942,7 @@ HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion003, TestSize.Level1)
  * @tc.name: UpdateAbsDirtyRegion004
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion004, TestSize.Level1)
 {
@@ -962,7 +962,7 @@ HWTEST_F(RSRenderNodeTest, UpdateAbsDirtyRegion004, TestSize.Level1)
  * @tc.name: UpdateDrawRectAndDirtyRegion001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDrawRectAndDirtyRegion001, TestSize.Level1)
 {
@@ -978,7 +978,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDrawRectAndDirtyRegion001, TestSize.Level1)
  * @tc.name: UpdateDrawRectAndDirtyRegion002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDrawRectAndDirtyRegion002, TestSize.Level1)
 {
@@ -1003,7 +1003,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDrawRectAndDirtyRegion002, TestSize.Level1)
  * @tc.name: UpdateDrawRect001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDrawRect001, TestSize.Level1)
 {
@@ -1020,7 +1020,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDrawRect001, TestSize.Level1)
  * @tc.name: UpdateDrawRect002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDrawRect002, TestSize.Level1)
 {
@@ -1035,10 +1035,10 @@ HWTEST_F(RSRenderNodeTest, UpdateDrawRect002, TestSize.Level1)
 }
 
 /**
- * @tc.name: UpdateDrawRect001
+ * @tc.name: UpdateDirtyRegionInfoForDFX001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDirtyRegionInfoForDFX001, TestSize.Level1)
 {
@@ -1052,10 +1052,10 @@ HWTEST_F(RSRenderNodeTest, UpdateDirtyRegionInfoForDFX001, TestSize.Level1)
 }
 
 /**
- * @tc.name: UpdateDrawRect002
+ * @tc.name: UpdateDirtyRegionInfoForDFX002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDirtyRegionInfoForDFX002, TestSize.Level1)
 {
@@ -1069,7 +1069,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDirtyRegionInfoForDFX002, TestSize.Level1)
  * @tc.name: Update001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, Update001, TestSize.Level1)
 {
@@ -1087,7 +1087,7 @@ HWTEST_F(RSRenderNodeTest, Update001, TestSize.Level1)
  * @tc.name: Update002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, Update002, TestSize.Level1)
 {
@@ -1114,7 +1114,7 @@ HWTEST_F(RSRenderNodeTest, Update002, TestSize.Level1)
  * @tc.name: GetMutableRenderProperties
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetMutableRenderProperties, TestSize.Level1)
 {
@@ -1127,7 +1127,7 @@ HWTEST_F(RSRenderNodeTest, GetMutableRenderProperties, TestSize.Level1)
  * @tc.name: GetMutableRenderProperties001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateBufferDirtyRegion001, TestSize.Level1)
 {
@@ -1141,7 +1141,7 @@ HWTEST_F(RSRenderNodeTest, UpdateBufferDirtyRegion001, TestSize.Level1)
  * @tc.name: IsSelfDrawingNode
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsSelfDrawingNode, TestSize.Level1)
 {
@@ -1154,7 +1154,7 @@ HWTEST_F(RSRenderNodeTest, IsSelfDrawingNode, TestSize.Level1)
  * @tc.name: IsDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsDirty, TestSize.Level1)
 {
@@ -1167,7 +1167,7 @@ HWTEST_F(RSRenderNodeTest, IsDirty, TestSize.Level1)
  * @tc.name: IsSubTreeDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsSubTreeDirty, TestSize.Level1)
 {
@@ -1180,7 +1180,7 @@ HWTEST_F(RSRenderNodeTest, IsSubTreeDirty, TestSize.Level1)
  * @tc.name: SetSubTreeDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, SetSubTreeDirty, TestSize.Level1)
 {
@@ -1194,7 +1194,7 @@ HWTEST_F(RSRenderNodeTest, SetSubTreeDirty, TestSize.Level1)
  * @tc.name: SetParentSubTreeDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, SetParentSubTreeDirty, TestSize.Level1)
 {
@@ -1207,7 +1207,7 @@ HWTEST_F(RSRenderNodeTest, SetParentSubTreeDirty, TestSize.Level1)
  * @tc.name: IsContentDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsContentDirty, TestSize.Level1)
 {
@@ -1220,7 +1220,7 @@ HWTEST_F(RSRenderNodeTest, IsContentDirty, TestSize.Level1)
  * @tc.name: MapAndUpdateChildrenRect001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, MapAndUpdateChildrenRect001, TestSize.Level1)
 {
@@ -1234,7 +1234,7 @@ HWTEST_F(RSRenderNodeTest, MapAndUpdateChildrenRect001, TestSize.Level1)
  * @tc.name: MapAndUpdateChildrenRect002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, MapAndUpdateChildrenRect002, TestSize.Level1)
 {
@@ -1251,7 +1251,7 @@ HWTEST_F(RSRenderNodeTest, MapAndUpdateChildrenRect002, TestSize.Level1)
  * @tc.name: IsFilterCacheValid001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsFilterCacheValid001, TestSize.Level1)
 {
@@ -1265,7 +1265,7 @@ HWTEST_F(RSRenderNodeTest, IsFilterCacheValid001, TestSize.Level1)
  * @tc.name: IsFilterCacheValid001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsFilterCacheValid002, TestSize.Level1)
 {
@@ -1281,7 +1281,7 @@ HWTEST_F(RSRenderNodeTest, IsFilterCacheValid002, TestSize.Level1)
  * @tc.name: IsAIBarFilterCacheValid
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsAIBarFilterCacheValid, TestSize.Level1)
 {
@@ -1294,7 +1294,7 @@ HWTEST_F(RSRenderNodeTest, IsAIBarFilterCacheValid, TestSize.Level1)
  * @tc.name: GetFilterCachedRegion
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetFilterCachedRegion, TestSize.Level1)
 {
@@ -1307,7 +1307,7 @@ HWTEST_F(RSRenderNodeTest, GetFilterCachedRegion, TestSize.Level1)
  * @tc.name: HasBlurFilter
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, HasBlurFilter, TestSize.Level1)
 {
@@ -1320,7 +1320,7 @@ HWTEST_F(RSRenderNodeTest, HasBlurFilter, TestSize.Level1)
  * @tc.name: UpdateLastFilterCacheRegion
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateLastFilterCacheRegion, TestSize.Level1)
 {
@@ -1333,7 +1333,7 @@ HWTEST_F(RSRenderNodeTest, UpdateLastFilterCacheRegion, TestSize.Level1)
  * @tc.name: GetAbsMatrixReverse001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetAbsMatrixReverse001, TestSize.Level1)
 {
@@ -1352,7 +1352,7 @@ HWTEST_F(RSRenderNodeTest, GetAbsMatrixReverse001, TestSize.Level1)
  * @tc.name: GetAbsMatrixReverse002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetAbsMatrixReverse002, TestSize.Level1)
 {
@@ -1371,7 +1371,7 @@ HWTEST_F(RSRenderNodeTest, GetAbsMatrixReverse002, TestSize.Level1)
  * @tc.name: UpdateFilterRegionInSkippedSubTree001
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateFilterRegionInSkippedSubTree001, TestSize.Level1)
 {
@@ -1392,7 +1392,7 @@ HWTEST_F(RSRenderNodeTest, UpdateFilterRegionInSkippedSubTree001, TestSize.Level
  * @tc.name: UpdateFilterRegionInSkippedSubTree002
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateFilterRegionInSkippedSubTree002, TestSize.Level1)
 {
@@ -1414,7 +1414,7 @@ HWTEST_F(RSRenderNodeTest, UpdateFilterRegionInSkippedSubTree002, TestSize.Level
  * @tc.name: CheckBlurFilterCacheNeedForceClearOrSave
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, CheckBlurFilterCacheNeedForceClearOrSave, TestSize.Level1)
 {
@@ -1431,7 +1431,7 @@ HWTEST_F(RSRenderNodeTest, CheckBlurFilterCacheNeedForceClearOrSave, TestSize.Le
  * @tc.name: IsForceClearOrUseFilterCache
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsForceClearOrUseFilterCache, TestSize.Level1)
 {
@@ -1444,7 +1444,7 @@ HWTEST_F(RSRenderNodeTest, IsForceClearOrUseFilterCache, TestSize.Level1)
  * @tc.name: MarkFilterStatusChanged
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, MarkFilterStatusChanged, TestSize.Level1)
 {
@@ -1465,7 +1465,7 @@ HWTEST_F(RSRenderNodeTest, MarkFilterStatusChanged, TestSize.Level1)
  * @tc.name: GetFilterDrawable
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, GetFilterDrawable, TestSize.Level1)
 {
@@ -1481,7 +1481,7 @@ HWTEST_F(RSRenderNodeTest, GetFilterDrawable, TestSize.Level1)
  * @tc.name: UpdateFilterCacheWithBelowDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateFilterCacheWithBelowDirty, TestSize.Level1)
 {
@@ -1496,7 +1496,7 @@ HWTEST_F(RSRenderNodeTest, UpdateFilterCacheWithBelowDirty, TestSize.Level1)
  * @tc.name: UpdateFilterCacheWithSelfDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateFilterCacheWithSelfDirty, TestSize.Level1)
 {
@@ -1513,7 +1513,7 @@ HWTEST_F(RSRenderNodeTest, UpdateFilterCacheWithSelfDirty, TestSize.Level1)
  * @tc.name: IsBackgroundInAppOrNodeSelfDirty
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, IsBackgroundInAppOrNodeSelfDirty, TestSize.Level1)
 {
@@ -1526,7 +1526,7 @@ HWTEST_F(RSRenderNodeTest, IsBackgroundInAppOrNodeSelfDirty, TestSize.Level1)
  * @tc.name: UpdateDirtySlotsAndPendingNodes
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, UpdateDirtySlotsAndPendingNodes, TestSize.Level1)
 {
@@ -1540,7 +1540,7 @@ HWTEST_F(RSRenderNodeTest, UpdateDirtySlotsAndPendingNodes, TestSize.Level1)
  * @tc.name: PostPrepareForBlurFilterNode
  * @tc.desc: test
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: issueI9V3BK
  */
 HWTEST_F(RSRenderNodeTest, PostPrepareForBlurFilterNode, TestSize.Level1)
 {

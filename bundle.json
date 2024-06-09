@@ -88,6 +88,7 @@
           "egl",
           "opengles",
           "node",
+          "cxx",
           "vulkan-headers",
           "vulkan-loader",
           "hiview",
@@ -115,6 +116,7 @@
           "jsoncpp",
           "egl",
           "opengles",
+          "cxx",
           "vulkan-headers",
           "vulkan-loader"
         ]

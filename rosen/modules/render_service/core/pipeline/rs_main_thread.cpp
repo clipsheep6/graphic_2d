@@ -1670,10 +1670,15 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
     if (rsVSyncDistributor_->IsDVsyncOn()) {
         auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         auto pendingRefreshRate = frameRateMgr_->GetPendingRefreshRate();
-        if (pendingRefreshRate != nullptr
-            && (!info.isUiDvsyncOn || rsRate == *pendingRefreshRate)) {
+        if (pendingRefreshRate != nullptr) {
             hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
             frameRateMgr_->ResetPendingRefreshRate();
+            RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d rs-dvsync", *pendingRefreshRate_);
+        }
+
+        if (dvsyncInfo.isUiDvsyncOn) {
+            hgmCore.SetPendingScreenRefreshRate(rsRate);
+            RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d ui-dvsync", rsRate);
         }
     }
 }

@@ -28,6 +28,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+static std::mutex registarMutex;
 SkiaPersistentCache::SkiaPersistentCache(GPUContextOptions::PersistentCache* cache) : cache_(cache) {}
 
 sk_sp<SkData> SkiaPersistentCache::load(const SkData& key)
@@ -366,14 +367,20 @@ std::unordered_map<uintptr_t, std::function<void(const std::function<void()>& ta
 
 void SkiaGPUContext::RegisterPostFunc(const std::function<void(const std::function<void()>& task)>& func)
 {
-    if (grContext_ != nullptr) {
-        contextPostMap_[uintptr_t(grContext_.get())] = func;
+    if (grContext_ == nullptr) {
+        return;
     }
+    std::unique_lock lock(registarMutex);
+    contextPostMap_[uintptr_t(grContext_.get())] = func;
 }
 
 std::function<void(const std::function<void()>& task)> SkiaGPUContext::GetPostFunc(sk_sp<GrDirectContext> grContext)
 {
-    if (grContext != nullptr && contextPostMap_.count(uintptr_t(grContext.get())) > 0) {
+    if (grContext == nullptr) {
+        return;
+    }
+    std::unique_lock lock(registarMutex);
+    if (contextPostMap_.count(uintptr_t(grContext.get())) > 0) {
         return contextPostMap_[uintptr_t(grContext.get())];
     }
     return nullptr;

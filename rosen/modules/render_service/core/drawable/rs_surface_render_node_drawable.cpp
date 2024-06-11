@@ -188,7 +188,11 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isUiFirstNode);
     // when surfacenode named "CapsuleWindow", cache the current canvas as SkImage for screen recording
-    auto curDisplayNode = surfaceParams->GetAncestorDisplayNode().lock()->ReinterpretCastTo<RSDisplayRenderNode>();
+    std::shared_ptr<RSDisplayRenderNode> curDisplayNode = nullptr;
+    auto unlockedAncestorDisplayNode = surfaceParams->GetAncestorDisplayNode().lock();
+    if (unlockedAncestorDisplayNode) {
+        curDisplayNode = unlockedAncestorDisplayNode->ReinterpretCastTo<RSDisplayRenderNode>();
+    }
     if (!curDisplayNode) {
         RS_LOGE("surfaceNode GetAncestorDisplayNode() return nullptr");
         return;

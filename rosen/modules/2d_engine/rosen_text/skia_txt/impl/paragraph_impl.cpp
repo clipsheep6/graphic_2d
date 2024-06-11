@@ -24,6 +24,7 @@
 #include "text/font_metrics.h"
 #include "paragraph_builder_impl.h"
 #include "text_line_impl.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -231,6 +232,7 @@ Range<size_t> ParagraphImpl::GetActualTextRange(int lineNumber, bool includeSpac
 
 std::vector<skia::textlayout::LineMetrics> ParagraphImpl::GetLineMetrics()
 {
+    LOGE("clp : ParagraphImpl::GetLineMetrics is in 0000");
     std::vector<skt::LineMetrics> metrics;
     if (!lineMetrics_) {
         paragraph_->getLineMetrics(metrics);

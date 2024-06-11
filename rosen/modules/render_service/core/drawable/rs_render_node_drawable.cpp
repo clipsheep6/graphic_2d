@@ -509,6 +509,10 @@ bool RSRenderNodeDrawable::CheckIfNeedUpdateCache(RSRenderParams& params)
         updateTimes >= DRAWING_CACHE_MAX_UPDATE_TIME) {
         params.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
         ClearCachedSurface();
+        {
+            std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+            drawingCacheUpdateTimeMap_.erase(nodeId_);
+        }
         return false;
     }
 

@@ -1673,7 +1673,7 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         if (pendingRefreshRate != nullptr) {
             hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
             frameRateMgr_->ResetPendingRefreshRate();
-            RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d rs-dvsync", *pendingRefreshRate_);
+            RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d rs-dvsync", *pendingRefreshRate);
         }
 
         if (dvsyncInfo.isUiDvsyncOn) {

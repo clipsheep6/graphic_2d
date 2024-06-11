@@ -19,21 +19,27 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
-#ifdef OHOS_PLATFORM
+//#ifdef OHOS_PLATFORM
 #include <hilog/log.h>
-#endif
+//#endif
 
 namespace OHOS {
 namespace Rosen {
 
-#ifndef LOGD
-#ifdef OHOS_PLATFORM
+// #ifndef LOGD
+// #ifdef OHOS_PLATFORM
 
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD001402
 
 #undef LOG_TAG
 #define LOG_TAG "2DGraphics"
+
+#undef LOGD
+#undef LOGI
+#undef LOGW
+#undef LOGE
+
 
 #define LOGD(fmt, ...)               \
     HILOG_DEBUG(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
@@ -43,13 +49,13 @@ namespace Rosen {
     HILOG_WARN(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
 #define LOGE(fmt, ...)               \
     HILOG_ERROR(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
-#else
-#define LOGD(fmt, ...)
-#define LOGI(fmt, ...)
-#define LOGW(fmt, ...)
-#define LOGE(fmt, ...)
-#endif
-#endif
+// #else
+// #define LOGD(fmt, ...)
+// #define LOGI(fmt, ...)
+// #define LOGW(fmt, ...)
+// #define LOGE(fmt, ...)
+// #endif
+// #endif
 } // namespace Rosen
 } // namespace OHOS
 #endif

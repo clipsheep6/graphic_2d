@@ -218,7 +218,30 @@ HWTEST_F(HgmMultiAppStrategyTest, SingleAppTouch002, Function | SmallTest | Leve
             res = multiAppStrategy_->GetVoteRes(strategyConfig);
             ASSERT_EQ(res, EXEC_SUCCESS);
         }
-        STEP("3. start other pkg which hasn't config") {
+    }
+}
+
+/**
+ * @tc.name: SingleAppTouch003
+ * @tc.desc: Verify the result of SingleAppTouch002 function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HgmMultiAppStrategyTest, SingleAppTouch003, Function | SmallTest | Level1)
+{
+    PART("CaseDescription") {
+        std::string unConfigPkgName = "com.pkg.other";
+        auto &pkgParam = pkgParams_[0]; // first pkg
+        std::vector<std::string> voteParam = { pkgParam.pkgName + ":" + std::to_string(pkgParam.pid), };
+
+        PolicyConfigData::StrategyConfig strategyConfig;
+        HgmErrCode res;
+        SetMultiAppStrategy(MultiAppStrategyType::USE_MAX);
+
+        STEP("1. pkg vote") {
+            multiAppStrategy_->HandlePkgsEvent(voteParam);
+        }
+        STEP("2. start other pkg which hasn't config") {
             res = multiAppStrategy_->HandlePkgsEvent({});
             ASSERT_EQ(res, EXEC_SUCCESS);
             multiAppStrategy_->HandlePkgsEvent({ unConfigPkgName, });
@@ -256,12 +279,12 @@ HWTEST_F(HgmMultiAppStrategyTest, SingleAppTouch002, Function | SmallTest | Leve
 }
 
 /**
- * @tc.name: MultiAppTouch
+ * @tc.name: MultiAppTouch001
  * @tc.desc: Verify the result of MultiAppTouch function
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch, Function | SmallTest | Level1)
+HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch001, Function | SmallTest | Level1)
 {
     PART("CaseDescription") {
         PolicyConfigData::StrategyConfig strategyConfig;
@@ -296,7 +319,24 @@ HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch, Function | SmallTest | Level1)
             ASSERT_EQ(strategyConfig.min, fps1);
             ASSERT_EQ(strategyConfig.max, fps1);
         }
-        STEP("3. handle pkg1 touch event") {
+    }
+}
+
+/**
+ * @tc.name: MultiAppTouch002
+ * @tc.desc: Verify the result of MultiAppTouch function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch002, Function | SmallTest | Level1)
+{
+    PART("CaseDescription") {
+        PolicyConfigData::StrategyConfig strategyConfig;
+        SetMultiAppStrategy(MultiAppStrategyType::USE_MAX);
+        STEP("1. pkg vote") {
+            multiAppStrategy_->HandlePkgsEvent(CreateVotePkgs());
+        }
+        STEP("2. handle pkg1 touch event") {
             HgmMultiAppStrategy::TouchInfo touchInfo = {
                 .pkgname = pkgParams_[1].pkgName,
                 .touchState = TouchState::DOWN_STATE,
@@ -320,7 +360,48 @@ HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch, Function | SmallTest | Level1)
             ASSERT_EQ(strategyConfig.min, fps1);
             ASSERT_EQ(strategyConfig.max, fps1);
         }
-        STEP("4. handle empty pkg touch event") {
+        STEP("3. handle empty pkg touch event") {
+            HgmMultiAppStrategy::TouchInfo touchInfo = {
+                .pkgname = otherPkgName,
+                .touchState = TouchState::DOWN_STATE,
+                .upExpectFps = OLED_120_HZ,
+            };
+            multiAppStrategy_->HandleTouchInfo(touchInfo);
+            multiAppStrategy_->GetVoteRes(strategyConfig);
+            ASSERT_EQ(strategyConfig.min, OLED_144_HZ);
+            ASSERT_EQ(strategyConfig.max, OLED_144_HZ);
+
+            touchInfo = {
+                .touchState = TouchState::UP_STATE,
+            };
+            multiAppStrategy_->HandleTouchInfo(touchInfo);
+            touchInfo = {
+                .touchState = TouchState::IDLE_STATE,
+            };
+            multiAppStrategy_->HandleTouchInfo(touchInfo);
+
+            multiAppStrategy_->GetVoteRes(strategyConfig);
+            ASSERT_EQ(strategyConfig.min, fps1);
+            ASSERT_EQ(strategyConfig.max, fps1);
+        }
+    }
+}
+
+/**
+ * @tc.name: MultiAppTouch003
+ * @tc.desc: Verify the result of MultiAppTouch function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HgmMultiAppStrategyTest, MultiAppTouch003, Function | SmallTest | Level1)
+{
+    PART("CaseDescription") {
+        PolicyConfigData::StrategyConfig strategyConfig;
+        SetMultiAppStrategy(MultiAppStrategyType::USE_MAX);
+        STEP("1. pkg vote") {
+            multiAppStrategy_->HandlePkgsEvent(CreateVotePkgs());
+        }
+        STEP("2. handle empty pkg touch event") {
             HgmMultiAppStrategy::TouchInfo touchInfo = {
                 .pkgname = otherPkgName,
                 .touchState = TouchState::DOWN_STATE,

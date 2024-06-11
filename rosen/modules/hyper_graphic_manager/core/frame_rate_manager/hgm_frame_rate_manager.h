@@ -162,6 +162,8 @@ public:
     }
 private:
     void Reset();
+    bool GetNotSupportSurface();
+    uin32_t GetSurfaceUpExpectFps();
     void UpdateAppSupportStatus();
     void UpdateGuaranteedPlanVote(uint64_t timestamp);
     void ProcessLtpoVote(const FrameRateRange& finalRange, bool idleTimerExpired);
@@ -225,7 +227,7 @@ private:
     int32_t idleFps_ = 60;
     HgmMultiAppStrategy multiAppStrategy_;
     HgmTouchManager touchManager_;
-    int32_t lastTouchState_ = IDLE_STATE;
+    std::atomic<int32_t> lastTouchState_ = IDLE_STATE;
     bool startCheck_ = false;
     bool prepareCheck_ = false;
     HgmIdleDetector idleDetector_;
@@ -234,6 +236,8 @@ private:
     bool isNeedUpdateAppOffset_ = false;
     int32_t schedulePreferredFps_ = 60;
     int32_t schedulePreferredFpsChange_ = false;
+    std::vector<std::pair<std::string, uint32_t>> appBufferList_;
+    std::vector<std::string> appBufferBlackList_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -20,6 +20,7 @@ namespace Rosen {
 namespace {
     constexpr uint64_t BUFFER_IDLE_TIME_OUT = 200000000; // 200ms
     constexpr uint64_t MAX_BUFFER_COUNT = 10;
+    constexpr uint64_t MAX_BUFFER_LENGTH = 10;
 }
 
 void HgmIdleDetector::UpdateSurfaceTime(const std::string& name, uint64_t timestamp)
@@ -33,7 +34,12 @@ void HgmIdleDetector::UpdateSurfaceTime(const std::string& name, uint64_t timest
     if (name.empty()) {
         return;
     }
-    frameTimeMap_[name] = timestamp;
+    std::lock_guard<std::mutex> lock(frameTimeMapMutex_);
+    auto temp = name;
+    if (name.size() > MAX_BUFFER_LENGTH) {
+        temp = name.substr(0, MAX_BUFFER_LENGTH);
+    }
+    frameTimeMap_[temp] = timestamp;
 }
 
 bool HgmIdleDetector::GetSurFaceIdleState(uint64_t timestamp)
@@ -43,7 +49,7 @@ bool HgmIdleDetector::GetSurFaceIdleState(uint64_t timestamp)
     if (frameTimeMap_.empty()) {
         return idle;
     }
-
+    std::lock_guard<std::mutex> lock(frameTimeMapMutex_); 
     for (auto it = frameTimeMap_.begin(); it != frameTimeMap_.end();) {
         if ((timestamp - it->second) > BUFFER_IDLE_TIME_OUT) {
             it = frameTimeMap_.erase(it);

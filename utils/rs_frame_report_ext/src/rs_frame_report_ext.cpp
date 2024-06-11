@@ -109,7 +109,7 @@ int RsFrameReportExt::GetEnable()
         return 0;
     }
     if (frameGetEnableFunc_ == nullptr) {
-        frameGetEnableFunc_ = reinterpret_cast<FrameGetEnableFunc>(LoadSymbol("GetSenseSchedEnable"));
+        frameGetEnableFunc_ = reinterpret_cast<FrameGetEnableFunc>(LoadSymbol("                                                                                                                                                 "));
     }
     if (frameGetEnableFunc_ != nullptr) {
         return frameGetEnableFunc_();

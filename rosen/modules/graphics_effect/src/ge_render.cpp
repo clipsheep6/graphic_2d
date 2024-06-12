@@ -19,6 +19,7 @@
 #include "ge_hps_blur_shader_filter.h"
 #include "ge_kawase_blur_shader_filter.h"
 #include "ge_linear_gradient_blur_shader_filter.h"
+#include "ge_water_ripple_filter.h"
 #include "ge_log.h"
 #include "ge_visual_effect_impl.h"
 
@@ -88,7 +89,6 @@ std::vector<std::shared_ptr<GEShaderFilter>> GERender::GenerateShaderFilter(
                     LOGE("GERender::HPS_BLUR hpsParams is null.");
                     continue;
                 }
-
                 LOGD("GERender::HPS_BLUR %{public}f", hpsParams->radius);
                 shaderFilter = std::make_shared<GEHpsBlurShaderFilter>(*hpsParams);
                 break;
@@ -109,6 +109,11 @@ std::vector<std::shared_ptr<GEShaderFilter>> GERender::GenerateShaderFilter(
                 const auto& linearGradientBlurParams = ve->GetLinearGradientBlurParams();
                 LOGD("GERender::LINEAR_GRADIENT_BLUR %{public}f,", linearGradientBlurParams->blurRadius);
                 shaderFilter = std::make_shared<GELinearGradientBlurShaderFilter>(*linearGradientBlurParams);
+                break;
+            }
+            case Drawing::GEVisualEffectImpl::FilterType::WATER_RIPPLE: {
+                const auto& waterRippleParams = ve->GetWaterRippleParams();
+                shaderFilter = std::make_shared<GEWaterRippleFilter>(*waterRippleParams);
                 break;
             }
             default:

@@ -782,7 +782,7 @@ void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
 }
 
 void VSyncDistributor::CollectConnectionsLTPO(bool &waitForVSync, int64_t timestamp,
-                                              std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount, bool isDvsync)
+    std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount, bool isDvsync)
 {
     for (uint32_t i = 0; i < connections_.size(); i++) {
 #if defined(RS_ENABLE_DVSYNC)

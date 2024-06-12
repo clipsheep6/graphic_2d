@@ -22,6 +22,7 @@
 #include "skia_surface.h"
 #include "skia_texture_info.h"
 #include "src/core/SkAutoMalloc.h"
+#include "src/core/SkImagePriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
@@ -29,6 +30,7 @@
 #include "draw/surface.h"
 #include "image/bitmap.h"
 #include "image/image.h"
+#include "image/gpu_context.h"
 #include "image/picture.h"
 #include "utils/data.h"
 #include "utils/log.h"
@@ -333,6 +335,16 @@ bool SkiaImage::IsValid(GPUContext* context) const
         return skiaImage_->isValid(nullptr);
     }
     return skiaImage_->isValid(context->GetImpl<SkiaGPUContext>()->GetGrContext().get());
+}
+
+bool SkiaImage::pinAsTexture(GPUContext& context) const
+{
+    auto skGpuContext = context.GetImpl<SkiaGPUContext>();
+    if (skGpuContext == nullptr) {
+        return false;
+    }
+    auto skContext = skGpuContext->GetGrContext().get();
+    return skContext != nullptr && SkImage_pinAsTexture(GetImage().get(), skContext);
 }
 #endif
 

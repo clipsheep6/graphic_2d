@@ -334,6 +334,8 @@ public:
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const;
 
     bool IsValid(GPUContext* context) const;
+
+    bool pinAsTexture(GPUContext& context) const;
 #endif
 
     /**

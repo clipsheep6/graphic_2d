@@ -15,13 +15,9 @@
 
 #include "image/image.h"
 
-#include "engine_adapter/skia_adapter/skia_gpu_context.h"
-#include "image/gpu_context.h"
 #include "impl_factory.h"
 #include "skia_adapter/skia_image.h"
 #include "static_factory.h"
-#include "src/core/SkImagePriv.h"
-#include "src/image/SkImage_Base.h"
 #include "utils/system_properties.h"
 
 namespace OHOS {
@@ -120,6 +116,12 @@ BackendTexture Image::GetBackendTexture(bool flushPendingGrContextIO, TextureOri
 bool Image::IsValid(GPUContext* context) const
 {
     return imageImplPtr->IsValid(context);
+}
+
+bool Image::pinAsTexture(GPUContext& context) const
+{
+    auto image = std::static_pointer_cast<SkiaImage>(imageImplPtr);
+    return image != nullptr && image->pinAsTexture(context);
 }
 #endif
 

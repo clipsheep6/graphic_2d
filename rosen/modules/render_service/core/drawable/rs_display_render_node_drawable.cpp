@@ -1179,9 +1179,6 @@ void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
             !RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetBlackList().empty();
     }
     if (hasSpecialLayer_) {
-        RS_LOGD("RSDisplayRenderNodeDrawable::OnCapture: params %{public}s \
-            process RSDisplayRenderNode(id:[%{public}" PRIu64 "]) Not using UniRender buffer.",
-            params->ToString().c_str(), params->GetId());
         RS_TRACE_NAME("RSDisplayRenderNodeDrawable::OnCapture: processRSDisplayRenderNodeDrawable[" +
             std::to_string(params->GetScreenId()) + "] Not using UniRender buffer.");
 
@@ -1226,9 +1223,6 @@ void RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes(Drawing::Canvas& canv
         return;
     }
 
-    RS_LOGD("RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes: params %{public}s \
-        process RSDisplayRenderNode(id:[%{public}" PRIu64 "]) using UniRender buffer.",
-    params->ToString().c_str(), params->GetId());
     RS_TRACE_NAME("RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes: processRSDisplayRenderNodeDrawable[" +
         std::to_string(params->GetScreenId()) + "] using UniRender buffer.");
 

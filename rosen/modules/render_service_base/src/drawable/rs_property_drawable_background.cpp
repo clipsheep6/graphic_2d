@@ -33,7 +33,7 @@ constexpr int TRACE_LEVEL_TWO = 2;
 
 RSDrawable::Ptr RSShadowDrawable::OnGenerate(const RSRenderNode& node)
 {
-    // skip shadow if not valid. ShadowMask is processed by foregound
+    // skip shadow if not valid. ShadowMask is processed by foreground
     if (!node.GetRenderProperties().IsShadowValid() || node.GetRenderProperties().GetShadowMask()) {
         return nullptr;
     }

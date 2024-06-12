@@ -793,6 +793,20 @@ bool OH_Drawing_CanvasReadPixelsToBitmap(OH_Drawing_Canvas*, OH_Drawing_Bitmap*,
 OH_Drawing_ErrorCode OH_Drawing_CanvasIsClipEmpty(OH_Drawing_Canvas* canvas, bool* isClipEmpty);
 
 /**
+ * @brief Gets whether clip is rect and not empty.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param isClipRect Indicates if drawable area is a rect and not empty.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if canvas or isClipRect is nullptr.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ErrorCode OH_Drawing_CanvasIsClipRect(OH_Drawing_Canvas*, bool* isClipRect);
+
+/**
  * @brief Gets image info of canvas.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

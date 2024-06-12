@@ -1397,6 +1397,22 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawColor046, TestSize
     EXPECT_EQ(OH_Drawing_CanvasDrawColor(canvas_, 0xFFFF0000, OH_Drawing_BlendMode::BLEND_MODE_COLOR),
         OH_DRAWING_SUCCESS);
 }
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_IsClipRect047
+ * @tc.desc: test for if clip is rect and not empty
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_IsClipRect047, TestSize.Level1)
+{
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0.0f, 0.0f, 400.0f, 400.0f);
+    OH_Drawing_CanvasClipRect(canvas_, rect, OH_Drawing_CanvasClipOp::INTERSECT, false);
+    bool isClipRect;
+    OH_Drawing_CanvasIsClipRect(canvas_, &isClipRect);
+    EXPECT_EQ(isClipRect, true);
+    OH_Drawing_RectDestroy(rect);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

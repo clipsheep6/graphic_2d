@@ -45,7 +45,7 @@ bool SkiaRegion::SetRect(const RectI& rectI)
 bool SkiaRegion::SetPath(const Path& path, const Region& clip)
 {
     auto skPath = path.GetImpl<SkiaPath>()->GetPath();
-    auto skRegion = clip.GetImpl<SkiaRegion>()->GetSkRegion();
+    const auto& skRegion = clip.GetImpl<SkiaRegion>()->GetSkRegion();
     if (skRegion == nullptr) {
         LOGD("SkiaRegion::SetPath, skRegion is nullptr");
         return false;
@@ -72,7 +72,7 @@ bool SkiaRegion::GetBoundaryPath(Path* path) const
 
 bool SkiaRegion::IsIntersects(const Region& other) const
 {
-    auto skRegion = other.GetImpl<SkiaRegion>()->GetSkRegion();
+    const auto& skRegion = other.GetImpl<SkiaRegion>()->GetSkRegion();
     if (skRegion == nullptr) {
         LOGD("SkiaRegion::IsIntersects, skRegion is nullptr");
         return false;
@@ -104,7 +104,7 @@ bool SkiaRegion::IsRegionContained(const Region& other) const
 
 bool SkiaRegion::Op(const Region& region, RegionOp op)
 {
-    auto skRegion = region.GetImpl<SkiaRegion>()->GetSkRegion();
+    const auto& skRegion = region.GetImpl<SkiaRegion>()->GetSkRegion();
     if (skRegion == nullptr) {
         LOGD("SkiaRegion::Op, skRegion is nullptr");
         return false;

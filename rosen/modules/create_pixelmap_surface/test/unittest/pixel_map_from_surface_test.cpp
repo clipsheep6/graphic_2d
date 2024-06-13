@@ -38,7 +38,7 @@ namespace {
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 
+* CaseDescription:
     1. call CreatePixelMapFromSurface with nullptr suface and should return nullptr
     2. call CreatePixelMapFromSurface with incorrect rect.left and should return nullptr
     3. call CreatePixelMapFromSurface with incorrect rect.top and should return nullptr

@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 #include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_render_thread_visitor.cpp"
+#include "visitor/rs_node_visitor.h"
 #include "screen_manager/screen_types.h"
 
 namespace OHOS {
@@ -73,7 +73,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSDisplayRenderNode::CompositeType type = (RSDisplayRenderNode::CompositeType)rogWidth;
     auto node = std::make_shared<RSBaseRenderNode>(id);
     std::vector<std::shared_ptr<RSRenderNode>> vec;
-    std::shared_ptr<RSRenderThreadVisitor> visitor;
+    std::shared_ptr<RSNodeVisitor> visitor;
     RSDisplayNodeConfig config;
     config.mirrorNodeId = id;
     config.screenId = id;

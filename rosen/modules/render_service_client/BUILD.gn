@@ -212,6 +212,10 @@ template("render_service_client_source_set") {
         "image_framework:image_native",
       ]
 
+      if (defined(graphic_2d_broker_configs.vendor_root)) {
+        external_deps += [ "container_hmos_service_broker:graphic_broker_idl_target" ]
+      }
+
       if (accessibility_enable) {
         external_deps += [ "accessibility:accessibilityconfig" ]
         external_deps += [ "accessibility:accessibility_common" ]

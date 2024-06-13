@@ -578,6 +578,8 @@ void RSUniRenderThread::PostClearMemoryTask(ClearMemoryMoment moment, bool deepl
         if (!isDefaultClean) {
             this->clearMemoryFinished_ = true;
         }
+        auto subThreadManager = RSSubThreadManager::Instance();
+        subThreadManager->TryReleaseTextureForIdleThread();
         this->exitedPidSet_.clear();
         this->clearMemDeeply_ = false;
         this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);

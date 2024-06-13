@@ -292,6 +292,17 @@ void OH_Drawing_PenSetJoin(OH_Drawing_Pen*, OH_Drawing_PenLineJoinStyle);
 void OH_Drawing_PenSetShaderEffect(OH_Drawing_Pen*, OH_Drawing_ShaderEffect*);
 
 /**
+ * @brief Gets the shaderEffect from a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_ShaderEffect Indicates the pointer to an <b>OH_Drawing_ShaderEffect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenGetShaderEffect(OH_Drawing_Pen*, OH_Drawing_ShaderEffect*);
+
+/**
  * @brief Sets the shadowLayer for a pen.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

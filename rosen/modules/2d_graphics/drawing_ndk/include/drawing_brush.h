@@ -155,6 +155,17 @@ void OH_Drawing_BrushSetAlpha(OH_Drawing_Brush*, uint8_t alpha);
 void OH_Drawing_BrushSetShaderEffect(OH_Drawing_Brush*, OH_Drawing_ShaderEffect*);
 
 /**
+ * @brief Gets the shaderEffect from a brush.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
+ * @param OH_Drawing_ShaderEffect Indicates the pointer to an <b>OH_Drawing_ShaderEffect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_BrushGetShaderEffect(OH_Drawing_Brush*, OH_Drawing_ShaderEffect*);
+
+/**
  * @brief Sets the shadowLayer for a brush.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

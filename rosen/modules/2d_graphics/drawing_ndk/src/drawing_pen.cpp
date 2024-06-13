@@ -19,6 +19,7 @@
 #include "drawing_helper.h"
 
 #include "draw/pen.h"
+#include "effect/path_effect.h"
 
 using namespace OHOS;
 using namespace Rosen;
@@ -278,6 +279,24 @@ void OH_Drawing_PenSetShaderEffect(OH_Drawing_Pen* cPen, OH_Drawing_ShaderEffect
         return;
     }
     pen->SetShaderEffect(std::shared_ptr<ShaderEffect>{CastToShaderEffect(cShaderEffect), [](auto p) {}});
+}
+
+void OH_Drawing_PenGetShaderEffect(OH_Drawing_Pen* cPen, OH_Drawing_ShaderEffect* cShaderEffect)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    ShaderEffect* shaderEffect = CastToShaderEffect(cShaderEffect);
+    if (shaderEffect == nullptr) {
+        return;
+    }
+    std::shared_ptr<ShaderEffect> shaderEffectPtr = pen->GetShaderEffect();
+    if (shaderEffectPtr == nullptr) {
+        *shaderEffect = ShaderEffect(ShaderEffect::ShaderEffectType::NO_TYPE);
+        return;
+    }
+    *shaderEffect = *(shaderEffectPtr.get());
 }
 
 void OH_Drawing_PenSetPathEffect(OH_Drawing_Pen* cPen, OH_Drawing_PathEffect* cPathEffect)

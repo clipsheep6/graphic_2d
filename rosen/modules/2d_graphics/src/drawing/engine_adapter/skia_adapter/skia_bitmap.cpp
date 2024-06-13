@@ -149,7 +149,7 @@ void SkiaBitmap::CopyPixels(Bitmap& dst, int srcLeft, int srcTop) const
     skiaBitmap_.readPixels(skImageInfo, dstPixels, dst.GetRowBytes(), srcX, srcY);
 }
 
-bool SkiaBitmap::IsImmutable()
+bool SkiaBitmap::IsImmutable() const
 {
     return skiaBitmap_.isImmutable();
 }
@@ -311,6 +311,13 @@ bool SkiaBitmap::Deserialize(std::shared_ptr<Data> data)
 ImageInfo SkiaBitmap::GetImageInfo()
 {
     return SkiaImageInfo::ConvertToRSImageInfo(skiaBitmap_.info());
+}
+
+std::shared_ptr<ColorSpace> SkiaBitmap::GetColorSpace()
+{
+    std::shared_ptr<SkiaColorSpace> skiaColorSpace = std::make_shared<SkiaColorSpace>();
+    skiaColorSpace->SetColorSpace(skiaBitmap_.refColorSpace());
+    return ColorSpace::CreateFromImpl(skiaColorSpace);
 }
 
 } // namespace Drawing

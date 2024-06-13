@@ -138,6 +138,18 @@ bool OH_Drawing_RegionSetRect(OH_Drawing_Region* region, const OH_Drawing_Rect* 
 bool OH_Drawing_RegionSetPath(OH_Drawing_Region* region, const OH_Drawing_Path* path, const OH_Drawing_Region* clip);
 
 /**
+ * @brief Gets whether other region is in the <b>OH_Drawing_Region</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param region Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param other Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @return Returns <b>true</b> if other region is completely inside the region object; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_RegionIsRegionContained(const OH_Drawing_Region* region, const OH_Drawing_Region* other);
+
+/**
  * @brief Destroys an <b>OH_Drawing_Region</b> object and reclaims the memory occupied by the object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

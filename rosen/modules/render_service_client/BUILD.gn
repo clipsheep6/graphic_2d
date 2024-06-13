@@ -181,6 +181,7 @@ template("render_service_client_source_set") {
     deps = [
       "$graphic_2d_root/rosen/modules/platform:ipc_core",
       "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
+      "container_hmos_service_broker:graphic_broker_idl_target",
     ]
     public_deps = []
     if (enable_export_macro) {

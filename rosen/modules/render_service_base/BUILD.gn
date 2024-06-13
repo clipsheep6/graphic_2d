@@ -31,7 +31,7 @@ if (!is_mingw && !is_mac && !is_cross_platform) {
 
   ohos_rust_static_ffi("particle_cxx_rust") {
     sources = [ "rust/src/lib.rs" ]
-    deps = [ "//third_party/rust/crates/cxx:lib" ]
+    external_deps = ["cxx:lib" ]
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }

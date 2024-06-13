@@ -5,3 +5,4 @@ bundle.json @lijj01
 
 [cross-platform]
 rosen/modules/glfw_render_context/ @aslklw
+rosen/modules/platform/ @mumuxilv

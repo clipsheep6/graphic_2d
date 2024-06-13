@@ -30,8 +30,16 @@ napi_value JsPath::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("lineTo", JsPath::LineTo),
         DECLARE_NAPI_FUNCTION("arcTo", JsPath::ArcTo),
         DECLARE_NAPI_FUNCTION("quadTo", JsPath::QuadTo),
+        DECLARE_NAPI_FUNCTION("conicTo", JsPath::ConicTo),
         DECLARE_NAPI_FUNCTION("cubicTo", JsPath::CubicTo),
+        DECLARE_NAPI_FUNCTION("rMoveTo", JsPath::RMoveTo),
+        DECLARE_NAPI_FUNCTION("rLineTo", JsPath::RLineTo),
+        DECLARE_NAPI_FUNCTION("rQuadTo", JsPath::RQuadTo),
+        DECLARE_NAPI_FUNCTION("rConicTo", JsPath::RConicTo),
+        DECLARE_NAPI_FUNCTION("rCubicTo", JsPath::RCubicTo),
+        DECLARE_NAPI_FUNCTION("addPolygon", JsPath::AddPolygon),
         DECLARE_NAPI_FUNCTION("close", JsPath::Close),
+        DECLARE_NAPI_FUNCTION("offset", JsPath::Offset),
         DECLARE_NAPI_FUNCTION("reset", JsPath::Reset),
     };
 
@@ -126,16 +134,64 @@ napi_value JsPath::QuadTo(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnQuadTo(env, info) : nullptr;
 }
 
+napi_value JsPath::ConicTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnConicTo(env, info) : nullptr;
+}
+
 napi_value JsPath::CubicTo(napi_env env, napi_callback_info info)
 {
     JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
     return (me != nullptr) ? me->OnCubicTo(env, info) : nullptr;
 }
 
+napi_value JsPath::RMoveTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnRMoveTo(env, info) : nullptr;
+}
+
+napi_value JsPath::RLineTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnRLineTo(env, info) : nullptr;
+}
+
+napi_value JsPath::RQuadTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnRQuadTo(env, info) : nullptr;
+}
+
+napi_value JsPath::RConicTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnRConicTo(env, info) : nullptr;
+}
+
+napi_value JsPath::RCubicTo(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnRCubicTo(env, info) : nullptr;
+}
+
+napi_value JsPath::AddPolygon(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnAddPolygon(env, info) : nullptr;
+}
+
 napi_value JsPath::Close(napi_env env, napi_callback_info info)
 {
     JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
     return (me != nullptr) ? me->OnClose(env, info) : nullptr;
+}
+
+napi_value JsPath::Offset(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnOffset(env, info) : nullptr;
 }
 
 napi_value JsPath::Reset(napi_env env, napi_callback_info info)
@@ -232,6 +288,37 @@ napi_value JsPath::OnQuadTo(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value JsPath::OnConicTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnConicTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_FIVE;
+    napi_value argv[ARGC_FIVE] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_FIVE) {
+        ROSEN_LOGE("JsPath::OnConicTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double ctrlPtX = 0.0;
+    double ctrlPtY = 0.0;
+    double endPtX = 0.0;
+    double endPtY = 0.0;
+    double weight = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], ctrlPtX) && ConvertFromJsValue(env, argv[ARGC_ONE], ctrlPtY) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], endPtX) && ConvertFromJsValue(env, argv[ARGC_THREE], endPtY) &&
+        ConvertFromJsValue(env, argv[ARGC_FOUR], weight))) {
+        ROSEN_LOGE("JsPath::OnConicTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->ConicTo(ctrlPtX, ctrlPtY, endPtX, endPtY, weight);
+    return NapiGetUndefined(env);
+}
+
 napi_value JsPath::OnCubicTo(napi_env env, napi_callback_info info)
 {
     if (m_path == nullptr) {
@@ -259,6 +346,198 @@ napi_value JsPath::OnCubicTo(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value JsPath::OnRMoveTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnRMoveTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_TWO;
+    napi_value argv[ARGC_TWO] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO) {
+        ROSEN_LOGE("JsPath::OnRMoveTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double dx = 0.0;
+    double dy = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], dx) && ConvertFromJsValue(env, argv[ARGC_ONE], dy))) {
+        ROSEN_LOGE("JsPath::OnRMoveTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->RMoveTo(dx, dy);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPath::OnRLineTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnRLineTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_TWO;
+    napi_value argv[ARGC_TWO] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO) {
+        ROSEN_LOGE("JsPath::OnRLineTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double dx = 0.0;
+    double dy = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], dx) && ConvertFromJsValue(env, argv[ARGC_ONE], dy))) {
+        ROSEN_LOGE("JsPath::OnRLineTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->RLineTo(dx, dy);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPath::OnRQuadTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnRQuadTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_FOUR;
+    napi_value argv[ARGC_FOUR] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_FOUR) {
+        ROSEN_LOGE("JsPath::OnRQuadTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double dx1 = 0.0;
+    double dy1 = 0.0;
+    double dx2 = 0.0;
+    double dy2 = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], dx1) && ConvertFromJsValue(env, argv[ARGC_ONE], dy1) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], dx2) && ConvertFromJsValue(env, argv[ARGC_THREE], dy2))) {
+        ROSEN_LOGE("JsPath::OnRQuadTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->RQuadTo(dx1, dy1, dx2, dy2);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPath::OnRConicTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnRConicTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_FIVE;
+    napi_value argv[ARGC_FIVE] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_FIVE) {
+        ROSEN_LOGE("JsPath::OnRConicTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double ctrlPtX = 0.0;
+    double ctrlPtY = 0.0;
+    double endPtX = 0.0;
+    double endPtY = 0.0;
+    double weight = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], ctrlPtX) && ConvertFromJsValue(env, argv[ARGC_ONE], ctrlPtY) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], endPtX) && ConvertFromJsValue(env, argv[ARGC_THREE], endPtY) &&
+        ConvertFromJsValue(env, argv[ARGC_FOUR], weight))) {
+        ROSEN_LOGE("JsPath::OnRConicTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->RConicTo(ctrlPtX, ctrlPtY, endPtX, endPtY, weight);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPath::OnRCubicTo(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnRCubicTo path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_SIX;
+    napi_value argv[ARGC_SIX] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_SIX) {
+        ROSEN_LOGE("JsPath::OnRCubicTo Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double px1 = 0.0;
+    double py1 = 0.0;
+    double px2 = 0.0;
+    double py2 = 0.0;
+    double px3 = 0.0;
+    double py3 = 0.0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_ZERO], px1) && ConvertFromJsValue(env, argv[ARGC_ONE], py1) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], px2) && ConvertFromJsValue(env, argv[ARGC_THREE], py2) &&
+        ConvertFromJsValue(env, argv[ARGC_FOUR], px3) && ConvertFromJsValue(env, argv[ARGC_FIVE], py3))) {
+        ROSEN_LOGE("JsPath::OnRCubicTo Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->RCubicTo(px1, py1, px2, py2, px3, py3);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPath::OnAddPolygon(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_THREE;
+    napi_value argv[ARGC_THREE] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO || argc > ARGC_THREE) {
+        ROSEN_LOGE("JsTextBlob::OnAddPolygon Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value array = argv[ARGC_ZERO];
+    uint32_t size = 0;
+    std::vector<Point> points;
+    napi_get_array_length(env, array, &size);
+    for (uint32_t i = 0; i < size; i++) {
+        napi_value tempRunBuffer = nullptr;
+        napi_get_element(env, array, i, &tempRunBuffer);
+
+        napi_value tempValue = nullptr;
+        Point point = Point();
+        double positionX = 0.0;
+        double positionY = 0.0;
+        napi_get_named_property(env, tempRunBuffer, "x", &tempValue);
+        bool isPositionXOk = ConvertFromJsValue(env, tempValue, positionX);
+        napi_get_named_property(env, tempRunBuffer, "y", &tempValue);
+        bool isPositionYOk = ConvertFromJsValue(env, tempValue, positionY);
+        if (!(isPositionXOk && isPositionYOk)) {
+            ROSEN_LOGE("JsPath::OnAddPolygon Argv is invalid");
+            return napi_value();
+        }
+
+        point.SetX(positionX);
+        point.SetY(positionY);
+        points.push_back(point);
+    }
+
+    uint32_t count = 0;
+    bool close = false;
+    if (!(!points.empty() && ConvertFromJsValue(env, argv[ARGC_ONE], count) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], close))) {
+        ROSEN_LOGE("JsPath::OnAddPolygon Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_path->AddPoly(points, count, close);
+    return napi_value();
+}
+
 napi_value JsPath::OnClose(napi_env env, napi_callback_info info)
 {
     if (m_path == nullptr) {
@@ -268,6 +547,35 @@ napi_value JsPath::OnClose(napi_env env, napi_callback_info info)
 
     JS_CALL_DRAWING_FUNC(m_path->Close());
     return nullptr;
+}
+
+napi_value JsPath::OnOffset(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnOffset path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_THREE;
+    napi_value argv[ARGC_THREE] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_THREE) {
+        ROSEN_LOGE("JsPath::OnOffset Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double dx = 0.0;
+    double dy = 0.0;
+    JsPath* jsPath = nullptr;
+    napi_unwrap(env, argv[ARGC_ZERO], reinterpret_cast<void**>(&jsPath));
+    if (!(jsPath != nullptr && jsPath->GetPath() != nullptr && ConvertFromJsValue(env, argv[ARGC_ONE], dx) &&
+        ConvertFromJsValue(env, argv[ARGC_TWO], dy))) {
+        ROSEN_LOGE("JsPath::OnOffset Argv is invalid: %{public}zu", argc);
+        return NapiGetUndefined(env);
+    }
+
+    m_path->Offset(jsPath->GetPath(), dx, dy);
+    return NapiGetUndefined(env);
 }
 
 napi_value JsPath::OnReset(napi_env env, napi_callback_info info)

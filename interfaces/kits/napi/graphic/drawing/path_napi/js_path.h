@@ -36,8 +36,16 @@ public:
     static napi_value LineTo(napi_env env, napi_callback_info info);
     static napi_value ArcTo(napi_env env, napi_callback_info info);
     static napi_value QuadTo(napi_env env, napi_callback_info info);
+    static napi_value ConicTo(napi_env env, napi_callback_info info);
     static napi_value CubicTo(napi_env env, napi_callback_info info);
+    static napi_value RMoveTo(napi_env env, napi_callback_info info);
+    static napi_value RLineTo(napi_env env, napi_callback_info info);
+    static napi_value RQuadTo(napi_env env, napi_callback_info info);
+    static napi_value RConicTo(napi_env env, napi_callback_info info);
+    static napi_value RCubicTo(napi_env env, napi_callback_info info);
+    static napi_value AddPolygon(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
+    static napi_value Offset(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
     Path* GetPath();
 
@@ -46,8 +54,16 @@ private:
     napi_value OnLineTo(napi_env env, napi_callback_info info);
     napi_value OnArcTo(napi_env env, napi_callback_info info);
     napi_value OnQuadTo(napi_env env, napi_callback_info info);
+    napi_value OnConicTo(napi_env env, napi_callback_info info);
     napi_value OnCubicTo(napi_env env, napi_callback_info info);
+    napi_value OnRMoveTo(napi_env env, napi_callback_info info);
+    napi_value OnRLineTo(napi_env env, napi_callback_info info);
+    napi_value OnRQuadTo(napi_env env, napi_callback_info info);
+    napi_value OnRConicTo(napi_env env, napi_callback_info info);
+    napi_value OnRCubicTo(napi_env env, napi_callback_info info);
+    napi_value OnAddPolygon(napi_env env, napi_callback_info info);
     napi_value OnClose(napi_env env, napi_callback_info info);
+    napi_value OnOffset(napi_env env, napi_callback_info info);
     napi_value OnReset(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;

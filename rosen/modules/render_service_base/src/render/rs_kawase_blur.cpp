@@ -45,45 +45,9 @@ static const bool IS_ADVANCED_FILTER_USABLE_CHECK_ONCE = IsAdvancedFilterUsable(
 
 KawaseBlurFilter::KawaseBlurFilter()
 {
-    std::string blurString(
-        R"(
-        uniform shader imageInput;
-        uniform float2 in_blurOffset;
-        uniform float2 in_maxSizeXY;
-
-        half4 main(float2 xy) {
-            half4 c = imageInput.eval(xy);
-            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            return half4(c.rgb * 0.2, 1.0);
-        }
-    )");
-
-    std::string mixString(
-        R"(
-        uniform shader blurredInput;
-        uniform shader originalInput;
-        uniform float mixFactor;
-        uniform float inColorFactor;
-
-        highp float random(float2 xy) {
-            float t = dot(xy, float2(78.233, 12.9898));
-            return fract(sin(t) * 43758.5453);
-        }
-        half4 main(float2 xy) {
-            highp float noiseGranularity = inColorFactor / 255.0;
-            half4 finalColor = mix(originalInput.eval(xy), blurredInput.eval(xy), mixFactor);
-            float noise  = mix(-noiseGranularity, noiseGranularity, random(xy));
-            finalColor.rgb += noise;
-            return finalColor;
-        }
-    )");
+    std::string blurString;
+    std::string mixString;
+    InitBlurAndMixShaders(blurString, mixString);
 
     auto blurEffect = Drawing::RuntimeEffect::CreateForShader(blurString);
     if (!blurEffect) {
@@ -105,6 +69,47 @@ KawaseBlurFilter::KawaseBlurFilter()
     mixEffect_ = std::move(mixEffect);
 
     SetupSimpleFilter();
+}
+
+void KawaseBlurFilter::InitBlurAndMixShaders(std::string& blurString, std::string& mixString)
+{
+    blurString = R"(
+        uniform shader imageInput;
+        uniform float2 in_blurOffset;
+        uniform float2 in_maxSizeXY;
+
+        half4 main(float2 xy) {
+            half4 c = imageInput.eval(xy);
+            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
+                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
+            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
+                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
+            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
+                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
+            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
+                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
+            return half4(c.rgb * 0.2, 1.0);
+        }
+    )";
+
+    mixString = R"(
+        uniform shader blurredInput;
+        uniform shader originalInput;
+        uniform float mixFactor;
+        uniform float inColorFactor;
+
+        highp float random(float2 xy) {
+            float t = dot(xy, float2(78.233, 12.9898));
+            return fract(sin(t) * 43758.5453);
+        }
+        half4 main(float2 xy) {
+            highp float noiseGranularity = inColorFactor / 255.0;
+            half4 finalColor = mix(originalInput.eval(xy), blurredInput.eval(xy), mixFactor);
+            float noise  = mix(-noiseGranularity, noiseGranularity, random(xy));
+            finalColor.rgb += noise;
+            return finalColor;
+        }
+    )";
 }
 
 KawaseBlurFilter::~KawaseBlurFilter() = default;
@@ -258,6 +263,16 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
         return true;
     }
     auto input = image;
+    auto blurImage = ApplyKawaseBlurImage(canvas, image, param, input);
+    if (!blurImage) {
+        return false;
+    }
+    return ApplyBlur(canvas, input, blurImage, param);
+}
+
+std::shared_ptr<Drawing::Image> KawaseBlurFilter::ApplyKawaseBlurImage(Drawing::Canvas& canvas,
+    const std::shared_ptr<Drawing::Image>& image, const KawaseParameter& param, std::shared_ptr<Drawing::Image>& input)
+{
     CheckInputImage(canvas, image, param, input);
     ComputeRadiusAndScale(param.radius);
     RS_OPTIONAL_TRACE_BEGIN("ApplyKawaseBlur " + GetDescription());
@@ -276,10 +291,7 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
     auto blurParams = BlurParams{numberOfPasses, width, height, radiusByPasses};
     auto blurImage = ExecutePingPongBlur(canvas, input, param, blurParams);
     RS_OPTIONAL_TRACE_END();
-    if (!blurImage) {
-        return false;
-    }
-    return ApplyBlur(canvas, input, blurImage, param);
+    return blurImage;
 }
 
 std::shared_ptr<Drawing::Image> KawaseBlurFilter::ExecutePingPongBlur(Drawing::Canvas& canvas,

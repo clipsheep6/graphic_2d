@@ -77,6 +77,10 @@ private:
     void AdjustRadiusAndScale();
     std::string GetDescription() const;
     void SetupSimpleFilter();
+    void InitBlurAndMixShaders(std::string& blurString, std::string& mixString);
+    std::shared_ptr<Drawing::Image> ApplyKawaseBlurImage(Drawing::Canvas& canvas,
+        const std::shared_ptr<Drawing::Image>& image, const KawaseParameter& param,
+        std::shared_ptr<Drawing::Image>& input);
 
     static constexpr float baseBlurScale = 0.5f; // base downSample radio
     static constexpr uint32_t kMaxPasses = 4; // Maximum number of render passes

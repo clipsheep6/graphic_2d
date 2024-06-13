@@ -194,11 +194,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read commandSize");
         return false;
     }
-    uint8_t followType = 0;
-    NodeId nodeId = 0;
-    uint8_t hasCommand = 0;
-    uint16_t commandType = 0;
-    uint16_t commandSubType = 0;
 
     size_t readableSize = parcel.GetReadableBytes();
     size_t len = static_cast<size_t>(commandSize);
@@ -213,6 +208,23 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read isUniRender");
         return false;
     }
+    if (!UnmarshalAndAddCommand(parcel, isUniRender, len)) {
+        return false;
+    }
+    int32_t pid;
+    return parcel.ReadBool(needSync_) && parcel.ReadBool(needCloseSync_) && parcel.ReadInt32(syncTransactionCount_) &&
+        parcel.ReadUint64(timestamp_) && ({RS_PROFILER_PATCH_TRANSACTION_TIME(parcel, timestamp_); true;}) &&
+        parcel.ReadInt32(pid) && ({RS_PROFILER_PATCH_PID(parcel, pid); pid_ = pid; true;}) &&
+        parcel.ReadUint64(index_) && parcel.ReadUint64(syncId_) && parcel.ReadInt32(hostPid_);
+}
+
+bool RSTransactionData::UnmarshalAndAddCommand(Parcel& parcel, const bool isUniRender, const size_t len)
+{
+    uint8_t followType = 0;
+    NodeId nodeId = 0;
+    uint8_t hasCommand = 0;
+    uint16_t commandType = 0;
+    uint16_t commandSubType = 0;
     std::unique_lock<std::mutex> payloadLock(commandMutex_, std::defer_lock);
     for (size_t i = 0; i < len; i++) {
         if (!isUniRender) {
@@ -247,17 +259,9 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
             payloadLock.lock();
             payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
             payloadLock.unlock();
-        } else {
-            continue;
         }
     }
-    int32_t pid;
-    return parcel.ReadBool(needSync_) && parcel.ReadBool(needCloseSync_) && parcel.ReadInt32(syncTransactionCount_) &&
-        parcel.ReadUint64(timestamp_) && ({RS_PROFILER_PATCH_TRANSACTION_TIME(parcel, timestamp_); true;}) &&
-        parcel.ReadInt32(pid) && ({RS_PROFILER_PATCH_PID(parcel, pid); pid_ = pid; true;}) &&
-        parcel.ReadUint64(index_) && parcel.ReadUint64(syncId_) && parcel.ReadInt32(hostPid_);
+    return true;
 }
-
-
 } // namespace Rosen
 } // namespace OHOS

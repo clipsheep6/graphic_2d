@@ -710,6 +710,18 @@ void OH_Drawing_SetTextStyleFontSize(OH_Drawing_TextStyle*, double /* fontSize *
 void OH_Drawing_SetTextStyleFontWeight(OH_Drawing_TextStyle*, int /* OH_Drawing_FontWeight */);
 
 /**
+ * @brief Sets the font variation of text typography.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TextStyle Indicates the pointer to an <b>OH_Drawing_TextStyle</b> object.
+ * @param char* Indicates the pointer to axis.
+ * @param float Indicates the font variation value to set.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_SetTextStyleFontVariation(OH_Drawing_TextStyle*, const char* /* axis */, const float /* value */);
+
+/**
  * @brief Sets the text baseline.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

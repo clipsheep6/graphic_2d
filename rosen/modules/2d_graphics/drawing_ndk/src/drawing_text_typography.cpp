@@ -250,6 +250,15 @@ void OH_Drawing_SetTextStyleFontWeight(OH_Drawing_TextStyle* style, int fontWeig
 #endif
 }
 
+void OH_Drawing_SetTextStyleFontVariation(OH_Drawing_TextStyle* style, const char* axis, const float value)
+{
+    std::string axis_(axis);
+    #ifndef USE_GRAPHIC_TEXT_GINE
+    #else
+        ConvertToOriginalText<TextStyle>(style)->fontVariations.SetAxisValue(axis_, value);
+    #endif
+}
+
 void OH_Drawing_SetTextStyleBaseLine(OH_Drawing_TextStyle* style, int baseline)
 {
     TextBaseline rosenBaseLine;

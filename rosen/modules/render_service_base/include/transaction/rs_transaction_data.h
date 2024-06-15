@@ -175,6 +175,7 @@ private:
     void AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType);
 
     bool UnmarshallingCommand(Parcel& parcel);
+    bool UnmarshalAndAddCommand(Parcel& parcel, const bool isUniRender, const size_t len);
     std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>> payload_ = {};
     uint64_t timestamp_ = 0;
     std::string abilityName_;

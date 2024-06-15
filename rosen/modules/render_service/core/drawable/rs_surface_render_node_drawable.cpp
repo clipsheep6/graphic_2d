@@ -16,6 +16,7 @@
 #include "drawable/rs_surface_render_node_drawable.h"
 
 #include <memory>
+#include "acquire_fence_manager.h"
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "draw/brush.h"
@@ -241,6 +242,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     if (surfaceParams->IsMainWindowType()) {
         RSRenderNodeDrawable::ClearTotalProcessedNodeCount();
+        RSRenderNodeDrawable::ClearProcessedNodeCount();
         rscanvas->PushDirtyRegion(curSurfaceDrawRegion);
     }
 
@@ -279,6 +281,8 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     // Draw base pipeline end
     if (surfaceParams->IsMainWindowType()) {
         rscanvas->PopDirtyRegion();
+        int processedNodes = RSRenderNodeDrawable::GetProcessedNodeCount();
+        AcquireFenceTracker::SetContainerNodeNum(processedNodes);
         RS_TRACE_NAME_FMT("RSUniRenderThread::Render() the number of total ProcessedNodes: %d",
             RSRenderNodeDrawable::GetTotalProcessedNodeCount());
         const RSNodeStatsType nodeStats = CreateRSNodeStatsItem(

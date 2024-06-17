@@ -32,6 +32,7 @@
 #include "include/gpu/GrBackendSemaphore.h"
 #include "platform/ohos/backend/native_buffer_utils.h"
 #include "platform/ohos/backend/rs_vulkan_context.h"
+#include "render/rs_image_cache.h"
 #endif
 
 #include "include/gpu/GrDirectContext.h"
@@ -158,6 +159,28 @@ RSExtendImageObject *RSExtendImageObject::Unmarshalling(Parcel &parcel)
     }
     return object;
 }
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+void RSExtendImageObject::SetDmaImageForVK(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap)
+{
+    if(!rsImage_ || !pixelMap) {
+        RS_LOGE("SetDmaImageForVK failed");
+        return;
+    }
+    auto cacheImage =
+        RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(pixelMap->GetUniqueId(), gettid());
+    if (cacheImage) {
+        image_ = cacheImage;
+    } else {
+        if (!MakeFromTextureForVK(canvas, reinterpret_cast<SurfaceBuffer*>(pixelMap->GetFd()))) {
+            RS_LOGE("MakeFromTextureForVK failed");
+            return;
+        }
+        SKResourceManager::Instance().HoldResource(image_);
+        RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(pixelMap->GetUniqueId(), image_, gettid());
+    }
+    rsImage_->SetDmaImage(image_);
+}
+#endif
 
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 void RSExtendImageObject::PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap,
@@ -177,9 +200,7 @@ void RSExtendImageObject::PreProcessPixelMap(Drawing::Canvas& canvas, const std:
 #endif
 #if defined(RS_ENABLE_VK)
         if (RSSystemProperties::IsUseVukan()) {
-            if (MakeFromTextureForVK(canvas, reinterpret_cast<SurfaceBuffer*>(pixelMap->GetFd()))) {
-                rsImage_->SetDmaImage(image_);
-            }
+            SetDmaImageForVK(canvas, pixelMap);
         }
 #endif
         return;

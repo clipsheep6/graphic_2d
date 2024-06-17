@@ -22,7 +22,7 @@
 
 using namespace OHOS;
 using namespace Rosen;
-using namespace Drawing;
+
 
 static Font* CastToFont(OH_Drawing_Font* cFont)
 {

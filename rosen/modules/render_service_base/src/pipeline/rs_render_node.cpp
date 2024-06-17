@@ -3701,8 +3701,8 @@ void RSRenderNode::SetDrawRegion(const std::shared_ptr<RectF>& rect)
 {
     if (rect && (rect->GetHeight() >= std::numeric_limits<uint16_t>::max() ||
         rect->GetWidth() >= std::numeric_limits<uint16_t>::max())) {
-        RS_LOGW("large draw region from arkui: %{public}s", rect->ToString().c_str());
-        RS_OPTIONAL_TRACE_NAME_FMT("large draw region from arkui: %s", rect->ToString().c_str());
+        RS_LOGW("large draw region from arkui: %{public}" PRIu64", %{public}s", GetId(), rect->ToString().c_str());
+        RS_OPTIONAL_TRACE_NAME_FMT("large draw region from arkui: %" PRIu64", %s", GetId(), rect->ToString().c_str());
     }
     drawRegion_ = rect;
     GetMutableRenderProperties().SetDrawRegion(rect);

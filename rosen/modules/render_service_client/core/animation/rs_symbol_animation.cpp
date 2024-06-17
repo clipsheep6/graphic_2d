@@ -416,11 +416,6 @@ bool RSSymbolAnimation::SetPublicAnimation(
         }
         rsNode_->AddChild(canvasNode, -1);
     
-        // if there is mask layer, set the blendmode on the original node rsNode_
-        if (symbolNode.isMask) {
-            rsNode_->SetColorBlendMode(RSColorBlendMode::SRC_OVER);
-            rsNode_->SetColorBlendApplyType(RSColorBlendApplyType::SAVE_LAYER);
-        }
         GroupDrawing(canvasNode, symbolNode, offsets, nodeNum > 1);
 
         if (!res || (symbolNode.animationIndex < 0)) {
@@ -545,6 +540,12 @@ Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path& path, const flo
 void RSSymbolAnimation::GroupDrawing(const std::shared_ptr<RSCanvasNode>& canvasNode,
     TextEngine::SymbolNode& symbolNode, const Vector4f& offsets, bool isMultiLayer)
 {
+    // if there is mask layer, set the blendmode on the original node rsNode_
+    if (symbolNode.isMask) {
+        rsNode_->SetColorBlendMode(RSColorBlendMode::SRC_OVER);
+        rsNode_->SetColorBlendApplyType(RSColorBlendApplyType::SAVE_LAYER);
+    }
+
     // drawing a symbol or a path group
     auto recordingCanvas = canvasNode->BeginRecording(symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]);
     if (isMultiLayer) {
@@ -563,7 +564,6 @@ void RSSymbolAnimation::DrawSymbolOnCanvas(
     }
     Drawing::Brush brush;
     Drawing::Pen pen;
-    SetIconProperty(brush, pen, symbolNode);
     Drawing::Point offsetLocal = Drawing::Point { offsets[2], offsets[3] }; // index 2 offsetX 3 offsetY
     recordingCanvas->AttachBrush(brush);
     recordingCanvas->AttachPen(pen);
@@ -583,14 +583,24 @@ void RSSymbolAnimation::DrawPathOnCanvas(
     if (symbolNode.isMask) {
         brush.SetBlendMode(Drawing::BlendMode::CLEAR);
         pen.SetBlendMode(Drawing::BlendMode::CLEAR);
+        symbolNode.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
+        recordingCanvas->AttachBrush(brush);
+        recordingCanvas->AttachPen(pen);
+        recordingCanvas->DrawPath(symbolNode.path);
+        recordingCanvas->DetachBrush();
+        recordingCanvas->DetachPen();
+        return;
     }
-    SetIconProperty(brush, pen, symbolNode);
-    symbolNode.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
-    recordingCanvas->AttachBrush(brush);
-    recordingCanvas->AttachPen(pen);
-    recordingCanvas->DrawPath(symbolNode.path);
-    recordingCanvas->DetachBrush();
-    recordingCanvas->DetachPen();
+
+    for(auto& pathColor: symbolNode.pathsColor) {
+        SetIconProperty(brush, pen, pathColor.color);
+        pathColor.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
+        recordingCanvas->AttachBrush(brush);
+        recordingCanvas->AttachPen(pen);
+        recordingCanvas->DrawPath(pathColor.path);
+        recordingCanvas->DetachBrush();
+        recordingCanvas->DetachPen();
+    }
 }
 
 bool RSSymbolAnimation::GetScaleUnitAnimationParas(
@@ -792,14 +802,14 @@ bool RSSymbolAnimation::CalcTimePercents(std::vector<float>& timePercents, const
     return true;
 }
 
-void RSSymbolAnimation::SetIconProperty(Drawing::Brush& brush, Drawing::Pen& pen, TextEngine::SymbolNode& symbolNode)
+void RSSymbolAnimation::SetIconProperty(Drawing::Brush& brush, Drawing::Pen& pen, Drawing::DrawingSColor& color)
 {
-    brush.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, symbolNode.color.r, symbolNode.color.g, symbolNode.color.b));
-    brush.SetAlphaF(symbolNode.color.a);
+    brush.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, color.r, color.g, color.b));
+    brush.SetAlphaF(color.a);
     brush.SetAntiAlias(true);
 
-    pen.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, symbolNode.color.r, symbolNode.color.g, symbolNode.color.b));
-    pen.SetAlphaF(symbolNode.color.a);
+    pen.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, color.r, color.g, color.b));
+    pen.SetAlphaF(color.a);
     pen.SetAntiAlias(true);
     return;
 }

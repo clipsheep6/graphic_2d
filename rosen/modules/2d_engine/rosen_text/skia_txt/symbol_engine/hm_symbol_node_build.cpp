@@ -54,6 +54,88 @@ static void MergePath(RSPath& multPath, const std::vector<RSGroupInfo>& groupInf
 }
 
 /**
+ * @brief  Obtain the group id of layer
+ * @param groupIds (output paramer) the index of groupIds if layer index, the groupIds[index] is the group index
+ * @param renderGroups the renderGroups info of symbol
+ */
+static void GetLayersGroupId(std::vector<size_t>& groupIds, const std::vector<RSRenderGroup>& renderGroups)
+{
+    for (size_t i = 0; i < renderGroups.size(); i++) {
+        for (auto& groupInfo : renderGroups[i].groupInfos) {
+            for (auto& j : groupInfo.layerIndexes) {
+                if (j < groupIds.size()) {
+                    groupIds[j] = i;
+                }
+            }
+            for (auto& j : groupInfo.maskIndexes) {
+                if (j < groupIds.size()) {
+                    groupIds[j] = i;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief Merge the paths of Group and obtain the corresponding rendering color.
+ * @param groupInfos a group informations of dynamic drawing
+ * @param pathLayers the path data of layers on symbol
+ * @param indexs the indexs of groups on renderGroups, the indexs.size == pathLayers.size
+ * @param pathsColor (output paramer) the result of the merge, where each merged path corresponds to a specific color
+ * @param renderGroups the groups informations of static drawing
+ */
+static void MergePathAndColor(const std::vector<RSGroupInfo>& groupInfos,
+    std::vector<RSPath>& pathLayers, const std::vector<size_t>& indexs,
+    std::vector<TextEngine::LayersColor>& pathsColor, const std::vector<RSRenderGroup>& renderGroups)
+{
+    size_t i = 0;
+    RSSColor color = {0, 0, 0, 0}; // default color with 0 alpha
+    for (const auto& groupInfo : groupInfos) {
+        TextEngine::LayersColor layer;
+        size_t t = 0;
+        for (size_t j = 0; j < groupInfo.layerIndexes.size(); j++) {
+            auto k = groupInfo.layerIndexes[j];
+            if (k >= pathLayers.size() || k >= indexs.size()) {
+                continue;
+            }
+            if (j == 0) { // initialize layer
+                layer.color = indexs[k] < renderGroups.size() ? renderGroups[indexs[k]].color : color;
+                layer.path.AddPath(pathLayers[k]);
+                t = k;
+                continue;
+            }
+            // If the groupIndex of two paths is different, updata pathsColor and layer
+            if (indexs[t] != indexs[k]) {
+                pathsColor.push_back(layer);
+                layer.path.Reset();
+                layer.color = indexs[k] < renderGroups.size() ? renderGroups[indexs[k]].color : color;
+                t = k;
+            }
+            layer.path.AddPath(pathLayers[k]);
+        }
+        pathsColor.push_back(layer);
+
+        RSPath maskPath;
+        for (size_t h : groupInfo.maskIndexes) {
+            if (h < pathLayers.size()) {
+                maskPath.AddPath(pathLayers[h]);
+            }
+        }
+        if(!maskPath.IsValid()) {
+            i = pathsColor.size();
+            continue;
+        }
+
+        for (size_t j = i; j < pathsColor.size(); j++) {
+            Drawing::Path outPath;
+            bool isOk = outPath.Op(pathsColor[j].path, maskPath, Drawing::PathOp::DIFFERENCE);
+            pathsColor[j].path = isOk ? outPath : pathsColor[j].path;
+        }
+        i = pathsColor.size();
+    }
+}
+
+/**
  * @brief check if the symbol group is a mask layer, that it has only mask indexes
  * @param multPath (output paramer) combine all paths of mask indexes in groupInfos
  * @param groupInfos the groupsInfos of symbol
@@ -102,24 +184,26 @@ void SymbolNodeBuild::AddHierarchicalAnimation(RSHMSymbolData &symbolData, const
     RSHMSymbol::PathOutlineDecompose(symbolData.path_, paths);
     std::vector<RSPath> pathLayers;
     RSHMSymbol::MultilayerPath(symbolData.symbolInfo_.layers, paths, pathLayers);
-    RSSColor color;
-    size_t i = 0;
-    auto renderGroups = symbolData.symbolInfo_.renderGroups;
+    // Obtain the group id of layer
+    std::vector<size_t> groupIds(pathLayers.size(), pathLayers.size());
+    GetLayersGroupId(groupIds, symbolData.symbolInfo_.renderGroups);
+
+    // 
     for (auto& groupSetting: groupSettings) {
-        RSPath multPath;
+        TextEngine::SymbolNode symbolNode;
         RSPath maskPath;
         bool isMask = IsMaskLayer(maskPath, groupSetting.groupInfos, pathLayers);
         if (!isMask) {
-            MergePath(multPath, groupSetting.groupInfos, pathLayers);
-            if (i < renderGroups.size()) {
-                color = renderGroups[i].color;
-                i++;
-            }
+            MergePath(symbolNode.path, groupSetting.groupInfos, pathLayers);
+            MergePathAndColor(groupSetting.groupInfos, pathLayers, groupIds, symbolNode.pathsColor,
+                symbolData.symbolInfo_.renderGroups);
         } else {
-            multPath = maskPath;
+            symbolNode.path = maskPath;
         }
-        TextEngine::SymbolNode symbolNode = {multPath, color, nodeBounds, symbolData,
-            groupSetting.animationIndex, isMask};
+        symbolNode.nodeBoundary = nodeBounds;
+        symbolNode.symbolData = symbolData;
+        symbolNode.animationIndex = groupSetting.animationIndex;
+        symbolNode.isMask = isMask;
         symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
     }
     symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();

@@ -18,13 +18,15 @@
 namespace OHOS {
 namespace Rosen {
 namespace SPText {
+static const float MINLOSE = 1E-6;
+
 bool HMSymbolTxt::operator ==(HMSymbolTxt const &sym) const
 {
     if (colorList_.size() != sym.colorList_.size()) {
         return false;
     }
     for (size_t i = 0; i < colorList_.size(); i++) {
-        if (colorList_[i].a != sym.colorList_[i].a ||
+        if (abs(colorList_[i].a - sym.colorList_[i].a) < MINLOSE  ||
             colorList_[i].r != sym.colorList_[i].r ||
             colorList_[i].g != sym.colorList_[i].g ||
             colorList_[i].b != sym.colorList_[i].b) {

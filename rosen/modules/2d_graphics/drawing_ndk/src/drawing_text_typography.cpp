@@ -31,12 +31,13 @@
 #include <unicode/brkiter.h>
 #include <shared_mutex>
 
-// Using aliases.
 namespace {
+// Using type aliases.
 using RosenFontStyle = OHOS::Rosen::FontStyle;
 using RosenTextHeightBehavior = OHOS::Rosen::TextHeightBehavior;
 using RosenFontWidth = OHOS::Rosen::FontWidth;
 using RosenLineMetrics = OHOS::Rosen::LineMetrics;
+// Namespace aliases.
 namespace RosenTextEngine = OHOS::Rosen::TextEngine;
 namespace RosenDrawing = OHOS::Rosen::Drawing;
 };

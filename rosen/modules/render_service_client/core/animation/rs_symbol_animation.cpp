@@ -592,7 +592,7 @@ void RSSymbolAnimation::DrawPathOnCanvas(
         return;
     }
 
-    for(auto& pathColor: symbolNode.pathsColor) {
+    for (auto& pathColor: symbolNode.pathsColor) {
         SetIconProperty(brush, pen, pathColor.color);
         pathColor.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
         recordingCanvas->AttachBrush(brush);

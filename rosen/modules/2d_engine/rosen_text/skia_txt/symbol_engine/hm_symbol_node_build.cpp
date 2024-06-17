@@ -54,23 +54,22 @@ static void MergePath(RSPath& multPath, const std::vector<RSGroupInfo>& groupInf
 }
 
 /**
- * @brief  Obtain the group id of layer
+ * @brief  Obtain the group id to layer
  * @param groupIds (output paramer) the index of groupIds if layer index, the groupIds[index] is the group index
- * @param renderGroups the renderGroups info of symbol
+ * @param renderGroup the renderGroup info of symbol
+ * @param index the renderGroup index
  */
-static void GetLayersGroupId(std::vector<size_t>& groupIds, const std::vector<RSRenderGroup>& renderGroups)
+static void GetLayersGroupId(std::vector<size_t>& groupIds, const RSRenderGroup& renderGroup, size_t index)
 {
-    for (size_t i = 0; i < renderGroups.size(); i++) {
-        for (auto& groupInfo : renderGroups[i].groupInfos) {
-            for (auto& j : groupInfo.layerIndexes) {
-                if (j < groupIds.size()) {
-                    groupIds[j] = i;
-                }
+    for (auto& groupInfo : renderGroup.groupInfos) {
+        for (auto& j : groupInfo.layerIndexes) {
+            if (j < groupIds.size()) {
+                groupIds[j] = index;
             }
-            for (auto& j : groupInfo.maskIndexes) {
-                if (j < groupIds.size()) {
-                    groupIds[j] = i;
-                }
+        }
+        for (auto& j : groupInfo.maskIndexes) {
+            if (j < groupIds.size()) {
+                groupIds[j] = index;
             }
         }
     }
@@ -121,7 +120,7 @@ static void MergePathAndColor(const std::vector<RSGroupInfo>& groupInfos,
                 maskPath.AddPath(pathLayers[h]);
             }
         }
-        if(!maskPath.IsValid()) {
+        if (!maskPath.IsValid()) {
             i = pathsColor.size();
             continue;
         }
@@ -184,11 +183,14 @@ void SymbolNodeBuild::AddHierarchicalAnimation(RSHMSymbolData &symbolData, const
     RSHMSymbol::PathOutlineDecompose(symbolData.path_, paths);
     std::vector<RSPath> pathLayers;
     RSHMSymbol::MultilayerPath(symbolData.symbolInfo_.layers, paths, pathLayers);
+
     // Obtain the group id of layer
     std::vector<size_t> groupIds(pathLayers.size(), pathLayers.size());
-    GetLayersGroupId(groupIds, symbolData.symbolInfo_.renderGroups);
+    for (size_t idex = 0; idex < symbolData.symbolInfo_.renderGroups.size(); idex++) {
+        GetLayersGroupId(groupIds, symbolData.symbolInfo_.renderGroups[idex], idex);
+    }
 
-    // 
+    // Splitting animation nodes information
     for (auto& groupSetting: groupSettings) {
         TextEngine::SymbolNode symbolNode;
         RSPath maskPath;

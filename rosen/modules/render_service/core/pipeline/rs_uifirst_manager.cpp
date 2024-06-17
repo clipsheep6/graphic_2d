@@ -331,18 +331,16 @@ void RSUifirstManager::DoPurgePendingPostNodes(std::unordered_map<NodeId,
             ++it;
             continue;
         }
-        auto surfaceParams = static_cast<RSSurfaceRenderParams*>(drawable->GetRenderParams().get());
-        if (!surfaceParams) {
-            ++it;
-            continue;
-        }
-        auto node = it->second;
-        bool staticContent = node->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD ?
-            node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
-        if (drawable->HasCachedTexture() && (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) &&
-            (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end())) {
-            RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %s", surfaceParams->GetName().c_str());
-            it = pendingNode.erase(it);
+        if (drawable->HasCachedTexture() && (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end())) {
+            auto node = it->second;
+            bool staticContent = node->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD ?
+                node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
+            if (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) {
+                RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %lld", id);
+                it = pendingNode.erase(it);
+            } else {
+                ++it;
+            }
         } else {
             ++it;
         }
@@ -944,6 +942,12 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         (RSUifirstManager::Instance().CheckIfAppWindowHasAnimation(node))) {
         return false;
     }
+    if (node.IsSelfDrawingType()) {
+        return false;
+    }
+    if (node.GetSurfaceWindowType() == SurfaceWindowType::SYSTEM_SCB_WINDOW) {
+        return false;
+    }
     if (node.IsLeashWindow()) {
         if (RSUifirstManager::Instance().IsRecentTaskScene()) {
             isNeedAssignToSubThread = node.IsScale() && LeashWindowContainMainWindow(node);
@@ -954,12 +958,6 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         // 1: Planning: support multi appwindows
         isNeedAssignToSubThread = (isNeedAssignToSubThread || ROSEN_EQ(node.GetGlobalAlpha(), 0.0f) ||
             node.GetForceUIFirst()) && !node.HasFilter() && !RSUifirstManager::Instance().rotationChanged_;
-    }
-
-    std::string surfaceName = node.GetName();
-    bool needFilterSCB = node.GetSurfaceWindowType() == SurfaceWindowType::SYSTEM_SCB_WINDOW;
-    if (needFilterSCB || node.IsSelfDrawingType()) {
-        return false;
     }
     RS_OPTIONAL_TRACE_NAME_FMT("Assign info: name[%s] id[%lu]"
         " filter:%d animation:%d forceUIFirst:%d isNeedAssign:%d",

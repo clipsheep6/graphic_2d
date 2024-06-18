@@ -101,9 +101,12 @@ HWTEST_F(SkiaTextBlobTest, GetDrawingGlyphIDforTextBlob001, TestSize.Level1)
     Font font;
     font.SetSize(100);
     auto textblob = SkiaTextBlob::MakeFromText(str, strlen(str), font, TextEncoding::UTF8);
+    SkiaTextBlob::MakeFromText(nullptr, strlen(str), font, TextEncoding::UTF8);
     ASSERT_TRUE(textblob != nullptr);
     std::vector<uint16_t> glyphIds { 0, 1 };
     SkiaTextBlob::GetDrawingGlyphIDforTextBlob(textblob.get(), glyphIds);
+    font.SetSize(0);
+    SkiaTextBlob::MakeFromText(str, strlen(str), font, TextEncoding::UTF8);
 }
 
 /**

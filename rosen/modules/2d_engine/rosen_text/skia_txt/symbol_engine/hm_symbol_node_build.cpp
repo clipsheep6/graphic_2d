@@ -29,30 +29,6 @@ static const std::map<RSEffectStrategy, TextEngine::SymbolAnimationEffectStrateg
     {RSEffectStrategy::PULSE, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_PULSE},
     {RSEffectStrategy::REPLACE_APPEAR, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_REPLACE_APPEAR}};
 
-static void MergePath(RSPath& multPath, const std::vector<RSGroupInfo>& groupInfos, std::vector<RSPath>& pathLayers)
-{
-    for (const auto& groupInfo : groupInfos) {
-        RSPath pathTemp;
-        for (auto k : groupInfo.layerIndexes) {
-            if (k >= pathLayers.size()) {
-                continue;
-            }
-            pathTemp.AddPath(pathLayers[k]);
-        }
-        for (size_t h : groupInfo.maskIndexes) {
-            if (h >= pathLayers.size()) {
-                continue;
-            }
-            RSPath outPath;
-            auto isOk = outPath.Op(pathTemp, pathLayers[h], RSPathOp::DIFFERENCE);
-            if (isOk) {
-                pathTemp = outPath;
-            }
-        }
-        multPath.AddPath(pathTemp);
-    }
-}
-
 /**
  * @brief  Obtain the group id to layer
  * @param groupIds (output paramer) the index of groupIds if layer index, the groupIds[index] is the group index
@@ -196,7 +172,6 @@ void SymbolNodeBuild::AddHierarchicalAnimation(RSHMSymbolData &symbolData, const
         RSPath maskPath;
         bool isMask = IsMaskLayer(maskPath, groupSetting.groupInfos, pathLayers);
         if (!isMask) {
-            MergePath(symbolNode.path, groupSetting.groupInfos, pathLayers);
             MergePathAndColor(groupSetting.groupInfos, pathLayers, groupIds, symbolNode.pathsColor,
                 symbolData.symbolInfo_.renderGroups);
         } else {

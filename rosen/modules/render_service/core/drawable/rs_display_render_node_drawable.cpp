@@ -548,6 +548,10 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
                 if (!uniParam->IsVirtualDirtyDfxEnabled()) {
                     expandProcessor->SetDirtyInfo(damageRegionRects);
                 }
+            } else {
+                damageRegionRects.emplace_back(
+                    RectI(0, 0, screenInfo.GetRotatedWidth(), screenInfo.GetRotatedHeight()));
+                expandProcessor->SetDirtyInfo(damageRegionRects);
             }
             rsDirtyRectsDfx.SetVirtualDirtyRects(damageRegionRects, screenInfo);
             DrawExpandScreen(*expandProcessor);

@@ -4118,7 +4118,14 @@ void RSProperties::UpdateFilter()
 
 void RSProperties::UpdateForegroundFilter()
 {
-    if (IsForegroundEffectRadiusValid()) {
+    if (motionBlurPara_ && ROSEN_GNE(motionBlurPara_->radius, 0.0)) {
+        auto motionBlurFilter = std::make_shared<RSMotionBlurFilter>(motionBlurPara_);
+        if (IS_UNI_RENDER) {
+            foregroundFilterCache_ = motionBlurFilter;
+        } else {
+            foregroundFilter_ = motionBlurFilter;
+        }
+    } else if (IsForegroundEffectRadiusValid()) {
         auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(foregroundEffectRadius_);
         if (IS_UNI_RENDER) {
             foregroundFilterCache_ = foregroundEffectFilter;
@@ -4144,10 +4151,7 @@ void RSProperties::UpdateForegroundFilter()
         foregroundFilter_.reset();
         foregroundFilterCache_.reset();
     }
-    if (motionBlurPara_ && ROSEN_GE(motionBlurPara_->radius, 0.0)) {
-        auto motionBlurFilter = std::make_shared<RSMotionBlurFilter>(motionBlurPara_);
-        foregroundFilter_ = motionBlurFilter;
-    }
+    
 }
 
 void RSProperties::CalculatePixelStretch()

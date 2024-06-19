@@ -38,6 +38,9 @@ napi_value JsFont::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("measureText", JsFont::MeasureText),
         DECLARE_NAPI_FUNCTION("setScaleX", JsFont::SetScaleX),
         DECLARE_NAPI_FUNCTION("setSkewX", JsFont::SetSkewX),
+        DECLARE_NAPI_FUNCTION("isSubpexel", JsFont::IsSubpixel),
+        DECLARE_NAPI_FUNCTION("isLinearText", JsFont::IsLinearText),
+        DECLARE_NAPI_FUNCTION("getTextSkewX", JsFont::GetTextSkewX),
     };
 
     napi_value constructor = nullptr;
@@ -191,6 +194,24 @@ napi_value JsFont::SetSkewX(napi_env env, napi_callback_info info)
 {
     JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
     return (me != nullptr) ? me->OnSetSkewX(env, info) : nullptr;
+}
+
+napi_value JsFont::IsSubpixel(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnIsSubpixel(env, info) : nullptr;
+}
+
+napi_value JsFont::IsLinearText(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnIsLinearText(env, info) : nullptr;
+}
+
+napi_value JsFont::GetTextSkewX(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnGetTextSkewX(env, info) : nullptr;
 }
 
 napi_value JsFont::OnEnableSubpixel(napi_env env, napi_callback_info info)
@@ -371,6 +392,39 @@ napi_value JsFont::OnSetSkewX(napi_env env, napi_callback_info info)
 
     JS_CALL_DRAWING_FUNC(m_font->SetSkewX(skewX));
     return nullptr;
+}
+
+napi_value JsFont::OnIsSubpixel(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnIsSubpixel font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    bool subpixel = m_font->IsSubpixel();
+    return CreateJsValue(env, subpixel);
+}
+
+napi_value JsFont::OnIsLinearText(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnIsLinearText font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    bool linear = m_font->IsLinearText();
+    return CreateJsValue(env, linear);
+}
+
+napi_value JsFont::OnGetTextSkewX(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnGetTextSkewX font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double skewX = m_font->GetSkewX();
+    return CreateJsValue(env, skewX);
 }
 
 std::shared_ptr<Font> JsFont::GetFont()

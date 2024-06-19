@@ -44,6 +44,7 @@ HgmOneShotTimer::HgmOneShotTimer(std::string name, const Interval& interval,
     const ResetCallback& resetCallback, const ExpiredCallback& expiredCallback,
     std::unique_ptr<ChronoSteadyClock> clock)
     : clock_(std::move(clock)),
+      runner_(AppExecFwk::EventRunner::Create(name)),
       name_(std::move(name)),
       interval_(interval),
       resetCallback_(resetCallback),
@@ -51,6 +52,7 @@ HgmOneShotTimer::HgmOneShotTimer(std::string name, const Interval& interval,
 {
     int result = sem_init(&semaphone_, 0, 0);
     HGM_LOGD("HgmOneShotTimer::sem_init result: %{public}d", result);
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     thread_ = std::thread([this] () {
         pthread_setname_np(pthread_self(), name_.c_str());
         std::mutex startCondMutex;
@@ -68,6 +70,9 @@ HgmOneShotTimer::HgmOneShotTimer(std::string name, const Interval& interval,
 HgmOneShotTimer::~HgmOneShotTimer()
 {
     threadAlive_ = false;
+    if (handler_ != nullptr) {
+        handler_->RemoveAllEvents();
+    }
     Stop();
     startCond_.notify_all();
     if (thread_.joinable()) {
@@ -79,11 +84,18 @@ HgmOneShotTimer::~HgmOneShotTimer()
 
 void HgmOneShotTimer::Start()
 {
+    std::lock_guard<std::mutex> lock(startMutex_);
+    if (handler_ != nullptr && handler_->IsIdle()) {
+        handler_->PostTask([this] () { Loop(); });
+    }
     startCond_.notify_all();
 }
 
 void HgmOneShotTimer::Stop()
 {
+    if (handler_ == nullptr || handler_->IsIdle()) {
+        return;
+    }
     if (stoppingFlag_) {
         return;
     }

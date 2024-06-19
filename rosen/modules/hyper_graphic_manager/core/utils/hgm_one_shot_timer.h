@@ -66,6 +66,7 @@ private:
     bool CheckTimerExpired(std::chrono::steady_clock::time_point expireTime) const;
 
     std::unique_ptr<ChronoSteadyClock> clock_;
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::mutex startMutex_;

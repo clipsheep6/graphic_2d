@@ -51,7 +51,7 @@ HWTEST_F(HgmTouchManagerTest, QuickTouch, Function | SmallTest | Level1)
         touchManager.ChangeState(TouchState::UP_STATE);
     }
     touchManager.ChangeState(TouchState::IDLE_STATE);
-    sleep(1);
+    sleep(1); // wait for 1s for the async task to complete
     touchManager.ChangeState(TouchState::IDLE_STATE);
 }
 

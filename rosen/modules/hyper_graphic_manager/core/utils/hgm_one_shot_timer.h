@@ -64,12 +64,7 @@ private:
     void Loop();
     HgmTimerState CheckForResetAndStop(HgmTimerState state);
     bool CheckTimerExpired(std::chrono::steady_clock::time_point expireTime) const;
-    void OnExpiredCallback();
 
-    std::thread thread_;
-    std::condition_variable startCond_;
-    bool threadAlive_ = true;
-    std::mutex loopMutex_;
     std::unique_ptr<ChronoSteadyClock> clock_;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -84,7 +79,6 @@ private:
 
     std::atomic<bool> resetFlag_ = false;
     std::atomic<bool> stopFlag_ = false;
-    std::atomic<bool> stoppingFlag_ = false;
 };
 } // namespace OHOS::Rosen
 

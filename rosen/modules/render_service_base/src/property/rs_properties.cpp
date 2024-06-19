@@ -4151,7 +4151,6 @@ void RSProperties::UpdateForegroundFilter()
         foregroundFilter_.reset();
         foregroundFilterCache_.reset();
     }
-    
 }
 
 void RSProperties::CalculatePixelStretch()

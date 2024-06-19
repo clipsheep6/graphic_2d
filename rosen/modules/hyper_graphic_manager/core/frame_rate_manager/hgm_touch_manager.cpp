@@ -29,6 +29,7 @@ namespace {
 }
 
 HgmTouchManager::HgmTouchManager() : HgmStateMachine<TouchState, TouchEvent>(TouchState::IDLE_STATE),
+    runner_(AppExecFwk::EventRunner::Create("TouchMachine")),
     upTimeoutTimer_("up_timeout_timer", std::chrono::milliseconds(UP_TIMEOUT_MS), nullptr, [this] () {
         auto frameRateMgr = HgmCore::Instance().GetFrameRateMgr();
         frameRateMgr->SetSchedulerPreferredFps(OLED_60_HZ);
@@ -39,6 +40,7 @@ HgmTouchManager::HgmTouchManager() : HgmStateMachine<TouchState, TouchEvent>(Tou
         ChangeState(TouchState::IDLE_STATE);
     })
 {
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     // register event callback
     RegisterEventCallback(TouchEvent::DOWN_EVENT, [this] (TouchEvent event) {
         auto frameRateMgr = HgmCore::Instance().GetFrameRateMgr();
@@ -104,8 +106,8 @@ bool HgmTouchManager::CheckChangeStateValid(TouchState lastState, TouchState new
 
 void HgmTouchManager::ExecuteCallback(const std::function<void()>& callback)
 {
-    if (callback != nullptr) {
-        HgmTaskHandleThread::Instance().PostSyncTask(callback);
+    if (callback != nullptr && handler_ != nullptr) {
+        handler_->PostTask(callback);
     }
 }
 } // OHOS::Rosen

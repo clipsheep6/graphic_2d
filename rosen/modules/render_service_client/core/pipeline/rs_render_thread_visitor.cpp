@@ -45,7 +45,6 @@
 #ifdef ROSEN_OHOS
 #include <frame_collector.h>
 #include <frame_painter.h>
-#include "common/rs_optional_trace.h"
 #include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
@@ -384,8 +383,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 #ifndef ROSEN_CROSS_PLATFORM
-    RS_OPTIONAL_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessRootRenderNode nodeId is %" PRIu64
-                               " GetIsTextureExportNode is %d", node.GetId(), node.GetIsTextureExportNode());
+    if (node.GetIsTextureExportNode()) {
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessRootRenderNode nodeId is %" PRIu64
+                          " GetIsTextureExportNode is %d", node.GetId(), node.GetIsTextureExportNode());
+    }
 #endif
     drawCmdListVector_.clear();
     curDirtyManager_ = node.GetDirtyManager();
@@ -598,9 +599,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
 #ifndef ROSEN_CROSS_PLATFORM
-    RS_OPTIONAL_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessCanvasRenderNode nodeId is %" PRIu64
-                               " GetIsTextureExportNode is %d properties is %s",
-        node.GetId(), node.GetIsTextureExportNode(), node.GetRenderProperties().Dump().c_str());
+    if (node.GetIsTextureExportNode()) {
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessCanvasRenderNode nodeId is %" PRIu64
+                          " GetIsTextureExportNode is %d properties is %s",
+            node.GetId(), node.GetIsTextureExportNode(), node.GetRenderProperties().Dump().c_str());
+    }
 #endif
     if (!node.ShouldPaint()) {
         return;
@@ -761,6 +764,7 @@ void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
     sptr<SyncFence> fence;
     int ret = surface->GetLastFlushedBuffer(surfaceBuffer, fence, matrix);
     if (ret != OHOS::GSERROR_OK || surfaceBuffer == nullptr) {
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceViewInRT: GetLastFlushedBuffer failed, err: %d", ret);
         RS_LOGE("RSRenderThreadVisitor::ProcessSurfaceViewInRT: GetLastFlushedBuffer failed, err: %{public}d", ret);
         return;
     }
@@ -786,9 +790,11 @@ void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
 void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
 #ifndef ROSEN_CROSS_PLATFORM
-    RS_OPTIONAL_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode nodeId is %" PRIu64
+    if (node.GetIsTextureExportNode()) {
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode nodeId is %" PRIu64
                                " GetIsTextureExportNode is %d name is %s properties is %s",
-        node.GetId(), node.GetIsTextureExportNode(), node.GetName().c_str(), node.GetRenderProperties().Dump().c_str());
+        node.GetId(), node.GetIsTextureExportNode(), node.GetName().c_str(), node.GetRenderProperties().Dump().c_str());   
+    }
 #endif
     if (!canvas_) {
         ROSEN_LOGE("RSRenderThreadVisitor::ProcessSurfaceRenderNode, canvas is nullptr");

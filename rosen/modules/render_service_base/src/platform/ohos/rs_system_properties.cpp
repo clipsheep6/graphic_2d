@@ -804,6 +804,12 @@ bool RSSystemProperties::IsPhoneType()
     return isPhone;
 }
 
+bool RSSystemProperties::IsTabletType()
+{
+    static bool isTablet = system::GetParameter("const.product.devicetype", "pc") == "tablet";
+    return isTablet;
+}
+
 bool RSSystemProperties::IsPcType()
 {
     static bool isPc = (system::GetParameter("const.product.devicetype", "pc") == "pc") ||
@@ -906,14 +912,6 @@ bool RSSystemProperties::GetSubSurfaceEnabled()
     static bool subSurfaceEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.subSurface", "0")).c_str());
     return subSurfaceEnabled;
-}
-
-bool RSSystemProperties::GetAceDebugBoundaryEnabled()
-{
-    static CachedHandle g_Handle = CachedParameterCreate("persist.ace.debug.boundary.enabled", "false");
-    int changed = 0;
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return (strcmp(enable, "true") == 0);
 }
 
 bool RSSystemProperties::GetSecurityPermissionCheckEnabled()

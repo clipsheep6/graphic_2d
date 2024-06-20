@@ -349,6 +349,11 @@ bool RSSystemProperties::IsPhoneType()
     return false;
 }
 
+bool RSSystemProperties::IsTabletType()
+{
+    return false;
+}
+
 bool RSSystemProperties::IsPcType()
 {
     return false;
@@ -429,11 +434,6 @@ bool RSSystemProperties::GetRenderParallelEnabled()
 }
 
 bool RSSystemProperties::GetUIFirstForceEnabled()
-{
-    return false;
-}
-
-bool RSSystemProperties::GetAceDebugBoundaryEnabled()
 {
     return false;
 }

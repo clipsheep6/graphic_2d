@@ -2560,8 +2560,8 @@ bool RSRenderNode::NeedInitCacheSurface()
     auto cacheType = GetCacheType();
     int width = 0;
     int height = 0;
-    if (cacheType == CacheType::ANIMATE_PROPERTY &&
-        GetRenderProperties().IsShadowValid() && !GetRenderProperties().IsSpherizeValid()) {
+    if (cacheType == CacheType::ANIMATE_PROPERTY && GetRenderProperties().IsShadowValid() &&
+        !GetRenderProperties().IsSpherizeValid() && !GetRenderProperties().IsAttractionValid()) {
         const RectF boundsRect = GetRenderProperties().GetBoundsRect();
         RRect rrect = RRect(boundsRect, {0, 0, 0, 0});
         RectI shadowRect;
@@ -2628,8 +2628,8 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
     Vector2f size = GetOptionalBufferSize();
     boundsWidth_ = size.x_;
     boundsHeight_ = size.y_;
-    if (cacheType == CacheType::ANIMATE_PROPERTY &&
-        GetRenderProperties().IsShadowValid() && !GetRenderProperties().IsSpherizeValid()) {
+    if (cacheType == CacheType::ANIMATE_PROPERTY && GetRenderProperties().IsShadowValid() &&
+        !GetRenderProperties().IsSpherizeValid() && !GetRenderProperties().IsAttractionValid()) {
         const RectF boundsRect = GetRenderProperties().GetBoundsRect();
         RRect rrect = RRect(boundsRect, {0, 0, 0, 0});
         RectI shadowRect;
@@ -2973,7 +2973,11 @@ void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup, bool incl
         }
         SetDirty();
     }
+    if (nodeGroupType_ == static_cast<uint8_t>(NodeGroupType::NONE) && !isNodeGroup) {
+        needClearSurface_ = true;
+    }
     nodeGroupIncludeProperty_ = includeProperty;
+    AddToPendingSyncList();
 }
 
 bool RSRenderNode::IsNodeGroupIncludeProperty() const
@@ -3782,6 +3786,7 @@ void RSRenderNode::UpdateRenderParams()
     stagingRenderParams_->SetCacheSize(GetOptionalBufferSize());
     stagingRenderParams_->SetAlphaOffScreen(GetRenderProperties().GetAlphaOffscreen());
     stagingRenderParams_->SetForegroundFilterCache(GetRenderProperties().GetForegroundFilterCache());
+    stagingRenderParams_->SetNeedFilter(GetRenderProperties().NeedFilter());
 }
 
 bool RSRenderNode::UpdateLocalDrawRect()
@@ -3818,6 +3823,7 @@ void RSRenderNode::UpdateClipAbsDrawRectChangeState(const RectI& clipRect)
 void RSRenderNode::OnSync()
 {
     addedToPendingSyncList_ = false;
+    bool isLeashWindowPartialSkip = false;
 
     if (renderDrawable_ == nullptr) {
         return;
@@ -3869,6 +3875,7 @@ void RSRenderNode::OnSync()
             }
         }
         uifirstSkipPartialSync_ = false;
+        isLeashWindowPartialSkip = true;
     }
     if (ShouldClearSurface()) {
         clearSurfaceTask_();
@@ -3880,14 +3887,15 @@ void RSRenderNode::OnSync()
     foregroundFilterRegionChanged_ = false;
     foregroundFilterInteractWithDirty_ = false;
 
-    lastFrameSynced_ = true;
+    lastFrameSynced_ = !isLeashWindowPartialSkip;
 }
 
 bool RSRenderNode::ShouldClearSurface()
 {
     bool renderGroupFlag = GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE || isOpincRootFlag_;
     bool freezeFlag = stagingRenderParams_->GetRSFreezeFlag();
-    return (renderGroupFlag || freezeFlag) && clearSurfaceTask_ && needClearSurface_;
+    return (renderGroupFlag || freezeFlag || nodeGroupType_ == static_cast<uint8_t>(NodeGroupType::NONE)) &&
+        clearSurfaceTask_ && needClearSurface_;
 }
 
 void RSRenderNode::ValidateLightResources()
@@ -3922,6 +3930,12 @@ void RSRenderNode::AddToPendingSyncList()
     }
 }
 
+void RSRenderNode::MarkUifirstNode(bool isUifirstNode)
+{
+    RS_OPTIONAL_TRACE_NAME_FMT("MarkUifirstNode id:%lld, isUifirstNode:%d", GetId(), isUifirstNode);
+    isUifirstNode_ = isUifirstNode;
+}
+
 void RSRenderNode::SetChildrenHasSharedTransition(bool hasSharedTransition)
 {
     childrenHasSharedTransition_ = hasSharedTransition;
@@ -3930,6 +3944,9 @@ void RSRenderNode::SetChildrenHasSharedTransition(bool hasSharedTransition)
 void RSRenderNode::RemoveChildFromFulllist(NodeId id)
 {
     // Make a copy of the fullChildrenList
+    if (!fullChildrenList_) {
+        return;
+    }
     auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 
     fullChildrenList->erase(std::remove_if(fullChildrenList->begin(),

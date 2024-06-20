@@ -300,7 +300,7 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp
     }
 
     RS_TRACE_NAME_FMT("RSHardwareThread::PerformSetActiveMode setting active mode. rate: %d",
-        hgmCore.GetScreenCurrentRefreshRate(screenManager->GetDefaultScreenId()));
+        HgmCore::Instance().GetScreenCurrentRefreshRate(HgmCore::Instance().GetActiveScreenId()));
     for (auto mapIter = modeMap->begin(); mapIter != modeMap->end(); ++mapIter) {
         ScreenId id = mapIter->first;
         int32_t modeId = mapIter->second;
@@ -435,6 +435,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         canvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
     }
 #endif
+
     uniRenderEngine_->DrawLayers(*canvas, layers, false, screenInfo);
     renderFrame->Flush();
     RS_LOGD("RsDebug RSHardwareThread::Redraw flush frame buffer end");

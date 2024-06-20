@@ -215,13 +215,13 @@ public:
     static bool GetSnapshotWithDMAEnabled();
     static bool GetDrmEnabled();
     static bool IsPhoneType();
+    static bool IsTabletType();
     static bool IsPcType();
     static bool GetSyncTransactionEnabled();
     static int GetSyncTransactionWaitDelay();
     static bool GetSingleFrameComposerEnabled();
     static bool GetSingleFrameComposerCanvasNodeEnabled();
     static bool GetSubSurfaceEnabled();
-    static bool GetAceDebugBoundaryEnabled();
     static bool GetSecurityPermissionCheckEnabled();
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();

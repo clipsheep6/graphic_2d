@@ -122,6 +122,15 @@ void HgmFrameRateManager::InitTouchManager()
 {
     static std::once_flag createFlag;
     std::call_once(createFlag, [this]() {
+        touchManager_.RegisterEventCallback(TouchEvent::UP_TIMEOUT_EVENT, [this] (TouchEvent event) {
+            SetSchedulerPreferredFps(OLED_60_HZ);
+            SetIsNeedUpdateAppOffset(true);
+            touchManager_.ChangeState(TouchState::IDLE_STATE);
+        });
+        touchManager_.RegisterEventCallback(TouchEvent::DOWN_EVENT, [this] (TouchEvent event) {
+            SetSchedulerPreferredFps(OLED_120_HZ);
+            touchManager_.ChangeState(TouchState::DOWN_STATE);
+        });
         touchManager_.RegisterEnterStateCallback(TouchState::DOWN_STATE,
             [this] (TouchState lastState, TouchState newState) {
             if (lastState == TouchState::IDLE_STATE) {
@@ -295,9 +304,6 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
             schedulePreferredFpsChange_ = true;
         }
         FrameRateReport();
-    }
-    if (dvsyncInfo.isRsDvsyncOn) {
-        pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
     }
     ReportHiSysEvent(resultVoteInfo);
     lastVoteInfo_ = resultVoteInfo;
@@ -675,11 +681,22 @@ void HgmFrameRateManager::HandlePackageEvent(pid_t pid, uint32_t listSize, const
     }
     HgmTaskHandleThread::Instance().PostTask([this, packageList] () {
         if (multiAppStrategy_.HandlePkgsEvent(packageList) == EXEC_SUCCESS) {
-            std::lock_guard<std::mutex> locker(pkgSceneMutex_);
-            sceneStack_.clear();
+            ClearScene();
         }
         UpdateAppSupportStatus();
     });
+}
+
+void HgmFrameRateManager::ClearScene()
+{
+    std::lock_guard<std::mutex> locker(pkgSceneMutex_);
+    for (auto it = sceneStack_.begin(); it != sceneStack_.end();) {
+        if (it->first.find("CAMERA") != std::string::npos) {
+            it++;
+        } else {
+            it = sceneStack_.erase(it);
+        }
+    }
 }
 
 void HgmFrameRateManager::HandleRefreshRateEvent(pid_t pid, const EventInfo& eventInfo)
@@ -723,6 +740,14 @@ void HgmFrameRateManager::HandleTouchEvent(pid_t pid, int32_t touchStatus, int32
             touchManager_.HandleTouchEvent(TouchEvent::DOWN_EVENT, "");
         }
     } else if (touchStatus == TOUCH_UP || touchStatus == TOUCH_PULL_UP) {
+        if (touchCnt != LAST_TOUCH_CNT) {
+            return;
+        }
+        if (auto iter = voteRecord_.find("VOTER_GAMES"); iter != voteRecord_.end() && !iter->second.empty() &&
+            gameScenes_.empty() && multiAppStrategy_.CheckPidValid(iter->second.front().pid)) {
+            HGM_LOGI("[touch manager] keep down in games");
+            return;
+        }
         if (touchCnt == LAST_TOUCH_CNT) {
             HGM_LOGI("[touch manager] up");
             touchManager_.HandleTouchEvent(TouchEvent::UP_EVENT, "");

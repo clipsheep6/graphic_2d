@@ -296,7 +296,7 @@ bool RSUifirstManager::CheckVisibleDirtyRegionIsEmpty(std::shared_ptr<RSSurfaceR
                 surfaceNode->SetUIFirstIsPurge(false);
                 return true;
             }
-            auto surfaceDirtyRect = surfaceNode->GetDirtyManager()->GetCurrentFrameDirtyRegion();
+            auto surfaceDirtyRect = surfaceNode->GetSyncDirtyManager()->GetCurrentFrameDirtyRegion();
             Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
                 surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
             Occlusion::Region surfaceDirtyRegion { dirtyRect };
@@ -340,7 +340,8 @@ void RSUifirstManager::DoPurgePendingPostNodes(std::unordered_map<NodeId,
         bool staticContent = node->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD ?
             node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
         if (drawable->HasCachedTexture() && (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) &&
-            (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end())) {
+            (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end()) &&
+            !drawable->IsSubThreadSkip()) {
             RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %s", surfaceParams->GetName().c_str());
             it = pendingNode.erase(it);
         } else {
@@ -460,7 +461,7 @@ void RSUifirstManager::ProcessSubDoneNode()
 
 void RSUifirstManager::ConvertPendingNodeToDrawable()
 {
-    if (!RSSystemParameters::GetUIFirstDmaBufferEnabled()) {
+    if (!useDmaBuffer_) {
         return;
     }
     pendingPostDrawables_.clear();
@@ -933,7 +934,8 @@ bool RSUifirstManager::IsArkTsCardCache(RSSurfaceRenderNode& node, bool animatio
 // animation first, may reuse last image cache
 bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animation)
 {
-    if (node.GetName().find("ScreenShotWindow") != std::string::npos) {
+    if (RSUifirstManager::Instance().GetUseDmaBuffer() &&
+        node.GetName().find("ScreenShotWindow") != std::string::npos) {
         return true;
     }
     bool isNeedAssignToSubThread = false;
@@ -1097,6 +1099,9 @@ void RSUifirstManager::UpdateChildrenDirtyRect(RSSurfaceRenderNode& node)
 
 void RSUifirstManager::UpdateUIFirstLayerInfo(const ScreenInfo& screenInfo)
 {
+    if (!useDmaBuffer_) {
+        return;
+    }
     for (auto iter : pendingPostNodes_) {
         if (!iter.second) {
             continue;
@@ -1134,9 +1139,9 @@ void RSUifirstManager::SetUseDmaBuffer(bool val)
     useDmaBuffer_ = val;
 }
 
-bool RSUifirstManager::GetUseDmaBuffer()
+bool RSUifirstManager::GetUseDmaBuffer() const
 {
-    return useDmaBuffer_ && IsScreenshotAnimation();
+    return useDmaBuffer_;
 }
 } // namespace Rosen
 } // namespace OHOS

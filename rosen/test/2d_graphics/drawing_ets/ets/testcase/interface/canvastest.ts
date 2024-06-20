@@ -469,6 +469,9 @@ export class CanvasDrawTextBlob extends TestBase {
       let text : string = 'Hello World, This is test code!';
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(true);
+      font.isSubpexel();
+      font.isLinearText();
+      font.getTextSkewX();
       let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 500, 50);
       canvas.detachBrush()
@@ -486,6 +489,9 @@ export class CanvasDrawTextBlob extends TestBase {
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(true)
       font.enableEmbolden(true)
+      font.isSubpexel();
+      font.isLinearText();
+      font.getTextSkewX();
       font.setSize(10)
       let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 100, 100);
@@ -505,6 +511,9 @@ export class CanvasDrawTextBlob extends TestBase {
       let text : string = 'Hello World,这是测试代码!';
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(false)
+      font.isSubpexel();
+      font.isLinearText();
+      font.getTextSkewX();
       font.enableEmbolden(false)
       font.enableLinearMetrics(false)
       font.setSize(30)
@@ -527,6 +536,9 @@ export class CanvasDrawTextBlob extends TestBase {
       let text : string = 'Hello World,这是测试代码!';
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(false)
+      font.isSubpexel();
+      font.isLinearText();
+      font.getTextSkewX();
       font.enableEmbolden(false)
       font.enableLinearMetrics(false)
       font.setSize(5)

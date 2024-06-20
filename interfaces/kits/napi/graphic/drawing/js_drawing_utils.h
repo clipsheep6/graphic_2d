@@ -22,6 +22,7 @@
 #endif
 
 #include "common/rs_common_def.h"
+#include "draw/color.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
@@ -366,6 +367,19 @@ void BindNativeFunction(napi_env env, napi_value object, const char* name, const
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
 bool ConvertFromJsTextEncoding(napi_env env, TextEncoding& textEncoding, napi_value nativeType);
+
+inline napi_value GetColorAndConvertToJsValue(napi_env env, Color& color)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        napi_set_named_property(env, objValue, "alpha", CreateJsNumber(env, color.GetAlpha()));
+        napi_set_named_property(env, objValue, "red", CreateJsNumber(env, color.GetRed()));
+        napi_set_named_property(env, objValue, "green", CreateJsNumber(env, color.GetGreen()));
+        napi_set_named_property(env, objValue, "blue", CreateJsNumber(env, color.GetBlue()));
+    }
+    return objValue;
+}
 
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
 } // namespace Drawing

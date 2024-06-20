@@ -874,7 +874,6 @@ napi_value JsCanvas::OnDrawBitmap(napi_env env, napi_callback_info info)
     }
 
     m_canvas->DrawBitmap(*jsBitmap->GetBitmap(), px, py);
-    LOGE("JsCanvas::OnDrawBitmap complete");
     return NapiGetUndefined(env);
 }
 

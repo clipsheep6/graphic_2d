@@ -38,9 +38,15 @@ enum SymbolAnimationEffectStrategy {
     SYMBOL_REPLACE_DISAPPEAR = 8
 };
 
+struct LayersColor {
+    Drawing::Path path;
+    Drawing::DrawingSColor color;
+};
+
 struct SymbolNode {
     Drawing::Path path;
     Drawing::DrawingSColor color;
+    std::vector<LayersColor> pathsColor;
     Vector4f nodeBoundary;
     Drawing::DrawingHMSymbolData symbolData;
     int animationIndex = 0;

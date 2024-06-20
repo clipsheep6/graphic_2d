@@ -17,7 +17,7 @@
 
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_node_gc.h"
-
+#include "platform/common/rs_log.h"
 namespace OHOS {
 namespace Rosen {
 
@@ -25,6 +25,7 @@ void RSCanvasNodeCommandHelper::Create(RSContext& context, NodeId id, bool isTex
 {
     auto node = std::shared_ptr<RSCanvasRenderNode>(new RSCanvasRenderNode(id,
         context.weak_from_this(), isTextureExportNode), RSRenderNodeGC::NodeDestructor);
+    RS_LOGE("ZJH Create(), nodeid:%{public}llu, count:%{public}ld", id, node.use_count());
     context.GetMutableNodeMap().RegisterRenderNode(node);
 }
 

@@ -26,6 +26,7 @@
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
+#include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -119,6 +120,7 @@ RSRenderThread::RSRenderThread()
             std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
             context_->activeNodesInRoot_.clear();
         }
+        RSRenderNodeGC::Instance().ReleaseNodeMemory();
 #ifdef ROSEN_OHOS
         FRAME_TRACE::RenderFrameTrace::GetInstance().RenderEndFrameTrace(RT_INTERVAL_NAME);
 #endif

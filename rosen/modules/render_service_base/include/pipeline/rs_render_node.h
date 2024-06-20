@@ -969,7 +969,7 @@ private:
     std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
     pid_t appPid_ = 0;
 
-    const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
+    std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
 
     void OnRegister(const std::weak_ptr<RSContext>& context);
 

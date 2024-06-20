@@ -17,7 +17,7 @@
 
 #include <algorithm>
 #include "modifier/rs_modifier_type.h"
-
+#include "rs_trace.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_common_def.h"
 #include "recording/recording_canvas.h"
@@ -41,6 +41,7 @@ RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>
     : RSRenderNode(id, context, isTextureExportNode)
 {
 #ifndef ROSEN_ARKUI_X
+    RS_LOGE("ZJH create RSCanvasRenderNode():%{public}llu", GetId());
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);
 #endif
@@ -49,6 +50,7 @@ RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>
 RSCanvasRenderNode::~RSCanvasRenderNode()
 {
 #ifndef ROSEN_ARKUI_X
+    RS_TRACE_NAME_FMT("ZJH ~RSCanvasRenderNode():%{public}llu", GetId());
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
 #endif
 }

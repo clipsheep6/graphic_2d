@@ -20,7 +20,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-
+#include "rs_trace.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -133,6 +133,7 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
     if (renderNodeMap_.count(id)) {
         return false;
     }
+    RS_LOGE("ZJH RegisterRenderNode() 0, nodeid:%{public}llu, count:%{public}ld", id, nodePtr.use_count());
     renderNodeMap_.emplace(id, nodePtr);
     nodePtr->OnRegister(context_);
     if (nodePtr->GetType() == RSRenderNodeType::SURFACE_NODE) {
@@ -147,6 +148,7 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
         auto canvasDrawingNode = nodePtr->ReinterpretCastTo<RSCanvasDrawingRenderNode>();
         canvasDrawingNodeMap_.emplace(id, canvasDrawingNode);
     }
+    RS_LOGE("ZJH RegisterRenderNode() 1, nodeid:%{public}llu, count:%{public}ld", id, renderNodeMap_[id].use_count());
     return true;
 }
 
@@ -185,6 +187,7 @@ void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
     EraseAbilityComponentNumsInProcess(id);
     // temp solution to address the dma leak
     auto surfaceNode = surfaceNodeMap_[id];
+    auto canvasNode = renderNodeMap_[id];
     if (surfaceNode) {
         if (surfaceNode->GetName().find("ShellAssistantAnco") == std::string::npos) {
             renderNodeMap_.erase(id);
@@ -197,6 +200,9 @@ void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
     residentSurfaceNodeMap_.erase(id);
     displayNodeMap_.erase(id);
     canvasDrawingNodeMap_.erase(id);
+    if (canvasNode) {
+        RS_LOGE("ZJH UnregisterRenderNode(), nodeid:%{public}llu, count:%{public}ld", id, canvasNode.use_count());
+    }
 }
 
 void RSRenderNodeMap::MoveRenderNodeMap(

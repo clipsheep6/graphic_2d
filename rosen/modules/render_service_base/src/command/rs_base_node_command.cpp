@@ -16,7 +16,7 @@
 #include "command/rs_base_node_command.h"
 
 #include "pipeline/rs_base_render_node.h"
-
+#include "platform/common/rs_log.h"
 namespace OHOS {
 namespace Rosen {
 
@@ -24,16 +24,25 @@ void BaseNodeCommandHelper::Destroy(RSContext& context, NodeId nodeId)
 {
     auto& nodeMap = context.GetMutableNodeMap();
     auto node = nodeMap.GetRenderNode(nodeId);
+    auto& map = context.pendingSyncNodes_;
+    RS_LOGE("ZJH Destroy 0, nodeid:%{public}llu,  %{public}ld, %{public}d", nodeId, node.use_count(), map.size());
     if (node == nullptr) {
         return;
     }
     auto parent = node->GetParent().lock();
     node->ClearChildren();
+    RS_LOGE("ZJH Destroy 1, nodeid:%{public}llu,  %{public}ld", nodeId, node.use_count());
     node->RemoveFromTree();
+    RS_LOGE("ZJH Destroy 2, nodeid:%{public}llu,  %{public}ld", nodeId, node.use_count());
     nodeMap.UnregisterRenderNode(node->GetId());
+    RS_LOGE("ZJH Destroy 3, nodeid:%{public}llu,  %{public}ld %{public}d", nodeId, node.use_count(), !!parent);
     if (parent) {
         parent->RemoveChildFromFulllist(node->GetId());
     }
+    RS_LOGE("ZJH Destroy 4, nodeid:%{public}llu,  %{public}ld", nodeId, node.use_count());
+    map.clear();
+    node.reset();
+    RS_LOGE("ZJH Destroy 5, nodeid:%{public}llu,  %{public}ld", nodeId, node.use_count());
 }
 
 void BaseNodeCommandHelper::AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index)

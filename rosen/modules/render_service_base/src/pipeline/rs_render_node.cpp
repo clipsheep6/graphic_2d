@@ -202,16 +202,21 @@ const std::set<RSModifierType> BASIC_GEOTRANSFORM_ANIMATION_TYPE = {
     RSModifierType::SCALE,
     RSModifierType::ALPHA,
 };
+static std::atomic_llong new_cnt = 0;
+static std::atomic_llong del_cnt = 0;
 }
 
 RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
     : id_(id), context_(context), isTextureExportNode_(isTextureExportNode)
-{}
+{new_cnt = new_cnt.load() + 1;}
 
 RSRenderNode::RSRenderNode(
     NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
     : isOnTheTree_(isOnTheTree), id_(id), context_(context), isTextureExportNode_(isTextureExportNode)
-{}
+{
+    new_cnt = new_cnt.load() + 1;
+
+}
 
 void RSRenderNode::AddChild(SharedPtr child, int index)
 {
@@ -286,7 +291,9 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
         return;
     }
     // avoid duplicate entry in disappearingChildren_ (this should not happen)
+    RS_LOGE("ZJH RemoveChild 0, nodeid:%{public}llu,  %{public}ld", child->GetId(), child.use_count());
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+    RS_LOGE("ZJH RemoveChild 1, nodeid:%{public}llu,  %{public}ld", child->GetId(), child.use_count());
     // if child has disappearing transition, add it to disappearingChildren_
     if (skipTransition == false && child->HasDisappearingTransition(true)) {
         ROSEN_LOGD("RSRenderNode::RemoveChild %{public}" PRIu64 " move child(id %{public}" PRIu64 ") into"
@@ -407,7 +414,9 @@ void RSRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr&
         return;
     }
     // avoid duplicate entry in disappearingChildren_ (this should not happen)
+    RS_LOGE("ZJH RemoveCrossParentChild 0, nodeid:%{public}llu,  %{public}ld", child->GetId(), child.use_count());
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+
     // if child has disappearing transition, add it to disappearingChildren_
     if (child->HasDisappearingTransition(true)) {
         ROSEN_LOGD("RSRenderNode::RemoveChild %{public}" PRIu64 " move child(id %{public}" PRIu64 ")"
@@ -428,11 +437,27 @@ void RSRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr&
 void RSRenderNode::RemoveFromTree(bool skipTransition)
 {
     auto parentPtr = parent_.lock();
+    auto child = shared_from_this();
     if (parentPtr == nullptr) {
+    disappearingChildren_.clear();
+    child->modifiers_.clear();
+    child->stagingDrawCmdList_.clear();
+    child->dirtySlots_.clear();
+    child->renderContent_ = nullptr;
+    fullChildrenList_ = nullptr;
         return;
     }
-    auto child = shared_from_this();
+    
     parentPtr->RemoveChild(child, skipTransition);
+
+    parentPtr->disappearingChildren_.clear();
+    disappearingChildren_.clear();
+    child->modifiers_.clear();
+    child->stagingDrawCmdList_.clear();
+    child->dirtySlots_.clear();
+    child->renderContent_ = nullptr;
+    fullChildrenList_ = nullptr;
+    parentPtr->fullChildrenList_ = nullptr;
     if (skipTransition == false) {
         return;
     }
@@ -440,6 +465,7 @@ void RSRenderNode::RemoveFromTree(bool skipTransition)
     parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     parentPtr->isFullChildrenListValid_ = false;
     child->ResetParent();
+    fullChildrenList_ = nullptr;
 }
 
 void RSRenderNode::ClearChildren()
@@ -1037,6 +1063,10 @@ void RSRenderNode::InternalRemoveSelfFromDisappearingChildren()
 
 RSRenderNode::~RSRenderNode()
 {
+    
+    del_cnt = del_cnt.load() + 1;
+    RS_LOGE("ZJH ~RSRenderNode():%{public}llu [%{public}lld %{public}lld ]", GetId(), new_cnt.load(), del_cnt.load());
+    RS_TRACE_NAME_FMT("ZJH ~RSRenderNode():%{public}llu", GetId());
     if (appPid_ != 0) {
         RSSingleFrameComposer::AddOrRemoveAppPidToMap(false, appPid_);
     }
@@ -3851,14 +3881,31 @@ void RSRenderNode::SetChildrenHasSharedTransition(bool hasSharedTransition)
 void RSRenderNode::RemoveChildFromFulllist(NodeId id)
 {
     // Make a copy of the fullChildrenList
+    if (!fullChildrenList_) {
+        return;
+    }
     auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 
     fullChildrenList->erase(std::remove_if(fullChildrenList->begin(),
-        fullChildrenList->end(), [id](const auto& node) { return id == node->GetId(); }), fullChildrenList->end());
+        fullChildrenList->end(), [id, this](const auto& node) { 
+            if ( id == node->GetId()) {
+                RS_LOGE("ZJH RemoveChildFromFulllist, id:%llu", id);
+                return true;
+            }
+            return false; }), fullChildrenList->end());
 
     // Move the fullChildrenList to fullChildrenList_ atomically
+    // fullChildrenList->clear();
     ChildrenListSharedPtr constFullChildrenList = std::move(fullChildrenList);
     std::atomic_store_explicit(&fullChildrenList_, constFullChildrenList, std::memory_order_release);
+
+    // auto size = fullChildrenList_->size();
+    // for (auto i = 0; i < fullChildrenList_->size(); i++) {
+    //     auto& node = *fullChildrenList_[i];
+    //     if (id == node->GetId()) {
+    //         fullChildrenList_->erase(i);
+    //     }
+    // }
 }
 
 std::map<NodeId, std::weak_ptr<SharedTransitionParam>> SharedTransitionParam::unpairedShareTransitions_;

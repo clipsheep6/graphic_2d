@@ -409,6 +409,7 @@ NodeId RSProfiler::GetRandomSurfaceNode(const RSContext& context)
 
 void RSProfiler::MarshalNodes(const RSContext& context, std::stringstream& data)
 {
+    return;
     const auto& map = const_cast<RSContext&>(context).GetMutableNodeMap();
     const uint32_t count = map.renderNodeMap_.size();
     data.write(reinterpret_cast<const char*>(&count), sizeof(count));

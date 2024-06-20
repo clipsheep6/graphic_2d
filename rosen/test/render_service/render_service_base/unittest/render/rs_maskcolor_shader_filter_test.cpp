@@ -15,6 +15,7 @@
 #include <parameter.h>
 #include <parameters.h>
 
+#include "inner_event.h"
 #include "gtest/gtest.h"
 
 #include "render/rs_maskcolor_shader_filter.h"
@@ -51,6 +52,7 @@ HWTEST_F(RSMaskColorShaderFilterTest, InitColorModTest, TestSize.Level1)
     rsMaskColorShaderFilterTwo->InitColorMod();
     EXPECT_EQ(rsMaskColorShaderFilterTwo->colorPickerTask_, nullptr);
 }
+
 /**
  * @tc.name: CaclMaskColorTest
  * @tc.desc: Verify function CaclMaskColor
@@ -61,10 +63,22 @@ HWTEST_F(RSMaskColorShaderFilterTest, CaclMaskColorTest, TestSize.Level1)
 {
     RSColor color;
     auto rsMaskColorShaderFilter = std::make_shared<RSMaskColorShaderFilter>(1, color);
-    std::shared_ptr<Drawing::Image> image = std::make_shared<Drawing::Image>();
-    rsMaskColorShaderFilter->CalcAverageColor(image);
     auto rsMaskColorShaderFilterSecond = std::make_shared<RSMaskColorShaderFilter>(2, color);
-    rsMaskColorShaderFilterSecond->CalcAverageColor(image);
+    std::shared_ptr<Drawing::Image> image = nullptr;
+    rsMaskColorShaderFilter->CaclMaskColor(image);
+    rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+    image = std::make_shared<Drawing::Image>();
+    rsMaskColorShaderFilterSecond->InitColorMod();
+    rsMaskColorShaderFilter->CaclMaskColor(image);
+    rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+    if (rsMaskColorShaderFilterSecond->colorPickerTask_ != nullptr) {
+        rsMaskColorShaderFilterSecond->colorPickerTask_->waitRelease_->store(true);
+        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+        rsMaskColorShaderFilterSecond->colorPickerTask_->valid_ = true;
+        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+        rsMaskColorShaderFilterSecond->colorPickerTask_->firstGetColorFinished_ = true;
+        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+    }
     EXPECT_EQ(rsMaskColorShaderFilter->colorMode_, 1);
 }
 
@@ -80,6 +94,10 @@ HWTEST_F(RSMaskColorShaderFilterTest, ReleaseColorPickerFilterTest, TestSize.Lev
     auto rsMaskColorShaderFilter = std::make_shared<RSMaskColorShaderFilter>(1, color);
     rsMaskColorShaderFilter->ReleaseColorPickerFilter();
     EXPECT_EQ(rsMaskColorShaderFilter->colorPickerTask_, nullptr);
+    rsMaskColorShaderFilter->colorMode_ = 2;
+    rsMaskColorShaderFilter->InitColorMod();
+    rsMaskColorShaderFilter->ReleaseColorPickerFilter();
+    EXPECT_EQ(rsMaskColorShaderFilter->colorMode_, 2);
 }
 } // namespace Rosen
 } // namespace OHOS

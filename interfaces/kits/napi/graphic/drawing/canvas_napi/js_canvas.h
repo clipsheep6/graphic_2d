@@ -61,8 +61,12 @@ public:
     static napi_value DrawPoint(napi_env env, napi_callback_info info);
     static napi_value DrawPath(napi_env env, napi_callback_info info);
     static napi_value DrawPixelMapMesh(napi_env env, napi_callback_info info);
+    static napi_value DrawBitmap(napi_env env, napi_callback_info info);
     static napi_value DrawRegion(napi_env env, napi_callback_info info);
     static napi_value DrawText(napi_env env, napi_callback_info info);
+    static napi_value DrawBackground(napi_env env, napi_callback_info info);
+    static napi_value DrawRoundRect(napi_env env, napi_callback_info info);
+    static napi_value DrawNestedRoundRect(napi_env env, napi_callback_info info);
     static napi_value DetachBrush(napi_env env, napi_callback_info info);
     static napi_value DetachPen(napi_env env, napi_callback_info info);
     static napi_value GetSaveCount(napi_env env, napi_callback_info info);
@@ -101,6 +105,10 @@ private:
     napi_value OnSave(napi_env env, napi_callback_info info);
     napi_value OnScale(napi_env env, napi_callback_info info);
     napi_value OnTranslate(napi_env env, napi_callback_info info);
+    napi_value OnDrawBitmap(napi_env env, napi_callback_info info);
+    napi_value OnDrawBackground(napi_env env, napi_callback_info info);
+    napi_value OnDrawRoundRect(napi_env env, napi_callback_info info);
+    napi_value OnDrawNestedRoundRect(napi_env env, napi_callback_info info);
 
     static bool DeclareFuncAndCreateConstructor(napi_env env);
     static thread_local napi_ref constructor_;

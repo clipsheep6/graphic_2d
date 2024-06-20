@@ -14,7 +14,8 @@
  */
 
 #include "js_canvas.h"
-
+#include "../bitmap_napi/js_bitmap.h"
+#include "../utils_napi/js_roundrect.h"
 #include <mutex>
 
 #ifdef ROSEN_OHOS
@@ -336,7 +337,11 @@ bool JsCanvas::DeclareFuncAndCreateConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("drawLine", JsCanvas::DrawLine),
         DECLARE_NAPI_FUNCTION("drawTextBlob", JsCanvas::DrawText),
         DECLARE_NAPI_FUNCTION("drawPixelMapMesh", JsCanvas::DrawPixelMapMesh),
+        DECLARE_NAPI_FUNCTION("drawBitmap", JsCanvas::DrawBitmap),
         DECLARE_NAPI_FUNCTION("drawRegion", JsCanvas::DrawRegion),
+        DECLARE_NAPI_FUNCTION("drawBackground", JsCanvas::DrawBackground),
+        DECLARE_NAPI_FUNCTION("drawRoundRect", JsCanvas::DrawRoundRect),
+        DECLARE_NAPI_FUNCTION("drawNestedRoundRect", JsCanvas::DrawNestedRoundRect),
         DECLARE_NAPI_FUNCTION("attachPen", JsCanvas::AttachPen),
         DECLARE_NAPI_FUNCTION("attachBrush", JsCanvas::AttachBrush),
         DECLARE_NAPI_FUNCTION("detachPen", JsCanvas::DetachPen),
@@ -838,6 +843,41 @@ napi_value JsCanvas::OnDrawPixelMapMesh(napi_env env, napi_callback_info info)
 #endif
 }
 
+napi_value JsCanvas::DrawBitmap(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawBitmap(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawBitmap(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawBitmap canvas is null");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_THREE;
+    napi_value argv[ARGC_THREE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_THREE) {
+        ROSEN_LOGE("JsCanvas::OnDrawbitmap Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    JsBitmap* jsBitmap = nullptr;
+    double px = 0.0;
+    double py = 0.0;
+    napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsBitmap));
+    if (jsBitmap == nullptr ||
+        !(ConvertFromJsValue(env, argv[ARGC_ONE], px) && ConvertFromJsValue(env, argv[ARGC_TWO], py))) {
+        ROSEN_LOGE("JsCanvas::OnDrawBitmap Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_canvas->DrawBitmap(*jsBitmap->GetBitmap(), px, py);
+    LOGE("JsCanvas::OnDrawBitmap complete");
+    return NapiGetUndefined(env);
+}
+
 napi_value JsCanvas::DrawRegion(napi_env env, napi_callback_info info)
 {
     JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
@@ -863,6 +903,109 @@ napi_value JsCanvas::OnDrawRegion(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value JsCanvas::DrawBackground(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawBackground(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawBackground(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawBackground canvas is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsCanvas::OnDrawBackground Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    JsBrush* jsBrush = nullptr;
+    napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsBrush));
+    if (jsBrush == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawBackground jsBrush is nullptr");
+        return NapiGetUndefined(env);
+    }
+    if (jsBrush->GetBrush() == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawBackground brush is nullptr");
+        return NapiGetUndefined(env);
+    }
+    m_canvas->DrawBackground(*jsBrush->GetBrush());
+    return NapiGetUndefined(env);
+}
+
+napi_value JsCanvas::DrawRoundRect(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawRoundRect(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawRoundRect(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRoundRect canvas is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsCanvas::OnDrawRoundRect Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    JsRoundRect* jsRoundRect = nullptr;
+    napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsRoundRect));
+    if (jsRoundRect == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRoundRect jsRoundRect is nullptr");
+        return NapiGetUndefined(env);
+    }
+    if (jsRoundRect->GetRoundRect() == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRoundRect roundrect is nullptr");
+        return NapiGetUndefined(env);
+    }
+    m_canvas->DrawRoundRect(*jsRoundRect->GetRoundRect());
+    return NapiGetUndefined(env);
+}
+
+napi_value JsCanvas::DrawNestedRoundRect(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawNestedRoundRect(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawNestedRoundRect(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawNestedRoundRect canvas is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_TWO;
+    napi_value argv[ARGC_TWO] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO) {
+        ROSEN_LOGE("JsCanvas::OnDrawNestedRoundRect Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    JsRoundRect* jsOuter = nullptr;
+    JsRoundRect* jsInner = nullptr;
+    napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsOuter));
+    napi_unwrap(env, argv[1], reinterpret_cast<void **>(&jsInner));
+    if (jsOuter == nullptr || jsInner == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawNestedRoundRect jsRoundRect is nullptr");
+        return NapiGetUndefined(env);
+    }
+    if (jsOuter->GetRoundRect() == nullptr || jsInner->GetRoundRect() == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawNestedRoundRect roundrect is nullptr");
+        return NapiGetUndefined(env);
+    }
+    m_canvas->DrawNestedRoundRect(*jsOuter->GetRoundRect(), *jsInner->GetRoundRect());
+    return NapiGetUndefined(env);
+}
 napi_value JsCanvas::AttachPen(napi_env env, napi_callback_info info)
 {
     JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);

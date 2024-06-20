@@ -16,6 +16,7 @@
 #include "js_drawing_init.h"
 
 #include "brush_napi/js_brush.h"
+#include "bitmap_napi/js_bitmap.h"
 #include "canvas_napi/js_canvas.h"
 #include "color_filter_napi/js_color_filter.h"
 #include "enum_napi/js_enum.h"
@@ -29,6 +30,7 @@
 #include "sampling_options_napi/js_sampling_options.h"
 #include "shadow_layer_napi/js_shadow_layer.h"
 #include "text_blob_napi/js_text_blob.h"
+#include "utils_napi/js_roundrect.h"
 
 namespace OHOS::Rosen {
 namespace Drawing {
@@ -43,6 +45,8 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsTextBlob::Init(env, exportObj);
     JsPen::Init(env, exportObj);
     JsBrush::Init(env, exportObj);
+    JsBitmap::Init(env, exportObj);
+    JsRoundRect::Init(env, exportObj);
     JsSamplingOptions::Init(env, exportObj);
     JsMaskFilter::Init(env, exportObj);
     JsPathEffect::Init(env, exportObj);

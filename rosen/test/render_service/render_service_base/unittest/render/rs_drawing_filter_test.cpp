@@ -20,7 +20,6 @@
 #include "gtest/gtest.h"
 #include "src/core/SkOpts.h"
 
-#include "common/rs_optional_trace.h"
 #include "draw/blend_mode.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"

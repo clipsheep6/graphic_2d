@@ -37,6 +37,7 @@ ohos_fuzztest(
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
   ]
   cflags = [
     "-g",

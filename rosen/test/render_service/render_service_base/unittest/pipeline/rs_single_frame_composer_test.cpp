@@ -14,7 +14,6 @@
  */
 
 #include "gtest/gtest.h"
-#include "rs_trace.h"
 
 #include "pipeline/rs_single_frame_composer.h"
 #include "platform/common/rs_log.h"

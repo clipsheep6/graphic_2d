@@ -179,6 +179,7 @@ public:
     static bool GetMagnifierEnabled();
     static bool GetDynamicBrightnessEnabled();
     static bool GetKawaseEnabled();
+    static bool GetGreyKawaseEnabled();
     static bool GetHpsBlurEnabled();
     static float GetKawaseRandomColorFactor();
     static bool GetRandomColorEnabled();

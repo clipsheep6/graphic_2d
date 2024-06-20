@@ -26,6 +26,7 @@
 #include "property/rs_properties_painter.h"
 #include "render/rs_aibar_shader_filter.h"
 #include "render/rs_grey_shader_filter.h"
+#include "render/rs_grey_kawase_shader_filter.h"
 #include "render/rs_kawase_blur_shader_filter.h"
 #include "render/rs_linear_gradient_blur_shader_filter.h"
 #include "render/rs_maskcolor_shader_filter.h"
@@ -94,6 +95,12 @@ std::string RSDrawingFilter::GetDescription()
                 filterString = filterString + ", radius: " + std::to_string(radius) + " sigma";
                 break;
             }
+            case RSShaderFilter::GREY_KAWASE: {
+                auto filter = std::static_pointer_cast<RSGreyKawaseShaderFilter>(shaderFilter);
+                int radius = filter->GetRadius();
+                filterString = filterString + ", radius: " + std::to_string(radius) + " sigma";
+                break;
+            }
             case RSShaderFilter::LINEAR_GRADIENT_BLUR: {
                 auto filter4 = std::static_pointer_cast<RSLinearGradientBlurShaderFilter>(shaderFilter);
                 float radius2 = filter4->GetLinearGradientBlurRadius();
@@ -121,6 +128,14 @@ std::string RSDrawingFilter::GetDetailedDescription()
             }
             case RSShaderFilter::GREY: {
                 auto filter2 = std::static_pointer_cast<RSGreyShaderFilter>(shaderFilter);
+                float greyCoefLow = filter2->GetGreyCoefLow();
+                float greyCoefHigh = filter2->GetGreyCoefHigh();
+                filterString = filterString + ", greyCoef1: " + std::to_string(greyCoefLow);
+                filterString = filterString + ", greyCoef2: " + std::to_string(greyCoefHigh);
+                break;
+            }
+            case RSShaderFilter::GREY_KAWASE: {
+                auto filter2 = std::static_pointer_cast<RSGreyKawaseShaderFilter>(shaderFilter);
                 float greyCoefLow = filter2->GetGreyCoefLow();
                 float greyCoefHigh = filter2->GetGreyCoefHigh();
                 filterString = filterString + ", greyCoef1: " + std::to_string(greyCoefLow);

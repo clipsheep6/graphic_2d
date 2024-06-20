@@ -51,6 +51,7 @@ ohos_source_set("graphics_effect_src") {
   sources = [
     "src/ge_aibar_shader_filter.cpp",
     "src/ge_cache.cpp",
+    "src/ge_grey_kawase_shader_filter.cpp",
     "src/ge_grey_shader_filter.cpp",
     "src/ge_hash.cpp",
     "src/ge_hps_blur_shader_filter.cpp",

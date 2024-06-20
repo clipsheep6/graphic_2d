@@ -36,6 +36,7 @@ public:
         NONE = 0,
         KAWASE,
         GREY,
+        GREY_KAWASE,
         AIBAR,
         LINEAR_GRADIENT_BLUR,
         MASK_COLOR,

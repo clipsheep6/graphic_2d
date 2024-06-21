@@ -1269,7 +1269,7 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
         needRequestNextVsync_ = false;
     }
     RSUifirstManager::Instance().SetRotationChanged(displayNodeRotationChanged_ || isScreenRotationAnimating_);
-    if (node.IsSubTreeDirty() || node.IsRotationChanged()) {
+    if (node.IsSubTreeDirty() || displayNodeRotationChanged_) {
         QuickPrepareChildren(node);
     }
     PostPrepare(node);
@@ -1706,7 +1706,7 @@ bool RSUniRenderVisitor::BeforeUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
         UpdateSecuritySkipAndProtectedLayersRecord(node);
         node.UpdateUIFirstFrameGravity();
     }
-    if (node.IsMainWindowType() || node.IsLeashWindow()) {
+    if (node.IsLeashOrMainWindow()) {
         // UpdateCurCornerRadius must process before curSurfaceNode_ update
         node.UpdateCurCornerRadius(curCornerRadius_, curSurfaceNode_ != nullptr);
         curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
@@ -2178,6 +2178,7 @@ void RSUniRenderVisitor::UpdateSurfaceOcclusionInfo()
 void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
 {
     RS_OPTIONAL_TRACE_FUNC();
+    auto surfaceName = surfaceNode->GetName().c_str();
     const auto& dirtyRect = surfaceNode->GetDirtyManager()->GetCurrentFrameDirtyRegion();
     auto oldDirtyInSurface = surfaceNode->GetOldDirtyInSurface();
     if (surfaceNode->IsTransparent()) {
@@ -2185,7 +2186,7 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
         RectI transparentDirtyRect = oldDirtyInSurface.IntersectRect(dirtyRect);
         if (!transparentDirtyRect.IsEmpty()) {
             RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge transparent dirty "
-                "%{public}s rect %{public}s", surfaceNode->GetName().c_str(),
+                "%{public}s rect %{public}s", surfaceName,
                 transparentDirtyRect.ToString().c_str());
             curDisplayNode_->GetDirtyManager()->MergeDirtyRect(transparentDirtyRect);
         }
@@ -2193,7 +2194,7 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
     if (surfaceNode->GetZorderChanged()) {
         // 2 Zorder changed case, merge surface dest Rect
         RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge GetZorderChanged "
-            "%{public}s rect %{public}s", surfaceNode->GetName().c_str(), oldDirtyInSurface.ToString().c_str());
+            "%{public}s rect %{public}s", surfaceName, oldDirtyInSurface.ToString().c_str());
         curDisplayNode_->GetDirtyManager()->MergeDirtyRect(oldDirtyInSurface);
     }
     // 3 surfacePos chanded case, merge surface lastframe pos or curframe pos
@@ -2202,7 +2203,7 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
     if (surfaceNode->GetAnimateState() || lastFrameSurfacePos != currentFrameSurfacePos) {
         RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge surface pos changed "
             "%{public}s lastFrameRect %{public}s currentFrameRect %{public}s",
-            surfaceNode->GetName().c_str(), lastFrameSurfacePos.ToString().c_str(),
+            surfaceName, lastFrameSurfacePos.ToString().c_str(),
             currentFrameSurfacePos.ToString().c_str());
         if (!lastFrameSurfacePos.IsEmpty()) {
             curDisplayNode_->GetDirtyManager()->MergeDirtyRect(lastFrameSurfacePos);
@@ -2212,30 +2213,28 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
         }
     }
     // 4 shadow disappear and appear case.
-    bool isShadowDisappear = !surfaceNode->GetRenderProperties().IsShadowValid() &&
-        surfaceNode->IsShadowValidLastFrame();
-    if (surfaceNode->GetRenderProperties().IsShadowValid() || isShadowDisappear) {
-        RectI shadowDirtyRect = oldDirtyInSurface.IntersectRect(dirtyRect);
+    bool isShadow = surfaceNode->GetRenderProperties().IsShadowValid();
+    bool iShadowValidLastFrame = surfaceNode->IsShadowValidLastFrame();
+    if (isShadow || iShadowValidLastFrame) {
+        bool isIntersectRectEmpty = oldDirtyInSurface.IsIntersectRectEmpty(dirtyRect);
         // There are two situation here:
         // 1. SurfaceNode first has shadow or shadow radius is larger than the last frame,
         // dirtyRect == surfaceNode->GetOldDirtyInSurface()
         // 2. SurfaceNode remove shadow or shadow radius is smaller than the last frame,
         // dirtyRect > surfaceNode->GetOldDirtyInSurface()
         // So we should always merge dirtyRect here.
-        if (!shadowDirtyRect.IsEmpty()) {
+        if (!isIntersectRectEmpty) {
             curDisplayNode_->GetDirtyManager()->MergeDirtyRect(dirtyRect);
             RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge ShadowValid %{public}s rect %{public}s",
-                surfaceNode->GetName().c_str(), dirtyRect.ToString().c_str());
+                surfaceName, dirtyRect.ToString().c_str());
         }
-        if (isShadowDisappear) {
+        if (!isShadow && iShadowValidLastFrame) {
             surfaceNode->SetShadowValidLastFrame(false);
         }
     }
     // 5 handle last and curframe surfaces which appear or disappear case
     std::vector<RectI> surfaceChangedRects = curDisplayNode_->GetSurfaceChangedRects();
     for (auto& surfaceChangedRect : surfaceChangedRects) {
-        RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge Surface closed %{public}s",
-            surfaceChangedRect.ToString().c_str());
         if (!surfaceChangedRect.IsEmpty()) {
             curDisplayNode_->GetDirtyManager()->MergeDirtyRect(surfaceChangedRect);
         }

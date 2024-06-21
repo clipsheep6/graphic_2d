@@ -165,6 +165,30 @@ public:
                (other.left_ <= left_ + width_) && (top_ <= other.top_ + other.height_) &&
                (other.top_ <= top_ + height_);
     }
+    bool IsIntersectRectEmpty(const RectT<T>& rect) const
+    {
+        T width = std::min(GetRight(), rect.GetRight()) - std::max(left_, rect.left_);
+        if (width <= 0) {
+            return true;
+        }
+        T height = std::min(GetBottom(), rect.GetBottom()) - std::max(top_, rect.top_);
+        return height <= 0;
+    }
+    void IntersectRect(T left, T top, T width, T height)
+    {
+        T left_temp = std::max(left_, left);
+        T top_temp = std::max(top_, top);
+        T width_temp = std::min(GetRight(), left + width) - left_temp;
+        T height_temp = std::min(GetBottom(), top + height) - top_temp;
+        if ((width_temp <= 0) || (height_temp <= 0)) {
+            Clear();
+            return;
+        }
+        left_ = left_temp;
+        top_ = top_temp;
+        width_ = width_temp;
+        height_ = height_temp;
+    }
     RectT<T> IntersectRect(const RectT<T>& rect) const
     {
         T left = std::max(left_, rect.left_);

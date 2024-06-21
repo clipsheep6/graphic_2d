@@ -110,6 +110,11 @@ public:
         zOrder_ = static_cast<uint32_t>(zOrder);
     }
 
+    void SetType(const GraphicLayerType layerType)
+    {
+        layerType_ = layerType;
+    }
+
     void SetAlpha(const GraphicLayerAlpha &alpha)
     {
         layerAlpha_ = alpha;
@@ -253,6 +258,11 @@ public:
     uint32_t GetZorder() const
     {
         return zOrder_;
+    }
+
+    GraphicLayerType GetType() const
+    {
+        return layerType_;
     }
 
     sptr<SyncFence> GetAcquireFence() const
@@ -501,6 +511,7 @@ public:
 
 private:
     uint32_t zOrder_ = 0;
+    GraphicLayerType layerType_ = GraphicLayerType::GRAPHIC_LAYER_TYPE_GRAPHIC;
     GraphicIRect layerRect_;
     GraphicIRect boundRect_; // node's bound width and height related to this layer, used for uni render redraw
     std::vector<GraphicIRect> visibleRegions_;

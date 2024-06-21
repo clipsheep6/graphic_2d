@@ -1326,6 +1326,8 @@ void RSSurfaceRenderNode::UpdateHwcNodeLayerInfo(GraphicTransformType transform)
     layer.blendType = GetBlendType();
     layer.matrix = totalMatrix_;
     layer.alpha = GetGlobalAlpha();
+    layer.layerType = IsHardwareEnabledTopSurface() ?
+        GraphicLayerType::GRAPHIC_LAYER_TYPE_CURSOR : GraphicLayerType::GRAPHIC_LAYER_TYPE_GRAPHIC;
     isHardwareForcedDisabled_ = isProtectedLayer_ ? false : isHardwareForcedDisabled_;
     RS_LOGD("RSSurfaceRenderNode::UpdateHwcNodeLayerInfo: node: %{public}s-%{public}" PRIu64 ","
         " src: %{public}s, dst: %{public}s, bounds: [%{public}d, %{public}d]"

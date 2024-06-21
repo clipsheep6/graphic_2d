@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@
 #include "pipeline/rs_dirty_region_manager.h"
 #include "property/rs_properties.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "platform/ohos/backend/rs_surface_frame_ohos_gl.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -315,9 +316,87 @@ HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode001, TestSize.Level1
 {
     RSRenderThreadVisitor rsRenderThreadVisitor;
     RSSurfaceRenderNode node(0);
-    rsRenderThreadVisitor.curDirtyManager_ = nullptr;
+    std::shared_ptr<RSSurfaceRenderNode> sharedPtr = std::make_shared<RSSurfaceRenderNode>(0);
+    node.parent_ = sharedPtr;
     rsRenderThreadVisitor.PrepareSurfaceRenderNode(node);
-    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ == nullptr);
+    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ != nullptr);
+    EXPECT_FALSE(node.IsNotifyRTBufferAvailable());
+}
+
+/**
+ * @tc.name: PrepareSurfaceRenderNode002
+ * @tc.desc: test results of PrepareSurfaceRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode002, TestSize.Level1)
+{
+    RSRenderThreadVisitor rsRenderThreadVisitor;
+    RSSurfaceRenderNode node(0);
+    std::shared_ptr<RSSurfaceRenderNode> sharedPtr = std::make_shared<RSSurfaceRenderNode>(0);
+    node.parent_ = sharedPtr;
+    node.isNotifyRTBufferAvailablePre_ = true;
+    rsRenderThreadVisitor.PrepareSurfaceRenderNode(node);
+    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ != nullptr);
+    EXPECT_TRUE(node.IsNotifyRTBufferAvailablePre());
+}
+
+/**
+ * @tc.name: PrepareSurfaceRenderNode003
+ * @tc.desc: test results of PrepareSurfaceRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode003, TestSize.Level1)
+{
+    RSRenderThreadVisitor rsRenderThreadVisitor;
+    RSSurfaceRenderNode node(0);
+    std::shared_ptr<RSSurfaceRenderNode> sharedPtr = std::make_shared<RSSurfaceRenderNode>(0);
+    node.isTextureExportNode_ = true;
+    RSProperties& properties = sharedPtr->GetMutableRenderProperties();
+    properties.frameGeo_->SetWidth(1.f);
+    properties.frameGeo_->SetHeight(1.f);
+    node.parent_ = sharedPtr;
+    rsRenderThreadVisitor.PrepareSurfaceRenderNode(node);
+    EXPECT_TRUE(node.GetIsTextureExportNode());
+    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ != nullptr);
+}
+
+/**
+ * @tc.name: PrepareSurfaceRenderNode004
+ * @tc.desc: test results of PrepareSurfaceRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode004, TestSize.Level1)
+{
+    RSRenderThreadVisitor rsRenderThreadVisitor;
+    RSSurfaceRenderNode node(0);
+    std::shared_ptr<RSSurfaceRenderNode> sharedPtr = std::make_shared<RSSurfaceRenderNode>(0);
+    node.isDirtyRegionUpdated_ = true;
+    node.parent_ = sharedPtr;
+    rsRenderThreadVisitor.PrepareSurfaceRenderNode(node);
+    EXPECT_FALSE(node.IsDirtyRegionUpdated());
+    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ != nullptr);
+}
+
+/**
+ * @tc.name: PrepareSurfaceRenderNode005
+ * @tc.desc: test results of PrepareSurfaceRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode005, TestSize.Level1)
+{
+    RSRenderThreadVisitor rsRenderThreadVisitor;
+    RSSurfaceRenderNode node(0);
+    std::shared_ptr<RSSurfaceRenderNode> sharedPtr = std::make_shared<RSSurfaceRenderNode>(0);
+    node.isDirtyRegionUpdated_ = true;
+    rsRenderThreadVisitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::CURRENT_SUB] = 1;
+    node.parent_ = sharedPtr;
+    rsRenderThreadVisitor.PrepareSurfaceRenderNode(node);
+    EXPECT_TRUE(rsRenderThreadVisitor.curDirtyManager_ != nullptr);
+    EXPECT_FALSE(node.IsDirtyRegionUpdated());
 }
 
 /**
@@ -607,6 +686,57 @@ HWTEST_F(RSRenderThreadVisitorTest, ProcessRootRenderNode007, TestSize.Level1)
     rsSurfaceRenderNode->NotifyRTBufferAvailable();
     canvasnode->AddChild(rsSurfaceRenderNode, -1);
     rootnode->Process(rsRenderThreadVisitor);
+}
+
+/**
+ * @tc.name: ProcessRootRenderNode008
+ * @tc.desc: test results of ProcessRootRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, ProcessRootRenderNode008, TestSize.Level1)
+{
+    RSRenderThreadVisitor visitor;
+    RSRootRenderNode node(0);
+    visitor.isIdle_ = false;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_FALSE(visitor.isIdle_);
+
+    visitor.isIdle_ = true;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_TRUE(visitor.isIdle_);
+
+    node.surfaceNodeId_ = 1;
+    RSSurfaceNodeConfig config;
+    std::shared_ptr<RSSurfaceNode> rsNode = std::make_shared<RSSurfaceNode>(config, true);
+    rsNode->id_ = node.GetRSSurfaceNodeId();
+    RSNodeMap::MutableInstance().RegisterNode(rsNode);
+    node.enableRender_ = true;
+    node.suggestedBufferWidth_ = 1.f;
+    node.suggestedBufferHeight_ = 1.f;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_TRUE(visitor.IsValidRootRenderNode(node));
+
+    visitor.isOpDropped_ = true;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_TRUE(visitor.IsValidRootRenderNode(node));
+
+    visitor.curDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_TRUE(visitor.curDirtyManager_);
+
+    visitor.curDirtyManager_->currentFrameDirtyRegion_.width_ = 1;
+    visitor.curDirtyManager_->currentFrameDirtyRegion_.height_ = 1;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_FALSE(visitor.curDirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty());
+
+    visitor.isRenderForced_ = true;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_TRUE(visitor.isRenderForced_);
+
+    visitor.isOpDropped_ = false;
+    visitor.ProcessRootRenderNode(node);
+    EXPECT_FALSE(visitor.isOpDropped_);
 }
 
 /**
@@ -902,6 +1032,7 @@ HWTEST_F(RSRenderThreadVisitorTest, DrawDirtyRegion001, TestSize.Level1)
     visitor.DrawDirtyRegion();
     EXPECT_TRUE(!visitor.curDirtyManager_->dirtyRegion_.IsEmpty());
 
+    visitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::MULTI_HISTORY] = 0;
     visitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::CURRENT_WHOLE] = 1;
     visitor.DrawDirtyRegion();
     EXPECT_EQ(visitor.curDirtyManager_->debugRegionEnabled_.empty(), false);
@@ -910,6 +1041,7 @@ HWTEST_F(RSRenderThreadVisitorTest, DrawDirtyRegion001, TestSize.Level1)
     visitor.DrawDirtyRegion();
     EXPECT_TRUE(visitor.curDirtyManager_->dirtyRegion_.IsEmpty());
 
+    visitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::CURRENT_WHOLE] = 0;
     visitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::CURRENT_SUB] = 1;
     std::map<NodeId, RectI> newMap;
     newMap[0] = rect;
@@ -917,6 +1049,30 @@ HWTEST_F(RSRenderThreadVisitorTest, DrawDirtyRegion001, TestSize.Level1)
     visitor.curDirtyManager_->dirtySurfaceNodeInfo_.push_back(newMap);
     visitor.DrawDirtyRegion();
     EXPECT_EQ(visitor.curDirtyManager_->debugRegionEnabled_.empty(), false);
+
+    visitor.curDirtyManager_->debugRegionEnabled_[DebugRegionType::CURRENT_SUB] = 0;
+    visitor.DrawDirtyRegion();
+    EXPECT_EQ(visitor.curDirtyManager_->debugRegionEnabled_.empty(), false);
+}
+
+/**
+ * @tc.name: UpdateDirtyAndSetEGLDamageRegion001
+ * @tc.desc: test results of UpdateDirtyAndSetEGLDamageRegion
+ * @tc.type: FUNC
+ * @tc.require: issueIA61E9
+ */
+HWTEST_F(RSRenderThreadVisitorTest, UpdateDirtyAndSetEGLDamageRegion001, TestSize.Level1)
+{
+    RSRenderThreadVisitor visitor;
+    visitor.isEglSetDamageRegion_ = true;
+    std::unique_ptr<RSSurfaceFrame> surfaceFrame = std::make_unique<RSSurfaceFrameOhosGl>(1, 1);
+    visitor.curDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
+    visitor.UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
+    EXPECT_TRUE(surfaceFrame);
+
+    visitor.isEglSetDamageRegion_ = false;
+    visitor.UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
+    EXPECT_TRUE(surfaceFrame);
 }
 
 /**
@@ -934,6 +1090,15 @@ HWTEST_F(RSRenderThreadVisitorTest, ProcessShadowFirst001, TestSize.Level1)
     EXPECT_EQ(properties.GetUseShadowBatching(), false);
 
     properties.useShadowBatching_ = true;
+    visitor.ProcessShadowFirst(node);
+    EXPECT_EQ(properties.GetUseShadowBatching(), true);
+
+    auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>();
+    auto canvasRenderNodeChild = std::make_shared<RSCanvasRenderNode>(0);
+    fullChildrenList->emplace_back(canvasRenderNodeChild);
+    node.fullChildrenList_ = std::move(fullChildrenList);
+    Drawing::Canvas drawingCanvas;
+    visitor.canvas_ = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     visitor.ProcessShadowFirst(node);
     EXPECT_EQ(properties.GetUseShadowBatching(), true);
 }
@@ -1019,6 +1184,23 @@ HWTEST_F(RSRenderThreadVisitorTest, CacRotationFromTransformType001, TestSize.Le
     transform = GraphicTransformType::GRAPHIC_FLIP_H;
     visitor.CacRotationFromTransformType(transform, bounds);
     EXPECT_EQ(bounds.IsEmpty(), false);
+}
+
+/**
+ * @tc.name: ProcessSurfaceViewInRT001
+ * @tc.desc: test results of ProcessSurfaceViewInRT
+ * @tc.type: FUNC
+ * @tc.require: issueI5HRIF
+ */
+HWTEST_F(RSRenderThreadVisitorTest, ProcessSurfaceViewInRT001, TestSize.Level1)
+{
+    RSRenderThreadVisitor visitor;
+    RSSurfaceRenderNodeConfig config;
+    RSSurfaceRenderNode node(config);
+    Drawing::Canvas canvas;
+    visitor.canvas_ = std::make_shared<RSPaintFilterCanvas>(&canvas);
+    visitor.ProcessSurfaceViewInRT(node);
+    EXPECT_TRUE(visitor.canvas_);
 }
 
 /**

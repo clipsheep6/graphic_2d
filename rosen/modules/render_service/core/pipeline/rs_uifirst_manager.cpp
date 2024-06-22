@@ -950,11 +950,20 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
             isNeedAssignToSubThread = node.IsScale() && LeashWindowContainMainWindow(node);
         } else {
             isNeedAssignToSubThread = animation || node.IsNodeToBeCaptured();
+            if (animation && RSUifirstManager::Instance().rotationChanged_) {
+                // if current doint animation and rotation changing, we think current is rotate animation
+                RSUifirstManager::Instance().rotateAnimating_ = true;
+            }
+            if (!animation) {
+                // until animation end, reset this flag, so if rotate become 0 before anim, do not enter uifirst
+                RSUifirstManager::Instance().rotateAnimating_ = false;
+            }
         }
 
         // 1: Planning: support multi appwindows
         isNeedAssignToSubThread = (isNeedAssignToSubThread || ROSEN_EQ(node.GetGlobalAlpha(), 0.0f) ||
-            node.GetForceUIFirst()) && !node.HasFilter() && !RSUifirstManager::Instance().rotationChanged_;
+            node.GetForceUIFirst()) && !node.HasFilter() && !RSUifirstManager::Instance().rotationChanged_ &&
+            !RSUifirstManager::Instance().rotateAnimating_;
     }
 
     std::string surfaceName = node.GetName();
@@ -963,9 +972,10 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         return false;
     }
     RS_OPTIONAL_TRACE_NAME_FMT("Assign info: name[%s] id[%lu]"
-        " filter:%d animation:%d forceUIFirst:%d isNeedAssign:%d",
-        node.GetName().c_str(), node.GetId(),
-        node.HasFilter(), animation, node.GetForceUIFirst(), isNeedAssignToSubThread);
+        " filter:%d animation:%d forceUIFirst:%d alpha:%f, rotate:%d, rotateAnim:%d, isNeedAssign:%d",
+        node.GetName().c_str(), node.GetId(), node.HasFilter(), animation, node.GetForceUIFirst(),
+        node.GetGlobalAlpha(), RSUifirstManager::Instance().rotationChanged_,
+        RSUifirstManager::Instance().rotateAnimating_, isNeedAssignToSubThread);
     return isNeedAssignToSubThread;
 }
 

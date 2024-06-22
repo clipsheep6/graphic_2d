@@ -331,19 +331,17 @@ void RSUifirstManager::DoPurgePendingPostNodes(std::unordered_map<NodeId,
             ++it;
             continue;
         }
-        auto surfaceParams = static_cast<RSSurfaceRenderParams*>(drawable->GetRenderParams().get());
-        if (!surfaceParams) {
-            ++it;
-            continue;
-        }
-        auto node = it->second;
-        bool staticContent = node->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD ?
-            node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
-        if (drawable->HasCachedTexture() && (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) &&
-            (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end()) &&
+        if (drawable->HasCachedTexture() && (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end()) &&
             !drawable->IsSubThreadSkip()) {
-            RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %s", surfaceParams->GetName().c_str());
-            it = pendingNode.erase(it);
+            auto node = it->second;
+            bool staticContent = node->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD ?
+                node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
+            if (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) {
+                RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %lld", id);
+                it = pendingNode.erase(it);
+            } else {
+                ++it;
+            }
         } else {
             ++it;
         }
@@ -945,6 +943,12 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         (RSUifirstManager::Instance().CheckIfAppWindowHasAnimation(node))) {
         return false;
     }
+    if (node.IsSelfDrawingType()) {
+        return false;
+    }
+    if (node.GetSurfaceWindowType() == SurfaceWindowType::SYSTEM_SCB_WINDOW) {
+        return false;
+    }
     if (node.IsLeashWindow()) {
         if (RSUifirstManager::Instance().IsRecentTaskScene()) {
             isNeedAssignToSubThread = node.IsScale() && LeashWindowContainMainWindow(node);
@@ -956,17 +960,10 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         isNeedAssignToSubThread = (isNeedAssignToSubThread || ROSEN_EQ(node.GetGlobalAlpha(), 0.0f) ||
             node.GetForceUIFirst()) && !node.HasFilter() && !RSUifirstManager::Instance().rotationChanged_;
     }
-
-    std::string surfaceName = node.GetName();
-    bool needFilterSCB = node.GetSurfaceWindowType() == SurfaceWindowType::SYSTEM_SCB_WINDOW;
-    if (needFilterSCB || node.IsSelfDrawingType()) {
-        RS_TRACE_NAME_FMT("IsLeashWindowCache: needFilterSCB [%d]", needFilterSCB);
-        return false;
-    }
-    RS_TRACE_NAME_FMT("IsLeashWindowCache: toSubThread[%d] IsScale[%d]"
-        " filter:[%d] rotate[%d]",
-        isNeedAssignToSubThread, node.IsScale(),
-        node.HasFilter(), RSUifirstManager::Instance().rotationChanged_);
+    RS_OPTIONAL_TRACE_NAME_FMT("Assign info: name[%s] id[%lu]"
+        " filter:%d animation:%d forceUIFirst:%d isNeedAssign:%d",
+        node.GetName().c_str(), node.GetId(),
+        node.HasFilter(), animation, node.GetForceUIFirst(), isNeedAssignToSubThread);
     return isNeedAssignToSubThread;
 }
 
@@ -995,9 +992,6 @@ bool RSUifirstManager::IsNonFocusWindowCache(RSSurfaceRenderNode& node, bool ani
 
 void RSUifirstManager::UpdateUifirstNodes(RSSurfaceRenderNode& node, bool ancestorNodeHasAnimation)
 {
-    RS_TRACE_NAME_FMT("UpdateUifirstNodes: Id[%llu] name[%s] FLId[%llu] Ani[%d] Support[%d]",
-        node.GetId(), node.GetName().c_str(), node.GetFirstLevelNodeId(),
-        ancestorNodeHasAnimation, node.GetUifirstSupportFlag());
     if (!isUiFirstOn_ || !node.GetUifirstSupportFlag()) {
         UifirstStateChange(node, MultiThreadCacheType::NONE);
         return;
@@ -1014,6 +1008,8 @@ void RSUifirstManager::UpdateUifirstNodes(RSSurfaceRenderNode& node, bool ancest
         UifirstStateChange(node, MultiThreadCacheType::ARKTS_CARD);
         return;
     }
+    RS_OPTIONAL_TRACE_NAME_FMT("UpdateUifirstNodes: node[%llu] name[%s] FirstLevelNodeId[%llu] cacheType",
+        node.GetId(), node.GetName().c_str(), node.GetFirstLevelNodeId());
     UifirstStateChange(node, MultiThreadCacheType::NONE);
 }
 

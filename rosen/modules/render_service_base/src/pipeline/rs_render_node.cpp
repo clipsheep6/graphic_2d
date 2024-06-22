@@ -2162,21 +2162,23 @@ void RSRenderNode::ResetAccmulateDirtyStatus()
 
 void RSRenderNode::RecordCurDirtyTypes()
 {
-    for (int i = 0; i < (int)RSModifierType::MAX_RS_MODIFIER_TYPE; i++) {
-        if (dirtyTypes_.test(static_cast<size_t>(i))) {
+    size_t maxSize = static_cast<size_t>(RSModifierType::MAX_RS_MODIFIER_TYPE);
+    for (size_t i = 0; i < maxSize; i++) {
+        if (dirtyTypes_.test(i)) {
             continue;
         }
-        curDirtyTypes_.set(static_cast<int>(i), true);
+        curDirtyTypes_.set(i, true);
     }
 }
 
 void RSRenderNode::AccmulateDirtyTypes()
 {
-    for (int i = 0; i < (int)RSModifierType::MAX_RS_MODIFIER_TYPE; i++) {
-        if (curDirtyTypes_.test(static_cast<size_t>(i))) {
+    size_t maxSize = static_cast<size_t>(RSModifierType::MAX_RS_MODIFIER_TYPE);
+    for (size_t i = 0; i < maxSize; i++) {
+        if (curDirtyTypes_.test(i)) {
             continue;
         }
-        dirtyTypes_.set(static_cast<int>(i), true);
+        dirtyTypes_.set(i, true);
     }
 }
 

@@ -2584,7 +2584,6 @@ void RSMainThread::SetVsyncInfo(uint64_t timestamp)
 
 void RSMainThread::Animate(uint64_t timestamp)
 {
-    RS_TRACE_FUNC();
     lastAnimateTimestamp_ = timestamp;
     rsCurrRange_.Reset();
 
@@ -2592,6 +2591,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         doWindowAnimate_ = false;
         return;
     }
+    RS_TRACE_FUNC();
     UpdateAnimateNodeFlag();
     doDirectComposition_ = false;
     RS_OPTIONAL_TRACE_NAME_FMT("rs debug: %s doDirectComposition false", __func__);

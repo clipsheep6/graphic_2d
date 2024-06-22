@@ -42,6 +42,7 @@ ohos_unittest("RSRenderAnimationTest") {
     "rs_render_transition_test.cpp",
     "rs_spring_model_test.cpp",
     "rs_value_estimator_test.cpp",
+    "rs_render_animation_debug_trace_test.cpp",
   ]
 
   configs = [ ":rs_render_animation_test_config" ]

@@ -5751,10 +5751,12 @@ HWTEST_F(RSNodeTest, SetNodeName, TestSize.Level1)
     auto rsNode = RSCanvasNode::Create();
     std::string nodeName = "1"; // for test
     rsNode->SetNodeName(nodeName);
+    rsNode->GetNodeName();
     EXPECT_NE(RSTransactionProxy::instance_, nullptr);
 
     nodeName = ""; // for test
     rsNode->SetNodeName(nodeName);
+    rsNode->GetNodeName();
     EXPECT_NE(RSTransactionProxy::instance_, nullptr);
 }
 

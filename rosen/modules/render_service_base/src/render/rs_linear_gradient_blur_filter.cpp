@@ -62,7 +62,7 @@ void RSLinearGradientBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const st
     }
 
     if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
-        DrawImageRectByDDGRGpuApiType(canvas, directionBias, clipIPadding, image, para);
+        DrawImageRectByDDGRGpuApiType(canvas, directionBias, dst, image, para);
         return;
     }
     if (RSSystemProperties::GetMaskLinearBlurEnabled() && para->useMaskAlgorithm_) {

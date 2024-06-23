@@ -136,6 +136,7 @@ public:
     static DirtyRegionDebugType GetDirtyRegionDebugType();
     static PartialRenderType GetPartialRenderEnabled();
     static PartialRenderType GetUniPartialRenderEnabled();
+    static float GetClipRectThreshold();
     static bool GetVirtualDirtyDebugEnabled();
     static bool GetVirtualDirtyEnabled();
     static bool GetOcclusionEnabled();
@@ -175,6 +176,8 @@ public:
     static bool GetColorPickerPartialEnabled();
     static bool GetMaskLinearBlurEnabled();
     static bool GetMotionBlurEnabled();
+    static bool GetMagnifierEnabled();
+    static bool GetDynamicBrightnessEnabled();
     static bool GetKawaseEnabled();
     static bool GetHpsBlurEnabled();
     static float GetKawaseRandomColorFactor();
@@ -193,6 +196,7 @@ public:
     static bool GetDrawFilterWithoutSnapshotEnabled();
     static bool GetBlurExtraFilterEnabled();
     static bool GetPurgeBetweenFramesEnabled();
+    static bool GetPreAllocateTextureBetweenFramesEnabled();
 
     static bool GetAnimationCacheEnabled();
 
@@ -200,7 +204,6 @@ public:
     static int WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context);
     static bool GetUIFirstEnabled();
     static bool GetUIFirstDebugEnabled();
-    static bool GetUIFirstForceEnabled();
     static bool GetDebugTraceEnabled();
     static int GetDebugTraceLevel();
     static bool FindNodeInTargetList(std::string node);
@@ -212,13 +215,13 @@ public:
     static bool GetSnapshotWithDMAEnabled();
     static bool GetDrmEnabled();
     static bool IsPhoneType();
+    static bool IsTabletType();
     static bool IsPcType();
     static bool GetSyncTransactionEnabled();
     static int GetSyncTransactionWaitDelay();
     static bool GetSingleFrameComposerEnabled();
     static bool GetSingleFrameComposerCanvasNodeEnabled();
     static bool GetSubSurfaceEnabled();
-    static bool GetAceDebugBoundaryEnabled();
     static bool GetSecurityPermissionCheckEnabled();
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();

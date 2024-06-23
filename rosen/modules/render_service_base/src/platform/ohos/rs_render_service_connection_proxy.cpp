@@ -93,15 +93,12 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
     if (!data.WriteInterfaceToken(RSRenderServiceConnectionProxy::GetDescriptor())) {
         return;
     }
-
     if (!task->Marshalling(data)) {
         return;
     }
-
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
@@ -436,6 +433,51 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
     return id;
 }
 
+int32_t RSRenderServiceConnectionProxy::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint64(id);
+    data.WriteUInt64Vector(blackListVector);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_BLACKLIST);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenBlackList: Send Request err.");
+    }
+
+    int32_t status = reply.ReadInt32();
+    return status;
+}
+
+int32_t RSRenderServiceConnectionProxy::SetCastScreenEnableSkipWindow(ScreenId id, bool enable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint64(id);
+    data.WriteBool(enable);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_CAST_SCREEN_ENABLE_SKIP_WINDOW);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetCastScreenEnableSkipWindow: Send Request err.");
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
 int32_t RSRenderServiceConnectionProxy::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
     if (surface == nullptr) {
@@ -609,6 +651,7 @@ void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, co
     data.WriteUint32(range.min_);
     data.WriteUint32(range.max_);
     data.WriteUint32(range.preferred_);
+    data.WriteUint32(range.type_);
     data.WriteBool(isAnimatorStopped);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SYNC_FRAME_RATE_RANGE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
@@ -768,7 +811,27 @@ void RSRenderServiceConnectionProxy::MarkPowerOffNeedProcessOneFrame()
         return;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS);
+    uint32_t code =
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        return;
+    }
+}
+
+void RSRenderServiceConnectionProxy::DisablePowerOffRenderControl(ScreenId id)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::DisablePowerOffRenderControl: Send Request err.");
+        return;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_RENDER_CONTROL_SCREEN);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         return;
@@ -816,7 +879,7 @@ void RSRenderServiceConnectionProxy::RegisterApplicationAgent(uint32_t pid, sptr
 }
 
 void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
-    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
+    float scaleX, float scaleY, bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr\n");
@@ -831,6 +894,7 @@ void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfa
     data.WriteRemoteObject(callback->AsObject());
     data.WriteFloat(scaleX);
     data.WriteFloat(scaleY);
+    data.WriteBool(useDma);
     data.WriteUint8(static_cast<uint8_t>(surfaceCaptureType));
     data.WriteBool(isSync);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::TAKE_SURFACE_CAPTURE);
@@ -2192,6 +2256,31 @@ void RSRenderServiceConnectionProxy::SetCacheEnabledForRotation(bool isEnabled)
     }
 }
 
+void RSRenderServiceConnectionProxy::ChangeSyncCount(uint64_t syncId, int32_t parentPid, int32_t childPid)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+    if (!data.WriteUint64(syncId)) {
+        return;
+    }
+    if (!data.WriteInt32(parentPid)) {
+        return;
+    }
+    if (!data.WriteInt32(childPid)) {
+        return;
+    }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CHANGE_SYNCHRONIZE_COUNT);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::ChangeSyncCount: Send Request err.");
+    }
+}
+
 void RSRenderServiceConnectionProxy::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback)
 {
     OnRemoteDiedCallback_ = callback;
@@ -2257,7 +2346,7 @@ LayerComposeInfo RSRenderServiceConnectionProxy::GetLayerComposeInfo()
         return layerComposeInfo;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_SYNTHESIS_MODE_INFO);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_COMPOSE_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::GetLayerComposeInfo: Send Request err.");

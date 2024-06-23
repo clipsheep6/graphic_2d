@@ -74,10 +74,15 @@ void RSDisplaySoloist::VsyncCallbackInner(TimestampType timestamp)
 
     if (JudgeWhetherSkip(timestamp)) {
         if (callback_.first) {
-            RS_TRACE_NAME_FMT("DisplaySoloistId: %d, RefreshRate: %d, preferred: %d, "
-                "drawFPS: %d, rate: %d, count: %d",
-                instanceId_, GetVSyncRate(), frameRateRange_.preferred_,
-                drawFPS_, currRate_, currCnt_);
+            RS_TRACE_NAME_FMT("SubDisplaySoloistId: %d, RefreshRate: %d, FrameRateRange: {%d, %d, %d}, "
+                "drawFPS: %d, rate: %d, count: %d", instanceId_, GetVSyncRate(),
+                frameRateRange_.min_, frameRateRange_.max_, frameRateRange_.preferred_, drawFPS_,
+                currRate_, currCnt_);
+            ROSEN_LOGD("SubDisplaySoloistId: %{public}d, RefreshRate: %{public}d, "
+                "FrameRateRange: {%{public}d, %{public}d, %{public}d}, "
+                "drawFPS: %{public}d, rate: %{public}d, count: %{public}d", instanceId_, GetVSyncRate(),
+                frameRateRange_.min_, frameRateRange_.max_, frameRateRange_.preferred_, drawFPS_,
+                currRate_, currCnt_);
             callback_.first(timestamp_, targetTimestamp_, callback_.second);
         }
     }
@@ -452,10 +457,16 @@ void RSDisplaySoloistManager::DispatchSoloistCallback(TimestampType timestamp)
         if (displaySoloist && displaySoloist->JudgeWhetherSkip(timestamp) &&
             displaySoloist->subStatus_ == ActiveStatus::ACTIVE) {
             if (displaySoloist->callback_.first) {
-                RS_TRACE_NAME_FMT("DisplaySoloistId: %d, RefreshRate: %d, preferred: %d, "
+                RS_TRACE_NAME_FMT("DisplaySoloistId: %d, RefreshRate: %d, FrameRateRange: {%d, %d, %d}, "
                     "drawFPS: %d, rate: %d, count: %d",
-                    displaySoloist->instanceId_, displaySoloist->GetVSyncRate(),
-                    displaySoloist->frameRateRange_.preferred_,
+                    displaySoloist->instanceId_, displaySoloist->GetVSyncRate(), displaySoloist->frameRateRange_.min_,
+                    displaySoloist->frameRateRange_.max_, displaySoloist->frameRateRange_.preferred_,
+                    displaySoloist->drawFPS_, displaySoloist->currRate_, displaySoloist->currCnt_);
+                ROSEN_LOGD("DisplaySoloistId: %{public}d, RefreshRate: %{public}d, "
+                    "FrameRateRange: {%{public}d, %{public}d, %{public}d}, "
+                    "drawFPS: %{public}d, rate: %{public}d, count: %{public}d",
+                    displaySoloist->instanceId_, displaySoloist->GetVSyncRate(), displaySoloist->frameRateRange_.min_,
+                    displaySoloist->frameRateRange_.max_, displaySoloist->frameRateRange_.preferred_,
                     displaySoloist->drawFPS_, displaySoloist->currRate_, displaySoloist->currCnt_);
                 displaySoloist->callback_.first(displaySoloist->timestamp_, displaySoloist->targetTimestamp_,
                                                 displaySoloist->callback_.second);
@@ -464,7 +475,8 @@ void RSDisplaySoloistManager::DispatchSoloistCallback(TimestampType timestamp)
                 frameRateRange_.Merge(displaySoloist->frameRateRange_);
             }
         }
-        isNeedRequestVSync |= (displaySoloist->subStatus_ == ActiveStatus::ACTIVE);
+        isNeedRequestVSync = isNeedRequestVSync ||
+                             static_cast<bool>(displaySoloist->subStatus_ == ActiveStatus::ACTIVE);
     }
 
     if (isNeedRequestVSync && managerStatus_ == ActiveStatus::ACTIVE) {

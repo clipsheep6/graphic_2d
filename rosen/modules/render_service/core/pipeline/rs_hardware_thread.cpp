@@ -162,6 +162,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    delayTime_ = 0;
     LayerComposeCollection::GetInstance().UpdateUniformOrOfflineComposeFrameNumberForDFX(layers.size());
     RefreshRateParam param = GetRefreshRateParam();
     RSTaskMessage::RSTask task = [this, output = output, layers = layers, param = param]() {
@@ -173,8 +174,8 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
                 std::chrono::steady_clock::now().time_since_epoch()).count();
         }
         uint32_t currentRate = HgmCore::Instance().GetScreenCurrentRefreshRate(HgmCore::Instance().GetActiveScreenId());
-        RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu",
-            currentRate, param.frameTimestamp);
+        RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu, size: %lu",
+            currentRate, param.frameTimestamp, layers.size());
         ExecuteSwitchRefreshRate(param.rate);
         PerformSetActiveMode(output, param.frameTimestamp, param.constraintRelativeTime);
         AddRefreshRateCount();
@@ -209,14 +210,14 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         uint64_t currTime = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count());
-        int64_t delayTime = std::round((static_cast<int64_t>(expectCommitTime - currTime)) / 1000000);
+        delayTime_ = std::round((static_cast<int64_t>(expectCommitTime - currTime)) / 1000000);
         RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers " \
             "expectCommitTime: %lu, currTime: %lu, delayTime: %ld, pipelineOffset: %ld, period: %ld",
-            expectCommitTime, currTime, delayTime, pipelineOffset, period);
-        if (period == 0 || delayTime <= 0) {
+            expectCommitTime, currTime, delayTime_, pipelineOffset, period);
+        if (period == 0 || delayTime_ <= 0) {
             PostTask(task);
         } else {
-            PostDelayTask(task, delayTime);
+            PostDelayTask(task, delayTime_);
         }
     }
 }
@@ -299,7 +300,7 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp
     }
 
     RS_TRACE_NAME_FMT("RSHardwareThread::PerformSetActiveMode setting active mode. rate: %d",
-        hgmCore.GetScreenCurrentRefreshRate(screenManager->GetDefaultScreenId()));
+        HgmCore::Instance().GetScreenCurrentRefreshRate(HgmCore::Instance().GetActiveScreenId()));
     for (auto mapIter = modeMap->begin(); mapIter != modeMap->end(); ++mapIter) {
         ScreenId id = mapIter->first;
         int32_t modeId = mapIter->second;
@@ -344,9 +345,11 @@ GSError RSHardwareThread::ClearFrameBuffers(OutputPtr output)
         uniRenderEngine_->ResetCurrentContext();
     }
 #ifdef RS_ENABLE_VK
-    auto frameBufferSurface = std::static_pointer_cast<RSSurfaceOhosVulkan>(frameBufferSurfaceOhos_);
-    if (frameBufferSurface) {
-        frameBufferSurface->ClearSurfaceMap();
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN) {
+        auto frameBufferSurface = std::static_pointer_cast<RSSurfaceOhosVulkan>(frameBufferSurfaceOhos_);
+        if (frameBufferSurface) {
+            frameBufferSurface->ClearSurfaceMap();
+        }
     }
 #endif
     return output->ClearFrameBuffer();
@@ -380,7 +383,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
-        if (RSSystemProperties::GetDrmEnabled() && RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE) {
+        if (RSSystemProperties::GetDrmEnabled() && RSMainThread::Instance()->GetDeviceType() != DeviceType::PC) {
             for (const auto& layer : layers) {
                 if (layer && layer->GetBuffer() && (layer->GetBuffer()->GetUsage() & BUFFER_USAGE_PROTECTED)) {
                     isProtected = true;
@@ -432,6 +435,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         canvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
     }
 #endif
+
     uniRenderEngine_->DrawLayers(*canvas, layers, false, screenInfo);
     renderFrame->Flush();
     RS_LOGD("RsDebug RSHardwareThread::Redraw flush frame buffer end");

@@ -58,6 +58,8 @@ public:
 
     std::optional<Vector4<Color>> GetBorderColor() const;
     std::optional<Vector4f> GetBorderWidth() const;
+    std::optional<Vector4f> GetBorderDashWidth() const;
+    std::optional<Vector4f> GetBorderDashGap() const;
 
     std::optional<std::shared_ptr<RSFilter>> GetBackgroundFilter() const;
     std::optional<std::shared_ptr<RSFilter>> GetFilter() const;
@@ -72,6 +74,9 @@ public:
     std::optional<float> GetSpherizeDegree() const;
     std::optional<float> GetLightUpEffectDegree() const;
     std::optional<float> GetDynamicDimDegree() const;
+
+    std::optional<float> GetAttractionFractionValue() const;
+    std::optional<Vector2f> GetAttractionDstPointValue() const;
 
 private:
     NodeId id_;

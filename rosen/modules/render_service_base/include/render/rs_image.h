@@ -26,6 +26,20 @@ namespace Media {
 class PixelMap;
 }
 namespace Rosen {
+namespace Drawing {
+struct AdaptiveImageInfo {
+    int32_t fitNum = 0;
+    int32_t repeatNum = 0;
+    Point radius[4];
+    double scale = 0.0;
+    uint32_t uniqueId = 0;
+    int32_t width = 0;
+    int32_t height = 0;
+    uint32_t dynamicRangeMode = 0;
+    Rect frameRect;
+};
+}
+
 class RsImageInfo final {
 public:
     RsImageInfo(int fitNum, int repeatNum, const Drawing::Point* radius, double scale, uint32_t id, int w, int h)
@@ -82,6 +96,12 @@ public:
     void SetDyamicRangeMode(uint32_t dynamicRangeMode);
 
     void SetNodeId(NodeId nodeId);
+    
+    void ApplyImageFit();
+    ImageFit GetImageFit();
+    Drawing::AdaptiveImageInfo GetAdaptiveImageInfoWithCustomizedFrameRect(const Drawing::Rect& frameRect) const;
+    RectF GetDstRect();
+    void SetFrameRect(RectF frameRect);
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSImage* Unmarshalling(Parcel& parcel);
@@ -106,7 +126,6 @@ public:
 
 private:
     bool HasRadius() const;
-    void ApplyImageFit();
     void ApplyCanvasClip(Drawing::Canvas& canvas);
     void UploadGpu(Drawing::Canvas& canvas);
     void DrawImageRepeatRect(const Drawing::SamplingOptions& samplingOptions, Drawing::Canvas& canvas);

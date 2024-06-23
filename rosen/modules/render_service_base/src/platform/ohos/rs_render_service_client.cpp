@@ -239,7 +239,7 @@ private:
 };
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
-    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
+    float scaleX, float scaleY, bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -265,7 +265,8 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     if (surfaceCaptureCbDirector_ == nullptr) {
         surfaceCaptureCbDirector_ = new SurfaceCaptureCallbackDirector(this);
     }
-    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_, scaleX, scaleY, surfaceCaptureType, isSync);
+    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_, scaleX, scaleY,
+        useDma, surfaceCaptureType, isSync);
     return true;
 }
 
@@ -325,6 +326,26 @@ ScreenId RSRenderServiceClient::CreateVirtualScreen(
     }
 
     return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
+}
+
+int32_t RSRenderServiceClient::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+
+    return renderService->SetVirtualScreenBlackList(id, blackListVector);
+}
+
+int32_t RSRenderServiceClient::SetCastScreenEnableSkipWindow(ScreenId id, bool enable)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+
+    return renderService->SetCastScreenEnableSkipWindow(id, enable);
 }
 
 int32_t RSRenderServiceClient::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
@@ -515,6 +536,16 @@ void RSRenderServiceClient::MarkPowerOffNeedProcessOneFrame()
     }
 
     renderService->MarkPowerOffNeedProcessOneFrame();
+}
+
+void RSRenderServiceClient::DisablePowerOffRenderControl(ScreenId id)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return;
+    }
+
+    renderService->DisablePowerOffRenderControl(id);
 }
 
 void RSRenderServiceClient::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
@@ -1234,6 +1265,14 @@ void RSRenderServiceClient::SetCacheEnabledForRotation(bool isEnabled)
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
         renderService->SetCacheEnabledForRotation(isEnabled);
+    }
+}
+
+void RSRenderServiceClient::ChangeSyncCount(uint64_t syncId, int32_t parentPid, int32_t childPid)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->ChangeSyncCount(syncId, parentPid, childPid);
     }
 }
 

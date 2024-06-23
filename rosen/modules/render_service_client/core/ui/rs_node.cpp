@@ -418,7 +418,7 @@ const RSShowingPropertiesFreezer& RSNode::GetShowingProperties() const
     return showingPropertiesFreezer_;
 }
 
-void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
+void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation, bool isStartAnimation)
 {
     if (animation == nullptr) {
         ROSEN_LOGE("Failed to add animation, animation is null!");
@@ -445,7 +445,10 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
         std::unique_lock<std::mutex> lock(animationMutex_);
         AddAnimationInner(animation);
     }
-    animation->StartInner(shared_from_this());
+
+    if (isStartAnimation) {
+        animation->StartInner(shared_from_this());
+    }
 }
 
 void RSNode::RemoveAllAnimations()
@@ -474,6 +477,12 @@ void RSNode::SetMotionPathOption(const std::shared_ptr<RSMotionPathOption>& moti
 {
     motionPathOption_ = motionPathOption;
     UpdateModifierMotionPathOption();
+}
+
+void RSNode::SetMagnifierParams(const std::shared_ptr<RSMagnifierParams>& para)
+{
+    SetProperty<RSMagnifierParamsModifier, RSProperty<std::shared_ptr<RSMagnifierParams>>>(
+        RSModifierType::MAGNIFIER_PARA, para);
 }
 
 const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
@@ -1037,8 +1046,8 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
         float scaleMax = particleParams[i].scale_.val_.end_;
         if (particleType == ParticleType::POINTS) {
             auto diameMax = particleParams[i].emitterConfig_.radius_ * 2 * scaleMax; // diameter = 2 * radius
-            left[i] = std::min(bounds.x_ - diameMax, position.x_ - diameMax);
-            top[i] = std::min(bounds.y_ - diameMax, position.y_ - diameMax);
+            left[i] = std::min(bounds.x_ - diameMax, bounds.x_ + position.x_ - diameMax);
+            top[i] = std::min(bounds.y_ - diameMax, bounds.y_ + position.y_ - diameMax);
             right[i] = std::max(boundsRight + diameMax + diameMax, position.x_ + emitSize.x_ + diameMax + diameMax);
             bottom[i] = std::max(boundsBottom + diameMax + diameMax, position.y_ + emitSize.y_ + diameMax + diameMax);
         } else {
@@ -1055,20 +1064,21 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
             }
             float imageSizeWidthMax = imageSizeWidth * scaleMax;
             float imageSizeHeightMax = imageSizeHeight * scaleMax;
-            left[i] = std::min(bounds.x_ - imageSizeWidthMax, position.x_ - imageSizeWidthMax);
-            top[i] = std::min(bounds.y_ - imageSizeHeightMax, position.y_ - imageSizeHeightMax);
+            left[i] = std::min(bounds.x_ - imageSizeWidthMax, bounds.x_ + position.x_ - imageSizeWidthMax);
+            top[i] = std::min(bounds.y_ - imageSizeHeightMax, bounds.y_ + position.y_ - imageSizeHeightMax);
             right[i] = std::max(boundsRight + imageSizeWidthMax + imageSizeWidthMax,
                 position.x_ + emitSize.x_ + imageSizeWidthMax + imageSizeWidthMax);
             bottom[i] = std::max(boundsBottom + imageSizeHeightMax + imageSizeHeightMax,
                 position.y_ + emitSize.y_ + imageSizeHeightMax + imageSizeHeightMax);
         }
     }
-    float l = *std::min_element(left.begin(), left.end());
-    float t = *std::min_element(top.begin(), top.end());
-    boundsRight = *std::max_element(right.begin(), right.end());
-    boundsBottom = *std::max_element(bottom.begin(), bottom.end());
-    std::shared_ptr<RectF> overlayRect = std::make_shared<RectF>(l, t, boundsRight - l, boundsBottom - t);
-    SetDrawRegion(overlayRect);
+    if (emitterCount != 0) {
+        float l = *std::min_element(left.begin(), left.end());
+        float t = *std::min_element(top.begin(), top.end());
+        boundsRight = *std::max_element(right.begin(), right.end());
+        boundsBottom = *std::max_element(bottom.begin(), bottom.end());
+        SetDrawRegion(std::make_shared<RectF>(l - bounds.x_, t - bounds.y_, boundsRight - l, boundsBottom - t));
+    }
 }
 
 // Update Particle Emitter
@@ -1214,6 +1224,20 @@ void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
     SetProperty<RSBorderStyleModifier, RSProperty<Vector4<uint32_t>>>(RSModifierType::BORDER_STYLE, styles);
 }
 
+// set dash width for border
+void RSNode::SetBorderDashWidth(const Vector4f& dashWidth)
+{
+    SetProperty<RSBorderDashWidthModifier, RSProperty<Vector4f>>(
+        RSModifierType::BORDER_DASH_WIDTH, dashWidth);
+}
+
+// set dash gap for border
+void RSNode::SetBorderDashGap(const Vector4f& dashGap)
+{
+    SetProperty<RSBorderDashGapModifier, RSProperty<Vector4f>>(
+        RSModifierType::BORDER_DASH_GAP, dashGap);
+}
+
 void RSNode::SetOuterBorderColor(const Vector4<Color>& color)
 {
     SetOutlineColor(color);
@@ -1254,6 +1278,18 @@ void RSNode::SetOutlineStyle(const Vector4<BorderStyle>& style)
         RSModifierType::OUTLINE_STYLE, styles);
 }
 
+void RSNode::SetOutlineDashWidth(const Vector4f& dashWidth)
+{
+    SetProperty<RSOutlineDashWidthModifier, RSAnimatableProperty<Vector4f>>(
+        RSModifierType::OUTLINE_DASH_WIDTH, dashWidth);
+}
+
+void RSNode::SetOutlineDashGap(const Vector4f& dashGap)
+{
+    SetProperty<RSOutlineDashGapModifier, RSAnimatableProperty<Vector4f>>(
+        RSModifierType::OUTLINE_DASH_GAP, dashGap);
+}
+
 void RSNode::SetOutlineRadius(const Vector4f& radius)
 {
     SetProperty<RSOutlineRadiusModifier, RSAnimatableProperty<Vector4f>>(
@@ -1262,12 +1298,43 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 
 void RSNode::SetUIBackgroundFilter(const OHOS::Rosen::Filter* backgroundFilter)
 {
-    // To do: generate composed filter here.
+    // To do: generate composed filter here. Now we just set background blur in v1.0.
+    auto filterParas = backgroundFilter->GetAllPara();
+    for (const auto& filterPara : filterParas) {
+        if (filterPara->GetParaType() == FilterPara::BLUR) {
+            auto filterBlurPara = std::static_pointer_cast<FilterBlurPara>(filterPara);
+            auto blurRadius = filterBlurPara->GetRadius();
+            SetBackgroundBlurRadiusX(blurRadius);
+            SetBackgroundBlurRadiusY(blurRadius);
+        }
+        if (filterPara->GetParaType() == FilterPara::WATER_RIPPLE) {
+            auto waterRipplePara = std::static_pointer_cast<WaterRipplePara>(filterPara);
+            auto waveCount = waterRipplePara->GetWaveCount();
+            auto rippleCenterX = waterRipplePara->GetRippleCenterX();
+            auto rippleCenterY = waterRipplePara->GetRippleCenterY();
+            auto progress = waterRipplePara->GetProgress();
+            RSWaterRipplePara rs_water_ripple_param = {
+                waveCount,
+                rippleCenterX,
+                rippleCenterY
+            };
+            SetWaterRippleParams(rs_water_ripple_param, progress);
+        }
+    }
 }
 
 void RSNode::SetUICompositingFilter(const OHOS::Rosen::Filter* compositingFilter)
 {
-    // To do: generate composed filter here.
+    // To do: generate composed filter here. Now we just set compositing blur in v1.0.
+    auto filterParas = compositingFilter->GetAllPara();
+    for (const auto& filterPara : filterParas) {
+        if (filterPara->GetParaType() == FilterPara::BLUR) {
+            auto filterBlurPara = std::static_pointer_cast<FilterBlurPara>(filterPara);
+            auto blurRadius = filterBlurPara->GetRadius();
+            SetForegroundBlurRadiusX(blurRadius);
+            SetForegroundBlurRadiusY(blurRadius);
+        }
+    }
 }
 
 void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
@@ -1275,6 +1342,11 @@ void RSNode::SetUIForegroundFilter(const OHOS::Rosen::Filter* foregroundFilter)
     // To do: generate composed filter here. Now we just set pixel stretch in v1.0.
     auto filterParas = foregroundFilter->GetAllPara();
     for (const auto& filterPara : filterParas) {
+        if (filterPara->GetParaType() == FilterPara::BLUR) {
+            auto filterBlurPara = std::static_pointer_cast<FilterBlurPara>(filterPara);
+            auto blurRadius = filterBlurPara->GetRadius();
+            SetForegroundEffectRadius(blurRadius);
+        }
         if (filterPara->GetParaType() == FilterPara::PIXEL_STRETCH) {
             auto pixelStretchPara = std::static_pointer_cast<PixelStretchPara>(filterPara);
             auto stretchPercent = pixelStretchPara->GetStretchPercent();
@@ -1299,8 +1371,8 @@ void RSNode::SetVisualEffect(const VisualEffect* visualEffect)
         }
         auto fraction = brightnessBlender->GetFraction();
         SetBgBrightnessFract(fraction);
-        SetBgBrightnessParams({ brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(),
-            brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree(), brightnessBlender->GetSaturation(),
+        SetBgBrightnessParams({ brightnessBlender->GetLinearRate(), brightnessBlender->GetDegree(),
+            brightnessBlender->GetCubicRate(), brightnessBlender->GetQuadRate(), brightnessBlender->GetSaturation(),
             { brightnessBlender->GetPositiveCoeff().data_[0], brightnessBlender->GetPositiveCoeff().data_[1],
                 brightnessBlender->GetPositiveCoeff().data_[2] },
             { brightnessBlender->GetNegativeCoeff().data_[0], brightnessBlender->GetNegativeCoeff().data_[1],
@@ -1403,8 +1475,35 @@ void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
 
 void RSNode::SetFgBrightnessParams(const RSDynamicBrightnessPara& params)
 {
-    SetProperty<RSFgBrightnessParamsModifier,
-        RSProperty<RSDynamicBrightnessPara>>(RSModifierType::FG_BRIGHTNESS_PARAMS, params);
+    // Compatible with original interfaces
+    SetFgBrightnessRates(params.rates_);
+    SetFgBrightnessSaturation(params.saturation_);
+    SetFgBrightnessPosCoeff(params.posCoeff_);
+    SetFgBrightnessNegCoeff(params.negCoeff_);
+}
+
+void RSNode::SetFgBrightnessRates(const Vector4f& rates)
+{
+    SetProperty<RSFgBrightnessRatesModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_RATES, rates);
+}
+
+void RSNode::SetFgBrightnessSaturation(const float& saturation)
+{
+    SetProperty<RSFgBrightnessSaturationModifier,
+        RSAnimatableProperty<float>>(RSModifierType::FG_BRIGHTNESS_SATURATION, saturation);
+}
+
+void RSNode::SetFgBrightnessPosCoeff(const Vector4f& coeff)
+{
+    SetProperty<RSFgBrightnessPosCoeffModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_POSCOEFF, coeff);
+}
+
+void RSNode::SetFgBrightnessNegCoeff(const Vector4f& coeff)
+{
+    SetProperty<RSFgBrightnessNegCoeffModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::FG_BRIGHTNESS_NEGCOEFF, coeff);
 }
 
 void RSNode::SetFgBrightnessFract(const float& fract)
@@ -1415,8 +1514,36 @@ void RSNode::SetFgBrightnessFract(const float& fract)
 
 void RSNode::SetBgBrightnessParams(const RSDynamicBrightnessPara& params)
 {
-    SetProperty<RSBgBrightnessParamsModifier,
-        RSProperty<RSDynamicBrightnessPara>>(RSModifierType::BG_BRIGHTNESS_PARAMS, params);
+    ROSEN_LOGE("LJQDEBUG: params.saturation_ %{public}f", params.saturation_);
+    // Compatible with original interfaces
+    SetBgBrightnessRates(params.rates_);
+    SetBgBrightnessSaturation(params.saturation_);
+    SetBgBrightnessPosCoeff(params.posCoeff_);
+    SetBgBrightnessNegCoeff(params.negCoeff_);
+}
+
+void RSNode::SetBgBrightnessRates(const Vector4f& rates)
+{
+    SetProperty<RSBgBrightnessRatesModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_RATES, rates);
+}
+
+void RSNode::SetBgBrightnessSaturation(const float& saturation)
+{
+    SetProperty<RSBgBrightnessSaturationModifier,
+        RSAnimatableProperty<float>>(RSModifierType::BG_BRIGHTNESS_SATURATION, saturation);
+}
+
+void RSNode::SetBgBrightnessPosCoeff(const Vector4f& coeff)
+{
+    SetProperty<RSBgBrightnessPosCoeffModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_POSCOEFF, coeff);
+}
+
+void RSNode::SetBgBrightnessNegCoeff(const Vector4f& coeff)
+{
+    SetProperty<RSBgBrightnessNegCoeffModifier,
+        RSAnimatableProperty<Vector4f>>(RSModifierType::BG_BRIGHTNESS_NEGCOEFF, coeff);
 }
 
 void RSNode::SetBgBrightnessFract(const float& fract)
@@ -1582,6 +1709,14 @@ void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent, Drawing::Til
         RSModifierType::PIXEL_STRETCH_TILE_MODE, static_cast<int>(stretchTileMode));
 }
 
+void RSNode::SetWaterRippleParams(const RSWaterRipplePara& params, float progress)
+{
+    SetProperty<RSWaterRippleParamsModifier,
+        RSProperty<RSWaterRipplePara>>(RSModifierType::WATER_RIPPLE_PARAMS, params);
+    SetProperty<RSWaterRippleProgressModifier,
+        RSAnimatableProperty<float>>(RSModifierType::WATER_RIPPLE_PROGRESS, progress);
+}
+
 void RSNode::SetFreeze(bool isFreeze)
 {
     ROSEN_LOGE("SetFreeze only support RSSurfaceNode and RSCanvasNode in uniRender");
@@ -1612,6 +1747,24 @@ void RSNode::SetTakeSurfaceForUIFlag()
 void RSNode::SetSpherizeDegree(float spherizeDegree)
 {
     SetProperty<RSSpherizeModifier, RSAnimatableProperty<float>>(RSModifierType::SPHERIZE, spherizeDegree);
+}
+
+void RSNode::SetAttractionEffect(float fraction, const Vector2f& destinationPoint)
+{
+    SetAttractionEffectFraction(fraction);
+    SetAttractionEffectDstPoint(destinationPoint);
+}
+
+void RSNode::SetAttractionEffectFraction(float fraction)
+{
+    SetProperty<RSAttractionFractionModifier, RSAnimatableProperty<float>>(RSModifierType::ATTRACTION_FRACTION,
+        fraction);
+}
+
+void RSNode::SetAttractionEffectDstPoint(Vector2f destinationPoint)
+{
+    SetProperty<RSAttractionDstPointModifier, RSAnimatableProperty<Vector2f>>(RSModifierType::ATTRACTION_DSTPOINT,
+        destinationPoint);
 }
 
 void RSNode::SetLightUpEffectDegree(float LightUpEffectDegree)
@@ -2038,6 +2191,19 @@ void RSNode::MarkSuggestOpincNode(bool isOpincNode, bool isNeedCalculate)
     isSuggestOpincNode_ = isOpincNode;
     std::unique_ptr<RSCommand> command = std::make_unique<RSMarkSuggestOpincNode>(GetId(),
         isOpincNode, isNeedCalculate);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSNode::MarkUifirstNode(bool isUifirstNode)
+{
+    if (isUifirstNode_ == isUifirstNode) {
+        return;
+    }
+    isUifirstNode_ = isUifirstNode;
+    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkUifirstNode>(GetId(), isUifirstNode);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());

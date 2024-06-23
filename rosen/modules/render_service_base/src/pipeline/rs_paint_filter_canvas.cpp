@@ -417,7 +417,7 @@ void RSPaintFilterCanvasBase::DrawImageNine(const Drawing::Image* image, const D
                 OnFilterWithBrush(b);
                 (*iter)->DrawImageNine(image, center, dst, filter, &b);
             } else {
-                (*iter)->DrawImageNine(image, center, dst, filter, brush);
+                (*iter)->DrawImageNine(image, center, dst, filter, GetFilteredBrush());
             }
         }
     }
@@ -428,36 +428,24 @@ void RSPaintFilterCanvasBase::DrawImageNine(const Drawing::Image* image, const D
             OnFilterWithBrush(b);
             canvas_->DrawImageNine(image, center, dst, filter, &b);
         } else {
-            canvas_->DrawImageNine(image, center, dst, filter, brush);
+            canvas_->DrawImageNine(image, center, dst, filter, GetFilteredBrush());
         }
     }
 #endif
 }
 
 void RSPaintFilterCanvasBase::DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice,
-    const Drawing::Rect& dst, Drawing::FilterMode filter, const Drawing::Brush* brush)
+    const Drawing::Rect& dst, Drawing::FilterMode filter)
 {
 #ifdef ENABLE_RECORDING_DCL
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr && OnFilter()) {
-            if (brush) {
-                Drawing::Brush b(*brush);
-                OnFilterWithBrush(b);
-                (*iter)->DrawImageLattice(image, lattice, dst, filter, &b);
-            } else {
-                (*iter)->DrawImageLattice(image, lattice, dst, filter, brush);
-            }
+            (*iter)->DrawImageLattice(image, lattice, dst, filter);
         }
     }
 #else
     if (canvas_ != nullptr && OnFilter()) {
-        if (brush) {
-            Drawing::Brush b(*brush);
-            OnFilterWithBrush(b);
-            canvas_->DrawImageLattice(image, lattice, dst, filter, &b);
-        } else {
-            canvas_->DrawImageLattice(image, lattice, dst, filter, brush);
-        }
+        canvas_->DrawImageLattice(image, lattice, dst, filter);
     }
 #endif
 }
@@ -1056,8 +1044,8 @@ void RSPaintFilterCanvas::PaintFilter(T& paint)
 
     auto colorFilter = filter.GetColorFilter();
     if (colorFilter) {
-        RS_LOGE("hdr PaintFilter has colorFilter");
-        return;
+        RS_LOGD("hdr PaintFilter has colorFilter");
+        luminanceColorFilter->Compose(*colorFilter.get());
     }
     filter.SetColorFilter(luminanceColorFilter);
 
@@ -1302,6 +1290,10 @@ void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
     isParallelCanvas_ = other.isParallelCanvas_;
     disableFilterCache_ = other.disableFilterCache_;
     threadIndex_ = other.threadIndex_;
+    hasHdrPresent_ = other.hasHdrPresent_;
+    brightnessRatio_ = other.brightnessRatio_;
+    screenId_ = other.screenId_;
+    targetColorGamut_ = other.targetColorGamut_;
 }
 
 void RSPaintFilterCanvas::SetHighContrast(bool enabled)

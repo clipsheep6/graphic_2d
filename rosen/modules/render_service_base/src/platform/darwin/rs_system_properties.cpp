@@ -87,6 +87,11 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
     return {};
 }
 
+float RSSystemProperties::GetClipRectThreshold()
+{
+    return 1.f;
+}
+
 bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
 {
     return {};
@@ -237,6 +242,16 @@ bool RSSystemProperties::GetMotionBlurEnabled()
     return true;
 }
 
+bool RSSystemProperties::GetDynamicBrightnessEnabled()
+{
+    return true;
+}
+
+bool RSSystemProperties::GetMagnifierEnabled()
+{
+    return true;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     return false;
@@ -334,6 +349,11 @@ bool RSSystemProperties::IsPhoneType()
     return false;
 }
 
+bool RSSystemProperties::IsTabletType()
+{
+    return false;
+}
+
 bool RSSystemProperties::IsPcType()
 {
     return false;
@@ -409,16 +429,6 @@ SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
 }
 
 bool RSSystemProperties::GetRenderParallelEnabled()
-{
-    return false;
-}
-
-bool RSSystemProperties::GetUIFirstForceEnabled()
-{
-    return false;
-}
-
-bool RSSystemProperties::GetAceDebugBoundaryEnabled()
 {
     return false;
 }

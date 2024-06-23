@@ -117,7 +117,7 @@ std::shared_ptr<Media::PixelMap> RSRenderServiceClient::CreatePixelMapFromSurfac
 }
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
-    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
+    float scaleX, float scaleY, bool useDma, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     return false;
 }
@@ -215,6 +215,10 @@ void RSRenderServiceClient::MarkPowerOffNeedProcessOneFrame()
 }
 
 void RSRenderServiceClient::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
+{
+}
+
+void RSRenderServiceClient::DisablePowerOffRenderControl(ScreenId id)
 {
 }
 
@@ -386,6 +390,11 @@ bool RSRenderServiceClient::UnRegisterTypeface(std::shared_ptr<Drawing::Typeface
     return {};
 }
 
+int32_t RSRenderServiceClient::SetCastScreenEnableSkipWindow(ScreenId id, bool enable)
+{
+    return {};
+}
+
 int32_t RSRenderServiceClient::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval)
 {
     return {};
@@ -483,6 +492,10 @@ void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled, SelfDr
 }
 
 void RSRenderServiceClient::SetCacheEnabledForRotation(bool isEnabled)
+{
+}
+
+void RSRenderServiceClient::ChangeSyncCount(uint64_t syncId, int32_t parentPid, int32_t childPid)
 {
 }
 

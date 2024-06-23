@@ -31,6 +31,8 @@ namespace OHOS {
 namespace Rosen {
 using namespace std;
 constexpr uint32_t FLAT_ANGLE = 180;
+constexpr int32_t DEFAULT_BRIGHTNESS = 500;
+constexpr float NO_RATIO = 1.0f;
 static const int GLOBAL_ALPHA_MAX = 255;
 bool RSUniRenderComposerAdapter::Init(const ScreenInfo& screenInfo, int32_t offsetX, int32_t offsetY,
     float mirrorAdaptiveCoefficient)
@@ -136,13 +138,16 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& no
         matrix.Get(Drawing::Matrix::Index::TRANS_Y), matrix.Get(Drawing::Matrix::Index::PERSP_0),
         matrix.Get(Drawing::Matrix::Index::PERSP_1), matrix.Get(Drawing::Matrix::Index::PERSP_2)};
     info.gravity = static_cast<int32_t>(Gravity::RESIZE);
+
+    info.displayNit = DEFAULT_BRIGHTNESS;
+    info.brightnessRatio = NO_RATIO;
     return info;
 }
 
 ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSRcdSurfaceRenderNode& node) const
 {
     const auto& buffer = node.GetBuffer(); // we guarantee the buffer is valid.
-    const RectI dstRect = node.GetDstRect();
+    const RectI& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
     ComposeInfo info {};
     info.srcRect = GraphicIRect {srcRect.left_, srcRect.top_, srcRect.width_, srcRect.height_};
@@ -165,6 +170,9 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSRcdSurfaceRenderNode&
     info.needClient = false;
     info.matrix = GraphicMatrix {1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f};
     info.gravity = static_cast<int32_t>(Gravity::RESIZE);
+
+    info.displayNit = DEFAULT_BRIGHTNESS;
+    info.brightnessRatio = NO_RATIO;
     return info;
 }
 
@@ -195,6 +203,8 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     layer->SetMatrix(info.matrix);
     layer->SetGravity(info.gravity);
     SetMetaDataInfoToLayer(layer, info.buffer, surface);
+    layer->SetDisplayNit(info.displayNit);
+    layer->SetBrightnessRatio(info.brightnessRatio);
 }
 
 void RSUniRenderComposerAdapter::SetBufferColorSpace(RSDisplayRenderNode& node)
@@ -298,10 +308,13 @@ void RSUniRenderComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const
         float xScale = (ROSEN_EQ(boundsWidth, 0.0f) ? 1.0f : bufferWidth / boundsWidth);
         float yScale = (ROSEN_EQ(boundsHeight, 0.0f) ? 1.0f : bufferHeight / boundsHeight);
 
+        const auto nodeParams = static_cast<RSSurfaceRenderParams*>(node.GetRenderParams().get());
         // If the scaling mode is SCALING_MODE_SCALE_TO_WINDOW, the scale should use smaller one.
-        ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
-        if (node.GetConsumer()->GetScalingMode(info.buffer->GetSeqNum(), scalingMode) == GSERROR_OK &&
-            scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
+        ScalingMode scalingMode = nodeParams->GetPreScalingMode();
+        if (node.GetConsumer()->GetScalingMode(info.buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
+            nodeParams->SetPreScalingMode(scalingMode);
+        }
+        if (scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
             float scale = std::min(xScale, yScale);
             info.srcRect.x = info.srcRect.x * scale;
             info.srcRect.y = info.srcRect.y * scale;
@@ -513,6 +526,9 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& no
     const auto& property = node.GetRenderProperties();
     info.boundRect = { 0, 0,
         static_cast<int32_t>(property.GetBoundsWidth()), static_cast<int32_t>(property.GetBoundsHeight())};
+
+    info.displayNit = node.GetDisplayNit();
+    info.brightnessRatio = node.GetBrightnessRatio();
     return info;
 }
 
@@ -742,7 +758,8 @@ LayerInfoPtr RSUniRenderComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& 
     SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
     LayerRotate(layer, node);
     LayerCrop(layer);
-    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
+    const auto nodeParams = static_cast<RSSurfaceRenderParams*>(node.GetRenderParams().get());
+    ScalingMode scalingMode = nodeParams->GetPreScalingMode();
     const auto& buffer = layer->GetBuffer();
     const auto& surface = layer->GetSurface();
     if (buffer == nullptr || surface == nullptr) {
@@ -751,11 +768,12 @@ LayerInfoPtr RSUniRenderComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& 
     }
 
     if (surface->GetScalingMode(buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
-        if (scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
-            LayerScaleDown(layer, node);
-        } else if (scalingMode == ScalingMode::SCALING_MODE_SCALE_FIT) {
-            LayerScaleFit(layer, node);
-        }
+        nodeParams->SetPreScalingMode(scalingMode);
+    }
+    if (scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
+        LayerScaleDown(layer, node);
+    } else if (scalingMode == ScalingMode::SCALING_MODE_SCALE_FIT) {
+        LayerScaleFit(layer, node);
     }
     return layer;
 }
@@ -847,7 +865,7 @@ static void SetLayerTransform(const LayerInfoPtr& layer, RSBaseRenderNode& node,
     // screenRotation: anti-clockwise, surfaceNodeRotation: anti-clockwise, surfaceTransform: anti-clockwise
     // layerTransform: clockwise
     int surfaceNodeRotation = GetSurfaceNodeRotation(node);
-    int totalRotation = (RotateEnumToInt(screenRotation) + surfaceNodeRotation +
+    int totalRotation = (RSBaseRenderUtil::RotateEnumToInt(screenRotation) + surfaceNodeRotation +
         RSBaseRenderUtil::RotateEnumToInt(RSBaseRenderUtil::GetRotateTransform(surface->GetTransform()))) % 360;
     GraphicTransformType rotateEnum = RSBaseRenderUtil::RotateEnumToInt(totalRotation,
         RSBaseRenderUtil::GetFlipTransform(surface->GetTransform()));

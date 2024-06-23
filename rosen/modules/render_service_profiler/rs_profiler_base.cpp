@@ -564,7 +564,7 @@ static void CreateRenderSurfaceNode(RSContext& context, NodeId id, bool isTextur
         .isTextureExportNode = isTextureExportNode,
         .isSync = false };
 
-    if (auto node = std::make_shared<RSSurfaceRenderNode>(config, context.weak_from_this())) {
+    if (auto node = SurfaceNodeCommandHelper::CreateWithConfigInRS(config, context)) {
         node->SetAbilityBGAlpha(backgroundAlpha);
         node->SetGlobalAlpha(globalAlpha);
         context.GetMutableNodeMap().RegisterRenderNode(node);
@@ -904,10 +904,12 @@ int RSProfiler::PerfTreeFlatten(
     return drawCmdListCount;
 }
 
-void RSProfiler::MarshalDrawingImage(std::shared_ptr<Drawing::Image>& image)
+void RSProfiler::MarshalDrawingImage(std::shared_ptr<Drawing::Image>& image,
+    std::shared_ptr<Drawing::Data>& compressData)
 {
     if (IsEnabled() && !IsSharedMemoryEnabled()) {
         image = nullptr;
+        compressData = nullptr;
     }
 }
 

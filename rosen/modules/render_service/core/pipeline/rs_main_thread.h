@@ -281,6 +281,7 @@ public:
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
     void SetFrameIsRender(bool isRender);
+    const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
     bool GetMarkRenderFlag() const
     {
         return markRenderFlag_;
@@ -325,6 +326,15 @@ public:
     {
         return needRequestNextVsyncAnimate_;
     }
+    
+    void ProcessEmptySyncTransactionCount(uint64_t syncId, int32_t parentPid, int32_t childPid);
+
+    bool IsFirstFrameOfPartialRender() const
+    {
+        return isFirstFrameOfPartialRender_;
+    }
+
+    void CallbackDrawContextStatusToWMS(bool isUniRender = false);
 
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
@@ -366,7 +376,6 @@ private:
     void RemoveRSEventDetector();
     void SetRSEventDetectorLoopStartTag();
     void SetRSEventDetectorLoopFinishTag();
-    void CallbackDrawContextStatusToWMS();
     void CheckSystemSceneStatus();
     void UpdateUIFirstSwitch();
     // ROG: Resolution Online Government
@@ -382,6 +391,7 @@ private:
     void ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
     void ProcessSyncRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
     void ProcessSyncTransactionCount(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void StartSyncTransactionFallbackTask(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void ProcessAllSyncTransactionData();
     void ProcessCommandForDividedRender();
     void ProcessCommandForUniRender();
@@ -436,6 +446,7 @@ private:
     float GetCurrentSteadyTimeMsFloat() const;
     void RequestNextVsyncForCachedCommand(std::string& transactionFlags, pid_t pid, uint64_t curIndex);
     void UpdateLuminance();
+    void DvsyncCheckRequestNextVsync();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -634,6 +645,11 @@ private:
     std::atomic_bool discardJankFrames_ = false;
     std::atomic_bool skipJankAnimatorFrame_ = false;
     ScreenId displayNodeScreenId_ = 0;
+
+    // partial render
+    bool isFirstFrameOfPartialRender_ = false;
+    bool isPartialRenderEnabledOfLastFrame_ = false;
+    bool isRegionDebugEnabledOfLastFrame_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

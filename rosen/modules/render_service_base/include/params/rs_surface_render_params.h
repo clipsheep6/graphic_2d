@@ -38,17 +38,13 @@ struct RSLayerInfo {
     int32_t gravity = 0;
     int32_t zOrder = 0;
     float alpha = 1.f;
-    sptr<SurfaceBuffer> buffer;
-    sptr<SurfaceBuffer> preBuffer;
-    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     GraphicBlendType blendType;
     GraphicTransformType transformType = GraphicTransformType::GRAPHIC_ROTATE_NONE;
     bool operator==(const RSLayerInfo& layerInfo) const
     {
         return (srcRect == layerInfo.srcRect) && (dstRect == layerInfo.dstRect) &&
             (boundRect == layerInfo.boundRect) && (matrix == layerInfo.matrix) && (gravity == layerInfo.gravity) &&
-            (zOrder == layerInfo.zOrder) && (buffer == layerInfo.buffer) && (preBuffer == layerInfo.preBuffer) &&
-            (acquireFence == layerInfo.acquireFence) && (blendType == layerInfo.blendType) &&
+            (zOrder == layerInfo.zOrder) && (blendType == layerInfo.blendType) &&
             (transformType == layerInfo.transformType) && (ROSEN_EQ(alpha, layerInfo.alpha));
     }
 #endif
@@ -93,6 +89,10 @@ public:
     bool IsSpherizeValid() const
     {
         return isSpherizeValid_;
+    }
+    bool IsAttractionValid() const
+    {
+        return isAttractionValid_;
     }
     bool NeedBilinearInterpolation() const
     {
@@ -149,6 +149,20 @@ public:
         return name_;
     }
 
+    void SetLeashWindowVisibleRegionEmptyParam(bool isLeashWindowVisibleRegionEmpty)
+    {
+        if (isLeashWindowVisibleRegionEmpty_ == isLeashWindowVisibleRegionEmpty) {
+            return;
+        }
+        isLeashWindowVisibleRegionEmpty_ = isLeashWindowVisibleRegionEmpty;
+        needSync_ = true;
+    }
+
+    bool GetLeashWindowVisibleRegionEmptyParam() const
+    {
+        return isLeashWindowVisibleRegionEmpty_;
+    }
+
     void SetUifirstNodeEnableParam(MultiThreadCacheType isUifirst)
     {
         if (uiFirstFlag_ == isUifirst) {
@@ -158,7 +172,7 @@ public:
         needSync_ = true;
     }
 
-    MultiThreadCacheType GetUifirstNodeEnableParam()
+    MultiThreadCacheType GetUifirstNodeEnableParam() const
     {
         return uiFirstFlag_;
     }
@@ -199,7 +213,7 @@ public:
     {
         return dstRect_;
     }
-    void SetSurfaceCacheContentStatic(bool contentStatic);
+    void SetSurfaceCacheContentStatic(bool contentStatic, bool lastFrameSynced);
     bool GetSurfaceCacheContentStatic() const;
     bool GetPreSurfaceCacheContentStatic() const;
 
@@ -212,6 +226,21 @@ public:
     {
         return uiFirstParentFlag_;
     }
+
+    void SetUIFirstFrameGravity(Gravity gravity)
+    {
+        if (uiFirstFrameGravity_ == gravity) {
+            return;
+        }
+        uiFirstFrameGravity_ = gravity;
+        needSync_ = true;
+    }
+
+    Gravity GetUIFirstFrameGravity() const
+    {
+        return uiFirstFrameGravity_;
+    }
+
     void SetOcclusionVisible(bool visible);
     bool GetOcclusionVisible() const;
 
@@ -253,6 +282,20 @@ public:
     void SetIsNodeToBeCaptured(bool isNodeToBeCaptured);
     bool IsNodeToBeCaptured() const;
 
+    void SetSkipDraw(bool skip);
+    bool GetSkipDraw() const;
+
+    bool IsVisibleRegionEmpty(const Drawing::Region curSurfaceDrawRegion) const;
+
+    void SetPreScalingMode(ScalingMode scalingMode)
+    {
+        preScalingMode_ = scalingMode;
+    }
+    ScalingMode GetPreScalingMode() const
+    {
+        return preScalingMode_;
+    }
+
 #ifndef ROSEN_CROSS_PLATFORM
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
     sptr<SurfaceBuffer> GetBuffer() const;
@@ -266,6 +309,23 @@ public:
 
     // DFX
     std::string ToString() const override;
+    // Set/Get OpaqueRegion, currently only used for DFX
+    void SetOpaqueRegion(const Occlusion::Region& opaqueRegion);
+    const Occlusion::Region& GetOpaqueRegion() const;
+
+    void SetNeedOffscreen(bool needOffscreen)
+    {
+        if (needOffscreen_ == needOffscreen) {
+            return;
+        }
+        needOffscreen_ = needOffscreen;
+        needSync_ = true;
+    }
+
+    bool GetNeedOffscreen() const
+    {
+        return needOffscreen_;
+    }
 
 protected:
 private:
@@ -279,6 +339,7 @@ private:
     float alpha_ = 0;
     bool isTransparent_ = false;
     bool isSpherizeValid_ = false;
+    bool isAttractionValid_ = false;
     bool isParentScaling_ = false;
     bool needBilinearInterpolation_ = false;
     MultiThreadCacheType uiFirstFlag_ = MultiThreadCacheType::NONE;
@@ -291,16 +352,23 @@ private:
     RectI absDrawRect_;
     RRect rrect_;
     Occlusion::Region transparentRegion_;
+    Occlusion::Region opaqueRegion_;
 
     bool surfaceCacheContentStatic_ = false;
     bool preSurfaceCacheContentStatic_ = false;
     bool isSubTreeDirty_ = false;
     float positionZ_ = 0.0f;
     bool occlusionVisible_ = false;
+    bool isLeashWindowVisibleRegionEmpty_ = false;
     Occlusion::Region visibleRegion_;
     Occlusion::Region visibleRegionInVirtual_;
     bool isOccludedByFilterCache_ = false;
     RSLayerInfo layerInfo_;
+#ifndef ROSEN_CROSS_PLATFORM
+    sptr<SurfaceBuffer> buffer_;
+    sptr<SurfaceBuffer> preBuffer_;
+    sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
+#endif
     bool isHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
     bool isForceHardwareByUser_ = false;
@@ -309,6 +377,7 @@ private:
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
     bool isSubSurfaceNode_ = false;
+    Gravity uiFirstFrameGravity_ = Gravity::TOP_LEFT;
     bool isNodeToBeCaptured_ = false;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
@@ -317,6 +386,9 @@ private:
     std::string name_= "";
     Vector4f overDrawBufferNodeCornerRadius_;
     bool isGpuOverDrawBufferOptimizeNode_ = false;
+    bool isSkipDraw_ = false;
+    ScalingMode preScalingMode_ = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
+    bool needOffscreen_ = false;
 
     friend class RSSurfaceRenderNode;
     friend class RSUniRenderProcessor;

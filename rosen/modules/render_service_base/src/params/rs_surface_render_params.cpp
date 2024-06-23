@@ -158,38 +158,38 @@ bool RSSurfaceRenderParams::GetForceHardwareByUser() const
 #ifndef ROSEN_CROSS_PLATFORM
 void RSSurfaceRenderParams::SetBuffer(const sptr<SurfaceBuffer>& buffer)
 {
-    layerInfo_.buffer = buffer;
+    buffer_ = buffer;
     needSync_ = true;
-    dirtyType_.set(RSRenderParamsDirtyType::LAYER_INFO_DIRTY);
+    dirtyType_.set(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
 }
 
 sptr<SurfaceBuffer> RSSurfaceRenderParams::GetBuffer() const
 {
-    return layerInfo_.buffer;
+    return buffer_;
 }
 
 void RSSurfaceRenderParams::SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer)
 {
-    layerInfo_.preBuffer = preBuffer;
+    preBuffer_ = preBuffer;
     needSync_ = true;
-    dirtyType_.set(RSRenderParamsDirtyType::LAYER_INFO_DIRTY);
+    dirtyType_.set(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
 }
 
 sptr<SurfaceBuffer>& RSSurfaceRenderParams::GetPreBuffer()
 {
-    return layerInfo_.preBuffer;
+    return preBuffer_;
 }
 
 void RSSurfaceRenderParams::SetAcquireFence(const sptr<SyncFence>& acquireFence)
 {
-    layerInfo_.acquireFence = acquireFence;
+    acquireFence_ = acquireFence;
     needSync_ = true;
-    dirtyType_.set(RSRenderParamsDirtyType::LAYER_INFO_DIRTY);
+    dirtyType_.set(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
 }
 
 sptr<SyncFence> RSSurfaceRenderParams::GetAcquireFence() const
 {
-    return layerInfo_.acquireFence;
+    return acquireFence_;
 }
 #endif
 
@@ -198,9 +198,14 @@ bool RSSurfaceRenderParams::GetPreSurfaceCacheContentStatic() const
     return preSurfaceCacheContentStatic_;
 }
 
-void RSSurfaceRenderParams::SetSurfaceCacheContentStatic(bool contentStatic)
+void RSSurfaceRenderParams::SetSurfaceCacheContentStatic(bool contentStatic, bool lastFrameSynced)
 {
+    // 1. don't sync while contentStatic not change
     if (surfaceCacheContentStatic_ == contentStatic) {
+        return;
+    }
+    // 2. don't sync while last frame isn't static and skip sync
+    if (!surfaceCacheContentStatic_ && !lastFrameSynced) {
         return;
     }
     preSurfaceCacheContentStatic_ = surfaceCacheContentStatic_;
@@ -280,6 +285,16 @@ bool RSSurfaceRenderParams::IsNodeToBeCaptured() const
     return isNodeToBeCaptured_;
 }
 
+void RSSurfaceRenderParams::SetSkipDraw(bool skip)
+{
+    isSkipDraw_ = skip;
+}
+
+bool RSSurfaceRenderParams::GetSkipDraw() const
+{
+    return isSkipDraw_;
+}
+
 void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target)
 {
     auto targetSurfaceParams = static_cast<RSSurfaceRenderParams*>(target.get());
@@ -292,6 +307,16 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
         targetSurfaceParams->layerInfo_ = layerInfo_;
         dirtyType_.reset(RSRenderParamsDirtyType::LAYER_INFO_DIRTY);
     }
+
+#ifndef ROSEN_CROSS_PLATFORM
+    if (dirtyType_.test(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY)) {
+        targetSurfaceParams->buffer_ = buffer_;
+        targetSurfaceParams->preBuffer_ = preBuffer_;
+        targetSurfaceParams->acquireFence_ = acquireFence_;
+        dirtyType_.reset(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
+    }
+#endif
+
     targetSurfaceParams->isMainWindowType_ = isMainWindowType_;
     targetSurfaceParams->isLeashWindow_ = isLeashWindow_;
     targetSurfaceParams->isAppWindow_ = isAppWindow_;
@@ -300,6 +325,7 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetSurfaceParams->ancestorDisplayNode_ = ancestorDisplayNode_;
     targetSurfaceParams->alpha_ = alpha_;
     targetSurfaceParams->isSpherizeValid_ = isSpherizeValid_;
+    targetSurfaceParams->isAttractionValid_ = isAttractionValid_;
     targetSurfaceParams->isParentScaling_ = isParentScaling_;
     targetSurfaceParams->needBilinearInterpolation_ = needBilinearInterpolation_;
     targetSurfaceParams->backgroundColor_ = backgroundColor_;
@@ -333,6 +359,10 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetSurfaceParams->isSubSurfaceNode_ = isSubSurfaceNode_;
     targetSurfaceParams->isNodeToBeCaptured_ = isNodeToBeCaptured_;
     targetSurfaceParams->dstRect_ = dstRect_;
+    targetSurfaceParams->isSkipDraw_ = isSkipDraw_;
+    targetSurfaceParams->isLeashWindowVisibleRegionEmpty_ = isLeashWindowVisibleRegionEmpty_;
+    targetSurfaceParams->opaqueRegion_ = opaqueRegion_;
+    targetSurfaceParams->needOffscreen_ = needOffscreen_;
     RSRenderParams::OnSync(target);
 }
 
@@ -343,6 +373,7 @@ std::string RSSurfaceRenderParams::ToString() const
     ret += RENDER_BASIC_PARAM_TO_STRING(int(selfDrawingType_));
     ret += RENDER_BASIC_PARAM_TO_STRING(alpha_);
     ret += RENDER_BASIC_PARAM_TO_STRING(isSpherizeValid_);
+    ret += RENDER_BASIC_PARAM_TO_STRING(isAttractionValid_);
     ret += RENDER_BASIC_PARAM_TO_STRING(needBilinearInterpolation_);
     ret += RENDER_BASIC_PARAM_TO_STRING(backgroundColor_.GetAlpha());
     ret += RENDER_RECT_PARAM_TO_STRING(absDrawRect_);
@@ -352,4 +383,24 @@ std::string RSSurfaceRenderParams::ToString() const
     return ret;
 }
 
+bool RSSurfaceRenderParams::IsVisibleRegionEmpty(const Drawing::Region curSurfaceDrawRegion) const
+{
+    if (IsMainWindowType()) {
+        return curSurfaceDrawRegion.IsEmpty();
+    }
+    if (IsLeashWindow()) {
+        return GetUifirstNodeEnableParam() != MultiThreadCacheType::NONE && GetLeashWindowVisibleRegionEmptyParam();
+    }
+    return false;
+}
+
+void RSSurfaceRenderParams::SetOpaqueRegion(const Occlusion::Region& opaqueRegion)
+{
+    opaqueRegion_ = opaqueRegion;
+}
+
+const Occlusion::Region& RSSurfaceRenderParams::GetOpaqueRegion() const
+{
+    return opaqueRegion_;
+}
 } // namespace OHOS::Rosen

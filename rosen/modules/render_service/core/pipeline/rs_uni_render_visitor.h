@@ -145,6 +145,10 @@ public:
     {
         return isOpDropped_;
     }
+    bool GetIsRegionDebugEnabled() const
+    {
+        return isRegionDebugEnabled_;
+    }
     // Use in vulkan parallel rendering
     GraphicColorGamut GetColorGamut() const
     {
@@ -222,6 +226,7 @@ private:
     bool NeedPrepareChindrenInReverseOrder(RSRenderNode& node) const;
     bool IsLeashAndHasMainSubNode(RSRenderNode& node) const;
     bool AfterUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node);
+    void UpdateLeashWindowVisibleRegionEmpty(RSSurfaceRenderNode& node);
     void UpdateSurfaceRenderNodeRotate(RSSurfaceRenderNode& node);
     void UpdateSurfaceDirtyAndGlobalDirty();
     // should ensure that the surface size of dirty region manager has been set
@@ -229,6 +234,7 @@ private:
     bool CheckScreenPowerChange() const;
     bool CheckColorFilterChange() const;
     bool CheckCurtainScreenUsingStatusChange() const;
+    bool IsFirstFrameOfPartialRender() const;
     void CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
         RSDirtyRegionManager& dirtyManager, const RectI& globalFilterRect);
     RectI GetVisibleEffectDirty(RSRenderNode& node) const;
@@ -237,6 +243,7 @@ private:
     void UpdateHwcNodeEnableByGlobalCleanFilter(const std::vector<std::pair<NodeId, RectI>>& cleanFilter,
         RSSurfaceRenderNode& hwcNodePtr);
     void UpdateHwcNodeEnableByFilterRect(std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect);
+    void CalcHwcNodeEnableByFilterRect(std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect);
     void UpdateHwcNodeEnableByBackgroundAlpha(RSSurfaceRenderNode& node);
     void UpdateHwcNodeEnableBySrcRect(RSSurfaceRenderNode& node);
     void UpdateHwcNodeInfoForAppNode(RSSurfaceRenderNode& node);
@@ -250,7 +257,7 @@ private:
     void UpdateHwcNodeDirtyRegionAndCreateLayer(std::shared_ptr<RSSurfaceRenderNode>& node);
     void UpdateHwcNodeEnable();
     void PrevalidateHwcNode();
-    void AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNode>& node, Drawing::Matrix& matrix, float& alpha);
+    void PrepareForUIFirstNode(RSSurfaceRenderNode& node);
 
     void UpdateHwcNodeDirtyRegionForApp(std::shared_ptr<RSSurfaceRenderNode>& appNode,
         std::shared_ptr<RSSurfaceRenderNode>& hwcNode);
@@ -266,7 +273,7 @@ private:
     // If reusable filter cache covers whole screen, mark lower layer to skip process
     void CheckAndUpdateFilterCacheOcclusion(std::vector<RSBaseRenderNode::SharedPtr>& curMainAndLeashSurfaces) const;
     void CheckMergeGlobalFilterForDisplay(Occlusion::Region& accumulatedDirtyRegion);
-    void CheckMergeDebugRectforRefreshRate();
+    void CheckMergeDebugRectforRefreshRate(std::vector<RSBaseRenderNode::SharedPtr>& surfaces);
 
     bool IsNotDirtyHardwareEnabledTopSurface(std::shared_ptr<RSSurfaceRenderNode>& node) const;
     void ClipRegion(std::shared_ptr<Drawing::Canvas> canvas, const Drawing::Region& region) const;
@@ -415,6 +422,7 @@ private:
     void UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& node);
     void UpdateSubSurfaceNodeRectInSkippedSubTree(const RSRenderNode& rootNode);
     void CollectOcclusionInfoForWMS(RSSurfaceRenderNode& node);
+    void CollectEffectInfo(RSRenderNode& node);
 
     /* Check whether gpu overdraw buffer feature can be enabled on the RenderNode
      * 1. is leash window
@@ -584,7 +592,6 @@ private:
     bool isPhone_ = false;
     bool isPc_ = false;
     bool isOverdrawDfxOn_ = false;
-    bool aceDebugBoundaryEnabled_ = false;
     bool isCacheBlurPartialRenderEnabled_ = false;
     bool drawCacheWithBlur_ = false;
     bool notRunCheckAndSetNodeCacheType_ = false;
@@ -607,6 +614,7 @@ private:
     std::unordered_map<NodeId, std::vector<std::pair<NodeId, RectI>>> transparentDirtyFilter_;
 
     std::vector<RectI> globalFilterRects_;
+    std::vector<RectI> globalSurfaceBounds_;
     // visible filter in transparent surface or display must prepare
     bool filterInGlobal_ = true;
     bool needRequestNextVsync_ = true;

@@ -44,6 +44,8 @@ public:
     AnimationId GetAnimationId() const;
     void Start();
     void Finish();
+    void FinishOnPosition(RSInteractiveAnimationPosition pos);
+    void SetReversedAndContinue();
     void Pause();
     void Resume();
     void SetFraction(float fraction);
@@ -153,6 +155,16 @@ public:
         return needUpdateStartTime_;
     }
 
+    void SetValueFraction(float fraction)
+    {
+        lastValueFraction_ = fraction;
+    }
+
+    float GetValueFraction() const
+    {
+        return lastValueFraction_;
+    }
+
     void Attach(RSRenderNode* renderNode);
     void Detach(bool forceDetach = false);
     RSRenderNode* GetTarget() const;
@@ -175,7 +187,9 @@ protected:
     virtual bool ParseParam(Parcel& parcel);
     void SetFractionInner(float fraction);
 
-    virtual void OnSetFraction(float fraction);
+    virtual void OnSetFraction(float fraction) {}
+
+    virtual void UpdateFractionAfterContinue() {}
 
     virtual void OnAttach() {}
 
@@ -196,6 +210,8 @@ protected:
 
     virtual void UpdateAnimateVelocity(float frameInterval) {}
 
+    virtual void ProcessAnimateVelocityUnderAngleRotation(float frameInterval) {}
+
     void FinishOnCurrentPosition();
 
     RSAnimationFraction animationFraction_;
@@ -204,6 +220,8 @@ protected:
     bool calculateAnimationValue_ { true };
 
     std::shared_ptr<RSRenderPropertyBase> animateVelocity_;
+
+    std::pair<bool, float> fractionChangeInfo_ = { false, 0.0f };
 
 private:
     void ProcessFillModeOnStart(float startFraction);
@@ -228,6 +246,7 @@ private:
     bool needUpdateStartTime_ { true };
     bool needInitialize_ { true };
     RSRenderNode* target_ { nullptr };
+    float lastValueFraction_ { 0.0f };
 
     friend class RSAnimation;
     friend class RSModifierManager;

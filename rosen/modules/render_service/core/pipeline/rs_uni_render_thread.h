@@ -66,8 +66,12 @@ public:
     uint32_t GetPendingScreenRefreshRate() const;
     uint64_t GetPendingConstraintRelativeTime() const;
 
-    void ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid = -1);
     void PurgeCacheBetweenFrames();
+    void ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid = -1);
+    void DefaultClearMemoryCache();
+    void PostClearMemoryTask(ClearMemoryMoment moment, bool deeply, bool isDefaultClean);
+    void MemoryManagementBetweenFrames();
+    void PreAllocateTextureBetweenFrames();
     bool GetClearMemoryFinished() const;
     bool GetClearMemDeeply() const;
     void SetClearMoment(ClearMemoryMoment moment);
@@ -103,8 +107,6 @@ public:
     void RenderServiceTreeDump(std::string& dumpString) const;
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
-
-    void DvsyncRequestNextVsync();
 
     bool IsMainLooping() const
     {

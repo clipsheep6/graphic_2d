@@ -489,6 +489,7 @@ public:
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const RectI& clipRect);
     void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
+    void UpdateFilterCacheWithBackgroundDirty();
     virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheWithSelfDirty();
     bool IsBackgroundInAppOrNodeSelfDirty() const;
@@ -509,9 +510,11 @@ public:
         GROUPED_BY_ANIM = 1,
         GROUPED_BY_UI = GROUPED_BY_ANIM << 1,
         GROUPED_BY_USER = GROUPED_BY_UI << 1,
-        GROUP_TYPE_BUTT = GROUPED_BY_USER,
+        GROUPED_BY_FOREGROUND_FILTER = GROUPED_BY_USER << 1,
+        GROUP_TYPE_BUTT = GROUPED_BY_FOREGROUND_FILTER,
     };
     void MarkNodeGroup(NodeGroupType type, bool isNodeGroup, bool includeProperty);
+    void MarkForegroundFilterCache();
     NodeGroupType GetNodeGroupType();
     bool IsNodeGroupIncludeProperty() const;
 
@@ -617,7 +620,7 @@ public:
 
     virtual bool GetUifirstSupportFlag()
     {
-        return !GetRenderProperties().GetSandBox() && isChildSupportUifirst_;
+        return !GetRenderProperties().GetSandBox() && isChildSupportUifirst_ && isUifirstNode_;
     }
 
     virtual void MergeOldDirtyRect()
@@ -682,6 +685,9 @@ public:
         return context_;
     }
 
+    // arkui mark uifirst
+    void MarkUifirstNode(bool isUifirstNode);
+
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
     virtual bool EffectNodeShouldPaint() const { return true; };
@@ -690,6 +696,7 @@ public:
     bool HasBlurFilter() const;
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
+    void RemoveChildFromFulllist(NodeId nodeId);
 
 protected:
     virtual void OnApplyModifiers() {}
@@ -759,6 +766,7 @@ protected:
     bool childHasSharedTransition_ = false;
     bool lastFrameSynced_ = true;
     bool clipAbsDrawRectChange_ = false;
+    bool isUifirstNode_ = true;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     virtual void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
@@ -795,6 +803,7 @@ private:
 
     void GenerateFullChildrenList();
     void ResortChildren();
+    bool ShouldClearSurface();
 
     std::weak_ptr<RSContext> context_ = {};
     NodeDirty dirtyStatus_ = NodeDirty::CLEAN;
@@ -830,6 +839,7 @@ private:
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();
     void CollectAndUpdateLocalPixelStretchRect();
+    void CollectAndUpdateLocalForegroundEffectRect();
     // update drawrect based on self's info
     void UpdateBufferDirtyRegion();
     bool UpdateSelfDrawRect();
@@ -950,6 +960,7 @@ private:
     RectI localShadowRect_;
     RectI localOutlineRect_;
     RectI localPixelStretchRect_;
+    RectI localForegroundEffectRect_;
     // map parentMatrix
     RectI absDrawRect_;
 

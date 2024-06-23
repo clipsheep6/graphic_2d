@@ -971,6 +971,26 @@ const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
     return filteredAppSet_;
 }
 
+void RSScreen::SetBlackList(std::unordered_set<uint64_t>& blackList)
+{
+    blackList_ = blackList;
+}
+
+void RSScreen::SetCastScreenEnableSkipWindow(bool enable)
+{
+    skipWindow_ = enable;
+}
+
+bool RSScreen::GetCastScreenEnableSkipWindow()
+{
+    return skipWindow_;
+}
+
+const std::unordered_set<uint64_t>& RSScreen::GetBlackList() const
+{
+    return blackList_;
+}
+
 int32_t RSScreen::SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type)
 {
     if (IsVirtual()) {

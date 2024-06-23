@@ -44,6 +44,7 @@ public:
     virtual int64_t GetHardwarePeriod() const = 0;
     virtual void SetPendingPeriod(int64_t period) = 0;
     virtual void Dump(std::string &result) = 0;
+    virtual void ClearAllSamples() = 0;
 protected:
     SetScreenVsyncEnabledCallback setScreenVsyncEnabledCallback_ = nullptr;
 };
@@ -72,6 +73,7 @@ public:
     virtual int64_t GetHardwarePeriod() const override;
     virtual void SetPendingPeriod(int64_t period) override;
     virtual void Dump(std::string &result) override;
+    virtual void ClearAllSamples() override;
 
 private:
     friend class OHOS::Rosen::VSyncSampler;
@@ -91,7 +93,7 @@ private:
     int64_t period_;
     int64_t phase_;
     int64_t referenceTime_;
-    int64_t error_;
+    double error_;
     int64_t samples_[MAX_SAMPLES] = {0};
     int64_t presentFenceTime_[NUM_PRESENT] = {-1};
     uint32_t firstSampleIndex_;

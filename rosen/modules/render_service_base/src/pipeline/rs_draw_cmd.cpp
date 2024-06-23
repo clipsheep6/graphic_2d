@@ -91,7 +91,11 @@ RSExtendImageObject::RSExtendImageObject(const std::shared_ptr<Media::PixelMap>&
         rsImage_->SetRadius(radiusValue);
         rsImage_->SetScale(imageInfo.scale);
         rsImage_->SetDyamicRangeMode(imageInfo.dynamicRangeMode);
-        imageInfo_ = imageInfo;
+        RectF frameRect(imageInfo.frameRect.GetLeft(),
+                        imageInfo.frameRect.GetTop(),
+                        imageInfo.frameRect.GetRight(),
+                        imageInfo.frameRect.GetBottom());
+        rsImage_->SetFrameRect(frameRect);
     }
 }
 
@@ -116,7 +120,8 @@ void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect&
     std::shared_ptr<Media::PixelMap> pixelmap = rsImage_->GetPixelMap();
     if (pixelmap && pixelmap->IsAstc()) {
         if (auto recordingCanvas = static_cast<ExtendRecordingCanvas*>(canvas.GetRecordingCanvas())) {
-            recordingCanvas->DrawPixelMapWithParm(pixelmap, imageInfo_, sampling);
+            Drawing::AdaptiveImageInfo imageInfo = rsImage_->GetAdaptiveImageInfoWithCustomizedFrameRect(rect);
+            recordingCanvas->DrawPixelMapWithParm(pixelmap, imageInfo, sampling);
             return;
         }
     }
@@ -147,6 +152,7 @@ RSExtendImageObject *RSExtendImageObject::Unmarshalling(Parcel &parcel)
     auto object = new RSExtendImageObject();
     bool ret = RSMarshallingHelper::Unmarshalling(parcel, object->rsImage_);
     if (!ret) {
+        delete object;
         return nullptr;
     }
     return object;
@@ -183,18 +189,20 @@ void RSExtendImageObject::PreProcessPixelMap(Drawing::Canvas& canvas, const std:
         // After RS is switched to Vulkan, the judgment of GpuApiType can be deleted.
         if (pixelMap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC &&
             RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN) {
-            sptr<SurfaceBuffer> surfaceBuf(reinterpret_cast<SurfaceBuffer *>(pixelMap->GetFd()));
-            nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuf);
+            if (!nativeWindowBuffer_) {
+                sptr<SurfaceBuffer> surfaceBuf(reinterpret_cast<SurfaceBuffer *>(pixelMap->GetFd()));
+                nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuf);
+            }
             OH_NativeBuffer* nativeBuffer = OH_NativeBufferFromNativeWindowBuffer(nativeWindowBuffer_);
-            if (!fileData->BuildFromOHNativeBuffer(nativeBuffer, pixelMap->GetCapacity())) {
+            if (nativeBuffer == nullptr || !fileData->BuildFromOHNativeBuffer(nativeBuffer, pixelMap->GetCapacity())) {
                 LOGE("PreProcessPixelMap data BuildFromOHNativeBuffer fail");
                 return;
             }
         } else {
             const void* data = pixelMap->GetPixels();
             if (pixelMap->GetCapacity() > ASTC_HEADER_SIZE &&
-                !fileData->BuildWithoutCopy((void*)((char*) data + ASTC_HEADER_SIZE),
-                pixelMap->GetCapacity() - ASTC_HEADER_SIZE)) {
+                (data == nullptr || !fileData->BuildWithoutCopy((void*)((char*) data + ASTC_HEADER_SIZE),
+                pixelMap->GetCapacity() - ASTC_HEADER_SIZE))) {
                 LOGE("PreProcessPixelMap data BuildWithoutCopy fail");
                 return;
             }
@@ -404,6 +412,7 @@ RSExtendImageBaseObj *RSExtendImageBaseObj::Unmarshalling(Parcel &parcel)
     auto object = new RSExtendImageBaseObj();
     bool ret = RSMarshallingHelper::Unmarshalling(parcel, object->rsImage_);
     if (!ret) {
+        delete object;
         return nullptr;
     }
     return object;

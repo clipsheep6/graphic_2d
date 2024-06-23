@@ -264,10 +264,11 @@ void RSFilterDrawable::ClearCacheIfNeeded()
     stagingClearFilteredCacheAfterDrawing_ = filterType_ != RSFilter::AIBAR ? filterHashChanged_ : false;
     RS_TRACE_NAME_FMT("RSFilterDrawable::MarkNeedClearFilterCache nodeId[%llu], forceUseCache_:%d,"
         "forceClearCache_:%d, hashChanged:%d, regionChanged_:%d, belowDirty_:%d, currentClearAfterDrawing:%d,"
-        "lastCacheType:%d, cacheUpdateInterval_:%d, canSkip:%d, isLargeArea:%d, filterType_:%d, pendingPurge_:%d",
-        nodeId_, forceUseCache_, forceClearCache_, filterHashChanged_, filterRegionChanged_,
-        filterInteractWithDirty_, stagingClearFilteredCacheAfterDrawing_, lastCacheType_,
-        cacheUpdateInterval_, canSkipFrame_, isLargeArea_, filterType_, pendingPurge_);
+        "lastCacheType:%d, cacheUpdateInterval_:%d, canSkip:%d, isLargeArea:%d, filterType_:%d, pendingPurge_:%d,"
+        "forceClearCacheWithLastFrame:%d, rotationChanged:%d",
+        nodeId_, forceUseCache_, forceClearCache_, filterHashChanged_, filterRegionChanged_, filterInteractWithDirty_,
+        stagingClearFilteredCacheAfterDrawing_, lastCacheType_, cacheUpdateInterval_, canSkipFrame_, isLargeArea_,
+        filterType_, pendingPurge_, forceClearCacheWithLastFrame_, rotationChanged_);
 
     if (forceClearCacheWithLastFrame_) {
         cacheUpdateInterval_ = 0;
@@ -385,9 +386,10 @@ void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)
     }
 }
 
-bool RSFilterDrawable::IsAIBarCacheValid() const
+bool RSFilterDrawable::IsAIBarCacheValid()
 {
-    return (filterType_ == RSFilter::AIBAR) && cacheUpdateInterval_ > 0;
+    return (filterType_ == RSFilter::AIBAR) && !filterRegionChanged_ &&
+        (forceUseCache_ || ((filterInteractWithDirty_ || rotationChanged_))) && cacheUpdateInterval_ > 0;
 }
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

@@ -53,7 +53,7 @@ static double g_playbackStartTime = 0.0;
 static NodeId g_playbackParentNodeId = 0;
 static int g_playbackPid = 0;
 static bool g_playbackShouldBeTerminated = false;
-static uint64_t g_playbackPauseTime = 0;
+static double g_playbackPauseTime = 0;
 static int g_playbackWaitFrames = 0;
 
 static std::unordered_set<NodeId> g_nodeSetPerf;
@@ -372,6 +372,8 @@ void RSProfiler::OnFrameEnd()
     ProcessCommands();
     ProcessSendingRdc();
     RecordUpdate();
+
+    UpdateDirtyRegionBetaRecord(g_dirtyRegionPercentage);
     UpdateBetaRecord();
 
     CalcNodeWeigthOnFrameEnd();
@@ -1032,6 +1034,11 @@ void RSProfiler::CalcPerfNode(const ArgList& args)
     AwakeRenderServiceThread();
 }
 
+void RSProfiler::SocketShutdown(const ArgList& args)
+{
+    Network::ForceShutdown();
+}
+
 void RSProfiler::CalcPerfNodeAll(const ArgList& args)
 {
     if (g_nodeSetPerf.empty()) {
@@ -1171,13 +1178,14 @@ void RSProfiler::RecordStop(const ArgList& args)
             stream.write(reinterpret_cast<const char*>(&item), sizeof(item));
         }
 
-        size_t sizeFirstFrame = g_recordFile.GetHeaderFirstFrame().size();
+        uint32_t sizeFirstFrame = static_cast<uint32_t>(g_recordFile.GetHeaderFirstFrame().size());
         stream.write(reinterpret_cast<const char*>(&sizeFirstFrame), sizeof(sizeFirstFrame));
         stream.write(reinterpret_cast<const char*>(&g_recordFile.GetHeaderFirstFrame()[0]), sizeFirstFrame);
 
         ImageCache::Serialize(stream);
         Network::SendBinary(stream.str().data(), stream.str().size());
     }
+    SaveBetaRecordFile(g_recordFile);
     g_recordFile.Close();
     g_recordStartTime = 0.0;
 
@@ -1238,7 +1246,7 @@ void RSProfiler::PlaybackStart(const ArgList& args)
 
     std::thread thread([]() {
         while (IsPlaying()) {
-            const uint64_t timestamp = RawNowNano();
+            const int64_t timestamp = static_cast<int64_t>(RawNowNano());
 
             PlaybackUpdate();
             if (g_playbackStartTime >= 0) {
@@ -1246,7 +1254,7 @@ void RSProfiler::PlaybackStart(const ArgList& args)
             }
 
             constexpr int64_t timeoutLimit = 8000000;
-            const int64_t timeout = timeoutLimit - RawNowNano() + timestamp;
+            const int64_t timeout = timeoutLimit - static_cast<int64_t>(RawNowNano()) + timestamp;
             if (timeout > 0) {
                 std::this_thread::sleep_for(std::chrono::nanoseconds(timeout));
             }
@@ -1431,6 +1439,7 @@ RSProfiler::Command RSProfiler::GetCommand(const std::string& command)
         { "get_perf_tree", GetPerfTree },
         { "calc_perf_node", CalcPerfNode },
         { "calc_perf_node_all", CalcPerfNodeAll },
+        { "socket_shutdown", SocketShutdown },
     };
 
     if (command.empty()) {

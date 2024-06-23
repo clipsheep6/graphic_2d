@@ -38,6 +38,7 @@ struct VirtualScreenConfigs {
     GraphicPixelFormat pixelFormat = GRAPHIC_PIXEL_FMT_RGBA_8888;
     int32_t flags = 0; // reserve flag.
     std::unordered_set<uint64_t> filteredAppSet = {};
+    std::unordered_set<uint64_t> blackListSet = {};
 };
 
 class RSScreen {
@@ -101,6 +102,10 @@ public:
     virtual int32_t GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const = 0;
     virtual int32_t SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) = 0;
     virtual const std::unordered_set<uint64_t>& GetFilteredAppSet() const = 0;
+    virtual void SetBlackList(std::unordered_set<uint64_t>& blackListSet) = 0;
+    virtual void SetCastScreenEnableSkipWindow(bool enable) = 0;
+    virtual const std::unordered_set<uint64_t>& GetBlackList() const = 0;
+    virtual bool GetCastScreenEnableSkipWindow() = 0;
     virtual int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) = 0;
 };
 
@@ -176,6 +181,10 @@ public:
     int32_t GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const override;
     int32_t SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) override;
     const std::unordered_set<uint64_t>& GetFilteredAppSet() const override;
+    void SetBlackList(std::unordered_set<uint64_t>& blackListSet) override;
+    void SetCastScreenEnableSkipWindow(bool enable) override;
+    const std::unordered_set<uint64_t>& GetBlackList() const override;
+    bool GetCastScreenEnableSkipWindow() override;
     int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) override;
 
 private:
@@ -237,6 +246,8 @@ private:
     static std::map<GraphicHDRFormat, ScreenHDRFormat> HDI_HDR_FORMAT_TO_RS_MAP;
     static std::map<ScreenHDRFormat, GraphicHDRFormat> RS_TO_HDI_HDR_FORMAT_MAP;
     std::unordered_set<uint64_t> filteredAppSet_ = {};
+    std::unordered_set<uint64_t> blackList_ = {};
+    std::atomic<bool> skipWindow_ = false;
 };
 } // namespace impl
 } // namespace Rosen

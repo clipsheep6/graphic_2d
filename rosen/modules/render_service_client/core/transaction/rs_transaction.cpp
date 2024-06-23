@@ -17,6 +17,7 @@
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
+#include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction_proxy.h"
 
 namespace OHOS {
@@ -38,6 +39,7 @@ void RSTransaction::OpenSyncTransaction()
         RS_TRACE_NAME("OpenSyncTransaction");
         transactionProxy->StartSyncTransaction();
         transactionProxy->Begin();
+        isOpenSyncTransaction_ = true;
     }
 }
 
@@ -48,6 +50,7 @@ void RSTransaction::CloseSyncTransaction()
         RS_TRACE_NAME_FMT("CloseSyncTransaction syncId: %lu syncCount: %d", syncId_, transactionCount_);
         ROSEN_LOGD(
             "CloseSyncTransaction syncId: %{public}" PRIu64 " syncCount: %{public}d", syncId_, transactionCount_);
+        isOpenSyncTransaction_ = false;
         transactionProxy->MarkTransactionNeedCloseSync(transactionCount_);
         transactionProxy->SetSyncId(syncId_);
         transactionProxy->CommitSyncTransaction();
@@ -71,10 +74,13 @@ void RSTransaction::Commit()
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         RS_TRACE_NAME_FMT(
-            "CommitSyncTransaction syncId: %lu syncCount: %d hostPid: %d", syncId_, transactionCount_, hostPid_);
+            "CommitSyncTransaction syncId: %lu syncCount: %d parentPid: %d", syncId_, transactionCount_, parentPid_);
         transactionProxy->SetSyncTransactionNum(transactionCount_);
         transactionProxy->SetSyncId(syncId_);
-        transactionProxy->SetHostPid(hostPid_);
+        transactionProxy->SetParentAndChildPid(parentPid_, childPid_);
+        if (transactionProxy->IsRemoteCommandEmpty()) {
+            RSInterfaces::GetInstance().ChangeSyncCount(syncId_, parentPid_, childPid_);
+        }
         transactionProxy->CommitSyncTransaction();
         transactionProxy->CloseSyncTransaction();
     }
@@ -101,7 +107,9 @@ void RSTransaction::ResetSyncTransactionInfo()
     std::unique_lock<std::mutex> lock(mutex_);
     syncId_ = 0;
     transactionCount_ = 0;
-    hostPid_ = -1;
+    parentPid_ = -1;
+    childPid_ = -1;
+    isOpenSyncTransaction_ = false;
 }
 
 RSTransaction* RSTransaction::Unmarshalling(Parcel& parcel)
@@ -118,15 +126,23 @@ RSTransaction* RSTransaction::Unmarshalling(Parcel& parcel)
 bool RSTransaction::Marshalling(Parcel& parcel) const
 {
     if (!parcel.WriteUint64(syncId_)) {
-        ROSEN_LOGE("RSTransaction marshalling failed");
+        ROSEN_LOGE("RSTransaction marshalling synchronous Id failed");
         return false;
     }
     if (!parcel.WriteInt32(duration_)) {
-        ROSEN_LOGE("RSTransaction marshalling failed");
+        ROSEN_LOGE("RSTransaction marshalling duration failed");
         return false;
     }
-    if (!parcel.WriteInt32(hostPid_)) {
-        ROSEN_LOGE("RSTransaction marshalling failed");
+    if (!parcel.WriteInt32(parentPid_)) {
+        ROSEN_LOGE("RSTransaction marshalling parent pid failed");
+        return false;
+    }
+    if (!parcel.WriteInt32(childPid_)) {
+        ROSEN_LOGE("RSTransaction marshalling child pid failed");
+        return false;
+    }
+    if (!parcel.WriteBool(isOpenSyncTransaction_)) {
+        ROSEN_LOGE("RSTransaction marshalling parameter of whether synchronous transaction is open failed");
         return false;
     }
     transactionCount_++;
@@ -138,16 +154,23 @@ bool RSTransaction::Marshalling(Parcel& parcel) const
 bool RSTransaction::UnmarshallingParam(Parcel& parcel)
 {
     if (!parcel.ReadUint64(syncId_)) {
-        ROSEN_LOGE("RSTransaction unmarshallingParam failed");
+        ROSEN_LOGE("RSTransaction unmarshallingParam synchronous Id failed");
         return false;
     }
     if (!parcel.ReadInt32(duration_)) {
-        ROSEN_LOGE("RSTransaction unmarshallingParam failed");
+        ROSEN_LOGE("RSTransaction unmarshallingParam duration failed");
         return false;
     }
-    if (!parcel.ReadInt32(hostPid_)) {
-        ROSEN_LOGE("RSTransaction unmarshallingParam failed");
+    if (!parcel.ReadInt32(parentPid_)) {
+        ROSEN_LOGE("RSTransaction unmarshallingParam parent pid failed");
         return false;
+    }
+    if (!parcel.ReadInt32(childPid_)) {
+        ROSEN_LOGE("RSTransaction unmarshallingParam child pid failed");
+        return false;
+    }
+    if (!parcel.ReadBool(isOpenSyncTransaction_)) {
+        ROSEN_LOGE("RSTransaction unmarshalling parameter of whether synchronous transaction is open failed");
     }
     return true;
 }

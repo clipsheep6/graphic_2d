@@ -47,7 +47,7 @@ int32_t OH_DisplaySoloist_Destroy(OH_DisplaySoloist* displaySoloist)
         return SOLOIST_ERROR;
     }
 
-    int soloistId = displaySoloist->soloistId_->GetId();
+    SoloistIdType soloistId = displaySoloist->soloistId_->GetId();
     RSDisplaySoloistManager& soloistManager = RSDisplaySoloistManager::GetInstance();
     soloistManager.RemoveSoloist(soloistId);
 
@@ -69,7 +69,7 @@ int32_t OH_DisplaySoloist_Start(OH_DisplaySoloist* displaySoloist,
         return SOLOIST_ERROR;
     }
 
-    int soloistId = displaySoloist->soloistId_->GetId();
+    SoloistIdType soloistId = displaySoloist->soloistId_->GetId();
     RSDisplaySoloistManager& soloistManager = RSDisplaySoloistManager::GetInstance();
     soloistManager.InsertOnVsyncCallback(soloistId, callback, data);
     soloistManager.Start(soloistId);
@@ -88,7 +88,7 @@ int32_t OH_DisplaySoloist_Stop(OH_DisplaySoloist* displaySoloist)
         return SOLOIST_ERROR;
     }
 
-    int soloistId = displaySoloist->soloistId_->GetId();
+    SoloistIdType soloistId = displaySoloist->soloistId_->GetId();
     RSDisplaySoloistManager& soloistManager = RSDisplaySoloistManager::GetInstance();
     soloistManager.Stop(soloistId);
     return EXEC_SUCCESS;
@@ -113,7 +113,7 @@ int32_t OH_DisplaySoloist_SetExpectedFrameRateRange(OH_DisplaySoloist* displaySo
         return SOLOIST_ERROR;
     }
 
-    int soloistId = displaySoloist->soloistId_->GetId();
+    SoloistIdType soloistId = displaySoloist->soloistId_->GetId();
     RSDisplaySoloistManager& soloistManager = RSDisplaySoloistManager::GetInstance();
     soloistManager.InsertFrameRateRange(soloistId, frameRateRange);
     return EXEC_SUCCESS;

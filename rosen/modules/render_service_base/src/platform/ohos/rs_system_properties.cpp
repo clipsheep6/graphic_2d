@@ -26,12 +26,15 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
 constexpr int DEFAULT_CACHE_WIDTH = 1250;
 constexpr int DEFAULT_CACHE_HEIGHT = 2710;
 constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
 constexpr int DEFAULT_SCALE_MODE = 2;
+constexpr const char* DEFAULT_CLIP_RECT_THRESHOLD = "0.9";
+}
 
 #if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
 const GpuApiType RSSystemProperties::systemGpuApiType_ = Drawing::SystemProperties::GetGpuApiType();
@@ -204,6 +207,14 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
     return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
 }
 
+float RSSystemProperties::GetClipRectThreshold()
+{
+    int changed = 0;
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.cliprect.threshold", DEFAULT_CLIP_RECT_THRESHOLD);
+    const char *threshold = CachedParameterGetChanged(g_Handle, &changed);
+    return threshold == nullptr ? std::atof(DEFAULT_CLIP_RECT_THRESHOLD) : std::atof(threshold);
+}
+
 bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.virtualdirtydebug.enabled", "0");
@@ -214,7 +225,7 @@ bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
 
 bool RSSystemProperties::GetVirtualDirtyEnabled()
 {
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.virtualdirty.enabled", "0");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.virtualdirty.enabled", "1");
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(enable, 0) != 0;
@@ -507,6 +518,24 @@ bool RSSystemProperties::GetMotionBlurEnabled()
     return enabled;
 }
 
+bool RSSystemProperties::GetDynamicBrightnessEnabled()
+{
+    // Determine whether the daynamic brightness render should be enabled. The default value is 1,
+    // which means that it is enabled.
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.dynamicBrightnessEnabled", "1")).c_str()) != 0;
+    return enabled;
+}
+
+bool RSSystemProperties::GetMagnifierEnabled()
+{
+    // Determine whether the magnifier render should be enabled. The default value is 0,
+    // which means that it is unenabled.
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.magnifierEnabled", "1")).c_str()) != 0;
+    return enabled;
+}
+
 bool RSSystemProperties::GetKawaseEnabled()
 {
     static bool kawaseBlurEnabled =
@@ -580,22 +609,22 @@ const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
         initialized = true;
         // Configure AiInvertCoef0: Low
         aiInvertCoef[0] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertLow", "0")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertLow", "0.5")).c_str());
         // Configure AiInvertCoef1: High.
         aiInvertCoef[1] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertHigh", "1")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertHigh", "0.7")).c_str());
         // Configure AiInvertCoef2: Threshold.
         aiInvertCoef[2] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertThreshold", "0.55")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertThreshold", "0.5")).c_str());
         // Configure AiInvertCoef3: Opacity.
         aiInvertCoef[3] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertOpacity", "0.4")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertOpacity", "0.2")).c_str());
         // Configure AiInvertCoef4: Saturation.
         aiInvertCoef[4] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertSaturation", "1.6")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertSaturation", "1.0")).c_str());
         // Configure AiInvertCoef5: Filter Radius.
         aiInvertCoef[5] =
-            std::atof((system::GetParameter("persist.sys.graphic.aiInvertFilterRadius", "45")).c_str());
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertFilterRadius", "300")).c_str());
     }
     return aiInvertCoef;
 }
@@ -622,14 +651,6 @@ bool RSSystemProperties::GetUIFirstDebugEnabled()
 {
     static bool debugEnable = system::GetIntParameter("persist.sys.graphic.uifirstDebugEnabled", 0) != 0;
     return debugEnable;
-}
-
-bool RSSystemProperties::GetUIFirstForceEnabled()
-{
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.ui.first.force.enabled", "0");
-    int changed = 0;
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return ConvertToInt(enable, 1) != 0;
 }
 
 bool RSSystemProperties::GetDebugTraceEnabled()
@@ -775,6 +796,12 @@ bool RSSystemProperties::IsPhoneType()
     return isPhone;
 }
 
+bool RSSystemProperties::IsTabletType()
+{
+    static bool isTablet = system::GetParameter("const.product.devicetype", "pc") == "tablet";
+    return isTablet;
+}
+
 bool RSSystemProperties::IsPcType()
 {
     static bool isPc = (system::GetParameter("const.product.devicetype", "pc") == "pc") ||
@@ -827,8 +854,16 @@ bool RSSystemProperties::GetBlurExtraFilterEnabled()
 bool RSSystemProperties::GetPurgeBetweenFramesEnabled()
 {
     static bool purgeResourcesEveryEnabled =
-        (std::atoi(system::GetParameter("persist.sys.graphic.mem.purge_between_frames_enabled", "0").c_str()) != 0);
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.purge_between_frames_enabled", "1").c_str()) != 0);
     return purgeResourcesEveryEnabled;
+}
+
+bool RSSystemProperties::GetPreAllocateTextureBetweenFramesEnabled()
+{
+    static bool PreAllocateTextureBetweenFramesEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.pre_allocate_texture_between_frames_enabled", "1")
+                       .c_str()) != 0);
+    return PreAllocateTextureBetweenFramesEnabled;
 }
 
 const DdgrOpincType RSSystemProperties::ddgrOpincType_ =
@@ -877,14 +912,6 @@ bool RSSystemProperties::GetSubSurfaceEnabled()
     static bool subSurfaceEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.subSurface", "0")).c_str());
     return subSurfaceEnabled;
-}
-
-bool RSSystemProperties::GetAceDebugBoundaryEnabled()
-{
-    static CachedHandle g_Handle = CachedParameterCreate("persist.ace.debug.boundary.enabled", "false");
-    int changed = 0;
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return (strcmp(enable, "true") == 0);
 }
 
 bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
@@ -983,7 +1010,7 @@ bool RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
 
 bool RSSystemProperties::GetSkipDisplayIfScreenOffEnabled()
 {
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.graphic.screenoffskipdisplayenabled", "1");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.graphic.screenoffskipdisplayenabled", "0");
     int changed = 0;
     const char *num = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(num, 1) != 0;

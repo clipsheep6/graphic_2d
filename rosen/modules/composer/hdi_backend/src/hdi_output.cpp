@@ -191,26 +191,24 @@ int32_t HdiOutput::CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo
     }
     surfaceIdMap_[surfaceId] = layer;
 
+    if (device_ == nullptr) {
+        HLOGE("[%{public}s]HdiDevice is nullptr.", __func__);
+        return GRAPHIC_DISPLAY_SUCCESS;
+    }
     // DISPLAY ENGINE
     if (!arsrPreEnabled_) {
         return GRAPHIC_DISPLAY_SUCCESS;
     }
-    int32_t ret = 0;
-    std::vector<std::string> validKeys{};
-    ret = device_->GetSupportedLayerPerFrameParameterKey(validKeys);
-    if (ret != 0) {
-        HLOGD("GetSupportedLayerPreFrameParameter Fail! ret = %{public}d", ret);
-        return GRAPHIC_DISPLAY_SUCCESS;
-    }
+
+    const auto& validKeys = device_->GetSupportedLayerPerFrameParameterKey();
     const std::string GENERIC_METADATA_KEY_ARSR_PRE_NEEDED = "ArsrDoEnhance";
     if (std::find(validKeys.begin(), validKeys.end(), GENERIC_METADATA_KEY_ARSR_PRE_NEEDED) != validKeys.end()) {
         if (CheckIfDoArsrPre(layerInfo)) {
             const std::vector<int8_t> valueBlob{static_cast<int8_t>(1)};
-            ret = device_->SetLayerPerFrameParameter(screenId_, layerId,
-                                                     GENERIC_METADATA_KEY_ARSR_PRE_NEEDED, valueBlob);
-        }
-        if (ret != 0) {
-            HLOGD("SetLayerPerFrameParameter Fail! ret = %{public}d", ret);
+            if (device_->SetLayerPerFrameParameter(screenId_,
+                layerId, GENERIC_METADATA_KEY_ARSR_PRE_NEEDED, valueBlob) != 0) {
+                HLOGE("SetLayerPerFrameParameter Fail!");
+            }
         }
     }
 
@@ -544,16 +542,14 @@ int32_t HdiOutput::Commit(sptr<SyncFence> &fbFence)
     return device_->Commit(screenId_, fbFence);
 }
 
-int32_t HdiOutput::CommitAndGetReleaseFence(sptr<SyncFence> &fbFence, int32_t& skipState, bool& needFlush)
+int32_t HdiOutput::CommitAndGetReleaseFence(
+    sptr<SyncFence> &fbFence, int32_t &skipState, bool &needFlush, bool isValidated)
 {
     CHECK_DEVICE_NULL(device_);
     layersId_.clear();
     fences_.clear();
-    int32_t ret = device_->CommitAndGetReleaseFence(screenId_, fbFence, skipState, needFlush, layersId_, fences_);
-    if (ret == GRAPHIC_DISPLAY_SUCCESS) {
-        skipState_ = skipState;
-    }
-    return ret;
+    return device_->CommitAndGetReleaseFence(
+        screenId_, fbFence, skipState, needFlush, layersId_, fences_, isValidated);
 }
 
 int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
@@ -697,18 +693,6 @@ void HdiOutput::ReleaseLayers(sptr<SyncFence>& releaseFence)
 
 std::map<LayerInfoPtr, sptr<SyncFence>> HdiOutput::GetLayersReleaseFence()
 {
-    if (skipState_ != GRAPHIC_DISPLAY_SUCCESS) {
-        if (device_ == nullptr) {
-            HLOGE("GetLayersReleaseFence failed, device is nullptr");
-            return {};
-        }
-        int32_t ret = device_->GetScreenReleaseFence(screenId_, layersId_, fences_);
-        if (ret != GRAPHIC_DISPLAY_SUCCESS || layersId_.size() != fences_.size()) {
-            HLOGE("GetScreenReleaseFence failed, ret is %{public}d, layerId size[%{public}d], fence size[%{public}d]",
-                  ret, (int)layersId_.size(), (int)fences_.size());
-            return {};
-        }
-    }
     std::map<LayerInfoPtr, sptr<SyncFence>> res;
     std::unique_lock<std::mutex> lock(layerMutex_);
     size_t layerNum = layersId_.size();

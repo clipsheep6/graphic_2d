@@ -141,9 +141,11 @@ void RSModifierManager::SetFrameRateGetFunc(const FrameRateGetFunc& func)
     frameRateGetFunc_ = func;
 }
 
-const FrameRateRange& RSModifierManager::GetFrameRateRange() const
+const FrameRateRange RSModifierManager::GetFrameRateRange() const
 {
-    return rateDecider_.GetFrameRateRange();
+    auto frameRateRange = rateDecider_.GetFrameRateRange();
+    frameRateRange.type_ = UI_ANIMATION_FRAME_RATE_TYPE;
+    return frameRateRange;
 }
 
 void RSModifierManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation)

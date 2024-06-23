@@ -82,7 +82,7 @@ public:
     MOCK_METHOD3(GetLayerColorDataSpace, int32_t(uint32_t, uint32_t, GraphicColorDataSpace&));
     MOCK_METHOD3(SetLayerMetaData, int32_t(uint32_t, uint32_t, const std::vector<GraphicHDRMetaData>&));
     MOCK_METHOD4(SetLayerMetaDataSet, int32_t(uint32_t, uint32_t, GraphicHDRMetadataKey, const std::vector<uint8_t>&));
-    MOCK_METHOD1(GetSupportedLayerPerFrameParameterKey, int32_t(std::vector<std::string>&));
+    MOCK_METHOD0(GetSupportedLayerPerFrameParameterKey, std::vector<std::string>&());
     MOCK_METHOD4(SetLayerPerFrameParameter,
                  int32_t(uint32_t, uint32_t, const std::string&, const std::vector<int8_t>&));
     MOCK_METHOD3(SetLayerTunnelHandle, int32_t(uint32_t, uint32_t, GraphicExtDataHandle *));
@@ -94,8 +94,8 @@ public:
     MOCK_METHOD4(CreateLayer, int32_t(uint32_t, const GraphicLayerInfo&, uint32_t, uint32_t&));
     MOCK_METHOD2(CloseLayer, int32_t(uint32_t, uint32_t));
 
-    MOCK_METHOD6(CommitAndGetReleaseFence, int32_t(uint32_t, sptr<SyncFence>&, int32_t&, bool&,
-        std::vector<uint32_t>&, std::vector<sptr<SyncFence>>&));
+    MOCK_METHOD7(CommitAndGetReleaseFence, int32_t(uint32_t, sptr<SyncFence>&, int32_t&, bool&,
+        std::vector<uint32_t>&, std::vector<sptr<SyncFence>>&, bool));
     MOCK_METHOD0(Destroy, void());
 };
 } // namespace MockSys

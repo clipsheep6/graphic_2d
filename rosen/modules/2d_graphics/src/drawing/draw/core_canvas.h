@@ -404,7 +404,7 @@ public:
      * @param brush   brush containing BlendMode, ColorFilter, ImageFilter, and so on; or nullptr
      */
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
-        FilterMode filter, const Brush* brush = nullptr);
+        FilterMode filter);
 
     // opinc calculate realdraw rect
     virtual bool OpCalculateBefore(const Matrix& matrix);
@@ -727,11 +727,8 @@ protected:
     Paint defaultPaint_;
 
 private:
-    void ApplyDrawProc(const Paint& paint, const std::function<void()>& proc);
-    void ApplyBlurDrawProc(const Paint& paint, const std::function<void()>& proc);
-    void ApplyDrawLooper(const std::function<void()> drawProc);
+    void GetLooperPaint(const Paint& paint, Paint& looperPaint);
 
-    void AttachPaint();
     std::shared_ptr<CoreCanvasImpl> impl_;
 #ifdef ACE_ENABLE_GPU
     std::shared_ptr<GPUContext> gpuContext_;

@@ -113,7 +113,9 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
     if (!isDrawn_ || rect != lastRect_) {
         UpdateNodeIdToPicture(nodeId_);
         Drawing::AutoCanvasRestore acr(canvas, HasRadius());
-        frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+        if (frameRect_.IsEmpty()) {
+            frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+        }
         if (!isBackground) {
             ApplyImageFit();
             ApplyCanvasClip(canvas);
@@ -145,8 +147,7 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
     lastRect_ = rect;
 }
 
-struct ImageParameter
-{
+struct ImageParameter {
     float ratio;
     float srcW;
     float srcH;
@@ -238,6 +239,37 @@ void RSImage::ApplyImageFit()
     imageParameter.dstH = dstH;
     RectF tempRectF = dstRect_;
     dstRect_ = ApplyImageFitSwitch(imageParameter, imageFit_, tempRectF);
+}
+
+ImageFit RSImage::GetImageFit()
+{
+    return imageFit_;
+}
+
+Drawing::AdaptiveImageInfo RSImage::GetAdaptiveImageInfoWithCustomizedFrameRect(const Drawing::Rect& frameRect) const
+{
+    Drawing::AdaptiveImageInfo imageInfo = {
+        .fitNum = static_cast<int32_t>(imageFit_),
+        .repeatNum = static_cast<int32_t>(imageRepeat_),
+        .radius = { radius_[0], radius_[1], radius_[2], radius_[3] },
+        .scale = scale_,
+        .uniqueId = 0,
+        .width = 0,
+        .height = 0,
+        .dynamicRangeMode = dynamicRangeMode_,
+        .frameRect = frameRect
+    };
+    return imageInfo;
+}
+
+RectF RSImage::GetDstRect()
+{
+    return dstRect_;
+}
+
+void RSImage::SetFrameRect(RectF frameRect)
+{
+    frameRect_ = frameRect;
 }
 
 bool RSImage::HasRadius() const
@@ -492,11 +524,12 @@ bool RSImage::Marshalling(Parcel& parcel) const
 
     std::lock_guard<std::mutex> lock(mutex_);
     auto image = image_;
+    auto compressData = compressData_;
     if (image && image->IsTextureBacked()) {
         image = nullptr;
         ROSEN_LOGE("RSImage::Marshalling skip texture image");
     }
-    RS_PROFILER_MARSHAL_DRAWINGIMAGE(image);
+    RS_PROFILER_MARSHAL_DRAWINGIMAGE(image, compressData);
     bool success = RSMarshallingHelper::Marshalling(parcel, uniqueId_) &&
                    RSMarshallingHelper::Marshalling(parcel, static_cast<int>(srcRect_.width_)) &&
                    RSMarshallingHelper::Marshalling(parcel, static_cast<int>(srcRect_.height_)) &&
@@ -504,7 +537,7 @@ bool RSImage::Marshalling(Parcel& parcel) const
                    parcel.WriteBool(pixelMap_ == nullptr) &&
                    RSMarshallingHelper::Marshalling(parcel, image) &&
                    RSMarshallingHelper::Marshalling(parcel, pixelMap_) &&
-                   RSMarshallingHelper::Marshalling(parcel, compressData_) &&
+                   RSMarshallingHelper::Marshalling(parcel, compressData) &&
                    RSMarshallingHelper::Marshalling(parcel, imageFit) &&
                    RSMarshallingHelper::Marshalling(parcel, imageRepeat) &&
                    RSMarshallingHelper::Marshalling(parcel, radius_) &&

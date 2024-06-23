@@ -64,7 +64,7 @@ public:
     virtual int32_t GetSupportedMetaDataKey(uint32_t screenId, std::vector<GraphicHDRMetadataKey> &keys) = 0;
     virtual int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence) = 0;
     virtual int32_t CommitAndGetReleaseFence(uint32_t screenId, sptr<SyncFence> &fence, int32_t &skipState,
-        bool &needFlush, std::vector<uint32_t>& layers, std::vector<sptr<SyncFence>>& fences) = 0;
+        bool &needFlush, std::vector<uint32_t>& layers, std::vector<sptr<SyncFence>>& fences, bool isValidated) = 0;
     /* set & get device screen info end */
 
     /* set & get device layer info begin */
@@ -89,7 +89,7 @@ public:
                                      const std::vector<GraphicHDRMetaData> &graphicMetaData) = 0;
     virtual int32_t SetLayerMetaDataSet(uint32_t screenId, uint32_t layerId, GraphicHDRMetadataKey gkey,
                                         const std::vector<uint8_t> &metaData) = 0;
-    virtual int32_t GetSupportedLayerPerFrameParameterKey(std::vector<std::string>& keys) = 0;
+    virtual std::vector<std::string>& GetSupportedLayerPerFrameParameterKey() = 0;
     virtual int32_t SetLayerPerFrameParameter(uint32_t devId, uint32_t layerId, const std::string& key,
                                               const std::vector<int8_t>& value) = 0;
     virtual int32_t SetLayerTunnelHandle(uint32_t screenId, uint32_t layerId, GraphicExtDataHandle *handle) = 0;

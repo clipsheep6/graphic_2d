@@ -191,6 +191,9 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
 
 bool RSCanvasDrawingRenderNode::IsNeedProcess() const
 {
+    if (!renderDrawable_ || !(renderDrawable_->GetRenderParams())) {
+        return false;
+    }
     return renderDrawable_->GetRenderParams()->IsNeedProcess();
 }
 
@@ -504,7 +507,7 @@ void RSCanvasDrawingRenderNode::ClearOp()
     drawCmdLists_.clear();
 }
 
-void RSCanvasDrawingRenderNode::ResetSurface()
+void RSCanvasDrawingRenderNode::ResetSurface(int width, int height)
 {
     std::lock_guard<std::mutex> lockTask(taskMutex_);
     if (preThreadInfo_.second && surface_) {
@@ -513,6 +516,7 @@ void RSCanvasDrawingRenderNode::ResetSurface()
     surface_ = nullptr;
     recordingCanvas_ = nullptr;
     stagingRenderParams_->SetCanvasDrawingSurfaceChanged(true);
+    stagingRenderParams_->SetCanvasDrawingSurfaceParams(width, height);
 }
 
 const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDrawingRenderNode::GetDrawCmdLists() const

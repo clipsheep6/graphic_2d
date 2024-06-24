@@ -19,6 +19,7 @@
 
 #include "js_drawing_utils.h"
 #include "color_filter_napi/js_color_filter.h"
+#include "color_space_napi/js_color_space.h"
 #include "mask_filter_napi/js_mask_filter.h"
 #include "shadow_layer_napi/js_shadow_layer.h"
 
@@ -117,20 +118,34 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
-    size_t argc = ARGC_FOUR;
-    napi_value argv[ARGC_FOUR] = {nullptr};
-    CHECK_PARAM_NUMBER_WITH_OPTIONAL_PARAMS(argv, argc, ARGC_ONE, ARGC_FOUR);
+    size_t argc = ARGC_FIVE;
+    napi_value argv[ARGC_FIVE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITH_OPTIONAL_PARAMS(argv, argc, ARGC_ONE, ARGC_FIVE);
 
     Drawing::Color drawingColor;
-    if (argc == ARGC_ONE) {
+    Drawing::Color4f colorStruct;
+    std::shared_ptr<Drawing::ColorSpace> colorSpace = nullptr;
+    if (argc == ARGC_ONE || argc == ARGC_TWO) {
         int32_t argb[ARGC_FOUR] = {0};
         if (!ConvertFromJsColor(env, argv[ARGC_ZERO], argb, ARGC_FOUR)) {
             ROSEN_LOGE("JsBrush::SetColor Argv[0] is invalid");
             return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
                 "Parameter verification failed. The range of color channels must be [0, 255].");
         }
-        drawingColor = Color::ColorQuadSetARGB(argb[ARGC_ZERO], argb[ARGC_ONE], argb[ARGC_TWO], argb[ARGC_THREE]);
-    } else if (argc == ARGC_FOUR) {
+        if (argc == ARGC_ONE) {
+            drawingColor = Color::ColorQuadSetARGB(argb[ARGC_ZERO], argb[ARGC_ONE], argb[ARGC_TWO], argb[ARGC_THREE]);
+        }
+        else {
+            colorStruct.alphaF_ = argb[ARGC_ZERO];
+            colorStruct.redF_ = argb[ARGC_ONE];
+            colorStruct.greenF_ = argb[ARGC_TWO];
+            colorStruct.blueF_ = argb[ARGC_THREE];
+            JsColorSpace* jsColorSpace = nullptr;
+            napi_unwrap(env, argv[ARGC_ONE], reinterpret_cast<void **>(&jsColorSpace));
+            colorSpace = jsColorSpace->GetColorSpace();
+        }
+    }
+    else if (argc == ARGC_FOUR || argc == ARGC_FIVE) {
         int32_t alpha = 0;
         GET_COLOR_PARAM(ARGC_ZERO, alpha);
         int32_t red = 0;
@@ -139,11 +154,28 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
         GET_COLOR_PARAM(ARGC_TWO, green);
         int32_t blue = 0;
         GET_COLOR_PARAM(ARGC_THREE, blue);
-        drawingColor = Color::ColorQuadSetARGB(alpha, red, green, blue);
-    } else {
+        if (argc == ARGC_FOUR) {
+            drawingColor = Color::ColorQuadSetARGB(alpha, red, green, blue);
+        }
+        else {
+            colorStruct.alphaF_ = alpha;
+            colorStruct.redF_ = red;
+            colorStruct.greenF_ = green;
+            colorStruct.blueF_ = blue;
+            JsColorSpace* jsColorSpace = nullptr;
+            napi_unwrap(env, argv[ARGC_FOUR], reinterpret_cast<void **>(&jsColorSpace));
+            colorSpace = jsColorSpace->GetColorSpace();
+        }
+    }
+    else {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    brush->SetColor(drawingColor);
+    if (!colorSpace) {
+        brush->SetColor(drawingColor);
+    }
+    else {
+        brush->SetColor(colorStruct, colorSpace);
+    }
     return nullptr;
 }
 

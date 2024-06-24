@@ -64,6 +64,7 @@ ohos_shared_library("drawing_napi_impl") {
     "color_filter_napi/js_color_filter.cpp",
     "enum_napi/js_enum.cpp",
     "font_napi/js_font.cpp",
+    "matrix_napi/js_matrix.cpp",
     "font_napi/js_typeface.cpp",
     "js_common.cpp",
     "js_drawing_init.cpp",

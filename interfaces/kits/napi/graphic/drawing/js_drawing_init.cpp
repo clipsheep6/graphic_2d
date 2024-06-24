@@ -23,6 +23,7 @@
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
 #include "mask_filter_napi/js_mask_filter.h"
+#include "matrix_napi/js_matrix.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "path_napi/js_path.h"
 #include "pen_napi/js_pen.h"
@@ -49,6 +50,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsRoundRect::Init(env, exportObj);
     JsSamplingOptions::Init(env, exportObj);
     JsMaskFilter::Init(env, exportObj);
+	JsMatrix::Init(env, exportObj);
     JsPathEffect::Init(env, exportObj);
     JsRegion::Init(env, exportObj);
     JsShadowLayer::Init(env, exportObj);

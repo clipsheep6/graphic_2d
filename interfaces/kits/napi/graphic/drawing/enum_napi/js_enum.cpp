@@ -22,6 +22,7 @@
 #include "draw/blend_mode.h"
 #include "draw/blend_mode.h"
 #include "draw/clip.h"
+#include "draw/color.h"
 #include "draw/pen.h"
 #include "effect/mask_filter.h"
 #include "text/font_types.h"
@@ -81,6 +82,21 @@ static const std::vector<struct JsEnumInt> g_textEncoding = {
     { "TEXT_ENCODING_UTF16", static_cast<int32_t>(TextEncoding::UTF16) },
     { "TEXT_ENCODING_UTF32", static_cast<int32_t>(TextEncoding::UTF32) },
     { "TEXT_ENCODING_GLYPH_ID", static_cast<int32_t>(TextEncoding::GLYPH_ID) },
+};
+static const std::vector<struct JsEnumInt> g_colorFormat = {
+    { "COLOR_FORMAT_UNKNOWN", static_cast<int32_t>(ColorType::COLORTYPE_UNKNOWN) },
+    { "COLOR_FORMAT_ALPHA_8", static_cast<int32_t>(ColorType::COLORTYPE_ALPHA_8) },
+    { "COLOR_FORMAT_RGB_565", static_cast<int32_t>(ColorType::COLORTYPE_RGB_565) },
+    { "COLOR_FORMAT_ARGB_4444", static_cast<int32_t>(ColorType::COLORTYPE_ARGB_4444) },
+    { "COLOR_FORMAT_RGBA_8888", static_cast<int32_t>(ColorType::COLORTYPE_RGBA_8888) },
+    { "COLOR_FORMAT_BGRA_8888", static_cast<int32_t>(ColorType::COLORTYPE_BGRA_8888) },
+};
+
+static const std::vector<struct JsEnumInt> g_alphaFormat = {
+    { "ALPHA_FORMAT_UNKNOWN", static_cast<int32_t>(AlphaType::ALPHATYPE_UNKNOWN) },
+    { "ALPHA_FORMAT_OPAQUE", static_cast<int32_t>(AlphaType::ALPHATYPE_OPAQUE) },
+    { "ALPHA_FORMAT_PREMUL", static_cast<int32_t>(AlphaType::ALPHATYPE_PREMUL) },
+    { "ALPHA_FORMAT_UNPREMUL", static_cast<int32_t>(AlphaType::ALPHATYPE_UNPREMUL) },
 };
 
 static const std::vector<struct JsEnumInt> g_filterMode = {
@@ -149,6 +165,8 @@ static const std::vector<struct JsEnumInt> g_fontMetricsFlags = {
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
+    { "ColorFormat", g_colorFormat },
+    { "AlphaFormat", g_alphaFormat },
     { "FilterMode", g_filterMode },
     { "RegionOp", g_regionOp },
     { "ClipOp", g_clipOp },

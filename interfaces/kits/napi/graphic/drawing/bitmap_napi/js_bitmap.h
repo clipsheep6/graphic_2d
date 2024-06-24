@@ -32,10 +32,16 @@ public:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value CreateJsBitmap(napi_env env, const std::shared_ptr<Bitmap> bitmap);
+    static napi_value Build(napi_env env, napi_callback_info info);
+    static napi_value GetWidth(napi_env env, napi_callback_info info);
+    static napi_value GetHeight(napi_env env, napi_callback_info info);
     
     Bitmap* GetBitmap();
 
 private:
+    napi_value OnBuild(napi_env env, napi_callback_info info);
+    napi_value OnGetWidth(napi_env env, napi_callback_info info);
+    napi_value OnGetHeight(napi_env env, napi_callback_info info);
     static thread_local napi_ref constructor_;
 
     Bitmap* bitmap_;

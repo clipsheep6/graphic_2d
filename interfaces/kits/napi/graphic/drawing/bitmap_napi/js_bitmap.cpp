@@ -20,6 +20,41 @@
 #include "../js_common.h"
 
 namespace OHOS::Rosen {
+static Drawing::AlphaType AlphaTypeToDrawingAlphaType(uint32_t alphaType)
+{
+    switch (alphaType) {
+        case Drawing::AlphaType::ALPHATYPE_UNKNOWN:
+            return Drawing::AlphaType::ALPHATYPE_UNKNOWN;
+        case Drawing::AlphaType::ALPHATYPE_OPAQUE:
+            return Drawing::AlphaType::ALPHATYPE_OPAQUE;
+        case Drawing::AlphaType::ALPHATYPE_PREMUL:
+            return Drawing::AlphaType::ALPHATYPE_PREMUL;
+        case Drawing::AlphaType::ALPHATYPE_UNPREMUL:
+            return Drawing::AlphaType::ALPHATYPE_UNPREMUL;
+        default:
+            return Drawing::AlphaType::ALPHATYPE_UNKNOWN;
+    }
+}
+
+static Drawing::ColorType ColorTypeToDrawingColorType(uint32_t colorType)
+{
+    switch (colorType) {
+        case Drawing::ColorType::COLORTYPE_UNKNOWN:
+            return Drawing::ColorType::COLORTYPE_UNKNOWN ;
+        case Drawing::ColorType::COLORTYPE_ALPHA_8:
+            return Drawing::ColorType::COLORTYPE_ALPHA_8;
+        case Drawing::ColorType::COLORTYPE_RGB_565:
+            return Drawing::ColorType::COLORTYPE_RGB_565;
+        case Drawing::ColorType::COLORTYPE_ARGB_4444:
+            return Drawing::ColorType::COLORTYPE_ARGB_4444;
+        case Drawing::ColorType::COLORTYPE_RGBA_8888:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+        case Drawing::ColorType::COLORTYPE_BGRA_8888:
+            return Drawing::ColorType::COLORTYPE_BGRA_8888;
+        default:
+            return Drawing::ColorType::COLORTYPE_UNKNOWN;
+    }
+}
 namespace Drawing {
 const std::string CLASS_NAME = "Bitmap";
 thread_local napi_ref JsBitmap::constructor_ = nullptr;
@@ -27,6 +62,9 @@ std::shared_ptr<Bitmap> drawingBitmap;
 napi_value JsBitmap::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("build", JsBitmap::Build),
+        DECLARE_NAPI_FUNCTION("getWidth", JsBitmap::GetWidth),
+        DECLARE_NAPI_FUNCTION("getHeight", JsBitmap::GetHeight),
     };
 
     napi_value constructor = nullptr;
@@ -98,6 +136,80 @@ void JsBitmap::Destructor(napi_env env, void *nativeObject, void *finalize)
     }
 }
 
+napi_value JsBitmap::Build(napi_env env, napi_callback_info info)
+{
+    JsBitmap* me = CheckParamsAndGetThis<JsBitmap>(env, info);
+    return (me != nullptr) ? me->OnBuild(env, info) : nullptr;
+}
+
+napi_value JsBitmap::GetWidth(napi_env env, napi_callback_info info)
+{
+    JsBitmap* me = CheckParamsAndGetThis<JsBitmap>(env, info);
+    return (me != nullptr) ? me->OnGetWidth(env, info) : nullptr;
+}
+
+napi_value JsBitmap::GetHeight(napi_env env, napi_callback_info info)
+{
+    JsBitmap* me = CheckParamsAndGetThis<JsBitmap>(env, info);
+    return (me != nullptr) ? me->OnGetHeight(env, info) : nullptr;
+}
+
+napi_value JsBitmap::OnBuild(napi_env env, napi_callback_info info)
+{
+    if (bitmap_ == nullptr) {
+        ROSEN_LOGE("Drawing_napi: OnBuild bitmap is null");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_THREE;
+    napi_value argv[ARGC_THREE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_THREE) {
+        ROSEN_LOGE("Drawing_napi: OnBuild Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    int32_t width = 0;
+    int32_t height = 0;
+    ConvertFromJsValue(env, argv[0], width);
+    ConvertFromJsValue(env, argv[ARGC_ONE], height);
+
+    uint32_t colorType = 0;
+    uint32_t alphaType = 0;
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, argv[ARGC_TWO], "colorFormat", &tempValue);
+    napi_get_value_uint32(env, tempValue, &colorType);
+    napi_get_named_property(env, argv[ARGC_TWO], "alphaFormat", &tempValue);
+    napi_get_value_uint32(env, tempValue, &alphaType);
+
+
+    BitmapFormat bitmapFormat;
+    bitmapFormat.colorType = ColorTypeToDrawingColorType(colorType);
+    bitmapFormat.alphaType = AlphaTypeToDrawingAlphaType(alphaType);
+
+    bitmap_->Build(width, height, bitmapFormat);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsBitmap::OnGetWidth(napi_env env, napi_callback_info info)
+{
+    if (bitmap_ == nullptr) {
+        ROSEN_LOGE("Drawing_napi: OnGetWidth bitmap is null");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    
+    return CreateJsNumber(env,bitmap_->GetWidth());
+}
+
+napi_value JsBitmap::OnGetHeight(napi_env env, napi_callback_info info)
+{
+    if (bitmap_ == nullptr) {
+        ROSEN_LOGE("Drawing_napi: OnGetHeight bitmap is null");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    return CreateJsNumber(env,bitmap_->GetHeight());
+}
 napi_value JsBitmap::CreateJsBitmap(napi_env env, const std::shared_ptr<Bitmap> bitmap)
 {
     napi_value constructor = nullptr;

@@ -87,6 +87,7 @@
           "egl",
           "opengles",
           "node",
+          "cxx",
           "vulkan-headers",
           "vulkan-loader",
           "cJSON",
@@ -112,6 +113,7 @@
           "jsoncpp",
           "egl",
           "opengles",
+          "cxx",
           "vulkan-headers",
           "vulkan-loader"
         ]

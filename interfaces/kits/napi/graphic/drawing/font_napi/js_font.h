@@ -46,6 +46,13 @@ public:
     static napi_value MeasureText(napi_env env, napi_callback_info info);
     static napi_value SetScaleX(napi_env env, napi_callback_info info);
     static napi_value SetSkewX(napi_env env, napi_callback_info info);
+    static napi_value IsSubpixel(napi_env env, napi_callback_info info);
+    static napi_value IsLinearText(napi_env env, napi_callback_info info);
+    static napi_value GetTextSkewX(napi_env env, napi_callback_info info);
+    static napi_value IsFakeBoldText(napi_env env, napi_callback_info info);
+    static napi_value GetScaleX(napi_env env, napi_callback_info info);
+    static napi_value GetHinting(napi_env env, napi_callback_info info);
+    static napi_value GetEdging(napi_env env, napi_callback_info info);
 
     std::shared_ptr<Font> GetFont();
     void SetFont(std::shared_ptr<Font> font);
@@ -62,6 +69,13 @@ private:
     napi_value OnMeasureText(napi_env env, napi_callback_info info);
     napi_value OnSetScaleX(napi_env env, napi_callback_info info);
     napi_value OnSetSkewX(napi_env env, napi_callback_info info);
+    napi_value OnIsSubpixel(napi_env env, napi_callback_info info);
+    napi_value OnIsLinearText(napi_env env, napi_callback_info info);
+    napi_value OnGetTextSkewX(napi_env env, napi_callback_info info);
+    napi_value OnIsFakeBoldText(napi_env env, napi_callback_info info);
+    napi_value OnGetScaleX(napi_env env, napi_callback_info info);
+    napi_value OnGetHinting(napi_env env, napi_callback_info info);
+    napi_value OnGetEdging(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::shared_ptr<Font> m_font = nullptr;

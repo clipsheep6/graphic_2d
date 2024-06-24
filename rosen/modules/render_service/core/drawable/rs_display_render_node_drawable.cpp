@@ -724,11 +724,14 @@ void RSDisplayRenderNodeDrawable::DrawMirrorScreen(std::shared_ptr<RSDisplayRend
         return;
     }
     if (mirroredNode->GetSecurityDisplay() != displayNodeSp->GetSecurityDisplay() && hasSpecialLayer_) {
+        RS_LOGD("RSDisplayRenderNodeDrawable::DrawMirrorScreen, OnCapture.");
         DrawMirror(displayNodeSp, params, processor, &RSDisplayRenderNodeDrawable::OnCapture, *uniParam);
     } else if (hardwareNodes.size() > 0 && RSSystemProperties::GetHardwareComposerEnabledForMirrorMode()) {
+        RS_LOGD("RSDisplayRenderNodeDrawable::DrawMirrorScreen, DrawHardwareEnabledNodes.");
         DrawMirror(displayNodeSp, params, processor,
             &RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes, *uniParam);
     } else {
+        RS_LOGD("RSDisplayRenderNodeDrawable::DrawMirrorScreen, ProcessDisplaySurface.");
         bool isOpDropped = uniParam->IsOpDropped();
         uniParam->SetOpDropped(false);
         mirroredNode->SetOriginScreenRotation(displayNodeSp->GetOriginScreenRotation());

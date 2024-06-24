@@ -93,6 +93,7 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
         exFoldScreen_ = (RSSystemProperties::IsFoldScreenFlag() && mirrorNode->GetScreenId() == 0);
         std::string lemScreen = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
         if (lemScreen[0] == '2') { // Small folding screen
+            RS_LOGD("RSUniRenderVirtualProcessor::Init, LemScreen");
             exFoldScreen_ = false;
         }
     }
@@ -214,6 +215,7 @@ void RSUniRenderVirtualProcessor::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& 
             canvas_->Translate(-(static_cast<float>(mainScreenInfo.width)), 0);
         }
     }
+    RS_LOGD("RSUniRenderVirtualProcessor::RotateMirrorCanvasIfNeed, rotation:%{public}d", rotation);
 }
 
 void RSUniRenderVirtualProcessor::ScaleMirrorIfNeed(RSDisplayRenderNode& node)
@@ -224,6 +226,7 @@ void RSUniRenderVirtualProcessor::ScaleMirrorIfNeed(RSDisplayRenderNode& node)
 
     canvas_->Clear(SK_ColorBLACK);
 
+    RS_LOGD("RSUniRenderVirtualProcessor::ScaleMirrorIfNeed, scaleMode:%{public}d", scaleMode_);
     if (scaleMode_ == ScreenScaleMode::FILL_MODE) {
         Fill(*canvas_, mainWidth_, mainHeight_, mirrorWidth_, mirrorHeight_);
     } else if (scaleMode_ == ScreenScaleMode::UNISCALE_MODE) {
@@ -240,6 +243,8 @@ void RSUniRenderVirtualProcessor::JudgeResolution(RSDisplayRenderNode& node)
     auto rotation = canvasRotation_ ? node.GetScreenRotation() : node.GetOriginScreenRotation();
     auto flag = (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270);
 
+    RS_LOGD("RSUniRenderVirtualProcessor::JudgeResolution, exFoldScreen:%{public}d, flag:%{public}d,
+        canvasRotation:%{public}d", exFoldScreen_, flag, canvasRotation_);
     if (exFoldScreen_) {
         if (!flag) {
             std::swap(mainWidth_, mainHeight_);

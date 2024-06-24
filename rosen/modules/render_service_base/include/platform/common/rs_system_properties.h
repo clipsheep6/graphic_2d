@@ -45,6 +45,7 @@ enum class DirtyRegionDebugType {
     RENDER_PROPERTIES_RECT,
     CANVAS_NODE_SKIP_RECT,
     OUTLINE_RECT,
+    SUBTREE_SKIP_RECT,
 };
 
 enum class SurfaceRegionDebugType {

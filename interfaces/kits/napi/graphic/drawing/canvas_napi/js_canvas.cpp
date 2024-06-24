@@ -34,6 +34,7 @@
 #include "utils/rect.h"
 #include "utils/sampling_options.h"
 #include "utils/vertices.h"
+#include "matrix_napi/js_matrix.h"
 
 #include "brush_napi/js_brush.h"
 #include "pen_napi/js_pen.h"
@@ -492,10 +493,10 @@ napi_value JsCanvas::OnDrawShadow(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
 
-    Color ambientColor;
-    Color spotColor;
-    if (!ConvertFromJsColor(env, argv[ARGC_FOUR], ambientColor) ||
-        !ConvertFromJsColor(env, argv[ARGC_FIVE], spotColor)) {
+    int32_t ambientColor[ARGC_FOUR] = {0};
+    int32_t spotColor[ARGC_FOUR] = {0};
+    if (!ConvertFromJsColor(env, argv[ARGC_FOUR], ambientColor, ARGC_FOUR) ||
+        !ConvertFromJsColor(env, argv[ARGC_FIVE], spotColor, ARGC_FOUR)) {
         ROSEN_LOGE("JsCanvas::OnDrawShadow argv[5] or argv[6] is invalid.");
         return NapiGetUndefined(env);
     }
@@ -508,7 +509,12 @@ napi_value JsCanvas::OnDrawShadow(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsCanvas::OnDrawShadow GetPath is nullptr.");
         return NapiGetUndefined(env);
     }
-    m_canvas->DrawShadow(*jsPath->GetPath(), offset, lightPos, lightRadius, ambientColor, spotColor, shadowFlag);
+
+    auto ambientColorPara = Color::ColorQuadSetARGB(ambientColor[ARGC_ZERO], ambientColor[ARGC_ONE],
+        ambientColor[ARGC_TWO], ambientColor[ARGC_THREE]);
+    auto spotColorPara = Color::ColorQuadSetARGB(spotColor[ARGC_ZERO], spotColor[ARGC_ONE],
+        spotColor[ARGC_TWO], spotColor[ARGC_THREE]);
+    m_canvas->DrawShadow(*jsPath->GetPath(), offset, lightPos, lightRadius, ambientColorPara, spotColorPara, shadowFlag);
     return NapiGetUndefined(env);
 }
 
@@ -1209,6 +1215,15 @@ napi_value JsCanvas::OnDrawNestedRoundRect(napi_env env, napi_callback_info info
     }
     m_canvas->DrawNestedRoundRect(*jsOuter->GetRoundRect(), *jsInner->GetRoundRect());
     return NapiGetUndefined(env);
+}
+
+static void DestructorMatrix(napi_env env, void *nativeObject, void *finalize)
+{
+    (void)finalize;
+    if (nativeObject != nullptr) {
+        JsMatrix *napi = reinterpret_cast<JsMatrix *>(nativeObject);
+        delete napi;
+    }
 }
 
 napi_value JsCanvas::GetTotalMatrix(napi_env env, napi_callback_info info)

@@ -334,6 +334,16 @@ bool ConvertFromJsPoint(napi_env env, napi_value src, Point& point);
 bool ConvertFromJsPoint3d(napi_env env, napi_value src, Point3& point3d);
 bool CovertFromJsShadowFlag(napi_env env, napi_value src, ShadowFlags& shadowFlag, ShadowFlags defaultFlag = ShadowFlags::NONE);
 
+inline bool ConvertClampFromJsValue(napi_env env, napi_value jsValue, int32_t& value, int32_t lo, int32_t hi)
+{
+    if (jsValue == nullptr) {
+        return false;
+    }
+    bool ret = napi_get_value_int32(env, jsValue, &value) == napi_ok;
+    value = std::clamp(value, lo, hi);
+    return ret;
+}
+
 inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value, int32_t lo, int32_t hi)
 {
     return napi_get_value_int32(env, jsValue, &value) == napi_ok && value >= lo && value <= hi;

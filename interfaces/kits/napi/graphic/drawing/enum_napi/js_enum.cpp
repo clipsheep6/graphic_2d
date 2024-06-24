@@ -21,6 +21,7 @@
 #include "native_value.h"
 #include "draw/blend_mode.h"
 #include "draw/blend_mode.h"
+#include "draw/core_canvas.h"
 #include "draw/clip.h"
 #include "draw/color.h"
 #include "draw/pen.h"
@@ -30,6 +31,7 @@
 #include "utils/region.h"
 #include "utils/sampling_options.h"
 #include "utils/vertices.h"
+#include "effect/shader_effect.h"
 
 #include "js_drawing_utils.h"
 
@@ -170,6 +172,13 @@ static const std::vector<struct JsEnumInt> g_shadowFlag = {
     { "SHADOW_FLAGS_ALL", static_cast<int32_t>(ShadowFlags::ALL) },
 };
 
+static const std::vector<struct JsEnumInt> g_tileMode = {
+    { "CLAMP", static_cast<int32_t>(TileMode::CLAMP) },
+    { "REPEAT", static_cast<int32_t>(TileMode::REPEAT) },
+    { "MIRROR", static_cast<int32_t>(TileMode::MIRROR) },
+    { "DECAL", static_cast<int32_t>(TileMode::DECAL) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
@@ -184,6 +193,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "BlurType", g_blurType },
     { "PointMode", g_pointMode },
     { "VertexMode", g_vertexMode },
+    { "TileMode", g_tileMode },
     { "FontMetricsFlags", g_fontMetricsFlags },
 };
 

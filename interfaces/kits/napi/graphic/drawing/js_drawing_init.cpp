@@ -23,6 +23,7 @@
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
 #include "mask_filter_napi/js_mask_filter.h"
+#include "shader_effect_napi/js_shader_effect.h"
 #include "matrix_napi/js_matrix.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "path_napi/js_path.h"
@@ -57,6 +58,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
 	JsMatrix::Init(env, exportObj);
     JsPathEffect::Init(env, exportObj);
     JsRegion::Init(env, exportObj);
+    JsShaderEffect::Init(env, exportObj);
     JsShadowLayer::Init(env, exportObj);
     return exportObj;
 }

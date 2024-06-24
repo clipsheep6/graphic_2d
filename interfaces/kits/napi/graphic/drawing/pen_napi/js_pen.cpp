@@ -22,7 +22,8 @@
 #include "mask_filter_napi/js_mask_filter.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "shadow_layer_napi/js_shadow_layer.h"
-#include "../shader_effect_napi/js_shader_effect.h"
+#include "shader_effect_napi/js_shader_effect.h"
+
 namespace OHOS::Rosen {
 namespace Drawing {
 thread_local napi_ref JsPen::constructor_ = nullptr;

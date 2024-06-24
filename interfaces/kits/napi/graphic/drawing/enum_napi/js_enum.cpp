@@ -20,12 +20,14 @@
 
 #include "native_value.h"
 #include "draw/blend_mode.h"
+#include "draw/blend_mode.h"
 #include "draw/clip.h"
 #include "draw/pen.h"
 #include "effect/mask_filter.h"
 #include "text/font_types.h"
 #include "utils/region.h"
 #include "utils/sampling_options.h"
+#include "utils/vertices.h"
 
 #include "js_drawing_utils.h"
 
@@ -100,6 +102,19 @@ static const std::vector<struct JsEnumInt> g_clipOp = {
     { "INTERSECT", static_cast<int32_t>(ClipOp::INTERSECT) },
 };
 
+static const std::vector<struct JsEnumInt> g_pointMode = {
+    { "POINT_MODE_POINTS", static_cast<int32_t>(PointMode::POINTS_POINTMODE) },
+    { "POINT_MODE_LINES", static_cast<int32_t>(PointMode::LINES_POINTMODE) },
+    { "POINT_MODE_POLYGON", static_cast<int32_t>(PointMode::POLYGON_POINTMODE) },
+};
+
+static const std::vector<struct JsEnumInt> g_vertexMode = {
+    { "VERTEX_MODE_TRIANGLES", static_cast<int32_t>(VertexMode::TRIANGLES_VERTEXMODE) },
+    { "VERTEX_MODE_TRIANGLESSTRIP", static_cast<int32_t>(VertexMode::TRIANGLESSTRIP_VERTEXMODE) },
+    { "VERTEX_MODE_TRIANGLEFAN", static_cast<int32_t>(VertexMode::TRIANGLEFAN_VERTEXMODE) },
+    { "VERTEX_MODE_LAST", static_cast<int32_t>(VertexMode::LAST_VERTEXMODE) },
+};
+
 static const std::vector<struct JsEnumInt> g_joinStyle = {
     { "MITER_JOIN", static_cast<int32_t>(Pen::JoinStyle::MITER_JOIN) },
     { "ROUND_JOIN", static_cast<int32_t>(Pen::JoinStyle::ROUND_JOIN) },
@@ -140,6 +155,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "JoinStyle", g_joinStyle },
     { "CapStyle", g_capStyle },
     { "BlurType", g_blurType },
+    { "PointMode", g_pointMode },
+    { "VertexMode", g_vertexMode },
     { "FontMetricsFlags", g_fontMetricsFlags },
 };
 

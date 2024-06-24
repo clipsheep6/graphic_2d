@@ -19,6 +19,7 @@
 #include <parameters.h>
 #endif
 
+#include "image/image.h"
 #include "draw/color.h"
 
 namespace OHOS::Rosen {
@@ -112,6 +113,81 @@ bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t si
             return false;
         }
     }
+    return true;
+}
+
+bool CovertFromJsShadowFlag(napi_env env, napi_value src, ShadowFlags& shadowFlag, ShadowFlags defaultFlag)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    uint32_t value = 0;
+    if (!ConvertFromJsValue(env, src, value)) {
+        return false;
+    }
+    shadowFlag = defaultFlag;
+    if (value >= static_cast<uint32_t>(ShadowFlags::NONE) && value <= static_cast<uint32_t>(ShadowFlags::ALL)) {
+        shadowFlag = static_cast<ShadowFlags>(value);
+    }
+    return true;
+}
+
+napi_value CreateImageInfoJsValue(napi_env env, std::shared_ptr<Image> image)
+{
+    napi_value resultObj = nullptr;
+    napi_create_object(env, &resultObj);
+    if (resultObj != nullptr && image != nullptr) {
+        auto imageInfo = image->GetImageInfo();
+        napi_value width = CreateJsValue(env, imageInfo.GetWidth());
+        napi_value height = CreateJsValue(env, imageInfo.GetHeight());
+        napi_value alphaType = CreateJsValue(env, static_cast<uint32_t>(imageInfo.GetAlphaType()));
+        napi_value colorType = CreateJsValue(env, static_cast<uint32_t>(imageInfo.GetColorType()));
+        napi_set_named_property(env, resultObj, "width", width);
+        napi_set_named_property(env, resultObj, "height", height);
+        napi_set_named_property(env, resultObj, "alphaType", alphaType);
+        napi_set_named_property(env, resultObj, "colorType", colorType);
+    }
+    return resultObj;
+}
+
+bool ConvertFromJsPoint(napi_env env, napi_value src, Point& point)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    double x = 0.0;
+    double y = 0.0;
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, src, "x", &tempValue);
+    bool isXOk = ConvertFromJsValue(env, tempValue, x);
+    napi_get_named_property(env, src, "y", &tempValue);
+    bool isYOk = ConvertFromJsValue(env, tempValue, y);
+    if (!(isXOk && isYOk)) {
+        return false;
+    }
+    point = Point(x, y);
+    return true;
+}
+
+bool ConvertFromJsPoint3d(napi_env env, napi_value src, Point3& point3d)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    napi_value tempValue = nullptr;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    napi_get_named_property(env, src, "x", &tempValue);
+    bool isXOk = ConvertFromJsValue(env, tempValue, x);
+    napi_get_named_property(env, src, "y", &tempValue);
+    bool isYOk = ConvertFromJsValue(env, tempValue, y);
+    napi_get_named_property(env, src, "z", &tempValue);
+    bool isZOk = ConvertFromJsValue(env, tempValue, z);
+    if (!(isXOk && isYOk && isZOk)) {
+        return false;
+    }
+    point3d = Point3(x, y, z);
     return true;
 }
 

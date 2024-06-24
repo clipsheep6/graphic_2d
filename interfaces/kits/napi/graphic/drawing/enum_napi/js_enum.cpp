@@ -24,6 +24,7 @@
 #include "draw/clip.h"
 #include "draw/color.h"
 #include "draw/pen.h"
+#include "draw/shadow.h"
 #include "effect/mask_filter.h"
 #include "text/font_types.h"
 #include "utils/region.h"
@@ -162,11 +163,19 @@ static const std::vector<struct JsEnumInt> g_fontMetricsFlags = {
     { "BOUNDS_INVALID", static_cast<int32_t>(Drawing::FontMetrics::FontMetricsFlags::BOUNDS_INVALID_FLAG) },
 };
 
+static const std::vector<struct JsEnumInt> g_shadowFlag = {
+    { "SHADOW_FLAGS_NONE", static_cast<int32_t>(ShadowFlags::NONE) },
+    { "SHADOW_FLAGS_TRANSPARENT_OCCLUDER", static_cast<int32_t>(ShadowFlags::TRANSPARENT_OCCLUDER) },
+    { "SHADOW_FLAGS_GEOMETRIC_ONLY", static_cast<int32_t>(ShadowFlags::GEOMETRIC_ONLY) },
+    { "SHADOW_FLAGS_ALL", static_cast<int32_t>(ShadowFlags::ALL) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
     { "ColorFormat", g_colorFormat },
     { "AlphaFormat", g_alphaFormat },
+    { "ShadowFlag", g_shadowFlag },
     { "FilterMode", g_filterMode },
     { "RegionOp", g_regionOp },
     { "ClipOp", g_clipOp },

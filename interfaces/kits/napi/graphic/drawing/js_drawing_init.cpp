@@ -32,6 +32,7 @@
 #include "sampling_options_napi/js_sampling_options.h"
 #include "shadow_layer_napi/js_shadow_layer.h"
 #include "text_blob_napi/js_text_blob.h"
+#include "image_napi/js_image.h"
 #include "utils_napi/js_roundrect.h"
 
 namespace OHOS::Rosen {
@@ -49,6 +50,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsBrush::Init(env, exportObj);
     JsBitmap::Init(env, exportObj);
     JsRect::Init(env, exportObj);
+    JsImage::Init(env, exportObj);
     JsRoundRect::Init(env, exportObj);
     JsSamplingOptions::Init(env, exportObj);
     JsMaskFilter::Init(env, exportObj);

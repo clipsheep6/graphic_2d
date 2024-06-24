@@ -344,6 +344,7 @@ bool JsCanvas::DeclareFuncAndCreateConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("drawPixelMapMesh", JsCanvas::DrawPixelMapMesh),
         DECLARE_NAPI_FUNCTION("drawBitmap", JsCanvas::DrawBitmap),
         DECLARE_NAPI_FUNCTION("drawRegion", JsCanvas::DrawRegion),
+        DECLARE_NAPI_FUNCTION("drawShadow", JsCanvas::DrawShadow),
         DECLARE_NAPI_FUNCTION("drawBackground", JsCanvas::DrawBackground),
         DECLARE_NAPI_FUNCTION("drawRoundRect", JsCanvas::DrawRoundRect),
         DECLARE_NAPI_FUNCTION("drawNestedRoundRect", JsCanvas::DrawNestedRoundRect),
@@ -451,6 +452,64 @@ JsCanvas::~JsCanvas()
     }
     m_canvas = nullptr;
     g_drawingCanvas = nullptr;
+}
+
+napi_value JsCanvas::DrawShadow(napi_env env, napi_callback_info info)
+{
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawShadow(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawShadow(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow canvas is null.");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_SEVEN;
+    napi_value argv[ARGC_SEVEN] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc != ARGC_SEVEN) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    JsPath* jsPath = nullptr;
+    napi_unwrap(env, argv[0], reinterpret_cast<void **>(&jsPath));
+    if (jsPath == nullptr ) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow path is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    Point3 offset;
+    Point3 lightPos;
+    if (!ConvertFromJsPoint3d(env, argv[ARGC_ONE], offset) || !ConvertFromJsPoint3d(env, argv[ARGC_TWO], lightPos)) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow argv[2] or argv[3] is invalid.");
+        return NapiGetUndefined(env);
+    }
+    double lightRadius = 0.0f;
+    if (!(ConvertFromJsValue(env, argv[ARGC_THREE], lightRadius))) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow Argv[4] is invalid.");
+        return NapiGetUndefined(env);
+    }
+
+    Color ambientColor;
+    Color spotColor;
+    if (!ConvertFromJsColor(env, argv[ARGC_FOUR], ambientColor) ||
+        !ConvertFromJsColor(env, argv[ARGC_FIVE], spotColor)) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow argv[5] or argv[6] is invalid.");
+        return NapiGetUndefined(env);
+    }
+    ShadowFlags shadowFlag = ShadowFlags::NONE;
+    if (!CovertFromJsShadowFlag(env, argv[ARGC_SIX], shadowFlag) ) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow argv[7] is invalid.");
+        return NapiGetUndefined(env);
+    }
+    if (jsPath->GetPath() == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawShadow GetPath is nullptr.");
+        return NapiGetUndefined(env);
+    }
+    m_canvas->DrawShadow(*jsPath->GetPath(), offset, lightPos, lightRadius, ambientColor, spotColor, shadowFlag);
+    return NapiGetUndefined(env);
 }
 
 napi_value JsCanvas::DrawRect(napi_env env, napi_callback_info info)

@@ -23,6 +23,9 @@
 
 #include "common/rs_common_def.h"
 #include "draw/color.h"
+#include "utils/point.h"
+#include "utils/point3.h"
+#include "draw/shadow.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
@@ -149,6 +152,7 @@ private:
     } while (0)
 
 namespace Drawing {
+class Image;
 constexpr size_t ARGC_ZERO = 0;
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
@@ -323,6 +327,12 @@ bool ConvertFromJsValue(napi_env env, napi_value jsValue, T& value)
 bool ConvertFromJsColor(napi_env env, napi_value jsValue, int32_t* argb, size_t size);
 
 bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t size);
+
+napi_value CreateImageInfoJsValue(napi_env env, std::shared_ptr<Image> image);
+
+bool ConvertFromJsPoint(napi_env env, napi_value src, Point& point);
+bool ConvertFromJsPoint3d(napi_env env, napi_value src, Point3& point3d);
+bool CovertFromJsShadowFlag(napi_env env, napi_value src, ShadowFlags& shadowFlag, ShadowFlags defaultFlag = ShadowFlags::NONE);
 
 inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value, int32_t lo, int32_t hi)
 {

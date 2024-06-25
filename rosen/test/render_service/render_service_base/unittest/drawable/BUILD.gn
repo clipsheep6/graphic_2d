@@ -28,6 +28,7 @@ ohos_unittest("RSRenderServiceBaseRSDrawableTest") {
     "rs_property_drawable_foreground_test.cpp",
     "rs_property_drawable_test.cpp",
     "rs_property_drawable_utils_test.cpp",
+    "rs_render_node_drawable_adapter_test.cpp",
     "rs_render_node_shadow_drawable_test.cpp",
   ]
 
@@ -53,6 +54,7 @@ ohos_unittest("RSRenderServiceBaseRSDrawableTest") {
 
   deps = [
     "$graphic_2d_root/rosen/modules/graphics_effect:libgraphics_effect",
+    "$graphic_2d_root/rosen/modules/render_service:librender_service",
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
     "$graphic_2d_root/rosen/modules/render_service_client:render_service_client_src",
     "../../../../../modules/render_service_base:render_service_base_src",
@@ -65,6 +67,9 @@ ohos_unittest("RSRenderServiceBaseRSDrawableTest") {
     "init:libbegetutil",
   ]
 
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
   subsystem_name = "graphic"
 }
 

@@ -61,6 +61,7 @@ ohos_unittest("RSRenderServiceClientUITest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
   ]
 }
 

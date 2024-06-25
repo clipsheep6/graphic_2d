@@ -43,6 +43,7 @@ ohos_fuzztest("RSRootRenderNodeFuzzTest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
   ]
   sources = [ "rsrootrendernode_fuzzer.cpp" ]
 }

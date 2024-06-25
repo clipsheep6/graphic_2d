@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include "drawable/rs_property_drawable_utils.h"
 #include "draw/surface.h"
-#include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_drawing_filter.h"

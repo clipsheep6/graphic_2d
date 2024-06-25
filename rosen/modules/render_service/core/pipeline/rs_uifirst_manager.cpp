@@ -184,6 +184,7 @@ void RSUifirstManager::ProcessForceUpdateNode()
         }
     }
     for (auto& node : toDirtyNodes) {
+        ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, force update", node->GetId());
         node->SetDirty(true);
     }
     pendingForceUpdateNode_.clear();

@@ -140,6 +140,7 @@ void RSPointLightManager::CheckIlluminated(
     if (inIlluminatedRange && illuminatedRootNodeId == lightSourceRootNodeId) {
         auto lightPos = CalculateLightPosForIlluminated(*lightSourcePtr, illuminatedAbsRect);
         illuminatedNode->GetRenderProperties().GetIlluminated()->AddLightSourcesAndPos(lightSourcePtr, lightPos);
+        ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, node be Illuminated", illuminatedNode->GetId());
         illuminatedNode->SetDirty();
     }
 }

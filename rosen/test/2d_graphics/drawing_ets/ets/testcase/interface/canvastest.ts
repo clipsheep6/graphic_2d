@@ -575,6 +575,7 @@ export class CanvasDrawPixelMapMesh extends TestBase {
   }
 }
 
+
 export class CanvasDrawColor extends TestBase {
 
   public constructor() {

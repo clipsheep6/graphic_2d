@@ -281,6 +281,7 @@ export enum TestFunctionStyleType {
   DRAW_STYLE_TYPE_1 = 0,
   DRAW_STYLE_TYPE_2,
   DRAW_STYLE_TYPE_3,
+  DRAW_STYLE_TYPE_4
 }
 
 export enum StyleType { //公共的pen，brush，filter等配置

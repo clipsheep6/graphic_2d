@@ -16,10 +16,8 @@
 #ifndef OHOS_JS_TEXT_UTILS_H
 #define OHOS_JS_TEXT_UTILS_H
 
+#include <codecvt>
 #include <map>
-#include "native_engine/native_engine.h"
-#include "native_engine/native_value.h"
-#include "utils/point.h"
 
 #include "draw/color.h"
 #include "js_drawing_utils.h"
@@ -27,7 +25,8 @@
 #include "typography.h"
 #include "typography_create.h"
 #include "typography_style.h"
-#include <codecvt>
+#include "utils/log.h"
+#include "utils/point.h"
 
 namespace OHOS::Rosen {
 constexpr size_t ARGC_ONE = 1;
@@ -161,6 +160,8 @@ napi_value CreateJsValue(napi_env env, const T& value)
     } else if constexpr (std::is_same_v<ValueType, const char*>) {
         (value != nullptr) ? napi_create_string_utf8(env, value, strlen(value), &result) :
             napi_get_undefined(env, &result);
+        return result;
+    } else {
         return result;
     }
 }

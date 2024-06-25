@@ -12,20 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "js_paragraph.h"
+
+#include "js_drawing_utils.h"
+#include "js_text_utils.h"
 #include "canvas_napi/js_canvas.h"
 #include "draw/canvas.h"
 #include "recording/recording_canvas.h"
-#include "js_drawing_utils.h"
-#include "js_paragraph.h"
-#include "js_text_utils.h"
 #include "paragraph_builder_napi/js_paragraph_builder.h"
-#include "utils/log.h"
 #include "text_line_napi/js_text_line.h"
+#include "utils/log.h"
 
 namespace OHOS::Rosen {
-std::unique_ptr<Typography> g_Typography = nullptr;
+namespace {
+const std::string CLASS_NAME = "JsParagraph";
+}
+
+std::unique_ptr<Typography> JsParagraph::g_Typography = nullptr;
 thread_local napi_ref JsParagraph::constructor_ = nullptr;
-const std::string CLASS_NAME = "Paragraph";
 
 napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
 {
@@ -133,10 +138,11 @@ napi_value JsParagraph::OnLayout(napi_env env, napi_callback_info info)
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     double width = 0.0;
-    if (!(ConvertFromJsValue(env, argv[0], width))) {
+    if (!(argv[0] != nullptr && ConvertFromJsValue(env, argv[0], width))) {
         ROSEN_LOGE("JsParagraph::OnLayout Argv is invalid");
         return NapiGetUndefined(env);
     }
+
     paragraph_->Layout(width);
     return NapiGetUndefined(env);
 }
@@ -159,6 +165,10 @@ napi_value JsParagraph::OnPaint(napi_env env, napi_callback_info info)
     if (status != napi_ok || argc < ARGC_THREE) {
         ROSEN_LOGE("JsParagraph::OnPaint Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    if (argv[0] == nullptr) {
+        ROSEN_LOGE("JsParagraph::OnPaint Argv is invalid");
+        return  NapiGetUndefined(env);
     }
     Drawing::JsCanvas* jsCanvas = nullptr;
     double x = 0.0;
@@ -316,11 +326,20 @@ napi_value JsParagraph::OnGetRectsForRange(napi_env env, napi_callback_info info
     TextRectWidthStyle wstyle;
     TextRectHeightStyle hstyle;
     napi_get_named_property(env, argv[0], "start", &tempValue);
+    if (tempValue == nullptr) {
+        ROSEN_LOGE("JsParagraph::OnGetRectsForRange, get start property failed");
+        return NapiGetUndefined(env);
+    }
     bool isStartOk = ConvertFromJsValue(env, tempValue, start);
+    tempValue = nullptr;
     napi_get_named_property(env, argv[0], "end", &tempValue);
+    if (tempValue == nullptr) {
+        ROSEN_LOGE("JsParagraph::OnGetRectsForRange, get end property failed");
+        return NapiGetUndefined(env);
+    }
     bool isEndOk = ConvertFromJsValue(env, tempValue, end);
-    if (!(isStartOk && isEndOk && ConvertFromJsValue(env, argv[ARGC_ONE], wstyle) &&
-        ConvertFromJsValue(env, argv[ARGC_TWO], hstyle))) {
+    if (!(isStartOk && isEndOk && argv[ARGC_ONE] != nullptr && ConvertFromJsValue(env, argv[ARGC_ONE], wstyle) &&
+        argv[ARGC_TWO] != nullptr && ConvertFromJsValue(env, argv[ARGC_TWO], hstyle))) {
         ROSEN_LOGE("JsParagraph::OnGetRectsForRange Argv is invalid");
         return NapiGetUndefined(env);
     }
@@ -353,7 +372,9 @@ napi_value JsParagraph::OnGetRectsForPlaceholders(napi_env env, napi_callback_in
     int num = static_cast<int>(rectsForPlaceholders.size());
     for (int index = 0; index < num; ++index) {
         napi_value tempValue = CreateTextRectJsValue(env, rectsForPlaceholders[index]);
-        NAPI_CALL(env, napi_set_element(env, returnPlaceholders, index, tempValue));
+        if (tempValue != nullptr) {
+            NAPI_CALL(env, napi_set_element(env, returnPlaceholders, index, tempValue));
+        }
     }
     return returnPlaceholders;
 }
@@ -379,7 +400,8 @@ napi_value JsParagraph::OnGetGlyphPositionAtCoordinate(napi_env env, napi_callba
     }
     double dx = 0.0;
     double dy = 0.0;
-    if (!(ConvertFromJsValue(env, argv[0], dx) && ConvertFromJsValue(env, argv[1], dy))) {
+    if (!(argv[0] != nullptr && ConvertFromJsValue(env, argv[0], dx) && argv[1] != nullptr &&
+         ConvertFromJsValue(env, argv[1], dy))) {
         ROSEN_LOGE("JsParagraph::OnGetGlyphPositionAtCoordinate Argv is invalid");
         return NapiGetUndefined(env);
     }
@@ -407,7 +429,7 @@ napi_value JsParagraph::OnGetWordBoundary(napi_env env, napi_callback_info info)
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     size_t offset = 0;
-    if (!(ConvertFromJsValue(env, argv[0], offset))) {
+    if (!(argv[0] != nullptr && ConvertFromJsValue(env, argv[0], offset))) {
         ROSEN_LOGE("JsParagraph::OnGetWordBoundary Argv is invalid");
         return NapiGetUndefined(env);
     }
@@ -451,7 +473,7 @@ napi_value JsParagraph::OnGetLineHeight(napi_env env, napi_callback_info info)
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     int lineNumber = 0;
-    if (!(ConvertFromJsValue(env, argv[0], lineNumber))) {
+    if (!(argv[0] != nullptr && ConvertFromJsValue(env, argv[0], lineNumber))) {
         ROSEN_LOGE("JsParagraph::OnGetLineHeight Argv is invalid");
         return NapiGetUndefined(env);
     }
@@ -479,7 +501,7 @@ napi_value JsParagraph::OnGetLineWidth(napi_env env, napi_callback_info info)
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     int lineNumber = 0;
-    if (!(ConvertFromJsValue(env, argv[0], lineNumber))) {
+    if (!(argv[0] != nullptr && ConvertFromJsValue(env, argv[0], lineNumber))) {
         ROSEN_LOGE("JsParagraph::OnGetLineWidth Argv is invalid");
         return NapiGetUndefined(env);
     }

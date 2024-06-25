@@ -18,6 +18,7 @@
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+
 #include "js_text_utils.h"
 #include "text_line_base.h"
 #include "typography_style.h"

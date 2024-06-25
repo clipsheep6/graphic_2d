@@ -17,6 +17,7 @@
 #define ROSEN_MODULES_SPTEXT_TEXT_LINE_BASE_H
 
 #include <cstddef>
+
 #include "draw/canvas.h"
 #include "rosen_text/typography.h"
 #include "run.h"

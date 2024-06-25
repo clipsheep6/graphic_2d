@@ -14,13 +14,18 @@
  */
 
 #include <fstream>
+
 #include "js_drawing_utils.h"
 #include "js_fontcollection.h"
 
 namespace OHOS::Rosen {
+namespace {
 constexpr size_t FILE_HEAD_LENGTH = 7; // 7 is the size of "file://"
-thread_local napi_ref JsFontCollection::constructor_ = nullptr;
 const std::string CLASS_NAME = "FontCollection";
+}
+
+thread_local napi_ref JsFontCollection::constructor_ = nullptr;
+
 const std::string LOCAL_BIND_PATH = "/data/storage/el1/bundle/";
 const std::string HAP_POSTFIX = ".hap";
 const int32_t GLOBAL_ERROR = 10000;
@@ -30,16 +35,20 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed from napi_get_cb_info");
+        ROSEN_LOGE("Constructor failed to napi_get_cb_info");
         return nullptr;
     }
 
     JsFontCollection* jsFontCollection = new(std::nothrow) JsFontCollection();
+    if (jsFontCollection == nullptr) {
+        ROSEN_LOGE("JsFontCollection::Constructor Failed to new JsFontCollection");
+        return nullptr;
+    }
     status = napi_wrap(env, jsThis, jsFontCollection,
         JsFontCollection::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsFontCollection;
-        ROSEN_LOGE("failed from napi_wrap");
+        ROSEN_LOGE("Constructor Failed to wrap native instance");
         return nullptr;
     }
     return jsThis;
@@ -128,7 +137,7 @@ bool JsFontCollection::SpiltAbsoluteFontPath(std::string& absolutePath)
 {
     auto iter = absolutePath.find_first_of(':');
     if (iter == std::string::npos) {
-        ROSEN_LOGE("font file directory is not absolute path");
+        ROSEN_LOGE("Font file directory is not absolute path");
         return false;
     }
     std::string head = absolutePath.substr(0, iter);
@@ -341,12 +350,21 @@ napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
     napi_value argv[ARGC_TWO] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
         argc < ARGC_TWO) {
+        ROSEN_LOGE("JsFontCollection::OnLoadFont argv is invalid: %{public}zu", argc);
+        return nullptr;
+    }
+    if (argv[0] == nullptr) {
+        LOGE("JsFontCollection::OnLoadFont Argv[0] is invalid");
         return nullptr;
     }
     std::string familyName;
     std::string familySrc;
     ConvertFromJsValue(env, argv[0], familyName);
     napi_valuetype valueType = napi_undefined;
+    if (argv[1] == nullptr) {
+        LOGE("JsFontCollection::OnLoadFont Argv[1] is invalid");
+        return nullptr;
+    }
     napi_typeof(env, argv[1], &valueType);
     if (valueType != napi_object) {
         ConvertFromJsValue(env, argv[1], familySrc);

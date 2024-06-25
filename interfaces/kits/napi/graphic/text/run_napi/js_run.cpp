@@ -263,6 +263,10 @@ napi_value JsRun::OnPaint(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsRun::OnPaint Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
+    if (argv[0] == nullptr) {
+        ROSEN_LOGE("JsRun::OnPaint argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
     Drawing::JsCanvas* jsCanvas = nullptr;
     double x = 0.0;
     double y = 0.0;

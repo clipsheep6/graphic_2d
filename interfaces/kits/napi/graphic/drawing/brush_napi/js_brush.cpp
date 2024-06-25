@@ -134,10 +134,10 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
             colorSpace = jsColorSpace ? jsColorSpace->GetColorSpace() : nullptr;
         }
     } else if (argc == ARGC_FOUR || argc == ARGC_FIVE) {
-        GET_COLOR_PARAM(ARGC_ZERO, argb[0]);
-        GET_COLOR_PARAM(ARGC_ONE, argb[1]);
-        GET_COLOR_PARAM(ARGC_TWO, argb[2]);
-        GET_COLOR_PARAM(ARGC_THREE, argb[3]);
+        GET_COLOR_PARAM(ARGC_ZERO, argb[ARGC_ZERO]);
+        GET_COLOR_PARAM(ARGC_ONE, argb[ARGC_ONE]);
+        GET_COLOR_PARAM(ARGC_TWO, argb[ARGC_TWO]);
+        GET_COLOR_PARAM(ARGC_THREE, argb[ARGC_THREE]);
         if (argc == ARGC_FIVE) {
             JsColorSpace* jsColorSpace = nullptr;
             napi_unwrap(env, argv[ARGC_FOUR], reinterpret_cast<void **>(&jsColorSpace));

@@ -18,6 +18,7 @@
 #include "brush_napi/js_brush.h"
 #include "canvas_napi/js_canvas.h"
 #include "color_filter_napi/js_color_filter.h"
+#include "color_space_napi/js_color_space.h"
 #include "enum_napi/js_enum.h"
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
@@ -40,6 +41,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsCanvas::Init(env, exportObj);
     JsEnum::Init(env, exportObj);
     JsColorFilter::Init(env, exportObj);
+    JsColorSpace::Init(env, exportObj);
     JsTextBlob::Init(env, exportObj);
     JsPen::Init(env, exportObj);
     JsBrush::Init(env, exportObj);

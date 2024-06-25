@@ -575,44 +575,12 @@ export class CanvasDrawPixelMapMesh extends TestBase {
   }
 }
 
-export class CanvasColorSpace extends TestBase {
-  public constructor(){
-    super();
-  }
-
-  public OnTestFunction(canvas: drawing.Canvas) {
-    {
-      let pen = new drawing.Pen();
-      this.ApplyPenStyle(pen, TestFunctionStyleType.DRAW_STYLE_TYPE_2)
-      let brush = new drawing.Brush();
-      this.ApplyBrushStyle(brush, TestFunctionStyleType.DRAW_STYLE_TYPE_5)
-      canvas.attachPen(pen)
-      canvas.attachBrush(brush)
-      canvas.drawCircle(102.6, 67.6, 60.8)
-      canvas.detachPen()
-      canvas.detachBrush()
-    }
-    
-    {
-      let rect: common2D.Rect = { left: 2.7, top: 175.7, right: 450.7, bottom: 315.9 };
-      let pen = new drawing.Pen();
-      this.ApplyPenStyle(pen, TestFunctionStyleType.DRAW_STYLE_TYPE_3)
-      let brush = new drawing.Brush();
-      this.ApplyBrushStyle (brush, TestFunctionStyleType.DRAW_STYLE_TYPE_6)
-      canvas.attachPen(pen)
-      canvas.attachBrush(brush)
-      canvas.drawRect(rect)
-      canvas.detachPen()
-      canvas.detachBrush()
-    }
-  }
-}
-
 export class CanvasDrawColor extends TestBase {
 
   public constructor() {
     // 根据需求，如果与默认值不一样，请继承重写
     super();
+    
   }
 
   public OnTestFunction(canvas: drawing.Canvas) {

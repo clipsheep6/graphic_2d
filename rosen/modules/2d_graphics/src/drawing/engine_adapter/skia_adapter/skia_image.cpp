@@ -23,12 +23,14 @@
 #include "skia_texture_info.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/core/SkImagePriv.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
 
 #include "draw/surface.h"
 #include "image/bitmap.h"
 #include "image/image.h"
+#include "image/gpu_context.h"
 #include "image/picture.h"
 #include "utils/data.h"
 #include "utils/log.h"
@@ -334,6 +336,33 @@ bool SkiaImage::IsValid(GPUContext* context) const
     }
     return skiaImage_->isValid(context->GetImpl<SkiaGPUContext>()->GetGrContext().get());
 }
+
+bool SkiaImage::PinAsTexture(GPUContext* context) const
+{
+    if (skiaImage_ == nullptr) {
+        LOGD("SkiaImage::PinAsTexture, skiaImage_ is nullptr!");
+        return false;
+    }
+    if (context == nullptr) {
+        LOGD("SkiaImage::PinAsTexture, context is nullptr!");
+        return false;
+    }
+    return SkImage_pinAsTexture(skiaImage_.get(), context->GetImpl<SkiaGPUContext>()->GetGrContext().get());
+}
+
+void SkiaImage::UnPinAsTexture(GPUContext* context) const
+{
+    if (skiaImage_ == nullptr) {
+        LOGD("SkiaImage::UnPinAsTexture, skiaImage_ is nullptr!");
+        return;
+    }
+    if (context == nullptr) {
+        LOGD("SkiaImage::UnPinAsTexture, context is nullptr!");
+        return;
+    }
+    SkImage_unpinAsTexture(skiaImage_.get(), context->GetImpl<SkiaGPUContext>()->GetGrContext().get());
+}
+
 #endif
 
 bool SkiaImage::AsLegacyBitmap(Bitmap& bitmap) const

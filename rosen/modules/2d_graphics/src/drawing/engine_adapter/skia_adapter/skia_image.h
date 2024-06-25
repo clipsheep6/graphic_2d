@@ -70,6 +70,8 @@ public:
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) override;
     void SetGrBackendTexture(const GrBackendTexture& grBackendTexture);
     bool IsValid(GPUContext* context) const override;
+    bool PinAsTexture(GPUContext* context) const override;
+    void UnPinAsTexture(GPUContext* context) const override;
 #endif
     bool AsLegacyBitmap(Bitmap& bitmap) const override;
     int GetWidth() const override;

@@ -142,7 +142,7 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
             colorStruct.blueF_ = argb[ARGC_THREE];
             JsColorSpace* jsColorSpace = nullptr;
             napi_unwrap(env, argv[ARGC_ONE], reinterpret_cast<void **>(&jsColorSpace));
-            colorSpace = jsColorSpace->GetColorSpace();
+            colorSpace = jsColorSpace ? jsColorSpace->GetColorSpace() : nullptr;
         }
     }
     else if (argc == ARGC_FOUR || argc == ARGC_FIVE) {
@@ -164,7 +164,7 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
             colorStruct.blueF_ = blue;
             JsColorSpace* jsColorSpace = nullptr;
             napi_unwrap(env, argv[ARGC_FOUR], reinterpret_cast<void **>(&jsColorSpace));
-            colorSpace = jsColorSpace->GetColorSpace();
+            colorSpace = jsColorSpace ? jsColorSpace->GetColorSpace() : nullptr;
         }
     }
     else {

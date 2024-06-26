@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 class Ranges {
 public:
     struct Range {
@@ -54,7 +54,7 @@ private:
     std::vector<struct Range> ranges_;
     std::map<uint32_t, int32_t> singles_;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

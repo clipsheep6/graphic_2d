@@ -58,7 +58,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 namespace {
 const char *GetLevelStr(enum Logger::LOG_LEVEL level)
 {
@@ -370,6 +370,6 @@ void ScopedLogger::Finish()
         logger_ = nullptr;
     }
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

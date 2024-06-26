@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 struct PostTable {
     OpenTypeBasicType::Uint32 version;
     OpenTypeBasicType::Fixed italicAngle;
@@ -46,7 +46,7 @@ private:
     const char* data_ = nullptr;
     int32_t size_ = 0;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

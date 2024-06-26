@@ -30,7 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 #define SUCCESSED 0
 #define FAILED 1
 
@@ -534,6 +534,6 @@ void FontConfigJson::Dump() const
         LOGSO_FUNC_LINE(INFO) << "font config dump fontFileMap out";
     }
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 void Ranges::AddRange(const struct Range &range)
 {
     if (range.end - range.start == 1) {
@@ -60,6 +60,6 @@ void Ranges::Dump() const
             << ": glyphid " << std::dec << (codepoint + gid) % (1 << 16);
     }
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

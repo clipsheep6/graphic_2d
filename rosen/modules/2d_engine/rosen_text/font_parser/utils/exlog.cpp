@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 void ExTime(Logger &algnlogger, enum Logger::LOG_PHASE phase)
 {
     if (phase == Logger::LOG_PHASE::BEGIN) {
@@ -56,6 +56,6 @@ void ExTime(Logger &algnlogger, enum Logger::LOG_PHASE phase)
         Logger::OutputByStdout(algnlogger, phase);
     }
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

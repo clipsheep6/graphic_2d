@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 struct CmapSubtable;
 class CmapParser {
 public:
@@ -55,7 +55,7 @@ private:
 
     Ranges ranges_;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

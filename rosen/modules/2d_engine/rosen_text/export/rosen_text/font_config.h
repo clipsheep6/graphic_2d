@@ -24,7 +24,7 @@
 struct cJSON;
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 class FontConfig {
 public:
     explicit FontConfig(const char* fname = nullptr);
@@ -119,7 +119,7 @@ private:
     std::shared_ptr<FontConfigJsonInfo> fontPtr = nullptr;
     std::shared_ptr<FontFileMap> fontFileMap = nullptr;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 #endif /* FONT_CONFIG_H */

@@ -29,7 +29,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 #define SUCCESSED 0
 #define FAILED 1
 
@@ -415,6 +415,6 @@ std::unique_ptr<FontParser::FontDescriptor> FontParser::GetVisibilityFontByName(
 {
     return ParseFontDescriptor(fontName, GetLanguageId(locale));
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

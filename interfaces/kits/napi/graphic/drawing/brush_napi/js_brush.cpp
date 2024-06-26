@@ -146,12 +146,12 @@ napi_value JsBrush::SetColor(napi_env env, napi_callback_info info)
     } else {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    Drawing::Color color = 
+    Drawing::Color color =
         Color::ColorQuadSetARGB(argb[ARGC_ZERO], argb[ARGC_ONE], argb[ARGC_TWO], argb[ARGC_THREE]);
     if (!colorSpace) {
         brush->SetColor(color);
     } else {
-        brush->SetColor(color->GetColor4f(), colorSpace);
+        brush->SetColor(color.GetColor4f(), colorSpace);
     }
     return nullptr;
 }

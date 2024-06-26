@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <font_config.h>
+#include <rosen_text/font_config.h>
 
 #include "cJSON.h"
 #include <dirent.h>

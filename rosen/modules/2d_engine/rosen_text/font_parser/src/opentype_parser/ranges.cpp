@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <opentype_parser/ranges.h>
+#include <rosen_text/opentype_parser/ranges.h>
 
 #include <iomanip>
 #include "exlog.h"

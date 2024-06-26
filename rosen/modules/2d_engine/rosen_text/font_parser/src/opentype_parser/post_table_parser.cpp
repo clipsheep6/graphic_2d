@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "post_table_parser.h"
+#include <opentype_parser/post_table_parser.h>
 
 #include "exlog.h"
 

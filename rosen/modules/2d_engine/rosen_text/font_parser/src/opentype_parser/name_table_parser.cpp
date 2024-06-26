@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "name_table_parser.h"
+#include <opentype_parser/name_table_parser.h>
 
 #include <iomanip>
 #include <string>

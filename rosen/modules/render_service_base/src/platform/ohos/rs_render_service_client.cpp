@@ -380,6 +380,63 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
     renderService->RemoveVirtualScreen(id);
 }
 
+int32_t RSRenderServiceClient::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+ 
+    return renderService->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+}
+ 
+int32_t RSRenderServiceClient::DisableCursorInvert()
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+ 
+    return renderService->DisableCursorInvert();
+}
+ 
+class CustomPointerLuminanceChangeCallback : public RSPointerLuminanceChangeCallbackStub
+{
+public:
+    explicit CustomPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback) : cb_(callback) {}
+    ~CustomPointerLuminanceChangeCallback() override {};
+ 
+    void OnPointerLuminanceChanged(int32_t brightness) override
+    {
+        if (cb_ != nullptr) {
+            cb_(brightness);
+        }
+    }
+ 
+private:
+    PointerLuminanceChangeCallback cb_;
+};
+ 
+int32_t RSRenderServiceClient::RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+ 
+    PointerLuminanceChangeCb_ = new CustomPointerLuminanceChangeCallback(callback);
+    return renderService->RegisterPointerLuminanceChangeCallback(PointerLuminanceChangeCb_);
+}
+ 
+int32_t RSRenderServiceClient::UnRegisterPointerLuminanceChangeCallback()
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->UnRegisterPointerLuminanceChangeCallback();
+}
+
 class CustomScreenChangeCallback : public RSScreenChangeCallbackStub
 {
 public:

@@ -27,6 +27,7 @@ napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("preRotate", JsMatrix::PreRotate),
         DECLARE_NAPI_FUNCTION("preScale", JsMatrix::PreScale),
         DECLARE_NAPI_FUNCTION("preTranslate", JsMatrix::PreTranslate),
+        DECLARE_NAPI_FUNCTION("mapPoints", JsMatrix::MapPoints),
     };
 
     napi_value constructor = nullptr;
@@ -166,6 +167,48 @@ napi_value JsMatrix::OnPreTranslate(napi_env env, napi_callback_info info)
     GET_DOUBLE_PARAM(ARGC_ONE, dy);
 
     JS_CALL_DRAWING_FUNC(m_matrix->PreTranslate(dx, dy));
+
+    return nullptr;
+}
+
+napi_value JsMatrix::MapPoints(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnMapPoints(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnMapPoints matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+
+    napi_value dstArray = argv[ARGC_ZERO];
+    napi_value scrArray = argv[ARGC_ONE];
+
+    uint32_t scrSize = 0;
+    napi_get_array_length(env, scrArray, &scrSize);
+    std::vector<Point> src(scrSize);
+    if(!ConvertFromJsPointsArray(env, src, scrSize, scrArray)){
+        ROSEN_LOGE("JsCanvas::OnMapPoints argv[ARGC_ONE] is invalid");
+        return nullptr;
+    }
+
+    uint32_t size = 0;
+    GET_UINT32_PARAM(ARGC_TWO, size);
+    std::vector<Point> dst(size);
+    JS_CALL_DRAWING_FUNC(m_matrix->MapPoints(dst, src, size));
+
+    uint32_t i = 0;
+    for (auto p : src) {
+        napi_value eleValue = CreateJsValue(env, p);
+        napi_set_element(env, dstArray, i, eleValue);
+        ++i;
+    }
 
     return nullptr;
 }

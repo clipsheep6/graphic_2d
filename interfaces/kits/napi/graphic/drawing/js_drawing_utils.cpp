@@ -115,6 +115,26 @@ bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t si
     return true;
 }
 
+bool ConvertFromJsPointsArray(napi_env& env, std::vector<Point> &points, uint32_t size, napi_value& array)
+{
+    for (uint32_t i = 0; i < size; i++) {
+        napi_value tempNumber = nullptr;
+        napi_get_element(env, array, i, &tempNumber);
+        napi_value tempValue = nullptr;
+        double pointX = 0.0;
+        double pointY = 0.0;
+        napi_get_named_property(env, tempNumber, "x", &tempValue);
+        bool isPointXOk = ConvertFromJsValue(env, tempValue, pointX);
+        napi_get_named_property(env, tempNumber, "y", &tempValue);
+        bool isPointYOk = ConvertFromJsValue(env, tempValue, pointY);
+        if (!(isPointXOk && isPointYOk)) {
+            return false;
+        }
+        points.push_back(Point(pointX, pointY));
+    }
+    return true;
+}
+
 napi_value GetFontMetricsAndConvertToJsValue(napi_env env, FontMetrics* metrics)
 {
     napi_value objValue = nullptr;

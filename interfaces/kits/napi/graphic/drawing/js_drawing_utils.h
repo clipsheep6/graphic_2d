@@ -27,6 +27,7 @@
 #include "text/font_metrics.h"
 #include "text/font_types.h"
 #include "utils/rect.h"
+#include "utils/point.h"
 
 namespace OHOS::Rosen {
 
@@ -334,6 +335,8 @@ inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value
 {
     return napi_get_value_int32(env, jsValue, &value) == napi_ok && value >= lo && value <= hi;
 }
+
+bool ConvertFromJsPointsArray(napi_env& env, std::vector<Point> &points, uint32_t size, napi_value& array);
 
 inline napi_value GetDoubleAndConvertToJsValue(napi_env env, double d)
 {

@@ -13,37 +13,37 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_JS_COLOR_FILTER_H
-#define OHOS_ROSEN_JS_COLOR_FILTER_H
+#ifndef OHOS_ROSEN_JS_IMAGE_FILTER_H
+#define OHOS_ROSEN_JS_IMAGE_FILTER_H
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
-#include "effect/color_filter.h"
+
+#include "color_filter_napi/js_color_filter.h"
+#include "effect/image_filter.h"
+#include "effect/shader_effect.h"
+
 
 namespace OHOS::Rosen {
 namespace Drawing {
-class JsColorFilter final {
+class JsImageFilter final {
 public:
-    explicit JsColorFilter(std::shared_ptr<ColorFilter> colorFilter = nullptr) : m_ColorFilter(colorFilter) {}
-    ~JsColorFilter();
+    explicit JsImageFilter(std::shared_ptr<ImageFilter> imageFilter = nullptr) : m_ImageFilter(imageFilter) {}
+    ~JsImageFilter();
 
     static napi_value Init(napi_env env, napi_value exportObj);
     static void Finalizer(napi_env env, void* data, void* hint);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
-
-    static napi_value CreateBlendModeColorFilter(napi_env env, napi_callback_info info);
-    static napi_value CreateComposeColorFilter(napi_env env, napi_callback_info info);
-    static napi_value CreateLinearToSRGBGamma(napi_env env, napi_callback_info info);
-    static napi_value CreateSRGBGammaToLinear(napi_env env, napi_callback_info info);
-    static napi_value CreateLumaColorFilter(napi_env env, napi_callback_info info);
-    static napi_value Create(napi_env env, const std::shared_ptr<ColorFilter> colorFilter);
-    DRAWING_API std::shared_ptr<ColorFilter> GetColorFilter();
+    static napi_value CreateBlurImageFilter(napi_env env, napi_callback_info info);
+    static napi_value CreateFromColorFilter(napi_env env, napi_callback_info info);
+    static napi_value Create(napi_env env, const std::shared_ptr<ImageFilter> imageFilter);
+    DRAWING_API std::shared_ptr<ImageFilter> GetImageFilter();
 
 private:
-    std::shared_ptr<ColorFilter> m_ColorFilter = nullptr;
+    std::shared_ptr<ImageFilter> m_ImageFilter = nullptr;
     static thread_local napi_ref constructor_;
 };
 } // namespace Drawing
 } // namespace OHOS::Rosen
-#endif // OHOS_ROSEN_JS_COLOR_FILTER_H
+#endif // OHOS_ROSEN_JS_IMAGE_FILTER_H

@@ -1253,7 +1253,7 @@ void RSProfiler::PlaybackStart(const ArgList& args)
                 SendTelemetry(Now() - g_playbackStartTime);
             }
 
-            constexpr int64_t timeoutLimit = 8000000;
+            constexpr int64_t timeoutLimit = 800000;
             const int64_t timeout = timeoutLimit - static_cast<int64_t>(RawNowNano()) + timestamp;
             if (timeout > 0) {
                 std::this_thread::sleep_for(std::chrono::nanoseconds(timeout));

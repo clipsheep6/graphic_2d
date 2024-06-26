@@ -19,6 +19,8 @@ if (enable_text_gine) {
   config("rosen_text_public_config") {
     include_dirs = [
       "export",
+      "//third_party/skia",
+      "//third_party/skia/third_party/externals/harfbuzz/src",
       "$graphic_2d_root/rosen/modules/2d_graphics/include",
       "$graphic_2d_root/rosen/modules/2d_graphics/src",
       "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
@@ -29,6 +31,7 @@ if (enable_text_gine) {
       "$graphic_2d_root/rosen/modules/render_service_client/core",
       "$graphic_2d_root/rosen/modules/render_service_base",
       "$graphic_2d_root/rosen/modules/render_service_base/include",
+      "font_parser/utils",
       "$graphic_2d_root/rosen/modules/platform/image_native",
     ]
   }
@@ -97,7 +100,6 @@ if (enable_text_gine) {
     }
 
     deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
-    deps += [ "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser_source" ]
 
 
     part_name = "graphic_2d"
@@ -177,6 +179,16 @@ if (enable_text_gine) {
       "adapter/skia_txt/text_line_base.cpp",
       "adapter/skia_txt/typography.cpp",
       "adapter/skia_txt/typography_create.cpp",
+      "font_parser/src/opentype_parser/cmap_parser.cpp",
+      "font_parser/src/opentype_parser/cmap_table_parser.cpp",
+      "font_parser/src/opentype_parser/name_table_parser.cpp",
+      "font_parser/src/opentype_parser/opentype_basic_type.cpp",
+      "font_parser/src/opentype_parser/post_table_parser.cpp",
+      "font_parser/src/opentype_parser/ranges.cpp",
+      "font_parser/src/font_config.cpp",
+      "font_parser/src/font_parser.cpp",
+      "font_parser/utils/logger.cpp",
+      "font_parser/utils/exlog.cpp"
     ]
 
     platform = current_os
@@ -194,9 +206,13 @@ if (enable_text_gine) {
       }
     }
 
+    # this needs to be rechecked, currently just to get the thread id right 
+    if (platform == "ohos") {
+      defines += [ "BUILD_NON_SDK_VER" ]
+    }
+
     deps = [
       "$graphic_2d_root/rosen/modules/texgine:libtexgine_source",
-      "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser_source",
     ]
     if (!(host_os == "linux" && host_cpu == "arm64")) {
        deps += [
@@ -205,7 +221,11 @@ if (enable_text_gine) {
        ]
     }
 
-    external_deps = [ "hilog:libhilog" ]
+    external_deps = [
+      "hilog:libhilog",
+      "bounds_checking_function:libsec_static",
+      "cJSON:cjson_static"
+    ]
 
     is_cross_platform =
         current_os == "mac" || current_os == "mingw" || current_os == "linux" ||

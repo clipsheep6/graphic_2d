@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "cmap_parser.h"
+#include <opentype_parser/cmap_parser.h>
 
 #include "exlog.h"
 
-#include "opentype_basic_type.h"
+#include <opentype_parser/opentype_basic_type.h>
 
 namespace OHOS {
 namespace Rosen {

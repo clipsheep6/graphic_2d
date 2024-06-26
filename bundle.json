@@ -385,18 +385,6 @@
           },
           {
             "type": "so",
-            "name": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/font_parser:libfont_parser",
-            "header": {
-              "header_files": [
-                "font_config.h",
-                "font_parser.h",
-                "drawing.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/font_parser/src"
-            }
-          },
-          {
-            "type": "so",
             "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager:color_space_object_convertor",
             "header": {
               "header_files": [
@@ -427,7 +415,14 @@
                 "typography_style.h",
                 "text_style.h",
                 "typography.h",
-                "typography_types.h"
+                "typography_types.h",
+                "font_config.h",
+                "font_parser.h",
+                "drawing.h",
+		"opentype_parser/cmap_table_parser.h",
+		"opentype_parser/post_table_parser.h",
+		"opentype_parser/name_table_parser.h",
+		"opentype_parser/ranges.h"		
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text"
             }

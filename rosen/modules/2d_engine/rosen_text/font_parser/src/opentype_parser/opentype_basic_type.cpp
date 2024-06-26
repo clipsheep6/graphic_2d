@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "opentype_basic_type.h"
+#include <opentype_parser/opentype_basic_type.h>
 
 namespace OHOS {
 namespace Rosen {

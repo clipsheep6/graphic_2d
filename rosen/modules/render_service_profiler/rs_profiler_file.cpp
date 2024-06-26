@@ -458,10 +458,17 @@ bool RSFile::GetDataCopy(std::vector<uint8_t>& data)
     if (fileSize == 0) {
         return false;
     }
+
+    // File size threshold is set to ensure that the file is valid
+    const size_t maxFileSize = 300000000;
+    if (fileSize > maxFileSize) {
+        return false;
+    }
+
     data.clear();
     data.resize(fileSize);
 
-    const int64_t position = Utils::FileTell(file_);
+    const int64_t position = static_cast<int64_t>(Utils::FileTell(file_));
     Utils::FileSeek(file_, 0, SEEK_SET);
     Utils::FileRead(file_, data.data(), fileSize);
     Utils::FileSeek(file_, position, SEEK_SET); // set ptr back

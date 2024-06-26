@@ -176,86 +176,162 @@ HWTEST_F(RSDisplayRenderNodeDrawableTest, DrawWatermarkIfNeed, TestSize.Level1)
 }
 
 /**
- * @tc.name: RotateMirrorCanvasIfNeed001
- * @tc.desc: Test RotateMirrorCanvasIfNeed, if canvas doesn't need to be rotated.
+ * @tc.name: CalculateVirtualDirtyForWiredScreen001
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, without mirrorNode
  * @tc.type: FUNC
- * @tc.require: #I9NVOG
+ * @tc.require: #IA76UC
  */
-HWTEST_F(RSDisplayRenderNodeDrawableTest, RotateMirrorCanvasIfNeed001, TestSize.Level1)
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen001, TestSize.Level1)
 {
     ASSERT_NE(renderNode_, nullptr);
     ASSERT_NE(displayDrawable_, nullptr);
-    renderNode_->mirrorSource_ = mirroredNode_;
-    displayDrawable_->canvasRotation_ = true;
-    displayDrawable_->exFoldScreen_ = true;
-    displayDrawable_->RotateMirrorCanvasIfNeed(*renderNode_);
 
-    displayDrawable_->canvasRotation_ = false;
-    displayDrawable_->exFoldScreen_ = false;
-    displayDrawable_->RotateMirrorCanvasIfNeed(*renderNode_);
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
 }
 
 /**
- * @tc.name: RotateMirrorCanvasIfNeed002
- * @tc.desc: Test RotateMirrorCanvasIfNeed, if canvas needs to be rotated.
+ * @tc.name: CalculateVirtualDirtyForWiredScreen002
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, isVirtualDirtyEnabled_ false
  * @tc.type: FUNC
- * @tc.require: #I9NVOG
+ * @tc.require: #IA76UC
  */
-HWTEST_F(RSDisplayRenderNodeDrawableTest, RotateMirrorCanvasIfNeed002, TestSize.Level1)
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen002, TestSize.Level1)
 {
     ASSERT_NE(renderNode_, nullptr);
     ASSERT_NE(displayDrawable_, nullptr);
-    renderNode_->mirrorSource_ = mirroredNode_;
-    displayDrawable_->canvasRotation_ = true;
-    displayDrawable_->exFoldScreen_ = false;
-    displayDrawable_->RotateMirrorCanvasIfNeed(*renderNode_);
 
-    displayDrawable_->canvasRotation_ = false;
-    displayDrawable_->exFoldScreen_ = true;
-    displayDrawable_->RotateMirrorCanvasIfNeed(*renderNode_);
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    params->mirrorSource_ = mirroredNode_;
+    auto& rtThread = RSUniRenderThread::Instance();
+    if (rtThread.renderThreadParams_) {
+        rtThread.renderThreadParams_->isVirtualDirtyEnabled_ = false;
+    }
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
 }
 
 /**
- * @tc.name: ScaleMirrorIfNeed001
- * @tc.desc: Test ScaleMirrorIfNeed001, with canvas rotation
+ * @tc.name: CalculateVirtualDirtyForWiredScreen003
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, without syncDirtyManager
  * @tc.type: FUNC
- * @tc.require: #I9NVOG
+ * @tc.require: #IA76UC
  */
-HWTEST_F(RSDisplayRenderNodeDrawableTest, ScaleMirrorIfNeed001, TestSize.Level1)
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen003, TestSize.Level1)
 {
     ASSERT_NE(renderNode_, nullptr);
     ASSERT_NE(displayDrawable_, nullptr);
-    auto processor = std::make_shared<RSUniRenderVirtualProcessor>();
-    renderNode_->mirrorSource_ = mirroredNode_;
 
-    displayDrawable_->canvasRotation_ = true;
-    displayDrawable_->exFoldScreen_ = true;
-    displayDrawable_->ScaleMirrorIfNeed(*renderNode_, processor);
-
-    displayDrawable_->canvasRotation_ = true;
-    displayDrawable_->exFoldScreen_ = false;
-    displayDrawable_->ScaleMirrorIfNeed(*renderNode_, processor);
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    params->mirrorSource_ = mirroredNode_;
+    auto& rtThread = RSUniRenderThread::Instance();
+    if (rtThread.renderThreadParams_) {
+        rtThread.renderThreadParams_->isVirtualDirtyEnabled_ = true;
+    }
+    std::shared_ptr<RSDirtyRegionManager> syncDirtyManager;
+    renderNode_->syncDirtyManager_ = syncDirtyManager;
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
 }
 
 /**
- * @tc.name: ScaleMirrorIfNeed002
- * @tc.desc: Test ScaleMirrorIfNeed, without canvas rotation
+ * @tc.name: CalculateVirtualDirtyForWiredScreen004
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, canvasMatrix not equals to lastMatrix_
  * @tc.type: FUNC
- * @tc.require: #I9NVOG
+ * @tc.require: #IA76UC
  */
-HWTEST_F(RSDisplayRenderNodeDrawableTest, ScaleMirrorIfNeed002, TestSize.Level1)
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen004, TestSize.Level1)
 {
     ASSERT_NE(renderNode_, nullptr);
     ASSERT_NE(displayDrawable_, nullptr);
-    auto processor = std::make_shared<RSUniRenderVirtualProcessor>();
-    renderNode_->mirrorSource_ = mirroredNode_;
 
-    displayDrawable_->canvasRotation_ = false;
-    displayDrawable_->exFoldScreen_ = true;
-    displayDrawable_->ScaleMirrorIfNeed(*renderNode_, processor);
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    params->mirrorSource_ = mirroredNode_;
+    auto& rtThread = RSUniRenderThread::Instance();
+    if (rtThread.renderThreadParams_) {
+        rtThread.renderThreadParams_->isVirtualDirtyEnabled_ = true;
+    }
+    renderNode_->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>(false);
+    const Drawing::scalar scale = 100.0f;
+    canvasMatrix.SetScale(scale, scale);
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
+}
 
-    displayDrawable_->canvasRotation_ = false;
-    displayDrawable_->exFoldScreen_ = false;
-    displayDrawable_->ScaleMirrorIfNeed(*renderNode_, processor);
+/**
+ * @tc.name: CalculateVirtualDirtyForWiredScreen005
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, extraDirty is not empty
+ * @tc.type: FUNC
+ * @tc.require: #IA76UC
+ */
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen005, TestSize.Level1)
+{
+    ASSERT_NE(renderNode_, nullptr);
+    ASSERT_NE(displayDrawable_, nullptr);
+
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    params->mirrorSource_ = mirroredNode_;
+    auto& rtThread = RSUniRenderThread::Instance();
+    if (rtThread.renderThreadParams_) {
+        rtThread.renderThreadParams_->isVirtualDirtyEnabled_ = true;
+    }
+    renderNode_->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>(false);
+    renderNode_->syncDirtyManager_->dirtyRegion_ = RectI(0, 0, DEFAULT_CANVAS_SIZE, DEFAULT_CANVAS_SIZE);
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
+}
+
+/**
+ * @tc.name: CalculateVirtualDirtyForWiredScreen006
+ * @tc.desc: Test CalculateVirtualDirtyForWiredScreen, extraDirty is not empty
+ * @tc.type: FUNC
+ * @tc.require: #IA76UC
+ */
+HWTEST_F(RSDisplayRenderNodeDrawableTest, CalculateVirtualDirtyForWiredScreen006, TestSize.Level1)
+{
+    ASSERT_NE(renderNode_, nullptr);
+    ASSERT_NE(displayDrawable_, nullptr);
+
+    auto params = std::make_shared<RSDisplayRenderParams>(0);
+    ASSERT_NE(params, nullptr);
+    auto renderFrame = std::make_unique<RSRenderFrame>(nullptr, nullptr);
+    ASSERT_NE(renderFrame, nullptr);
+    Drawing::Matrix canvasMatrix;
+    params->mirrorSource_ = mirroredNode_;
+    auto& rtThread = RSUniRenderThread::Instance();
+    if (rtThread.renderThreadParams_) {
+        rtThread.renderThreadParams_->isVirtualDirtyEnabled_ = true;
+        rtThread.renderThreadParams_->isVirtualDirtyDfxEnabled_ = true;
+    }
+    renderNode_->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>(false);
+    auto damageRects = displayDrawable_->CalculateVirtualDirtyForWiredScreen(
+        *renderNode_, renderFrame, *params, canvasMatrix);
+    ASSERT_EQ(damageRects.size(), 0);
 }
 }

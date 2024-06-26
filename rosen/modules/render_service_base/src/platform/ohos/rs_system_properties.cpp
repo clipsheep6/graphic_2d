@@ -647,18 +647,18 @@ bool RSSystemProperties::GetUIFirstEnabled()
 #endif
 }
 
+bool RSSystemProperties::GetSurfaceOffscreenEnadbled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("persist.sys.graphic.surfaceOffscreenEnabled", "1");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 1) != 0;
+}
+
 bool RSSystemProperties::GetUIFirstDebugEnabled()
 {
     static bool debugEnable = system::GetIntParameter("persist.sys.graphic.uifirstDebugEnabled", 0) != 0;
     return debugEnable;
-}
-
-bool RSSystemProperties::GetUIFirstForceEnabled()
-{
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.ui.first.force.enabled", "0");
-    int changed = 0;
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return ConvertToInt(enable, 1) != 0;
 }
 
 bool RSSystemProperties::GetDebugTraceEnabled()
@@ -864,6 +864,14 @@ bool RSSystemProperties::GetPurgeBetweenFramesEnabled()
     static bool purgeResourcesEveryEnabled =
         (std::atoi(system::GetParameter("persist.sys.graphic.mem.purge_between_frames_enabled", "1").c_str()) != 0);
     return purgeResourcesEveryEnabled;
+}
+
+bool RSSystemProperties::GetPreAllocateTextureBetweenFramesEnabled()
+{
+    static bool PreAllocateTextureBetweenFramesEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.pre_allocate_texture_between_frames_enabled", "1")
+                       .c_str()) != 0);
+    return PreAllocateTextureBetweenFramesEnabled;
 }
 
 const DdgrOpincType RSSystemProperties::ddgrOpincType_ =

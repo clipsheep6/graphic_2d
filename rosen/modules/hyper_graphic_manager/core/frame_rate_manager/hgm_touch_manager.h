@@ -25,6 +25,8 @@ namespace OHOS::Rosen {
 enum TouchEvent : int32_t {
     DOWN_EVENT,
     UP_EVENT,
+    UP_TIMEOUT_EVENT,
+    RS_IDLE_TIMEOUT_EVENT,
 };
 
 enum TouchState : int32_t {
@@ -50,6 +52,8 @@ protected:
     void ExecuteCallback(const std::function<void()>& callback) override;
 private:
     std::string pkgName_;
+    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     HgmOneShotTimer upTimeoutTimer_;
     HgmOneShotTimer rsIdleTimeoutTimer_;
 };

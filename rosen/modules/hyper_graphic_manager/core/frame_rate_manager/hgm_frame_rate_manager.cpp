@@ -122,6 +122,15 @@ void HgmFrameRateManager::InitTouchManager()
 {
     static std::once_flag createFlag;
     std::call_once(createFlag, [this]() {
+        touchManager_.RegisterEventCallback(TouchEvent::UP_TIMEOUT_EVENT, [this] (TouchEvent event) {
+            SetSchedulerPreferredFps(OLED_60_HZ);
+            SetIsNeedUpdateAppOffset(true);
+            touchManager_.ChangeState(TouchState::IDLE_STATE);
+        });
+        touchManager_.RegisterEventCallback(TouchEvent::DOWN_EVENT, [this] (TouchEvent event) {
+            SetSchedulerPreferredFps(OLED_120_HZ);
+            touchManager_.ChangeState(TouchState::DOWN_STATE);
+        });
         touchManager_.RegisterEnterStateCallback(TouchState::DOWN_STATE,
             [this] (TouchState lastState, TouchState newState) {
             if (lastState == TouchState::IDLE_STATE) {
@@ -146,12 +155,17 @@ void HgmFrameRateManager::ProcessPendingRefreshRate(uint64_t timestamp, uint32_t
 {
     auto &hgmCore = HgmCore::Instance();
     hgmCore.SetTimestamp(timestamp);
-    if (pendingRefreshRate_ != nullptr && (!dvsyncInfo.isUiDvsyncOn || rsRate == *pendingRefreshRate_)) {
+    if (pendingRefreshRate_ != nullptr) {
         hgmCore.SetPendingConstraintRelativeTime(pendingConstraintRelativeTime_);
         hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate_);
         RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate_);
         pendingRefreshRate_.reset();
         pendingConstraintRelativeTime_ = 0;
+    }
+    if (curRefreshRateMode_ == HGM_REFRESHRATE_MODE_AUTO &&
+        dvsyncInfo.isUiDvsyncOn && GetCurScreenStrategyId().find("LTPO") != std::string::npos) {
+        RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d ui-dvsync", rsRate);
+        hgmCore.SetPendingScreenRefreshRate(rsRate);
     }
 }
 
@@ -231,13 +245,13 @@ void HgmFrameRateManager::UpdateGuaranteedPlanVote(uint64_t timestamp)
     }
 }
 
-void HgmFrameRateManager::ProcessLtpoVote(const FrameRateRange& finalRange, bool idleTimerExpired, pid_t pid)
+void HgmFrameRateManager::ProcessLtpoVote(const FrameRateRange& finalRange, bool idleTimerExpired)
 {
     if (finalRange.IsValid()) {
         ResetScreenTimer(curScreenId_);
         CalcRefreshRate(curScreenId_, finalRange);
         DeliverRefreshRateVote(
-            {"VOTER_LTPO", currRefreshRate_, currRefreshRate_, pid, finalRange.GetExtInfo()}, ADD_VOTE);
+            {"VOTER_LTPO", currRefreshRate_, currRefreshRate_, DEFAULT_PID, finalRange.GetExtInfo()}, ADD_VOTE);
     } else if (idleTimerExpired) {
         // idle in ltpo
         HandleIdleEvent(ADD_VOTE);
@@ -263,18 +277,15 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
     FrameRateRange finalRange;
     if (curRefreshRateMode_ == HGM_REFRESHRATE_MODE_AUTO) {
         finalRange = rsFrameRateLinker->GetExpectedRange();
-        pid_t pid = DEFAULT_PID;
         bool needCheckAceAnimatorStatus = true;
         for (auto linker : appFrameRateLinkers) {
             if (!multiAppStrategy_.CheckPidValid(ExtractPid(linker.first))) {
                 continue;
             }
             SetAceAnimatorVote(linker.second, needCheckAceAnimatorStatus);
-            if (finalRange.Merge(linker.second->GetExpectedRange())) {
-                pid = ExtractPid(linker.first);
-            }
+            finalRange.Merge(linker.second->GetExpectedRange());
         }
-        ProcessLtpoVote(finalRange, idleTimerExpired, pid);
+        ProcessLtpoVote(finalRange, idleTimerExpired);
     }
 
     UpdateGuaranteedPlanVote(timestamp);
@@ -578,7 +589,7 @@ int32_t HgmFrameRateManager::GetExpectedFrameRate(const RSPropertyUnit unit, flo
         case RSPropertyUnit::RATIO_SCALE:
             return GetPreferredFps("scale", PixelToMM(velocity));
         case RSPropertyUnit::ANGLE_ROTATION:
-            return GetPreferredFps("rotation", velocity);
+            return GetPreferredFps("rotation", PixelToMM(velocity));
         default:
             return 0;
     }
@@ -588,6 +599,9 @@ int32_t HgmFrameRateManager::GetPreferredFps(const std::string& type, float velo
 {
     auto &configData = HgmCore::Instance().GetPolicyConfigData();
     if (!configData) {
+        return 0;
+    }
+    if (ROSEN_EQ(velocity, 0.f)) {
         return 0;
     }
     const std::string settingMode = std::to_string(curRefreshRateMode_);

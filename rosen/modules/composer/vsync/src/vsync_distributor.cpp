@@ -351,7 +351,7 @@ void VSyncDistributor::WaitForVsyncOrRequest(std::unique_lock<std::mutex> &locke
 #if defined(RS_ENABLE_DVSYNC)
     dvsync_->RNVNotify();
     if (!isRs_ && IsDVsyncOn()) {
-        con_.wait(locker, [this] {return dvsync_->WaitCond();});
+        con_.wait_for(locker, std::chrono::nanoseconds(dvsync_->WaitTime()), [this] {return dvsync_->WaitCond();});
     } else {
         con_.wait(locker);
     }
@@ -527,11 +527,6 @@ void VSyncDistributor::OnDVSyncTrigger(int64_t now, int64_t period, uint32_t ref
     int64_t lastDVsyncTS = lastDVsyncTS_.load();
     // when dvsync switch to vsync, skip all vsync events within one period from the pre-rendered timestamp
     if (dvsync_->NeedSkipDVsyncPrerenderedFrame()) {
-        return;
-    }
-    if (!IsDVsyncOn() && now < (lastDVsyncTS + DVSYNC_ON_PERIOD - MAX_PERIOD_BIAS)) {
-        ScopedBytrace func("skip DVSync prerendered frame, now: " + std::to_string(now) +
-            ",lastDVsyncTS: " + std::to_string(lastDVsyncTS));
         return;
     }
 

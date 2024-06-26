@@ -33,6 +33,7 @@ config("local_text") {
     "../drawing",
     "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/platform/image_native",
   ]
 }
 

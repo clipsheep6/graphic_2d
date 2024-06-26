@@ -19,6 +19,8 @@
 #include <map>
 #ifdef ROSEN_OHOS
 #include "hilog/log.h"
+#include "image/image.h"
+#include "pixel_map.h"
 #endif
 
 #include "common/rs_common_def.h"
@@ -381,6 +383,12 @@ napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& messa
 bool ConvertFromJsTextEncoding(napi_env env, TextEncoding& textEncoding, napi_value nativeType);
 
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
+#ifdef ROSEN_OHOS
+std::shared_ptr<ColorSpace> ColorSpaceToDrawingColorSpace(OHOS::Media::ColorSpace colorSpace);
+ColorType PixelFormatToDrawingColorType(OHOS::Media::PixelFormat pixelFormat);
+AlphaType AlphaTypeToDrawingAlphaType(OHOS::Media::AlphaType alphaType);
+std::shared_ptr<Image> ExtractDrawingImage(std::shared_ptr<OHOS::Media::PixelMap> pixelMap);
+#endif
 } // namespace Drawing
 } // namespace OHOS::Rosen
 

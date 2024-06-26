@@ -421,6 +421,65 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedModes002, Function | SmallTest | Le
 }
 
 /*
+* Function: EnableCursorInvert
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call EnableCursorInvert
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, EnableCursorInvert001, Function | SmallTest | Level2)
+{
+    float darkBuffer = 0.5;
+    float brightBuffer = 0.5;
+    int64_t interval = 50;
+    int32_t ret = rsInterfaces->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+ 
+/*
+* Function: DisableCursorInvert
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call DisableCursorInvert
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, DisableCursorInvert001, Function | SmallTest | Level2)
+{
+    int32_t ret = rsInterfaces->DisableCursorInvert();
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+ 
+/*
+* Function: RegisterPointerLuminanceChangeCallback
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call RegisterPointerLuminanceChangeCallback
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, RegisterPointerLuminanceChangeCallback001, Function | SmallTest | Level2)
+{
+    int32_t ret = rsInterfaces->RegisterPointerLuminanceChangeCallback([](int32_t brightness) -> void {});
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+ 
+/*
+* Function: UnRegisterPointerLuminanceChangeCallback
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call UnRegisterPointerLuminanceChangeCallback
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, UnRegisterPointerLuminanceChangeCallback, Function | SmallTest | Level2)
+{
+    int32_t ret = rsInterfaces->UnRegisterPointerLuminanceChangeCallback();
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
 * Function: SetScreenActiveMode
 * Type: Function
 * Rank: Important(2)

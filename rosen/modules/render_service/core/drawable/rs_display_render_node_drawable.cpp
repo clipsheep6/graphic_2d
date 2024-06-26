@@ -841,7 +841,7 @@ void RSDisplayRenderNodeDrawable::DrawMirror(std::shared_ptr<RSDisplayRenderNode
         rsDirtyRectsDfx.SetVirtualDirtyRects(dirtyRects, params.GetScreenInfo());
     }
 
-    std::shared_ptr<Drawing::Image> cacheImageProcessed = GetCacheImageFromMirrorNode(mirroredNode);
+    std::shared_ptr<Drawing::Image> cacheImageProcessed = mirroredNode->GetCacheImgForCapture();
     mirroredNode->SetCacheImgForCapture(nullptr);
     if (cacheImageProcessed && !hasSpecialLayer_) {
         RS_LOGD("RSDisplayRenderNodeDrawable::DrawMirrorScreen, Enable recording optimization.");
@@ -1085,33 +1085,6 @@ void RSDisplayRenderNodeDrawable::ProcessCacheImage(Drawing::Image& cacheImagePr
     auto sampling = Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
     curCanvas_->DrawImage(cacheImageProcessed, 0, 0, sampling);
     curCanvas_->DetachBrush();
-}
-
-std::shared_ptr<Drawing::Image> RSDisplayRenderNodeDrawable::GetCacheImageFromMirrorNode(
-    std::shared_ptr<RSDisplayRenderNode> mirrorNode)
-{
-    auto cacheImage = mirrorNode->GetCacheImgForCapture();
-    bool parallelComposition = RSMainThread::Instance()->GetParallelCompositionEnabled();
-    auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
-    if (!parallelComposition || cacheImage == nullptr || renderEngine == nullptr) {
-        return cacheImage;
-    }
-    auto image = std::make_shared<Drawing::Image>();
-    if (auto renderContext = renderEngine->GetRenderContext()) {
-        auto grContext = renderContext->GetDrGPUContext();
-        auto imageBackendTexure = cacheImage->GetBackendTexture(false, nullptr);
-        if (grContext != nullptr && imageBackendTexure.IsValid()) {
-            Drawing::BitmapFormat bitmapFormat = {Drawing::ColorType::COLORTYPE_RGBA_8888,
-                Drawing::AlphaType::ALPHATYPE_PREMUL};
-            SharedTextureContext* sharedContext = new SharedTextureContext(cacheImage);
-            if (!image->BuildFromTexture(*grContext, imageBackendTexure.GetTextureInfo(),
-                Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr,
-                SKResourceManager::DeleteSharedTextureContext, sharedContext)) {
-                RS_LOGE("RSDisplayRenderNodeDrawable::GetCacheImageFromMirrorNode image is nullptr");
-            }
-        }
-    }
-    return image;
 }
 
 void RSDisplayRenderNodeDrawable::RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight)

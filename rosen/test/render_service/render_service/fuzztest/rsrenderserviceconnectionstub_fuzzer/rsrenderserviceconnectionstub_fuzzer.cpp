@@ -221,6 +221,58 @@ bool DoSetScreenChangeCallback(const uint8_t* data, size_t size)
     return true;
 }
 
+bool DoEnableCursorInvert(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+ 
+    if (size < MAX_SIZE) {
+        return false;
+    }
+ 
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+ 
+    float darkBuffer = GetData<float>();
+    float brightBuffer = GetData<float>();
+    int64_t interval = GetData<int64_t>();
+    rsClient->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    return true;
+}
+ 
+class CustomPointerLuminanceChangeCallback : public RSPointerLuminanceChangeCallbackStub {
+public:
+    explicit CustomPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback) : cb_(callback) {}
+    ~CustomPointerLuminanceChangeCallback() override {};
+ 
+    void OnPointerLuminanceChanged(int32_t brightness) override
+    {
+        if (cb_ != nullptr) {
+            cb_(brightness);
+        }
+    }
+ 
+private:
+    PointerLuminanceChangeCallback cb_;
+};
+ 
+bool DoRegisterPointerLuminanceChangeCallback(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+ 
+    if (size < MAX_SIZE) {
+        return false;
+    }
+ 
+    PointerLuminanceChangeCallback cb = [](int32_t brightness) {};
+    rsClient->RegisterPointerLuminanceChangeCallback(cb);
+    return true;
+}
+
 bool DoSetScreenActiveMode(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
@@ -743,6 +795,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoSetFocusAppInfo(data, size);
     OHOS::Rosen::DoCreateVirtualScreen(data, size);
     OHOS::Rosen::DoSetScreenChangeCallback(data, size);
+    OHOS::Rosen::DoEnableCursorInvert(data, size);
+    OHOS::Rosen::DoRegisterPointerLuminanceChangeCallback(data, size);
     OHOS::Rosen::DoSetScreenActiveMode(data, size);
     OHOS::Rosen::DoSetScreenRefreshRate(data, size);
     OHOS::Rosen::DoSetRefreshRateMode(data, size);

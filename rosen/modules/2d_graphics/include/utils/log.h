@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <functional>
 #ifdef OHOS_PLATFORM
 #include <hilog/log.h>
@@ -35,14 +36,50 @@ namespace Rosen {
 #undef LOG_TAG
 #define LOG_TAG "2DGraphics"
 
-#define LOGD(fmt, ...)               \
-    HILOG_DEBUG(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+class LogUtils {
+public:
+    static inline bool CanPrint()
+    {
+        uint64_t curTime = GetCurrentTime();
+        if (curTime < baseTime || (curTime - baseTime) >= LOG_LIMIT_DURATION_IN_SECOND) {
+            baseTime = curTime;
+            currentLogNum = 0;
+        }
+        return currentLogNum++ < MAX_LOG_NUM_IN_DURATION;
+    }
+
+private:
+    static inline uint64_t GetCurrentTime()
+    {
+        struct timespec current = {0};
+        int ret = clock_gettime(CLOCK_REALTIME, &current);
+        if (ret != 0) {
+            return 0;
+        }
+        return (uint64_t) current.tv_sec;
+    }
+
+    static constexpr uint8_t LOG_LIMIT_DURATION_IN_SECOND = 60;
+    static constexpr uint8_t MAX_LOG_NUM_IN_DURATION = 6;
+    static uint8_t currentLogNum;
+    static uint64_t baseTime;
+};
+
+#define HILOG_WITH_CHECK(func, fmt, ...)                                    \
+    do {                                                                    \
+        if (LogUtils::CanPrint()) {                                         \
+            func(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__);    \
+        }                                                                   \
+    } while (0)
+
+#define LOGD(fmt, ...)              \
+    HILOG_WITH_CHECK(HILOG_DEBUG, fmt, ##__VA_ARGS__)
 #define LOGI(fmt, ...)              \
-    HILOG_INFO(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+    HILOG_WITH_CHECK(HILOG_INFO, fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...)              \
-    HILOG_WARN(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
-#define LOGE(fmt, ...)               \
-    HILOG_ERROR(LOG_CORE, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+    HILOG_WITH_CHECK(HILOG_WARN, fmt, ##__VA_ARGS__)
+#define LOGE(fmt, ...)              \
+    HILOG_WITH_CHECK(HILOG_ERROR, fmt, ##__VA_ARGS__)
 #else
 #define LOGD(fmt, ...)
 #define LOGI(fmt, ...)

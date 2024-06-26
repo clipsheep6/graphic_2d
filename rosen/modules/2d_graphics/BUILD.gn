@@ -158,6 +158,7 @@ template("graphics2d_source_set") {
       "$drawing_core_src_dir/text/typeface.cpp",
       "$drawing_core_src_dir/utils/camera3d.cpp",
       "$drawing_core_src_dir/utils/data.cpp",
+      "$drawing_core_src_dir/utils/log.cpp",
       "$drawing_core_src_dir/utils/matrix.cpp",
       "$drawing_core_src_dir/utils/matrix44.cpp",
       "$drawing_core_src_dir/utils/memory_stream.cpp",

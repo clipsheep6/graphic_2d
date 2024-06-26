@@ -368,10 +368,6 @@ napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& messa
 bool ConvertFromJsTextEncoding(napi_env env, TextEncoding& textEncoding, napi_value nativeType);
 
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
-
-uint32_t FontEdgingCastToTsFontEdging(FontEdging fontEdging);
-
-uint32_t FontHintingCastToTsFontHinting(FontHinting fontHinting);
 } // namespace Drawing
 } // namespace OHOS::Rosen
 

@@ -143,50 +143,5 @@ napi_value GetFontMetricsAndConvertToJsValue(napi_env env, FontMetrics* metrics)
     }
     return objValue;
 }
-
-uint32_t FontEdgingCastToTsFontEdging(FontEdging fontEdging)
-{
-    uint32_t value;
-
-    switch (fontEdging) {
-        case FontEdging::ALIAS: // 0: FontEdging::ALIAS
-            value = 0;
-            break;
-        case FontEdging::ANTI_ALIAS: // 1: FontEdging::ANTI_ALIAS
-            value = 1;
-            break;
-        case FontEdging::SUBPIXEL_ANTI_ALIAS: // 2: FontEdging::SUBPIXEL_ANTI_ALIAS
-            value = 2;
-            break;
-        default: // default: FontEdging::ALIAS
-            value = 0;
-            break;
-    }
-    return value;
-}
-
-uint32_t FontHintingCastToTsFontHinting(FontHinting fontHinting)
-{
-    uint32_t value;
-
-    switch (fontHinting) {
-        case FontHinting::NONE: // 0: FontHinting::NONE
-            value = 0;
-            break;
-        case FontHinting::SLIGHT: // 1: FontHinting::SLIGHT
-            value = 1;
-            break;
-        case FontHinting::NORMAL: // 2: FontHinting::NORMAL
-            value = 2;
-            break;
-        case FontHinting::FULL: // 3: FontHinting::FULL
-            value = 3;
-            break;
-        default: // default: FontHinting::NONE
-            value = 0;
-            break;
-    }
-    return value;
-}
 } // namespace Drawing
 } // namespace OHOS::Rosen

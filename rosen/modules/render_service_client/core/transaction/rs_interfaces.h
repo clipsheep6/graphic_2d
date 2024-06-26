@@ -75,6 +75,14 @@ public:
 
     void RemoveVirtualScreen(ScreenId id);
 
+    int32_t EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval);
+ 
+    int32_t DisableCursorInvert();
+ 
+    int32_t RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback);
+ 
+    int32_t UnRegisterPointerLuminanceChangeCallback();
+
     int32_t SetScreenChangeCallback(const ScreenChangeCallback &callback);
 
     bool TakeSurfaceCapture(std::shared_ptr<RSSurfaceNode> node, std::shared_ptr<SurfaceCaptureCallback> callback,

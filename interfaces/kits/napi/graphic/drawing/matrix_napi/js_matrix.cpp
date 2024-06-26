@@ -24,6 +24,8 @@ const std::string CLASS_NAME = "Matrix";
 napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("postRotate", JsMatrix::PostRotate),
+        DECLARE_NAPI_FUNCTION("postTranslate", JsMatrix::PostTranslate),
         DECLARE_NAPI_FUNCTION("preRotate", JsMatrix::PreRotate),
         DECLARE_NAPI_FUNCTION("preScale", JsMatrix::PreScale),
         DECLARE_NAPI_FUNCTION("preTranslate", JsMatrix::PreTranslate),
@@ -85,6 +87,60 @@ void JsMatrix::Destructor(napi_env env, void* nativeObject, void* finalize)
         JsMatrix* napi = reinterpret_cast<JsMatrix*>(nativeObject);
         delete napi;
     }
+}
+
+napi_value JsMatrix::PostRotate(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnPostRotate(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnPostRotate(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnPostRotate matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+
+    double degree = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ZERO, degree);
+    double px = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ONE, px);
+    double py = 0.0;
+    GET_DOUBLE_PARAM(ARGC_TWO, py);
+
+    JS_CALL_DRAWING_FUNC(m_matrix->PostRotate(degree, px, py));
+
+    return nullptr;
+}
+
+napi_value JsMatrix::PostTranslate(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnPostTranslate(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnPostTranslate(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnPostTranslate matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_TWO] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_TWO);
+
+    double dx = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ZERO, dx);
+    double dy = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ONE, dy);
+
+    JS_CALL_DRAWING_FUNC(m_matrix->PostTranslate(dx, dy));
+
+    return nullptr;
 }
 
 napi_value JsMatrix::PreRotate(napi_env env, napi_callback_info info)

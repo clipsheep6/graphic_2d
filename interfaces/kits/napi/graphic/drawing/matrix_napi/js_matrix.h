@@ -32,6 +32,8 @@ public:
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
+    static napi_value PostRotate(napi_env env, napi_callback_info info);
+    static napi_value PostTranslate(napi_env env, napi_callback_info info);
     static napi_value PreRotate(napi_env env, napi_callback_info info);
     static napi_value PreScale(napi_env env, napi_callback_info info);
     static napi_value PreTranslate(napi_env env, napi_callback_info info);
@@ -40,6 +42,8 @@ public:
     std::shared_ptr<Matrix> GetMatrix();
 private:
 
+    napi_value OnPostRotate(napi_env env, napi_callback_info info);
+    napi_value OnPostTranslate(napi_env env, napi_callback_info info);
     napi_value OnPreRotate(napi_env env, napi_callback_info info);
     napi_value OnPreScale(napi_env env, napi_callback_info info);
     napi_value OnPreTranslate(napi_env env, napi_callback_info info);

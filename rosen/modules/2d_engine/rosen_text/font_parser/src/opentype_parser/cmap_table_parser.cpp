@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <opentype_parser/cmap_table_parser.h>
+#include <rosen_text/opentype_parser/cmap_table_parser.h>
 
 #include "exlog.h"
 

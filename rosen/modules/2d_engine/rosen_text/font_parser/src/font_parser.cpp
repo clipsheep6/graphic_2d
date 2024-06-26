@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <font_parser.h>
+#include <rosen_text/font_parser.h>
 
 #include <codecvt>
 #include <dirent.h>
@@ -24,7 +24,7 @@
 #include <iconv.h>
 #endif
 
-#include <font_config.h>
+#include <rosen_text/font_config.h>
 #include "exlog.h"
 
 namespace OHOS {

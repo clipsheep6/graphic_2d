@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <opentype_parser/name_table_parser.h>
+#include <rosen_text/opentype_parser/name_table_parser.h>
 
 #include <iomanip>
 #include <string>

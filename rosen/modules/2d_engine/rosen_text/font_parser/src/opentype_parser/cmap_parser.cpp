@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 #define FORMAT4 4
 #define FORMAT12 12
 #define SEG_SIZE 2
@@ -218,6 +218,6 @@ int CmapParser::ParseFormat12(const CmapSubtable &subtable, const std::size_t si
     }
     return 0;
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

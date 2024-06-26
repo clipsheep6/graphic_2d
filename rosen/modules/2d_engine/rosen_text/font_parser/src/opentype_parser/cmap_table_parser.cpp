@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 const struct CmapTables* CmapTableParser::Parse(const char* data, int32_t size)
 {
     return reinterpret_cast<const struct CmapTables*>(data);
@@ -35,6 +35,6 @@ void CmapTableParser::Dump() const
             << ", encodingID: " << record.encodingID.Get();
     }
 }
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

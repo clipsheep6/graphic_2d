@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 void ExTime(Logger &logger, enum Logger::LOG_PHASE phase);
 
 #define LOGNEX(level, ...) Logger(LOGGER_ARG(level), ##__VA_ARGS__, \
@@ -75,7 +75,7 @@ void ExTime(Logger &logger, enum Logger::LOG_PHASE phase);
 #define LOGEX_PT_FILE_LINE_DEBUG(...) NoLogger()
 #define LOGEX_PT_FFL_DEBUG(...) NoLogger()
 #endif
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Roesen
 } // namespace OHOS
 

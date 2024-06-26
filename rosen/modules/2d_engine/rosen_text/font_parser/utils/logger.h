@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 class Logger : public std::stringstream {
 public:
     enum class LOG_LEVEL { DEBUG, INFO, WARN, ERROR, FATAL };
@@ -228,7 +228,7 @@ private:
     Logger::AppendPidTid, Logger::AppendFileLine, Logger::OutputByFileLog, FILE_LABEL, NULL)
 #define LOGF_PT_FFL(level, ...) Logger(LOGGER_ARG(level), ##__VA_ARGS__, \
     Logger::AppendPidTid, Logger::AppendFileFuncLine, Logger::OutputByFileLog, FILE_LABEL, NULL)
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

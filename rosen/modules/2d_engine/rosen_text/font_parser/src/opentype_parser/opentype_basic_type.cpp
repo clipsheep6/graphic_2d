@@ -17,7 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 namespace OpenTypeBasicType {
 #define MAX_NUM 65536.0
 
@@ -85,6 +85,6 @@ float Fixed::Get() const
     return data.Get() / MAX_NUM;
 }
 } // namespace OpenTypeBasicType
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

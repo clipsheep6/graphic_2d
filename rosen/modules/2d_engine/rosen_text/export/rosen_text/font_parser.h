@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 #define SIMPLIFIED_CHINESE "zh-hans"
 #define TRADITIONAL_CHINESE "zh-hant"
 #define ENGLISH "en-latn"
@@ -129,7 +129,7 @@ private:
     std::vector<std::string> fontSet_;
     std::vector<FontDescriptor> visibilityFonts_;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

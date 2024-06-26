@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace FontParser {
+namespace TextEngine {
 struct NameRecord {
     OpenTypeBasicType::Uint16 platformId;
     OpenTypeBasicType::Uint16 encodingId;
@@ -50,7 +50,7 @@ private:
     const char* data_ = nullptr;
     int32_t size_ = 0;
 };
-} // namespace FontParser
+} // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
 

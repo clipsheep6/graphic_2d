@@ -590,7 +590,8 @@ int32_t RSRenderServiceConnectionProxy::DisableCursorInvert()
     return result;
 }
  
-int32_t RSRenderServiceConnectionProxy::RegisterPointerLuminanceChangeCallback(sptr<RSIPointerLuminanceChangeCallback> callback)
+int32_t RSRenderServiceConnectionProxy::RegisterPointerLuminanceChangeCallback(
+    sptr<RSIPointerLuminanceChangeCallback> callback)
 {
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterPointerLuminanceChangeCallback: callback is nullptr.");

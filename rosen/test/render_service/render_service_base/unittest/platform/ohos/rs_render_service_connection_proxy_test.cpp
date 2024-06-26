@@ -254,6 +254,52 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, RemoveVirtualScreen, TestSize.Level
 }
 
 /**
+ * @tc.name: EnableCursorInvert Test
+ * @tc.desc: EnableCursorInvert Test
+ * @tc.type:FUNC
+ * @tc.require: issueI9KXXE
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, EnableCursorInvert, TestSize.Level1)
+{
+    float darkBuffer = 0.5;
+    float brightBuffer = 0.5;
+    int64_t interval = 50;
+    proxy->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    ASSERT_TRUE(true);
+}
+ 
+/**
+ * @tc.name: DisableCursorInvert Test
+ * @tc.desc: DisableCursorInvert Test
+ * @tc.type:FUNC
+ * @tc.require: issueI9KXXE
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, DisableCursorInvert, TestSize.Level1)
+{
+    proxy->DisableCursorInvert();
+    ASSERT_TRUE(true);
+}
+ 
+/**
+ * @tc.name: RegisterPointerLuminanceChangeCallback Test
+ * @tc.desc: RegisterPointerLuminanceChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, RegisterPointerLuminanceChangeCallback, TestSize.Level1)
+{
+    sptr<RSIPointerLuminanceChangeCallback> callback;
+    proxy->RegisterPointerLuminanceChangeCallback(id, callback);
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(samgr, nullptr);
+    proxy->UnRegisterPointerLuminanceChangeCallback();
+    auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
+    callback = iface_cast<RegisterPointerLuminanceChangeCallback>(remoteObject);
+    proxy->RegisterPointerLuminanceChangeCallback(callback);
+    ASSERT_NE(proxy->transactionDataIndex_, 5);
+}
+
+/**
  * @tc.name: SetScreenChangeCallback Test
  * @tc.desc: SetScreenChangeCallback Test
  * @tc.type:FUNC

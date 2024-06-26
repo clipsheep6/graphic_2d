@@ -457,9 +457,9 @@ HWTEST_F(RSClientTest, EnableCursorInvert001, TestSize.Level1)
  * @tc.type:FUNC
  * @tc.require: issuesI9K7SJ
  */
-HWTEST_F(RSInterfacesTest, DisableCursorInvert001, TestSize.Level1)
+HWTEST_F(RSClientTest, DisableCursorInvert001, TestSize.Level1)
 {
-    EXPECT_EQ(rsInterfaces->DisableCursorInvert(), StatusCode::SUCCESS);
+    EXPECT_EQ(rsClient->DisableCursorInvert(), StatusCode::SUCCESS);
 }
  
 /**
@@ -468,9 +468,9 @@ HWTEST_F(RSInterfacesTest, DisableCursorInvert001, TestSize.Level1)
  * @tc.type:FUNC
  * @tc.require: issuesI9K7SJ
  */
-HWTEST_F(RSInterfacesTest, RegisterPointerLuminanceChangeCallback001, TestSize.Level1)
+HWTEST_F(RSClientTest, RegisterPointerLuminanceChangeCallback001, TestSize.Level1)
 {
-    EXPECT_EQ(rsInterfaces->RegisterPointerLuminanceChangeCallback([](int32_t brightness) -> void {}),
+    EXPECT_EQ(rsClient->RegisterPointerLuminanceChangeCallback([](int32_t brightness) -> void {}),
         StatusCode::SUCCESS);
 }
  
@@ -480,9 +480,9 @@ HWTEST_F(RSInterfacesTest, RegisterPointerLuminanceChangeCallback001, TestSize.L
  * @tc.type:FUNC
  * @tc.require: issuesI9K7SJ
  */
-HWTEST_F(RSInterfacesTest, UnRegisterPointerLuminanceChangeCallback001, TestSize.Level1)
+HWTEST_F(RSClientTest, UnRegisterPointerLuminanceChangeCallback001, TestSize.Level1)
 {
-    EXPECT_EQ(rsInterfaces->UnRegisterPointerLuminanceChangeCallback(), StatusCode::SUCCESS);
+    EXPECT_EQ(rsClient->UnRegisterPointerLuminanceChangeCallback(), StatusCode::SUCCESS);
 }
 
 /**

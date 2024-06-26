@@ -284,17 +284,17 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, DisableCursorInvert, TestSize.Level
  * @tc.name: RegisterPointerLuminanceChangeCallback Test
  * @tc.desc: RegisterPointerLuminanceChangeCallback Test
  * @tc.type:FUNC
- * @tc.require: issuesI9K7SJ
+ * @tc.require: issueI9KXXE
  */
 HWTEST_F(RSRenderServiceConnectionProxyTest, RegisterPointerLuminanceChangeCallback, TestSize.Level1)
 {
     sptr<RSIPointerLuminanceChangeCallback> callback;
-    proxy->RegisterPointerLuminanceChangeCallback(id, callback);
+    proxy->RegisterPointerLuminanceChangeCallback(callback);
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     ASSERT_NE(samgr, nullptr);
     proxy->UnRegisterPointerLuminanceChangeCallback();
     auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
-    callback = iface_cast<RegisterPointerLuminanceChangeCallback>(remoteObject);
+    callback = iface_cast<RSIPointerLuminanceChangeCallback>(remoteObject);
     proxy->RegisterPointerLuminanceChangeCallback(callback);
     ASSERT_NE(proxy->transactionDataIndex_, 5);
 }

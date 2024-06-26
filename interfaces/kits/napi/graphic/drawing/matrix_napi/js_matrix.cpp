@@ -24,10 +24,12 @@ const std::string CLASS_NAME = "Matrix";
 napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("getValue", JsMatrix::GetValue),
         DECLARE_NAPI_FUNCTION("preRotate", JsMatrix::PreRotate),
         DECLARE_NAPI_FUNCTION("preScale", JsMatrix::PreScale),
         DECLARE_NAPI_FUNCTION("preTranslate", JsMatrix::PreTranslate),
         DECLARE_NAPI_FUNCTION("postScale", JsMatrix::PostScale),
+        DECLARE_NAPI_FUNCTION("reset", JsMatrix::Reset),
     };
 
     napi_value constructor = nullptr;
@@ -85,6 +87,29 @@ void JsMatrix::Destructor(napi_env env, void* nativeObject, void* finalize)
         JsMatrix* napi = reinterpret_cast<JsMatrix*>(nativeObject);
         delete napi;
     }
+}
+
+napi_value JsMatrix::GetValue(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnGetValue(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnGetValue(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnGetValue matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_ONE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+
+    int index = -1;
+    GET_INT32_PARAM(ARGC_ZERO, index);
+
+    double value = m_matrix->Get(index);
+    return GetDoubleAndConvertToJsValue(env, value);
 }
 
 napi_value JsMatrix::PreRotate(napi_env env, napi_callback_info info)
@@ -198,6 +223,23 @@ napi_value JsMatrix::OnPostScale(napi_env env, napi_callback_info info)
 
     JS_CALL_DRAWING_FUNC(m_matrix->PostScale(sx, sy, px, py));
 
+    return nullptr;
+}
+
+napi_value JsMatrix::Reset(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnReset(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnReset(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnReset matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    m_matrix->Reset();
     return nullptr;
 }
 

@@ -126,6 +126,7 @@ void RSRenderNode::MarkSuggestOpincNode(bool isOpincNode, bool isNeedCalculate)
 {
     isSuggestOpincNode_ = isOpincNode;
     isNeedCalculate_ = isNeedCalculate;
+    ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, mark suggest opinc node", node->GetId());
     SetDirty();
 }
 
@@ -178,6 +179,7 @@ void RSRenderNode::NodeCacheStateReset(NodeCacheState nodeCacheState)
         SetCacheStateByRetrytime();
         isOpincRootFlag_ = false;
     }
+    ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, reset cache state", GetId());
     SetDirty();
     stagingRenderParams_->OpincSetCacheChangeFlag(true);
     isOpincRootFlag_ = false;

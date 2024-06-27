@@ -56,6 +56,7 @@ public:
     {
         if (enableRender_ != enableRender) {
             enableRender_ = enableRender;
+            ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, set enable render", GetId());
             SetContentDirty();
         }
     }

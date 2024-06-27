@@ -53,6 +53,71 @@ void RSPointerRenderManager::InitInstance(const std::shared_ptr<RSEglImageManage
 }
 #endif
 
+void RSPointerRenderManager::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
+{
+    darkBuffer_ = darkBuffer;
+    brightBuffer_ = brightBuffer;
+    colorSamplingInterval_ = interval;
+}
+ 
+void RSPointerRenderManager::SetPointerColorInversionEnabled(bool enable)
+{
+    isEnableCursorInversion_ = enable;
+    if (!enable) {
+        brightness_ = CursorBrightness::NONE;
+    }
+}
+ 
+void RSPointerRenderManager::RegisterPointerLuminanceChangeCallback(pid_t pid,
+    sptr<RSIPointerLuminanceChangeCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
+    colorChangeListeners_[pid] = callback;
+}
+ 
+void RSPointerRenderManager::UnRegisterPointerLuminanceChangeCallback(pid_t pid)
+{
+    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
+    colorChangeListeners_.erase(pid);
+}
+ 
+void RSPointerRenderManager::ExecutePointerLuminanceChangeCallback(int32_t brightness)
+{
+    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
+    for (auto it = colorChangeListeners_.begin(); it != colorChangeListeners_.end(); it++) {
+        if (it->second) {
+            it->second->OnPointerLuminanceChanged(brightness);
+        }
+    }
+}
+ 
+void RSPointerRenderManager::CallPointerLuminanceChange(int32_t brightness)
+{
+    auto timeNow = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
+    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch());
+    lastColorPickerTime_ = tmp.count();
+    if (brightness_ == CursorBrightness::NONE) {
+        if (brightness < RGB * HALF) {
+            brightness_ = CursorBrightness::DARK;
+        } else {
+            brightness_ = CursorBrightness::BRIGHT;
+        }
+        ExecutePointerLuminanceChangeCallback(brightness);
+    } else if (brightness_ == CursorBrightness::DARK) {
+        // 暗光标 --> 亮光标 缓冲区
+        if (brightness > RGB * darkBuffer_) {
+            brightness_ = CursorBrightness::BRIGHT;
+            ExecutePointerLuminanceChangeCallback(brightness);
+        }
+    } else {
+        // 亮光标 --> 暗光标 缓冲区
+        if (brightness < RGB * brightBuffer_) {
+            brightness_ = CursorBrightness::DARK;
+            ExecutePointerLuminanceChangeCallback(brightness);
+        }
+    }
+}
+
 bool RSPointerRenderManager::CheckColorPickerEnabled()
 {
     if (!isEnableCursorInversion_) {
@@ -82,6 +147,13 @@ void RSPointerRenderManager::ProcessColorPicker(std::shared_ptr<RSProcessor> pro
     if (!CheckColorPickerEnabled()) {
         ROSEN_LOGD("RSPointerRenderManager::CheckColorPickerEnabled is false!");
         return;
+    }
+
+    auto timeNow = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
+    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch());
+    auto time = tmp.count() - lastColorPickerTime_;
+    if (time < colorSamplingInterval_) {
+        return false;
     }
 
     if (cacheImgForPointer_) {

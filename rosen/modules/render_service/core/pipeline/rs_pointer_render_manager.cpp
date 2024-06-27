@@ -24,6 +24,8 @@ namespace Rosen {
 namespace {
 static const std::string DISPLAY_NODE = "DisplayNode";
 static const std::string POINTER_NODE = "pointer";
+static const float RGB = 255;
+static const float HALF = 0.5;
 } // namespace
 static std::unique_ptr<RSPointerRenderManager> g_pointerRenderManagerInstance =
     std::make_unique<RSPointerRenderManager>();

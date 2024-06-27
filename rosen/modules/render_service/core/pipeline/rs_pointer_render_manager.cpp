@@ -156,7 +156,7 @@ void RSPointerRenderManager::ProcessColorPicker(std::shared_ptr<RSProcessor> pro
     auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch());
     auto time = tmp.count() - lastColorPickerTime_;
     if (time < colorSamplingInterval_) {
-        return false;
+        return;
     }
 
     if (cacheImgForPointer_) {

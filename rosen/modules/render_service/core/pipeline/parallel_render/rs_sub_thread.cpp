@@ -243,7 +243,7 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
         return;
     }
 
-    const auto& param = nodeDrawable->GetRenderParams();
+    const auto param = nodeDrawable->GetRenderParams().get();
     if (!param) {
         return;
     }

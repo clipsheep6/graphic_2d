@@ -28,6 +28,7 @@ napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("preScale", JsMatrix::PreScale),
         DECLARE_NAPI_FUNCTION("preTranslate", JsMatrix::PreTranslate),
         DECLARE_NAPI_FUNCTION("mapPoints", JsMatrix::MapPoints),
+        DECLARE_NAPI_FUNCTION("postScale", JsMatrix::PostScale),
     };
 
     napi_value constructor = nullptr;
@@ -188,12 +189,12 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
 
     napi_value dstArray = argv[ARGC_ZERO];
-    napi_value scrArray = argv[ARGC_ONE];
+    napi_value srcArray = argv[ARGC_ONE];
 
-    uint32_t scrSize = 0;
-    napi_get_array_length(env, scrArray, &scrSize);
-    std::vector<Point> src(scrSize);
-    if(!ConvertFromJsPointsArray(env, src, scrSize, scrArray)){
+    uint32_t srcSize = 0;
+    napi_get_array_length(env, srcArray, &srcSize);
+    std::vector<Point> src(srcSize);
+    if(!ConvertFromJsPointsArray(env, src, srcSize, srcArray)){
         ROSEN_LOGE("JsCanvas::OnMapPoints argv[ARGC_ONE] is invalid");
         return nullptr;
     }
@@ -209,6 +210,36 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
         napi_set_element(env, dstArray, i, eleValue);
         ++i;
     }
+
+    return nullptr;
+}
+
+napi_value JsMatrix::PostScale(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnPostScale(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnPostScale(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnPostScale matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_FOUR] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_FOUR);
+
+    double sx = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ZERO, sx);
+    double sy = 0.0;
+    GET_DOUBLE_PARAM(ARGC_ONE, sy);
+    double px = 0.0;
+    GET_DOUBLE_PARAM(ARGC_TWO, px);
+    double py = 0.0;
+    GET_DOUBLE_PARAM(ARGC_THREE, py);
+
+    JS_CALL_DRAWING_FUNC(m_matrix->PostScale(sx, sy, px, py));
 
     return nullptr;
 }

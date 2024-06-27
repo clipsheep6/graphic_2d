@@ -36,6 +36,7 @@ public:
     static napi_value PreScale(napi_env env, napi_callback_info info);
     static napi_value PreTranslate(napi_env env, napi_callback_info info);
     static napi_value MapPoints(napi_env env, napi_callback_info info);
+    static napi_value PostScale(napi_env env, napi_callback_info info);
 
     std::shared_ptr<Matrix> GetMatrix();
 private:
@@ -44,6 +45,7 @@ private:
     napi_value OnPreScale(napi_env env, napi_callback_info info);
     napi_value OnPreTranslate(napi_env env, napi_callback_info info);
     napi_value OnMapPoints(napi_env env, napi_callback_info info);
+    napi_value OnPostScale(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::shared_ptr<Matrix> m_matrix = nullptr;

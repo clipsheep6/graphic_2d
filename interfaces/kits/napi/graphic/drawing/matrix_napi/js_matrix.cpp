@@ -105,8 +105,13 @@ napi_value JsMatrix::OnGetValue(napi_env env, napi_callback_info info)
     napi_value argv[ARGC_ONE] = {nullptr};
     CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
 
-    int index = -1;
+    int32_t index = -1;
     GET_INT32_PARAM(ARGC_ZERO, index);
+
+    if (index < 0 || index > 8) {
+        ROSEN_LOGE("JsMatrix::OnGetValue index is out of range");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
 
     double value = m_matrix->Get(index);
     return GetDoubleAndConvertToJsValue(env, value);

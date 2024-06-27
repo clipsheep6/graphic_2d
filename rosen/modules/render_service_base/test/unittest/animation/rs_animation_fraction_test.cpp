@@ -82,7 +82,7 @@ HWTEST_F(RSAnimationFractionTest, GetAnimationFraction001, TestSize.Level1)
  */
 HWTEST_F(RSAnimationFractionTest, GetAnimationFraction002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest GetAnimationFraction001 start";
+    GTEST_LOG_(INFO) << "RSAnimationFractionTest GetAnimationFraction002 start";
     RSAnimationFraction::OnAnimationScaleChangedCallback("persist.sys.graphic.animationscale", "1", nullptr);
     RSAnimationFraction fraction;
     bool isDelay = false;

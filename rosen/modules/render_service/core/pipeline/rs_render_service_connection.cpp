@@ -480,11 +480,13 @@ bool RSRenderServiceConnection::Set2DRenderCtrl(bool enable)
 int32_t RSRenderServiceConnection::SetPointerColorInversionConfig(float darkBuffer,
     float brightBuffer, int64_t interval)
 {
+    RSPointerRenderManager::GetInstance().SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     return StatusCode::SUCCESS;
 }
  
 int32_t RSRenderServiceConnection::SetPointerColorInversionEnabled(bool enable)
 {
+    RSPointerRenderManager::GetInstance().SetPointerColorInversionEnabled(enable);
     return StatusCode::SUCCESS;
 }
  
@@ -496,12 +498,14 @@ int32_t RSRenderServiceConnection::RegisterPointerLuminanceChangeCallback(
         RS_LOGE("RSRenderServiceConnection::RegisterPointerLuminanceChangeCallback: callback is nullptr");
         return StatusCode::INVALID_ARGUMENTS;
     }
+    RSPointerRenderManager::GetInstance().RegisterPointerLuminanceChangeCallback(remotePid_, callback);
     return StatusCode::SUCCESS;
 }
  
 int32_t RSRenderServiceConnection::UnRegisterPointerLuminanceChangeCallback()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    RSPointerRenderManager::GetInstance().UnRegisterPointerLuminanceChangeCallback(remotePid_);
     return StatusCode::SUCCESS;
 }
 

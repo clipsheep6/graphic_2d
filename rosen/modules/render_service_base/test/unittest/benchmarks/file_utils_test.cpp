@@ -22,8 +22,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-namespace Benchmarks {
-class FileUtilsTest : public testing:Test {
+class FileUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -51,15 +50,15 @@ HWTEST(FileUtilsTest, IsValidFile001, TestSize.Level1)
     const std::string VALID_PATH = "/data/";
 
     std::string path1 = "1";
-    ASSERT_FALSE(IsValidFile());
+    ASSERT_FALSE(Benchmarks::IsValidFile(path1, VALID_PATH));
     std::string path2 = "/ppp/data/xx";
-    ASSERT_FALSE(IsValidFile());
+    ASSERT_FALSE(Benchmarks::IsValidFile(path2, VALID_PATH));
     std::string path3 = "/data";
-    ASSERT_FALSE(IsValidFile());
+    ASSERT_FALSE(Benchmarks::IsValidFile(path3, VALID_PATH));
     std::string path4 = "/data/";
-    ASSERT_TRUE(IsValidFile());
+    ASSERT_TRUE(Benchmarks::IsValidFile(path4, VALID_PATH));
     std::string path5 = "/data/xx";
-    ASSERT_TRUE(IsValidFile());
+    ASSERT_TRUE(Benchmarks::IsValidFile(path5, VALID_PATH));
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest IsValidFile001 start";
 }
@@ -123,6 +122,5 @@ HWTEST(FileUtilsTest, WriteMessageParcelToFile001, TestSize.Level1)
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest WriteMessageParcelToFile001 end";
 }
-} // Benchmarks
 } // Rosen
 } // OHOS

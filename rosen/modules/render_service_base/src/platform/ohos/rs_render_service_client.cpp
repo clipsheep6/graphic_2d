@@ -398,7 +398,7 @@ int32_t RSRenderServiceClient::SetPointerColorInversionEnabled(bool enable)
         return RENDER_SERVICE_NULL;
     }
  
-    return renderService->SetPointerColorInversionEnabled(bool enable);
+    return renderService->SetPointerColorInversionEnabled(enable);
 }
  
 class CustomPointerLuminanceChangeCallback : public RSPointerLuminanceChangeCallbackStub

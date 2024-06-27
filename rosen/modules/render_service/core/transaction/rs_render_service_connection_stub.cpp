@@ -431,7 +431,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED): {
             bool enable = data.ReadBool();
-            int32_t status = SetPointerColorInversionEnabled(bool enable);
+            int32_t status = SetPointerColorInversionEnabled(enable);
             reply.WriteInt32(status);
             break;
         }

@@ -477,6 +477,34 @@ bool RSRenderServiceConnection::Set2DRenderCtrl(bool enable)
 }
 #endif
 
+int32_t RSRenderServiceConnection::SetPointerColorInversionConfig(float darkBuffer,
+    float brightBuffer, int64_t interval)
+{
+    return StatusCode::SUCCESS;
+}
+ 
+int32_t RSRenderServiceConnection::SetPointerColorInversionEnabled(bool enable)
+{
+    return StatusCode::SUCCESS;
+}
+ 
+int32_t RSRenderServiceConnection::RegisterPointerLuminanceChangeCallback(
+    sptr<RSIPointerLuminanceChangeCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!callback) {
+        RS_LOGE("RSRenderServiceConnection::RegisterPointerLuminanceChangeCallback: callback is nullptr");
+        return StatusCode::INVALID_ARGUMENTS;
+    }
+    return StatusCode::SUCCESS;
+}
+ 
+int32_t RSRenderServiceConnection::UnRegisterPointerLuminanceChangeCallback()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return StatusCode::SUCCESS;
+}
+
 void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
 {
     std::lock_guard<std::mutex> lock(mutex_);

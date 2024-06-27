@@ -33,25 +33,25 @@ napi_value JsColorSpace::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
                                            sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        ROSEN_LOGE("Drawing_napi: Failed to define ColorSpace class");
+        ROSEN_LOGE("JsColorSpace::Init failed to define ColorSpace class");
         return nullptr;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        ROSEN_LOGE("Drawing_napi: Failed to create reference of constructor");
+        ROSEN_LOGE("JsColorSpace::Init failed to create reference of constructor");
         return nullptr;
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        ROSEN_LOGE("Drawing_napi: Failed to set constructor");
+        ROSEN_LOGE("JsColorSpace::Init failed to set constructor");
         return nullptr;
     }
 
     status = napi_define_properties(env, exportObj, sizeof(properties) / sizeof(properties[0]), properties);
     if (status != napi_ok) {
-        ROSEN_LOGE("Drawing_napi: Failed to define static function");
+        ROSEN_LOGE("JsColorSpace::Init failed to define static function");
         return nullptr;
     }
     return exportObj;
@@ -73,20 +73,20 @@ napi_value JsColorSpace::Constructor(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to napi_get_cb_info");
+        ROSEN_LOGE("JsColorSpace::Constructor failed to napi_get_cb_info");
         return nullptr;
     }
 
     JsColorSpace *jsColorSpace = new(std::nothrow) JsColorSpace();
     if (!jsColorSpace) {
-        ROSEN_LOGE("Failed to create JsColorSpace");
+        ROSEN_LOGE("JsColorSpace::Constructor failed to create JsColorSpace");
         return nullptr;
     }
 
     status = napi_wrap(env, jsThis, jsColorSpace, JsColorSpace::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsColorSpace;
-        ROSEN_LOGE("Failed to wrap native instance");
+        ROSEN_LOGE("JsColorSpace::Constructor failed to wrap native instance");
         return nullptr;
     }
     return jsThis;
@@ -118,7 +118,7 @@ napi_value JsColorSpace::Create(napi_env env, const std::shared_ptr<ColorSpace> 
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue == nullptr || colorSpace == nullptr) {
-        ROSEN_LOGE("[NAPI]Object or JsColorSpace is null!");
+        ROSEN_LOGE("JsColorSpace::Create [NAPI]Object or JsColorSpace is null!");
         return nullptr;
     }
 
@@ -126,7 +126,7 @@ napi_value JsColorSpace::Create(napi_env env, const std::shared_ptr<ColorSpace> 
     napi_wrap(env, objValue, jsColorSpace.release(), JsColorSpace::Finalizer, nullptr, nullptr);
 
     if (objValue == nullptr) {
-        ROSEN_LOGE("[NAPI]objValue is null!");
+        ROSEN_LOGE("JsColorSpace::Create [NAPI]objValue is null!");
         return nullptr;
     }
     return objValue;

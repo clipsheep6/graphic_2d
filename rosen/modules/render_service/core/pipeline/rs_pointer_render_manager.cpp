@@ -95,6 +95,7 @@ void RSPointerRenderManager::ExecutePointerLuminanceChangeCallback(int32_t brigh
  
 void RSPointerRenderManager::CallPointerLuminanceChange(int32_t brightness)
 {
+    RS_LOGD("RSPointerRenderManager::CallPointerLuminanceChange luminance_:%{public}d.", luminance_);
     auto timeNow = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
     auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch());
     lastColorPickerTime_ = tmp.count();
@@ -314,6 +315,7 @@ void RSPointerRenderManager::RunColorPickerTask()
         luminance_ = color.GetRed() * 0.2126f + color.GetGreen() * 0.7152f + color.GetBlue() * 0.0722f;
         image_ = nullptr;
         taskDoing_ = false;
+        CallPointerLuminanceChange(luminance_);
 #endif
     };
     RSBackgroundThread::Instance().PostTask(task);

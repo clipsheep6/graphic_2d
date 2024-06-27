@@ -336,7 +336,7 @@ inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value
     return napi_get_value_int32(env, jsValue, &value) == napi_ok && value >= lo && value <= hi;
 }
 
-bool ConvertFromJsPointsArray(napi_env& env, std::vector<Point> &points, uint32_t size, napi_value& array);
+bool ConvertFromJsPointsArray(napi_env& env, const napi_value& array, size_t size, std::vector<Point> &out);
 
 inline napi_value GetDoubleAndConvertToJsValue(napi_env env, double d)
 {
@@ -363,6 +363,17 @@ inline napi_value GetRectAndConvertToJsValue(napi_env env, std::shared_ptr<Rect>
         napi_set_named_property(env, objValue, "top", CreateJsNumber(env, rect->GetTop()));
         napi_set_named_property(env, objValue, "right", CreateJsNumber(env, rect->GetRight()));
         napi_set_named_property(env, objValue, "bottom", CreateJsNumber(env, rect->GetBottom()));
+    }
+    return objValue;
+}
+
+inline napi_value ConvertPointToJsValue(napi_env env, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        napi_set_named_property(env, objValue, "x", CreateJsNumber(env, point.GetX()));
+        napi_set_named_property(env, objValue, "y", CreateJsNumber(env, point.GetY()));
     }
     return objValue;
 }

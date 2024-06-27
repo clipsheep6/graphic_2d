@@ -188,27 +188,35 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     napi_value argv[ARGC_THREE] = {nullptr};
     CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
 
+    uint32_t count = 0;
     napi_value dstArray = argv[ARGC_ZERO];
     napi_value srcArray = argv[ARGC_ONE];
+    GET_UINT32_PARAM(ARGC_TWO, count);
 
-    uint32_t srcSize = 0;
-    napi_get_array_length(env, srcArray, &srcSize);
-    std::vector<Point> src(srcSize);
-    if(!ConvertFromJsPointsArray(env, src, srcSize, srcArray)){
-        ROSEN_LOGE("JsCanvas::OnMapPoints argv[ARGC_ONE] is invalid");
-        return nullptr;
+    std::vector<Point> dstPoints(count);
+    std::vector<Point> srcPoints(count);
+
+    /* Check size */
+    uint32_t srcPointsSize = 0;
+    if (napi_get_array_length(env, srcArray, &srcPointsSize) != napi_ok || (count > srcPointsSize)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array size.");
+    }
+    uint32_t dstPointsSize = 0;
+    if (napi_get_array_length(env, srcArray, &dstPointsSize) != napi_ok) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect dst array size.");
     }
 
-    uint32_t size = 0;
-    GET_UINT32_PARAM(ARGC_TWO, size);
-    std::vector<Point> dst(size);
-    JS_CALL_DRAWING_FUNC(m_matrix->MapPoints(dst, src, size));
+    /* Fill vector with data from input array */
+    if(!ConvertFromJsPointsArray(env, srcArray, count, srcPoints)){
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array data.");
+    }
+    if(!ConvertFromJsPointsArray(env, srcArray, dstPointsSize, srcPoints)){
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect dst array data.");
+    }
 
-    uint32_t i = 0;
-    for (auto p : src) {
-        napi_value eleValue = CreateJsValue(env, p);
-        napi_set_element(env, dstArray, i, eleValue);
-        ++i;
+    JS_CALL_DRAWING_FUNC(m_matrix->MapPoints(dstPoints, srcPoints, count));
+    for (uint32_t idx = 0; idx < dstPoints.size(); idx++) {
+        NAPI_CALL(env, napi_set_element(env, dstArray, idx, ConvertPointToJsValue(env, dstPoints.at(idx))));
     }
 
     return nullptr;

@@ -189,6 +189,62 @@ void OH_Drawing_BitmapGetImageInfo(OH_Drawing_Bitmap*, OH_Drawing_Image_Info*);
  */
 bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info* dstInfo,
     void* dstPixels, size_t dstRowBytes, int32_t srcX, int32_t srcY);
+
+/**
+ * @brief Sets OH_Drawing_Image_Info to ImageInfo following the rules in setInfo(), and creates PixelRef
+ * containing pixels and rowBytes.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @param pixels Address or pixel storage; may be nullptr.
+ * @param rowBytes Size of pixel row or larger.
+ * @param releaseProc Function called when pixels can be deleted; may be nullptr.
+ * @param context Caller state passed to releaseProc; may be nullptr.
+ * @return Returns true if OH_Drawing_Image_Info is set to ImageInfo.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*, void* pixels, size_t rowBytes, 
+        void (*releaseProc)(void* addr, void* context), void* context);
+
+/**
+ * @brief Copies Bitmap pixel address, row bytes, and ImageInfo to pixmap, if address
+ * is available, and returns true. If pixel address is not available, return
+ * false and leave pixmap unchanged.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Pixmap Indicates the pointer to an <b>OH_Drawing_Pixmap</b> object.
+ * @return Returns true if Image has direct access to pixels.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap*, OH_Drawing_Pixmap*);
+
+/**
+ * @brief Sets OH_Drawing_Image_Info to ImageInfo following the rules in setInfo() and allocates pixel
+ * memory.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @return Returns true if pixel storage is allocated.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*);
+
+/**
+ * @brief Calculate the storage space required for pixel arrays.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Return memory required by pixel buffer.
+ * @since 12
+ * @version 1.0
+ */
+size_t OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap*);
 #ifdef __cplusplus
 }
 #endif

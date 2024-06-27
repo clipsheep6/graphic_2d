@@ -78,6 +78,7 @@ template("drawing_ndk_source_set") {
       "$drawing_ndk_src_dir/drawing_path_effect.cpp",
       "$drawing_ndk_src_dir/drawing_pen.cpp",
       "$drawing_ndk_src_dir/drawing_pixel_map.cpp",
+      "$drawing_ndk_src_dir/drawing_pixmap.cpp",
       "$drawing_ndk_src_dir/drawing_point.cpp",
       "$drawing_ndk_src_dir/drawing_rect.cpp",
       "$drawing_ndk_src_dir/drawing_region.cpp",

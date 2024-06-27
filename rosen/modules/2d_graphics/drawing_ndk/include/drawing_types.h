@@ -302,6 +302,14 @@ typedef struct OH_Drawing_GpuContext OH_Drawing_GpuContext;
 typedef struct OH_Drawing_Surface OH_Drawing_Surface;
 
 /**
+ * @brief Defines a Pixmap, which is used to build the Pixmap.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Pixmap OH_Drawing_Pixmap;
+
+/**
  * @brief Enumerates storage formats of bitmap pixels.
  *
  * @since 8
@@ -498,6 +506,19 @@ typedef struct OH_Drawing_FontMgr OH_Drawing_FontMgr;
  * @version 1.0
  */
 typedef struct OH_Drawing_FontStyleSet OH_Drawing_FontStyleSet;
+
+/**
+ * @brief Defines a RGBA color composed of 4 floats. Color and alpha components should be in the range of zero to one.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct {
+    float red;
+    float green;
+    float blue;
+    float alpha;
+} OH_Drawing_Color4f;
 
 #ifdef __cplusplus
 }

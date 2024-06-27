@@ -79,6 +79,17 @@ OH_Drawing_Canvas* OH_Drawing_SurfaceGetCanvas(OH_Drawing_Surface*);
  */
 void OH_Drawing_SurfaceDestroy(OH_Drawing_Surface*);
 
+/**
+ * @brief Gets Image capturing Surface contents.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Surface Indicates the pointer to an <b>OH_Drawing_Surface</b> object.
+ * @return Returns the pointer to the <b>OH_Drawing_Image</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface*);
+
 #ifdef __cplusplus
 }
 #endif

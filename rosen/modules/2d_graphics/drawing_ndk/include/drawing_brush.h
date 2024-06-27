@@ -122,6 +122,18 @@ uint32_t OH_Drawing_BrushGetColor(const OH_Drawing_Brush*);
 void OH_Drawing_BrushSetColor(OH_Drawing_Brush*, uint32_t color);
 
 /**
+ * @brief Sets the color for a brush. The color will be used by the brush to fill in a shape.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
+ * @param OH_Drawing_Color4f Indicates the pointer to an <b>OH_Drawing_Color4f</b> object.
+ * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_BrushSetColor4f(OH_Drawing_Brush*, OH_Drawing_Color4f*, OH_Drawing_ColorSpace*);
+
+/**
  * @brief Obtains the alpha of a brush. The alpha is used by the brush to fill in a shape.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

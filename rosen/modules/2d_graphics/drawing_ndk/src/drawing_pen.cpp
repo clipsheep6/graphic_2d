@@ -165,6 +165,18 @@ void OH_Drawing_PenSetColor(OH_Drawing_Pen* cPen, uint32_t color)
     pen->SetColor(color);
 }
 
+void OH_Drawing_PenSetColor4f(OH_Drawing_Pen* cPen, OH_Drawing_Color4f* color4f, OH_Drawing_ColorSpace* colorSpace)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+
+    pen->SetColor(*(Color4f*)color4f,
+        std::shared_ptr<ColorSpace>{reinterpret_cast<ColorSpace*>(colorSpace), [](auto p) {}});
+}
+
 uint8_t OH_Drawing_PenGetAlpha(const OH_Drawing_Pen* cPen)
 {
     if (cPen == nullptr) {

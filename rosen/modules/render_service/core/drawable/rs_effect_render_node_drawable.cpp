@@ -73,6 +73,10 @@ void RSEffectRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         auto currentRect = canvas.GetDeviceClipBounds();
         // create offscreen surface
         auto offscreenSurface = surface->MakeSurface(currentRect.GetWidth(), currentRect.GetHeight());
+        if (!offscreenSurface) {
+            ROSEN_LOGE("RSEffectRenderNodeDrawable::OnDraw offscreenSurface is null");
+            return;
+        }
         auto offscreenCanvas = std::make_unique<RSPaintFilterCanvas>(offscreenSurface.get());
         // copy current matrix to offscreen canvas, while aligned with current rect
         auto currentMatrix = canvas.GetTotalMatrix();

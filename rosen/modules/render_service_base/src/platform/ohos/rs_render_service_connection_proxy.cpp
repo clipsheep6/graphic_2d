@@ -549,7 +549,8 @@ void RSRenderServiceConnectionProxy::RemoveVirtualScreen(ScreenId id)
     }
 }
 
-int32_t RSRenderServiceConnectionProxy::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+int32_t RSRenderServiceConnectionProxy::SetPointerColorInversionConfig(float darkBuffer,
+    float brightBuffer, int64_t interval)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -561,17 +562,17 @@ int32_t RSRenderServiceConnectionProxy::EnableCursorInvert(float darkBuffer, flo
     data.WriteFloat(darkBuffer);
     data.WriteFloat(brightBuffer);
     data.WriteInt64(interval);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::ENABLE_CURSOR_INVERT);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::EnableCursorInvert: Send Request err.");
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetPointerColorInversionConfig: Send Request err.");
         return RS_CONNECTION_ERROR;
     }
     int32_t result = reply.ReadInt32();
     return result;
 }
  
-int32_t RSRenderServiceConnectionProxy::DisableCursorInvert()
+int32_t RSRenderServiceConnectionProxy::SetPointerColorInversionEnabled(bool enable)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -580,7 +581,8 @@ int32_t RSRenderServiceConnectionProxy::DisableCursorInvert()
         return WRITE_PARCEL_ERR;
     }
     option.SetFlags(MessageOption::TF_ASYNC);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_CURSOR_INVERT);
+    data.WriteBool(enable);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::DisableCursorInvert: Send Request err.");

@@ -254,29 +254,29 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, RemoveVirtualScreen, TestSize.Level
 }
 
 /**
- * @tc.name: EnableCursorInvert Test
- * @tc.desc: EnableCursorInvert Test
+ * @tc.name: SetPointerColorInversionConfig Test
+ * @tc.desc: SetPointerColorInversionConfig Test
  * @tc.type:FUNC
  * @tc.require: issueI9KXXE
  */
-HWTEST_F(RSRenderServiceConnectionProxyTest, EnableCursorInvert, TestSize.Level1)
+HWTEST_F(RSRenderServiceConnectionProxyTest, SetPointerColorInversionConfig, TestSize.Level1)
 {
     float darkBuffer = 0.5;
     float brightBuffer = 0.5;
     int64_t interval = 50;
-    proxy->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    proxy->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     ASSERT_TRUE(true);
 }
  
 /**
- * @tc.name: DisableCursorInvert Test
- * @tc.desc: DisableCursorInvert Test
+ * @tc.name: SetPointerColorInversionEnabled Test
+ * @tc.desc: SetPointerColorInversionEnabled Test
  * @tc.type:FUNC
  * @tc.require: issueI9KXXE
  */
-HWTEST_F(RSRenderServiceConnectionProxyTest, DisableCursorInvert, TestSize.Level1)
+HWTEST_F(RSRenderServiceConnectionProxyTest, SetPointerColorInversionEnabled, TestSize.Level1)
 {
-    proxy->DisableCursorInvert();
+    proxy->SetPointerColorInversionEnabled(false);
     ASSERT_TRUE(true);
 }
  

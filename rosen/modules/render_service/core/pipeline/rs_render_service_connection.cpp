@@ -477,12 +477,13 @@ bool RSRenderServiceConnection::Set2DRenderCtrl(bool enable)
 }
 #endif
 
-int32_t RSRenderServiceConnection::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+int32_t RSRenderServiceConnection::SetPointerColorInversionConfig(float darkBuffer,
+    float brightBuffer, int64_t interval)
 {
     return StatusCode::SUCCESS;
 }
  
-int32_t RSRenderServiceConnection::DisableCursorInvert()
+int32_t RSRenderServiceConnection::SetPointerColorInversionEnabled(bool enable)
 {
     return StatusCode::SUCCESS;
 }

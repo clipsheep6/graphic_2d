@@ -160,9 +160,9 @@ public:
     
     void RemoveVirtualScreen(ScreenId id);
 
-    int32_t EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval);
+    int32_t SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval);
  
-    int32_t DisableCursorInvert();
+    int32_t SetPointerColorInversionEnabled(bool enable);
  
     int32_t RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback);
  

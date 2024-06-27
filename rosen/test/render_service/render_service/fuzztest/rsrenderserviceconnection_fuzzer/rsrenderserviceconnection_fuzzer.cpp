@@ -507,7 +507,7 @@ bool DoCreateVirtualScreen(const uint8_t* data, size_t size)
     return true;
 }
 
-bool DoEnableCursorInvert(const uint8_t* data, size_t size)
+bool DoSetPointerColorInversionConfig(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
         return false;
@@ -527,7 +527,7 @@ bool DoEnableCursorInvert(const uint8_t* data, size_t size)
     float darkBuffer = GetData<float>();
     float brightBuffer = GetData<float>();
     int64_t interval = GetData<int64_t>();
-    rsConn->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    rsConn->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     return true;
 }
  
@@ -918,7 +918,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoSetScreenGamutMap(data, size);
     OHOS::Rosen::DoSetAppWindowNum(data, size);
     OHOS::Rosen::DoCreateVirtualScreen(data, size);
-    OHOS::Rosen::DoEnableCursorInvert(data, size);
+    OHOS::Rosen::DoSetPointerColorInversionConfig(data, size);
     OHOS::Rosen::DoRegisterPointerLuminanceChangeCallback(data, size);
     OHOS::Rosen::DoSetScreenActiveMode(data, size);
     OHOS::Rosen::DoSetRefreshRateMode(data, size);

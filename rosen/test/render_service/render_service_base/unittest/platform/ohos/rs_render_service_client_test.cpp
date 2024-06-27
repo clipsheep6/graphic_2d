@@ -438,28 +438,28 @@ HWTEST_F(RSClientTest, SetScreenChangeCallback001, TestSize.Level1)
 }
 
 /**
- * @tc.name: EnableCursorInvert Test
- * @tc.desc: EnableCursorInvert Test
+ * @tc.name: SetPointerColorInversionConfig Test
+ * @tc.desc: SetPointerColorInversionConfig Test
  * @tc.type:FUNC
  * @tc.require: issuesI9K7SJ
  */
-HWTEST_F(RSClientTest, EnableCursorInvert001, TestSize.Level1)
+HWTEST_F(RSClientTest, SetPointerColorInversionConfig001, TestSize.Level1)
 {
     float darkBuffer = 0.5;
     float brightBuffer = 0.5;
     int64_t interval = 50;
-    EXPECT_EQ(rsClient->EnableCursorInvert(darkBuffer, brightBuffer, interval), StatusCode::SUCCESS);
+    EXPECT_EQ(rsClient->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval), StatusCode::SUCCESS);
 }
  
 /**
- * @tc.name: DisableCursorInvert Test
- * @tc.desc: DisableCursorInvert Test
+ * @tc.name: SetPointerColorInversionEnabled Test
+ * @tc.desc: SetPointerColorInversionEnabled Test
  * @tc.type:FUNC
  * @tc.require: issuesI9K7SJ
  */
-HWTEST_F(RSClientTest, DisableCursorInvert001, TestSize.Level1)
+HWTEST_F(RSClientTest, SetPointerColorInversionEnabled001, TestSize.Level1)
 {
-    EXPECT_EQ(rsClient->DisableCursorInvert(), StatusCode::SUCCESS);
+    EXPECT_EQ(rsClient->SetPointerColorInversionEnabled(false), StatusCode::SUCCESS);
 }
  
 /**

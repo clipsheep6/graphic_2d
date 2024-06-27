@@ -149,8 +149,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SHOW_REFRESH_RATE_ENABLED),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_RENDER_CONTROL_SCREEN),
-        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::ENABLE_CURSOR_INVERT),
-        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_CURSOR_INVERT),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_POINTER_LUMINANCE_CALLBACK),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::UNREGISTER_POINTER_LUMINANCE_CALLBACK),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS),
@@ -421,16 +421,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
-        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::ENABLE_CURSOR_INVERT): {
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG): {
             float darkBuffer = data.ReadFloat();
             float brightBuffer = data.ReadFloat();
             int64_t interval = data.ReadInt64();
-            int32_t status = EnableCursorInvert(darkBuffer, brightBuffer, interval);
+            int32_t status = SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
             reply.WriteInt32(status);
             break;
         }
-        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_CURSOR_INVERT): {
-            int32_t status = DisableCursorInvert();
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED): {
+            bool enable = data.ReadBool();
+            int32_t status = SetPointerColorInversionEnabled(bool enable);
             reply.WriteInt32(status);
             break;
         }

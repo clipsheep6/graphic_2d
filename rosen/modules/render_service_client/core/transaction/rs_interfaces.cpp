@@ -109,14 +109,14 @@ void RSInterfaces::RemoveVirtualScreen(ScreenId id)
     renderServiceClient_->RemoveVirtualScreen(id);
 }
 
-int32_t RSInterfaces::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+int32_t RSInterfaces::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
-    return renderServiceClient_->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    return renderServiceClient_->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
 }
  
-int32_t RSInterfaces::DisableCursorInvert()
+int32_t RSInterfaces::SetPointerColorInversionEnabled(bool enable)
 {
-    return renderServiceClient_->DisableCursorInvert();
+    return renderServiceClient_->SetPointerColorInversionEnabled(enable);
 }
  
 int32_t RSInterfaces::RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback)

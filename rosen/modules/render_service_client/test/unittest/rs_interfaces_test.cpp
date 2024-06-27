@@ -421,33 +421,33 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedModes002, Function | SmallTest | Le
 }
 
 /*
-* Function: EnableCursorInvert
+* Function: SetPointerColorInversionConfig
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call EnableCursorInvert
+* CaseDescription: 1. call SetPointerColorInversionConfig
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, EnableCursorInvert001, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, SetPointerColorInversionConfig001, Function | SmallTest | Level2)
 {
     float darkBuffer = 0.5;
     float brightBuffer = 0.5;
     int64_t interval = 50;
-    int32_t ret = rsInterfaces->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    int32_t ret = rsInterfaces->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     EXPECT_EQ(ret, StatusCode::SUCCESS);
 }
  
 /*
-* Function: DisableCursorInvert
+* Function: SetPointerColorInversionEnabled
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call DisableCursorInvert
+* CaseDescription: 1. call SetPointerColorInversionEnabled
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, DisableCursorInvert001, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, SetPointerColorInversionEnabled001, Function | SmallTest | Level2)
 {
-    int32_t ret = rsInterfaces->DisableCursorInvert();
+    int32_t ret = rsInterfaces->SetPointerColorInversionEnabled(false);
     EXPECT_EQ(ret, StatusCode::SUCCESS);
 }
  

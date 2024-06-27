@@ -381,24 +381,24 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
     renderService->RemoveVirtualScreen(id);
 }
 
-int32_t RSRenderServiceClient::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+int32_t RSRenderServiceClient::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return RENDER_SERVICE_NULL;
     }
  
-    return renderService->EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    return renderService->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
 }
  
-int32_t RSRenderServiceClient::DisableCursorInvert()
+int32_t RSRenderServiceClient::SetPointerColorInversionEnabled(bool enable)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return RENDER_SERVICE_NULL;
     }
  
-    return renderService->DisableCursorInvert();
+    return renderService->SetPointerColorInversionEnabled(bool enable);
 }
  
 class CustomPointerLuminanceChangeCallback : public RSPointerLuminanceChangeCallbackStub

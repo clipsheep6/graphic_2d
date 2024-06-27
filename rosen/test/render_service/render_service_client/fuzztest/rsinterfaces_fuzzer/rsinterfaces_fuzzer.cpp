@@ -75,7 +75,7 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
 
     // test
     auto& rsInterfaces = RSInterfaces::GetInstance();
-    rsInterfaces.EnableCursorInvert(darkBuffer, brightBuffer, interval);
+    rsInterfaces.SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     PointerLuminanceChangeCallback callback = [](int32_t) {};
     rsInterfaces.RegisterPointerLuminanceChangeCallback(callback);
     rsInterfaces.SetScreenActiveMode(static_cast<ScreenId>(id), modeId);

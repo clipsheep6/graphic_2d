@@ -154,12 +154,12 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
 {
 }
 
-int32_t RSRenderServiceClient::EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval)
+int32_t RSRenderServiceClient::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
     return 0;
 }
  
-int32_t RSRenderServiceClient::DisableCursorInvert()
+int32_t RSRenderServiceClient::SetPointerColorInversionEnabled(bool enable)
 {
     return 0;
 }

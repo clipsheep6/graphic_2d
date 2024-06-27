@@ -100,9 +100,9 @@ public:
 
     virtual void RemoveVirtualScreen(ScreenId id) = 0;
 
-    virtual int32_t EnableCursorInvert(float darkBuffer, float brightBuffer, int64_t interval) = 0;
+    virtual int32_t SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval) = 0;
  
-    virtual int32_t DisableCursorInvert() = 0;
+    virtual int32_t SetPointerColorInversionEnabled(bool enable) = 0;
  
     virtual int32_t RegisterPointerLuminanceChangeCallback(sptr<RSIPointerLuminanceChangeCallback> callback) = 0;
  

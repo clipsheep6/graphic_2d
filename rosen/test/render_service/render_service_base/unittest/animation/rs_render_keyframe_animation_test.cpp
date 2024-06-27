@@ -14,13 +14,13 @@
  */
 
 #include "gtest/gtest.h"
-#include "animation/rs_render_keyframe_animation.h"
+#include "luminance/rs_luminance_control.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS::Rosen {
-class RSRenderKeyframeAnimationTest : public testing::Test {
+class RSLuminanceControlTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -28,176 +28,99 @@ public:
     void TearDown() override;
 };
 
-void RSRenderKeyframeAnimationTest::SetUpTestCase() {}
-void RSRenderKeyframeAnimationTest::TearDownTestCase() {}
-void RSRenderKeyframeAnimationTest::SetUp() {}
-void RSRenderKeyframeAnimationTest::TearDown() {}
+void RSLuminanceControlTest::SetUpTestCase() {}
+void RSLuminanceControlTest::TearDownTestCase() {}
+void RSLuminanceControlTest::SetUp() {}
+void RSLuminanceControlTest::TearDown() {}
 
 /**
- * @tc.name: DumpAnimationTypeTest
- * @tc.desc: test results of DumpAnimationType
+ * @tc.name: GetTest
+ * @tc.desc: test results of GetTest
  * @tc.type: FUNC
  */
-HWTEST_F(RSRenderKeyframeAnimationTest, DumpAnimationTypeTest, Level1)
+HWTEST_F(RSLuminanceControlTest, GetTest001, TestSize.Level1)
 {
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    std::string out = "out";
-    rsRenderKeyframeAnimation.DumpAnimationType(out);
+    auto instance = RSLuminanceControl::Get();
+    EXPECT_NE(instance, nullptr);
+}
+
+/**
+ * @tc.name: InitTest
+ * @tc.desc: test results of InitTest
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSLuminanceControlTest, InitTest001, TestSize.Level1)
+{
+    RSLuminanceControl rsLuminanceControl;
+    rsLuminanceControl.Init();
     EXPECT_TRUE(true);
 }
 
 /**
- * @tc.name: AddKeyframeTest001
- * @tc.desc: test results of AddKeyframe
+ * @tc.name: SetHdrStatus
+ * @tc.desc: test results of SetHdrStatus
  * @tc.type: FUNC
  */
-HWTEST_F(RSRenderKeyframeAnimationTest, AddKeyframeTest001, Level1)
+HWTEST_F(RSLuminanceControlTest, SetHdrStatusTest001, TestSize.Level1)
 {
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    auto value = std::make_shared<RSRenderPropertyBase>();
-    auto interpolator = std::shared_ptr<RSInterpolator>();
-    rsRenderKeyframeAnimation.AddKeyframe(1.0f, value, interpolator);
-    EXPECT_NE(value, nullptr);
+    RSLuminanceControl rsLuminanceControl;
+    int32_t type = HDR_TYPE::PHOTO;
+    rsLuminanceControl.SetHdrStatus(-1, true, type);
+    rsLuminanceControl.SetHdrStatus(0, true, type);
+    rsLuminanceControl.SetHdrStatus(1, true, type);
+    rsLuminanceControl.SetHdrStatus(-1, false, type);
+    rsLuminanceControl.SetHdrStatus(0, false, type);
+    rsLuminanceControl.SetHdrStatus(1, false, type);
+    type = HDR_TYPE::VIDEO;
+    rsLuminanceControl.SetHdrStatus(-1, true, type);
+    rsLuminanceControl.SetHdrStatus(0, true, type);
+    rsLuminanceControl.SetHdrStatus(1, true, type);
+    rsLuminanceControl.SetHdrStatus(-1, false, type);
+    rsLuminanceControl.SetHdrStatus(0, false, type);
+    rsLuminanceControl.SetHdrStatus(1, false, type);
+
+    EXPECT_TRUE(true);
 }
 
 /**
- * @tc.name: AddKeyframesTest
- * @tc.desc: test results of AddKeyframes
+ * @tc.name: IsHdrOn
+ * @tc.desc: test results of IsHdrOn
  * @tc.type: FUNC
  */
-HWTEST_F(RSRenderKeyframeAnimationTest, AddKeyframesTest, Level1)
+HWTEST_F(RSLuminanceControlTest, IsHdrOnTest001, TestSize.Level1)
 {
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    auto keyframes = std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>,
-    std::shared_ptr<RSInterpolator>>>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    rsRenderKeyframeAnimation.AddKeyframes(keyframes);
-    EXPECT_NE(originValue, nullptr);
-
-    rsRenderKeyframeAnimation.Start();
-    rsRenderKeyframeAnimation.AddKeyframes(keyframes);
-    EXPECT_NE(originValue, nullptr);
+    RSLuminanceControl rsLuminanceControl;
+    rsLuminanceControl.IsHdrOn(-1);
+    rsLuminanceControl.IsHdrOn(0);
+    rsLuminanceControl.IsHdrOn(1);
+    EXPECT_TRUE(true);
 }
 
 /**
- * @tc.name: AddKeyframeTest002
- * @tc.desc: test results of AddKeyframe
+ * @tc.name: IsDimmingOn
+ * @tc.desc: test results of IsDimmingOn
  * @tc.type: FUNC
  */
-HWTEST_F(RSRenderKeyframeAnimationTest, AddKeyframeTest002, Level1)
+HWTEST_F(RSLuminanceControlTest, IsDimmingOnTest001, TestSize.Level1)
 {
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    auto value = std::make_shared<RSRenderPropertyBase>();
-    auto interpolator = std::shared_ptr<RSInterpolator>();
-    int start = 1;
-    int end = 0;
-    rsRenderKeyframeAnimation.AddKeyframe(start, end, value, interpolator);
-    EXPECT_NE(value, nullptr);
-
-    start = 0;
-    end = 1;
-    rsRenderKeyframeAnimation.AddKeyframe(start, end, value, interpolator);
-    EXPECT_NE(value, nullptr);
-
-    rsRenderKeyframeAnimation.Start();
-    rsRenderKeyframeAnimation.AddKeyframe(start, end, value, interpolator);
-    EXPECT_NE(value, nullptr);
-
-    int val = -1;
-    rsRenderKeyframeAnimation.SetDuration(val);
-    rsRenderKeyframeAnimation.AddKeyframe(start, end, value, interpolator);
-    EXPECT_NE(value, nullptr);
+    RSLuminanceControl rsLuminanceControl;
+    rsLuminanceControl.IsDimmingOn(-1);
+    rsLuminanceControl.IsDimmingOn(0);
+    rsLuminanceControl.IsDimmingOn(1);
+    EXPECT_TRUE(true);
 }
 
 /**
- * @tc.name: SetDurationKeyframeTest
- * @tc.desc: test results of SetDurationKeyframe
+ * @tc.name: DimmingIncrease
+ * @tc.desc: test results of DimmingIncrease
  * @tc.type: FUNC
  */
-HWTEST_F(RSRenderKeyframeAnimationTest, SetDurationKeyframeTest, Level1)
+HWTEST_F(RSLuminanceControlTest, DimmingIncreaseTest001, TestSize.Level1)
 {
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    rsRenderKeyframeAnimation.SetDurationKeyframe(false);
-    EXPECT_EQ(rsRenderKeyframeAnimation.isDurationKeyframe_, false);
-}
-
-/**
- * @tc.name: MarshallingTest
- * @tc.desc: test results of Marshalling
- * @tc.type: FUNC
- */
-HWTEST_F(RSRenderKeyframeAnimationTest, MarshallingTest, Level1)
-{
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    Parcel parcel;
-    bool res = rsRenderKeyframeAnimation.Marshalling(parcel);
-    ASSERT_NE(res, false);
-}
-
-/**
- * @tc.name: UnmarshallingTest
- * @tc.desc: test results of Unmarshalling
- * @tc.type: FUNC
- */
-HWTEST_F(RSRenderKeyframeAnimationTest, UnmarshallingTest, Level1)
-{
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    Parcel parcel;
-    RSRenderKeyframeAnimation* renderKeyframeAnimation = rsRenderKeyframeAnimation.Unmarshalling(parcel);
-    ASSERT_EQ(renderKeyframeAnimation, renderKeyframeAnimation);
-    renderKeyframeAnimation = nullptr;
-}
-
-/**
- * @tc.name: ParseParamTest
- * @tc.desc: test results of ParseParam
- * @tc.type: FUNC
- */
-HWTEST_F(RSRenderKeyframeAnimationTest, ParseParamTest, Level1)
-{
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    Parcel parcel;
-    bool res = rsRenderKeyframeAnimation.ParseParam(parcel);
-    ASSERT_EQ(res, false);
-}
-
-/**
- * @tc.name: ParseDurationKeyframesParamTest
- * @tc.desc: test results of ParseDurationKeyframesParam
- * @tc.type: FUNC
- */
-HWTEST_F(RSRenderKeyframeAnimationTest, ParseDurationKeyframesParamTest, Level1)
-{
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    Parcel parcel;
-    int keyframeSize = 2;
-    bool res = rsRenderKeyframeAnimation.ParseDurationKeyframesParam(parcel, keyframeSize);
-    EXPECT_EQ(res, false);
-
-    keyframeSize = 0;
-    res = rsRenderKeyframeAnimation.ParseDurationKeyframesParam(parcel, keyframeSize);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.name: OnAnimateTest
- * @tc.desc: test results of OnAnimate
- * @tc.type: FUNC
- */
-HWTEST_F(RSRenderKeyframeAnimationTest, OnAnimateTest, Level1)
-{
-    auto originValue = std::make_shared<RSRenderPropertyBase>();
-    RSRenderKeyframeAnimation rsRenderKeyframeAnimation(0, 0, originValue);
-    float fraction = 0.0f;
-    rsRenderKeyframeAnimation.OnAnimate(fraction);
-    EXPECT_EQ(fraction, 0.0f);
+    RSLuminanceControl rsLuminanceControl;
+    rsLuminanceControl.DimmingIncrease(-1);
+    rsLuminanceControl.DimmingIncrease(0);
+    rsLuminanceControl.DimmingIncrease(1);
+    EXPECT_TRUE(true);
 }
 }

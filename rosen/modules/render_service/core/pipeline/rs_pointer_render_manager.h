@@ -92,7 +92,6 @@ private:
         DARK
     };
     CursorBrightness brightness_ = CursorBrightness::NONE;
-    bool isEnableCursorInversion_ = false;
     int64_t lastColorPickerTime_ = 0;
     int64_t colorSamplingInterval_ = 50;
     float darkBuffer_ = 0.55;

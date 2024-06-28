@@ -30,6 +30,7 @@
 #include "shadow_layer_napi/js_shadow_layer.h"
 #include "text_blob_napi/js_text_blob.h"
 #include "matrix_napi/js_matrix.h"
+#include "rect_napi/js_rectf.h"
 
 namespace OHOS::Rosen {
 namespace Drawing {
@@ -50,6 +51,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsRegion::Init(env, exportObj);
     JsShadowLayer::Init(env, exportObj);
     JsMatrix::Init(env, exportObj);
+    JsRectF::Init(env, exportObj);
     return exportObj;
 }
 } // namespace Drawing

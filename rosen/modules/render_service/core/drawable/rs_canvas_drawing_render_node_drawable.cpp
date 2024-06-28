@@ -182,17 +182,7 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         if (!surface_ || !canvas_) {
             return;
         }
-        auto renderNode = renderNode_.lock();
-        if (renderNode == nullptr) {
-            return;
-        }
-        auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
-        auto canvasDrawingNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
-        if (canvasDrawingNode == nullptr) {
-            return;
-        }
-        auto canvasDrawingParams =
-            static_cast<RSCanvasDrawingRenderParams*>(canvasDrawingNode->GetRenderParams().get());
+        auto canvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(GetRenderParams().get());
         if (canvasDrawingParams->GetCanvasDrawingSurfaceChanged()) {
             return;
         }

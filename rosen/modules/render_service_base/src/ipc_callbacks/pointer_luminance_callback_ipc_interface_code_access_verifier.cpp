@@ -26,9 +26,10 @@ RSIPointerLuminanceChangeCallbackInterfaceCodeAccessVerifier::
 bool RSIPointerLuminanceChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(
     CodeUnderlyingType code)
 {
-    bool hasPermission = true;
+    bool hasPermission = false;
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::ON_POINTER_LUMINANCE_CHANGED): {
+            hasPermission = IsSystemCalling(codeEnumTypeName_ + "::ON_POINTER_LUMINANCE_CHANGED");
             break;
         }
         default: {

@@ -669,7 +669,8 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             }
         } else {
             std::function<void()> captureTask = [id, callback, scaleX, scaleY, useDma]() -> void {
-                RSSurfaceCaptureTaskParallel::CheckModifiers(id, callback, scaleX, scaleY, useDma);
+                RSSurfaceCaptureTaskParallel::CheckModifiers(id);
+                RSSurfaceCaptureTaskParallel::Capture(id, callback, scaleX, scaleY, useDma);
             };
             mainThread_->PostTask(captureTask);
         }

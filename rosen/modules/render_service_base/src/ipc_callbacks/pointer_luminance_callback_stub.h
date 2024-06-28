@@ -30,9 +30,6 @@ public:
     ~RSPointerLuminanceChangeCallbackStub() = default;
  
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
- 
-private:
-    static const RSInterfaceCodeSecurityManager securityManager_;
 };
 } // namespace Rosen
 } // namespace OHOS

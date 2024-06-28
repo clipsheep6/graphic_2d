@@ -20,6 +20,8 @@ namespace Rosen {
 int RSPointerLuminanceChangeCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
+    RSInterfaceCodeSecurityManager securityManager =
+        RSInterfaceCodeSecurityManager::CreateInstance<RSIPointerLuminanceChangeCallbackInterfaceCodeAccessVerifier>();
     if (!securityManager_.IsInterfaceCodeAccessible(code)) {
         RS_LOGE("RSPointerLuminanceChangeCallbackStub::OnRemoteRequest no permission to access codeID=%{public}u",
             code);
@@ -46,8 +48,5 @@ int RSPointerLuminanceChangeCallbackStub::OnRemoteRequest(
  
     return ret;
 }
- 
-const RSInterfaceCodeSecurityManager RSPointerLuminanceChangeCallbackStub::securityManager_ = \
-    RSInterfaceCodeSecurityManager::CreateInstance<RSIPointerLuminanceChangeCallbackInterfaceCodeAccessVerifier>();
 } // namespace Rosen
 } // namespace OHOS

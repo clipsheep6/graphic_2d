@@ -22,6 +22,7 @@
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
 #include "mask_filter_napi/js_mask_filter.h"
+#include "matrix_napi/js_matrix.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "path_napi/js_path.h"
 #include "pen_napi/js_pen.h"

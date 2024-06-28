@@ -43,6 +43,7 @@ public:
     static napi_value Reset(napi_env env, napi_callback_info info);
 
     std::shared_ptr<Matrix> GetMatrix();
+    static napi_value GetAll(napi_env env, napi_callback_info info);
 private:
 
     napi_value OnGetValue(napi_env env, napi_callback_info info);
@@ -54,6 +55,7 @@ private:
     napi_value OnMapPoints(napi_env env, napi_callback_info info);
     napi_value OnPostScale(napi_env env, napi_callback_info info);
     napi_value OnReset(napi_env env, napi_callback_info info);
+    napi_value OnGetAll(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::shared_ptr<Matrix> m_matrix = nullptr;

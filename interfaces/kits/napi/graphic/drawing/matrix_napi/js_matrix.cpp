@@ -33,6 +33,7 @@ napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("mapPoints", JsMatrix::MapPoints),
         DECLARE_NAPI_FUNCTION("postScale", JsMatrix::PostScale),
         DECLARE_NAPI_FUNCTION("reset", JsMatrix::Reset),
+        DECLARE_NAPI_FUNCTION("getAll", JsMatrix::GetAll),
     };
 
     napi_value constructor = nullptr;
@@ -348,6 +349,50 @@ napi_value JsMatrix::OnReset(napi_env env, napi_callback_info info)
     }
 
     m_matrix->Reset();
+    return nullptr;
+}
+
+napi_value JsMatrix::GetAll(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnGetAll(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnGetAll(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnGetAll matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    // get target array from ARGV, check it's size
+    napi_value argv[ARGC_ONE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+    napi_value targetArray = argv[ARGC_ZERO];
+
+    uint32_t arrayLength = 0;
+    if (napi_get_array_length(env, targetArray, &arrayLength) != napi_ok) {
+        ROSEN_LOGE("JsMatrix::OnGetAll buffer is not an array");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    
+    if (arrayLength != Matrix::MATRIX_SIZE) {
+        // let's resize incoming array to required 9 elements
+        if (napi_set_named_property(env, targetArray, "length", CreateJsValue(env, Matrix::MATRIX_SIZE)) != napi_ok) {
+            ROSEN_LOGE("JsMatrix::OnGetAll unable to resize input array");
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        }
+    }
+
+    Matrix::Buffer matrData;
+    m_matrix->GetAll(matrData);
+
+    for (int i = 0; i < Matrix::MATRIX_SIZE; ++i) {
+        if (napi_set_element(env, targetArray, i, CreateJsValue(env, matrData[i])) != napi_ok) {
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Failed to set data to param.");
+        }
+    }
+
     return nullptr;
 }
 

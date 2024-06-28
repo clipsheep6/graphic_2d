@@ -421,6 +421,37 @@ inline napi_value NapiGetUndefined(napi_env env)
     return result;
 }
 
+inline void GetPointXFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetX = 0;
+    if (napi_get_named_property(env, argValue, "x", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetX) != napi_ok) {
+        return;
+    }
+    point.SetX(targetX);
+    return;
+}
+
+inline void GetPointYFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetY = 0;
+    if (napi_get_named_property(env, argValue, "y", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetY) != napi_ok) {
+        return;
+    }
+    point.SetY(targetY);
+    return;
+}
+
+inline void GetPointFromJsValue(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    GetPointXFromJsNumber(env, argValue, point);
+    GetPointYFromJsNumber(env, argValue, point);
+    return;
+}
+
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 

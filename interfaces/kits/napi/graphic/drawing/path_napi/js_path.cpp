@@ -33,6 +33,7 @@ napi_value JsPath::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("cubicTo", JsPath::CubicTo),
         DECLARE_NAPI_FUNCTION("close", JsPath::Close),
         DECLARE_NAPI_FUNCTION("reset", JsPath::Reset),
+        DECLARE_NAPI_FUNCTION("op", JsPath::Op),
     };
 
     napi_value constructor = nullptr;
@@ -142,6 +143,12 @@ napi_value JsPath::Reset(napi_env env, napi_callback_info info)
 {
     JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
     return (me != nullptr) ? me->OnReset(env, info) : nullptr;
+}
+
+napi_value JsPath::Op(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnOp(env, info) : nullptr;
 }
 
 napi_value JsPath::OnMoveTo(napi_env env, napi_callback_info info)
@@ -279,6 +286,44 @@ napi_value JsPath::OnReset(napi_env env, napi_callback_info info)
 
     JS_CALL_DRAWING_FUNC(m_path->Reset());
     return nullptr;
+}
+
+napi_value JsPath::OnOp(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnOp path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_THREE;
+    napi_value argv[ARGC_THREE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_THREE) {
+        ROSEN_LOGE("JsPath::OnOp Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    JsPath* firstJsPath = nullptr;
+    JsPath* secondJsPath = nullptr;
+    napi_unwrap(env, argv[0], reinterpret_cast<void**>(&firstJsPath));
+    napi_unwrap(env, argv[ARGC_ONE], reinterpret_cast<void**>(&secondJsPath));
+    if (firstJsPath == nullptr || secondJsPath == nullptr) {
+        ROSEN_LOGE("JsPath::OnOp jsPath is nullptr");
+        return NapiGetUndefined(env);
+    }
+
+    if (firstJsPath->GetPath() == nullptr || secondJsPath->GetPath() == nullptr) {
+        ROSEN_LOGE("JsPath::OnOp path is nullptr");
+        return NapiGetUndefined(env);
+    }
+
+    uint32_t jsPathOp = 0;
+    if (!(ConvertFromJsValue(env, argv[ARGC_TWO], jsPathOp))) {
+        ROSEN_LOGE("JsPath::OnOp Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+    PathOp pathOp = static_cast<PathOp>(jsPathOp);
+    return CreateJsValue(env, m_path->Op(*firstJsPath->GetPath(), *secondJsPath->GetPath(), pathOp));
 }
 
 Path* JsPath::GetPath()

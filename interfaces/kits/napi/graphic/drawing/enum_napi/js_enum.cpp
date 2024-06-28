@@ -20,12 +20,19 @@
 
 #include "native_value.h"
 #include "draw/blend_mode.h"
+#include "draw/blend_mode.h"
+#include "draw/core_canvas.h"
 #include "draw/clip.h"
+#include "draw/color.h"
+#include "draw/path.h"
 #include "draw/pen.h"
+#include "draw/shadow.h"
 #include "effect/mask_filter.h"
 #include "text/font_types.h"
 #include "utils/region.h"
 #include "utils/sampling_options.h"
+#include "utils/vertices.h"
+#include "effect/shader_effect.h"
 
 #include "js_drawing_utils.h"
 
@@ -80,6 +87,21 @@ static const std::vector<struct JsEnumInt> g_textEncoding = {
     { "TEXT_ENCODING_UTF32", static_cast<int32_t>(TextEncoding::UTF32) },
     { "TEXT_ENCODING_GLYPH_ID", static_cast<int32_t>(TextEncoding::GLYPH_ID) },
 };
+static const std::vector<struct JsEnumInt> g_colorFormat = {
+    { "COLOR_FORMAT_UNKNOWN", static_cast<int32_t>(ColorType::COLORTYPE_UNKNOWN) },
+    { "COLOR_FORMAT_ALPHA_8", static_cast<int32_t>(ColorType::COLORTYPE_ALPHA_8) },
+    { "COLOR_FORMAT_RGB_565", static_cast<int32_t>(ColorType::COLORTYPE_RGB_565) },
+    { "COLOR_FORMAT_ARGB_4444", static_cast<int32_t>(ColorType::COLORTYPE_ARGB_4444) },
+    { "COLOR_FORMAT_RGBA_8888", static_cast<int32_t>(ColorType::COLORTYPE_RGBA_8888) },
+    { "COLOR_FORMAT_BGRA_8888", static_cast<int32_t>(ColorType::COLORTYPE_BGRA_8888) },
+};
+
+static const std::vector<struct JsEnumInt> g_alphaFormat = {
+    { "ALPHA_FORMAT_UNKNOWN", static_cast<int32_t>(AlphaType::ALPHATYPE_UNKNOWN) },
+    { "ALPHA_FORMAT_OPAQUE", static_cast<int32_t>(AlphaType::ALPHATYPE_OPAQUE) },
+    { "ALPHA_FORMAT_PREMUL", static_cast<int32_t>(AlphaType::ALPHATYPE_PREMUL) },
+    { "ALPHA_FORMAT_UNPREMUL", static_cast<int32_t>(AlphaType::ALPHATYPE_UNPREMUL) },
+};
 
 static const std::vector<struct JsEnumInt> g_filterMode = {
     { "FILTER_MODE_NEAREST", static_cast<int32_t>(FilterMode::NEAREST) },
@@ -98,6 +120,19 @@ static const std::vector<struct JsEnumInt> g_regionOp = {
 static const std::vector<struct JsEnumInt> g_clipOp = {
     { "DIFFERENCE", static_cast<int32_t>(ClipOp::DIFFERENCE) },
     { "INTERSECT", static_cast<int32_t>(ClipOp::INTERSECT) },
+};
+
+static const std::vector<struct JsEnumInt> g_pointMode = {
+    { "POINT_MODE_POINTS", static_cast<int32_t>(PointMode::POINTS_POINTMODE) },
+    { "POINT_MODE_LINES", static_cast<int32_t>(PointMode::LINES_POINTMODE) },
+    { "POINT_MODE_POLYGON", static_cast<int32_t>(PointMode::POLYGON_POINTMODE) },
+};
+
+static const std::vector<struct JsEnumInt> g_vertexMode = {
+    { "VERTEX_MODE_TRIANGLES", static_cast<int32_t>(VertexMode::TRIANGLES_VERTEXMODE) },
+    { "VERTEX_MODE_TRIANGLESSTRIP", static_cast<int32_t>(VertexMode::TRIANGLESSTRIP_VERTEXMODE) },
+    { "VERTEX_MODE_TRIANGLEFAN", static_cast<int32_t>(VertexMode::TRIANGLEFAN_VERTEXMODE) },
+    { "VERTEX_MODE_LAST", static_cast<int32_t>(VertexMode::LAST_VERTEXMODE) },
 };
 
 static const std::vector<struct JsEnumInt> g_joinStyle = {
@@ -131,16 +166,45 @@ static const std::vector<struct JsEnumInt> g_fontMetricsFlags = {
     { "BOUNDS_INVALID", static_cast<int32_t>(Drawing::FontMetrics::FontMetricsFlags::BOUNDS_INVALID_FLAG) },
 };
 
+static const std::vector<struct JsEnumInt> g_shadowFlag = {
+    { "SHADOW_FLAGS_NONE", static_cast<int32_t>(ShadowFlags::NONE) },
+    { "SHADOW_FLAGS_TRANSPARENT_OCCLUDER", static_cast<int32_t>(ShadowFlags::TRANSPARENT_OCCLUDER) },
+    { "SHADOW_FLAGS_GEOMETRIC_ONLY", static_cast<int32_t>(ShadowFlags::GEOMETRIC_ONLY) },
+    { "SHADOW_FLAGS_ALL", static_cast<int32_t>(ShadowFlags::ALL) },
+};
+
+static const std::vector<struct JsEnumInt> g_tileMode = {
+    { "CLAMP", static_cast<int32_t>(TileMode::CLAMP) },
+    { "REPEAT", static_cast<int32_t>(TileMode::REPEAT) },
+    { "MIRROR", static_cast<int32_t>(TileMode::MIRROR) },
+    { "DECAL", static_cast<int32_t>(TileMode::DECAL) },
+};
+
+static const std::vector<struct JsEnumInt> g_pathOp = {
+    { "PATH_OP_DIFFERENCE", static_cast<int32_t>(PathOp::DIFFERENCE) },
+    { "PATH_OP_INTERSECT", static_cast<int32_t>(PathOp::INTERSECT) },
+    { "PATH_OP_UNION", static_cast<int32_t>(PathOp::UNION) },
+    { "PATH_OP_XOR", static_cast<int32_t>(PathOp::XOR) },
+    { "PATH_OP_REVERSE_DIFFERENCE", static_cast<int32_t>(PathOp::REVERSE_DIFFERENCE) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
+    { "ColorFormat", g_colorFormat },
+    { "AlphaFormat", g_alphaFormat },
+    { "ShadowFlag", g_shadowFlag },
     { "FilterMode", g_filterMode },
     { "RegionOp", g_regionOp },
     { "ClipOp", g_clipOp },
     { "JoinStyle", g_joinStyle },
     { "CapStyle", g_capStyle },
     { "BlurType", g_blurType },
+    { "PointMode", g_pointMode },
+    { "VertexMode", g_vertexMode },
+    { "TileMode", g_tileMode },
     { "FontMetricsFlags", g_fontMetricsFlags },
+    { "PathOp", g_pathOp },
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

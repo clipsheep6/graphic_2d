@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_SRC_FONT_PARSER_H
-#define ROSEN_MODULES_TEXGINE_SRC_FONT_PARSER_H
+#ifndef ROSEN_MODULES_2D_ENGINE_ROSEN_TEXT_FONT_PARSER_H
+#define ROSEN_MODULES_2D_ENGINE_ROSEN_TEXT_FONT_PARSER_H
 
 #include <hb.h>
 #include <string>
 #include <vector>
+#include <text/typeface.h>
 
 #include "opentype_parser/cmap_table_parser.h"
 #include "opentype_parser/name_table_parser.h"
 #include "opentype_parser/post_table_parser.h"
-
-#include "typeface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -134,4 +133,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // ROSEN_MODULES_TEXGINE_SRC_FONT_PARSER_H
+#endif // ROSEN_MODULES_2D_ENGINE_ROSEN_TEXT_FONT_PARSER_H

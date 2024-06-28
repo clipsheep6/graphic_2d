@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "font_config.h"
+#include <rosen_text/font_config.h>
 
 #include "cJSON.h"
 #include <dirent.h>
@@ -26,7 +26,7 @@
 #ifdef BUILD_NON_SDK_VER
 #include "securec.h"
 #endif
-#include "texgine/utils/exlog.h"
+#include "exlog.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -397,7 +397,7 @@ int FontConfigJson::ParseFallback(const cJSON* root, const char* key)
             continue;
         }
         cJSON* item2 = cJSON_GetArrayItem(item, 0);
-        if (item2 == nullptr || item2->valuestring == nullptr || item2->string == nullptr) {
+        if (item2 == nullptr) {
             continue;
         }
         FallbackInfo fallbackInfo;

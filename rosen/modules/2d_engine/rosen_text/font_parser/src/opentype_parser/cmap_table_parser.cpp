@@ -13,23 +13,27 @@
  * limitations under the License.
  */
 
-#include "texgine_stream.h"
+#include <rosen_text/opentype_parser/cmap_table_parser.h>
+
+#include "exlog.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-TexgineMemoryStream::TexgineMemoryStream(): memoryStream_(std::make_unique<RSMemoryStream>()) {}
-
-TexgineMemoryStream::TexgineMemoryStream(std::unique_ptr<RSMemoryStream> stream): memoryStream_(std::move(stream)) {}
-
-std::unique_ptr<RSMemoryStream> TexgineMemoryStream::GetStream()
+const struct CmapTables* CmapTableParser::Parse(const char* data, int32_t size)
 {
-    return std::move(memoryStream_);
+    return reinterpret_cast<const struct CmapTables*>(data);
 }
 
-std::unique_ptr<TexgineMemoryStream> TexgineMemoryStream::MakeCopy(const void *data, size_t length)
+void CmapTableParser::Dump() const
 {
-    return std::make_unique<TexgineMemoryStream>(std::make_unique<RSMemoryStream>(data, length, true));
+    auto cmapTable = reinterpret_cast<const struct CmapTables*>(data_);
+    LOGSO_FUNC_LINE(INFO) << "cmapTable size: " << size_;
+    for (auto i = 0; i < cmapTable->numTables.Get(); ++i) {
+        const auto& record = cmapTable->encodingRecords[i];
+        LOGSO_FUNC_LINE(INFO) << "platformID: " << record.platformID.Get()
+            << ", encodingID: " << record.encodingID.Get();
+    }
 }
 } // namespace TextEngine
 } // namespace Rosen

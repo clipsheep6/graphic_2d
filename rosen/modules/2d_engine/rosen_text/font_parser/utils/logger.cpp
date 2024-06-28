@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "texgine/utils/logger.h"
+#include "logger.h"
 
 #include <fstream>
 #include <iomanip>

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "ranges.h"
+#include <rosen_text/opentype_parser/ranges.h>
 
 #include <iomanip>
-#include "texgine/utils/exlog.h"
+#include "exlog.h"
 
 namespace OHOS {
 namespace Rosen {

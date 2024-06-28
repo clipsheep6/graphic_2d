@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "name_table_parser.h"
+#include <rosen_text/opentype_parser/name_table_parser.h>
 
 #include <iomanip>
 #include <string>
 
-#include "texgine/utils/exlog.h"
+#include "exlog.h"
 
 namespace OHOS {
 namespace Rosen {

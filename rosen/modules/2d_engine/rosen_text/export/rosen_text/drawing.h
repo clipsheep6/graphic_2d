@@ -16,8 +16,8 @@
 #ifndef ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_DRAWING_H
 #define ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_DRAWING_H
 
-#include "recording/recording_canvas.h"
-#include "skia_adapter/skia_text_blob.h"
+//#include "recording/recording_canvas.h"
+//#include "skia_adapter/skia_text_blob.h"
 #include "draw/path.h"
 #include "effect/path_effect.h"
 #include "effect/mask_filter.h"
@@ -34,14 +34,14 @@
 
 namespace RSDrawing = OHOS::Rosen::Drawing;
 using RSBlurType = RSDrawing::BlurType;
-using RSBrush = RSDrawing::Brush;
+//using RSBrush = RSDrawing::Brush;
 using RSMemoryStream = RSDrawing::MemoryStream;
-using RSCanvas = RSDrawing::Canvas;
-using RSColor = RSDrawing::Color;
+//using RSCanvas = RSDrawing::Canvas;
+//using RSColor = RSDrawing::Color;
 using RSData = RSDrawing::Data;
 using RSMaskFilter = RSDrawing::MaskFilter;
 using RSFont = RSDrawing::Font;
-using RSFilter = RSDrawing::Filter;
+//using RSFilter = RSDrawing::Filter;
 using RSFont = RSDrawing::Font;
 using RSFontEdging = RSDrawing::FontEdging;
 using RSFontHinting = RSDrawing::FontHinting;
@@ -50,9 +50,9 @@ using RSFontMgr = RSDrawing::FontMgr;
 using RSFontStyle = RSDrawing::FontStyle;
 using RSFontStyleSet = RSDrawing::FontStyleSet;
 using RSPath = RSDrawing::Path;
-using RSPen = RSDrawing::Pen;
+//using RSPen = RSDrawing::Pen;
 using RSPoint = RSDrawing::Point;
-using RSPicture = RSDrawing::Picture;
+//using RSPicture = RSDrawing::Picture;
 using RSPathEffect = RSDrawing::PathEffect;
 using RSPathDashStyle = RSDrawing::PathDashStyle;
 using RSRecordingPathEffect = RSDrawing::PathEffect;

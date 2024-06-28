@@ -13,27 +13,23 @@
  * limitations under the License.
  */
 
-#include "texgine_string.h"
+#include <rosen_text/opentype_parser/post_table_parser.h>
+
+#include "exlog.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-std::string *TexgineString::GetString()
+const struct PostTable* PostTableParser::Parse(const char* data, int32_t size)
 {
-    return string_.get();
+    return reinterpret_cast<const struct PostTable*>(data);
 }
 
-void TexgineString::SetString(const std::shared_ptr<std::string> string)
+void PostTableParser::Dump() const
 {
-    string_ = string;
-}
-
-std::string TexgineString::ToString() const
-{
-    if (string_ == nullptr) {
-        return "";
-    }
-    return string_->c_str();
+    const auto& table = *reinterpret_cast<const struct PostTable*>(data_);
+    LOGSO_FUNC_LINE(INFO) << "postTable size: " << size_ << "version: " << table.version.Get()
+        << "italicAngle: " << table.italicAngle.Get() << "isFixedPitch: " << table.isFixedPitch.Get();
 }
 } // namespace TextEngine
 } // namespace Rosen

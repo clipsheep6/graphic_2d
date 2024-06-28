@@ -415,7 +415,14 @@
                 "typography_style.h",
                 "text_style.h",
                 "typography.h",
-                "typography_types.h"
+                "typography_types.h",
+                "font_config.h",
+                "font_parser.h",
+                "drawing.h",
+		"opentype_parser/cmap_table_parser.h",
+		"opentype_parser/post_table_parser.h",
+		"opentype_parser/name_table_parser.h",
+		"opentype_parser/ranges.h"		
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text"
             }

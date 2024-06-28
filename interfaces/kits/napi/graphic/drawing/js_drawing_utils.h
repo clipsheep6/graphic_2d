@@ -26,6 +26,7 @@
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
 #include "text/font_types.h"
+#include "utils/point.h"
 #include "utils/rect.h"
 
 namespace OHOS::Rosen {
@@ -366,11 +367,55 @@ inline napi_value GetRectAndConvertToJsValue(napi_env env, std::shared_ptr<Rect>
     return objValue;
 }
 
+inline napi_value GetPointAndConvertToJsValue(napi_env env, std::shared_ptr<Point> point)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        if(napi_set_named_property(env, objValue, "x", CreateJsNumber(env, point->GetX())) != napi_ok ||
+           napi_set_named_property(env, objValue, "y", CreateJsNumber(env, point->GetY())) != napi_ok)) {
+            return nullptr;
+        }
+    }
+    return objValue;
+}
+
 inline napi_value NapiGetUndefined(napi_env env)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     return result;
+}
+
+inline void GetPointXFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetX = 0;
+    if (napi_get_named_property(env, argValue, "x", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetX) != napi_ok) {
+        return;
+    }
+    point.SetX(targetX);
+    return;
+}
+
+inline void GetPointYFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetY = 0;
+    if (napi_get_named_property(env, argValue, "y", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetY) != napi_ok) {
+        return;
+    }
+    point.SetY(targetY);
+    return;
+}
+
+inline void GetPointFromJsValue(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    GetPointXFromJsNumber(env, argValue, point);
+    GetPointYFromJsNumber(env, argValue, point);
+    return;
 }
 
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);

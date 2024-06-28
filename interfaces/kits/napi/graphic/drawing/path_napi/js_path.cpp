@@ -299,7 +299,7 @@ napi_value JsPath::OnReset(napi_env env, napi_callback_info info)
 napi_value JsPath::OnIsClosed(napi_env env, napi_callback_info info)
 {
     if (m_path == nullptr) {
-        ROSEN_LOGE("JsPath::OnCopy path is nullptr");
+        ROSEN_LOGE("JsPath::OnIsClosed path is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
@@ -322,6 +322,7 @@ napi_value JsPath::OnGetLength(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsPath::OnGetLength path is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
+
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = { nullptr };
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);

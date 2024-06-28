@@ -60,6 +60,7 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
     VSyncCallback cb = nullptr;
     VSyncCallbackWithId cbWithId = nullptr;
     int64_t expectedEnd;
+    void *userData;
     {
         std::lock_guard<std::mutex> locker(mtx_);
         cb = vsyncCallbacks_;
@@ -73,6 +74,7 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
         expectedEnd = now + period_;
         // rs vsync offset is 5000000ns
         expectedEnd = (name_ == "rs") ? (expectedEnd + period_ - 5000000) : expectedEnd;
+        userData = userData_;
     }
 
     VLOGD("dataCount:%{public}d, cb == nullptr:%{public}d", dataCount, (cb == nullptr));
@@ -81,7 +83,7 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
         " expectedEnd:" + std::to_string(expectedEnd) + " vsyncId:" + std::to_string(data[2])); // data[2] is vsyncId
     if (dataCount > 0 && (cbWithId != nullptr || cb != nullptr)) {
         // data[2] is frameCount
-        cbWithId != nullptr ? cbWithId(now, data[2], userData_) : cb(now, userData_);
+        cbWithId != nullptr ? cbWithId(now, data[2], userData) : cb(now, userData);
     }
     if (OHOS::Rosen::RsFrameReportExt::GetInstance().GetEnable()) {
         OHOS::Rosen::RsFrameReportExt::GetInstance().ReceiveVSync();

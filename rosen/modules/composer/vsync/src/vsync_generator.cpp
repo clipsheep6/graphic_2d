@@ -759,7 +759,7 @@ void VSyncGenerator::CalculateReferenceTimeOffsetPulseNumLocked(int64_t referenc
 {
     int64_t actualOffset = referenceTime - pendingReferenceTime_;
     int32_t actualOffsetPulseNum = round((double)actualOffset/(double)pulse_);
-    if (startRefresh_) {
+    if (startRefresh_ || (defaultReferenceTimeOffsetPulseNum_ == 0)) {
         referenceTimeOffsetPulseNum_ = defaultReferenceTimeOffsetPulseNum_;
     } else {
         referenceTimeOffsetPulseNum_ = std::max(actualOffsetPulseNum, defaultReferenceTimeOffsetPulseNum_);

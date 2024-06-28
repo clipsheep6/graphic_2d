@@ -111,21 +111,33 @@ void RSInterfaces::RemoveVirtualScreen(ScreenId id)
 
 int32_t RSInterfaces::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
+    if (renderServiceClient_ == nullptr) {
+        return StatusCode::RENDER_SERVICE_NULL;
+    }
     return renderServiceClient_->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
 }
  
 int32_t RSInterfaces::SetPointerColorInversionEnabled(bool enable)
 {
+    if (renderServiceClient_ == nullptr) {
+        return StatusCode::RENDER_SERVICE_NULL;
+    }
     return renderServiceClient_->SetPointerColorInversionEnabled(enable);
 }
  
 int32_t RSInterfaces::RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback)
 {
+    if (renderServiceClient_ == nullptr) {
+        return StatusCode::RENDER_SERVICE_NULL;
+    }
     return renderServiceClient_->RegisterPointerLuminanceChangeCallback(callback);
 }
  
 int32_t RSInterfaces::UnRegisterPointerLuminanceChangeCallback()
 {
+    if (renderServiceClient_ == nullptr) {
+        return StatusCode::RENDER_SERVICE_NULL;
+    }
     return renderServiceClient_->UnRegisterPointerLuminanceChangeCallback();
 }
 

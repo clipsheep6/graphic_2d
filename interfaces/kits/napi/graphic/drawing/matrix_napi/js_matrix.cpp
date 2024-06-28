@@ -36,6 +36,7 @@ napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("getAll", JsMatrix::GetAll),
         DECLARE_NAPI_FUNCTION("setPolyToPoly", JsMatrix::SetPolyToPoly),
         DECLARE_NAPI_FUNCTION("setRectToRect", JsMatrix::SetRectToRect),
+        DECLARE_NAPI_FUNCTION("mapRect", JsMatrix::MapRect),
     };
 
     napi_value constructor = nullptr;
@@ -491,6 +492,45 @@ napi_value JsMatrix::OnSetRectToRect(napi_env env, napi_callback_info info)
     }
 
     return CreateJsValue(env, result);
+}
+
+napi_value JsMatrix::MapRect(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnMapRect(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnMapRect(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnMapRect matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_TWO] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_TWO);
+
+    double src[ARGC_FOUR];
+    if (!ConvertFromJsRect(env, argv[ARGC_ONE], src, ARGC_FOUR)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "JsMatrix::OnMapRect Incorrect parameter type for src rect. The types must be numbers.");
+    }
+    Rect dstRect;
+    Rect srcRect{ src[ARGC_ZERO], src[ARGC_ONE], src[ARGC_TWO], src[ARGC_THREE]};
+    auto res = CreateJsValue(env, m_matrix->MapRect(dstRect, srcRect));
+    auto objValue = argv[ARGC_ZERO];
+    if (napi_set_named_property(env, objValue, "left",
+            CreateJsNumber(env, dstRect.GetLeft())) != napi_ok ||
+        napi_set_named_property(env, objValue, "top",
+            CreateJsNumber(env, dstRect.GetTop())) != napi_ok ||
+        napi_set_named_property(env, objValue, "right",
+            CreateJsNumber(env, dstRect.GetRight())) != napi_ok ||
+        napi_set_named_property(env, objValue, "bottom",
+            CreateJsNumber(env, dstRect.GetBottom())) != napi_ok ) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+                "JsMatrix::OnMapRect Cannot fill 'dst' Rect type.");
+    }
+    return res;
 }
 
 JsMatrix::~JsMatrix()

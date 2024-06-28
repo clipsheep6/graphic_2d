@@ -42,6 +42,7 @@ public:
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value SetPolyToPoly(napi_env env, napi_callback_info info);
     static napi_value SetRectToRect(napi_env env, napi_callback_info info);
+    static napi_value MapRect(napi_env env, napi_callback_info info);
 
     std::shared_ptr<Matrix> GetMatrix();
     static napi_value GetAll(napi_env env, napi_callback_info info);
@@ -59,6 +60,7 @@ private:
     napi_value OnGetAll(napi_env env, napi_callback_info info);
     napi_value OnSetPolyToPoly(napi_env env, napi_callback_info info);
     napi_value OnSetRectToRect(napi_env env, napi_callback_info info);
+    napi_value OnMapRect(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::shared_ptr<Matrix> m_matrix = nullptr;

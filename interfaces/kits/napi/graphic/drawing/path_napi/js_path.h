@@ -39,11 +39,8 @@ public:
     static napi_value CubicTo(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
-<<<<<<< HEAD
     static napi_value IsClosed(napi_env env, napi_callback_info info);
-=======
     static napi_value GetLength(napi_env env, napi_callback_info info);
->>>>>>> c479140b171e2f1ab7e79bdb5f88baa65337453c
     Path* GetPath();
 
 private:
@@ -54,11 +51,8 @@ private:
     napi_value OnCubicTo(napi_env env, napi_callback_info info);
     napi_value OnClose(napi_env env, napi_callback_info info);
     napi_value OnReset(napi_env env, napi_callback_info info);
-<<<<<<< HEAD
     napi_value OnIsClosed(napi_env env, napi_callback_info info);
-=======
     napi_value OnGetLength(napi_env env, napi_callback_info info);
->>>>>>> c479140b171e2f1ab7e79bdb5f88baa65337453c
 
     static thread_local napi_ref constructor_;
     Path* m_path = nullptr;

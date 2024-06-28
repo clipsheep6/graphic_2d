@@ -131,6 +131,13 @@ static const std::vector<struct JsEnumInt> g_fontMetricsFlags = {
     { "BOUNDS_INVALID", static_cast<int32_t>(Drawing::FontMetrics::FontMetricsFlags::BOUNDS_INVALID_FLAG) },
 };
 
+static const std::vector<struct JsEnumInt> g_scaleToFit = {
+    { "FILL_SCALETOFIT", static_cast<int32_t>(ScaleToFit::FILL_SCALETOFIT) },
+    { "START_SCALETOFIT", static_cast<int32_t>(ScaleToFit::START_SCALETOFIT) },
+    { "CENTER_SCALETOFIT", static_cast<int32_t>(ScaleToFit::CENTER_SCALETOFIT) },
+    { "END_SCALETOFIT", static_cast<int32_t>(ScaleToFit::END_SCALETOFIT) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
@@ -141,6 +148,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "CapStyle", g_capStyle },
     { "BlurType", g_blurType },
     { "FontMetricsFlags", g_fontMetricsFlags },
+    { "ScaleToFit", g_scaleToFit },
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

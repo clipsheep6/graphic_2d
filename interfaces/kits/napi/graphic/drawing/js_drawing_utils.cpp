@@ -115,7 +115,7 @@ bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t si
     return true;
 }
 
-bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, int32_t count)
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, uint32_t count)
 {
     for(uint32_t i = 0; i < count; i++)  {
         napi_value tempPoint = nullptr;
@@ -157,6 +157,5 @@ napi_value GetFontMetricsAndConvertToJsValue(napi_env env, FontMetrics* metrics)
     }
     return objValue;
 }
-
 } // namespace Drawing
 } // namespace OHOS::Rosen

@@ -34,6 +34,8 @@ napi_value JsMatrix::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("postScale", JsMatrix::PostScale),
         DECLARE_NAPI_FUNCTION("reset", JsMatrix::Reset),
         DECLARE_NAPI_FUNCTION("getAll", JsMatrix::GetAll),
+        DECLARE_NAPI_FUNCTION("setPolyToPoly", JsMatrix::SetPolyToPoly),
+        DECLARE_NAPI_FUNCTION("setRectToRect", JsMatrix::SetRectToRect),
     };
 
     napi_value constructor = nullptr;
@@ -69,7 +71,7 @@ napi_value JsMatrix::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    JsMatrix* jsMatrix = new(std::nothrow) JsMatrix(std::make_shared<Matrix>());
+    JsMatrix* jsMatrix = new(std::nothrow) JsMatrix();
     if (jsMatrix == nullptr) {
         ROSEN_LOGE("JsMatrix::Constructor Failed to create jsMatrix");
         return nullptr;
@@ -275,12 +277,12 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     napi_value argv[ARGC_THREE] = {nullptr};
     CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
 
-    int32_t count = 0;
+    uint32_t count = 0;
     napi_value dstArray = argv[ARGC_ZERO];
     napi_value srcArray = argv[ARGC_ONE];
-    GET_INT32_PARAM(ARGC_TWO, count);
+    GET_UINT32_PARAM(ARGC_TWO, count);
 
-    if (count <= 0) {
+    if (count == 0) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect count value.");
     }
 
@@ -375,7 +377,7 @@ napi_value JsMatrix::OnGetAll(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsMatrix::OnGetAll buffer is not an array");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    
+
     if (arrayLength != Matrix::MATRIX_SIZE) {
         // let's resize incoming array to required 9 elements
         if (napi_set_named_property(env, targetArray, "length", CreateJsValue(env, Matrix::MATRIX_SIZE)) != napi_ok) {
@@ -394,6 +396,101 @@ napi_value JsMatrix::OnGetAll(napi_env env, napi_callback_info info)
     }
 
     return nullptr;
+}
+
+napi_value JsMatrix::SetPolyToPoly(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnSetPolyToPoly(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnSetPolyToPoly(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnSetPolyToPoly matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+
+    uint32_t count = 0;
+    GET_UINT32_PARAM(ARGC_TWO, count);
+
+    if (count == 0) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Invalid param 'count' == 0");
+    }
+    uint32_t srcPointsSize = 0;
+    if (napi_get_array_length(env, argv[ARGC_ZERO], &srcPointsSize) != napi_ok || (count > srcPointsSize)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array size.");
+    }
+    Drawing::Point srcPoints[count];
+    if (!ConvertFromJsPointsArray(env, argv[ARGC_ZERO], srcPoints, count)){
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Invalid 'src' Array<Point> type.");
+    }
+    Drawing::Point dstPoints[count];
+    bool result = m_matrix->SetPolyToPoly(srcPoints, dstPoints, count);
+
+    if (result) {
+        for (uint32_t i = 0; i < count; i++) {
+            if (napi_set_element(env, argv[ARGC_ONE], i,
+                GetPointAndConvertToJsValue(env, dstPoints[i])) != napi_ok) {
+                return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+                       "Cannot fill 'dst' Array<Point> type.");
+            }
+        }
+    }
+
+    return CreateJsValue(env, result);
+}
+
+napi_value JsMatrix::SetRectToRect(napi_env env, napi_callback_info info)
+{
+    JsMatrix* me = CheckParamsAndGetThis<JsMatrix>(env, info);
+    return (me != nullptr) ? me->OnSetRectToRect(env, info) : nullptr;
+}
+
+napi_value JsMatrix::OnSetRectToRect(napi_env env, napi_callback_info info)
+{
+    if (m_matrix == nullptr) {
+        ROSEN_LOGE("JsMatrix::OnSetRectToRect matrix is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+
+    double ltrb[ARGC_FOUR];
+    if (!ConvertFromJsRect(env, argv[ARGC_ZERO], ltrb, ARGC_FOUR)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Incorrect 'src' Rect type. The type of left, top, right and bottom must be number.");
+    }
+    Drawing::Rect srcRect = Drawing::Rect(ltrb[ARGC_ZERO], ltrb[ARGC_ONE], ltrb[ARGC_TWO], ltrb[ARGC_THREE]);
+    Drawing::Rect dstRect;
+
+    int32_t stf;
+    GET_ENUM_PARAM(ARGC_TWO, stf, 0, static_cast<int32_t>(ScaleToFit::END_SCALETOFIT));
+
+    bool result = m_matrix->SetRectToRect(srcRect, dstRect, static_cast<ScaleToFit>(stf));
+
+    if (result) {
+        napi_value objValue = argv[ARGC_ONE];
+        if (napi_set_named_property(env, objValue, "left",
+                CreateJsNumber(env, dstRect.GetLeft())) != napi_ok ||
+            napi_set_named_property(env, objValue, "top",
+                CreateJsNumber(env, dstRect.GetTop())) != napi_ok ||
+            napi_set_named_property(env, objValue, "right",
+                CreateJsNumber(env, dstRect.GetRight())) != napi_ok ||
+            napi_set_named_property(env, objValue, "bottom",
+                CreateJsNumber(env, dstRect.GetBottom())) != napi_ok ) {
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+                    "Cannot fill 'dst' Rect type.");
+        }
+    }
+
+    return CreateJsValue(env, result);
 }
 
 JsMatrix::~JsMatrix()

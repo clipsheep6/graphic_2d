@@ -26,8 +26,8 @@
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
 #include "text/font_types.h"
-#include "utils/rect.h"
 #include "utils/point.h"
+#include "utils/rect.h"
 
 namespace OHOS::Rosen {
 
@@ -366,7 +366,7 @@ inline bool GetPointFromJsValue(napi_env env, napi_value argValue, Drawing::Poin
            GetPointYFromJsNumber(env, argValue, point);
 }
 
-bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, int32_t count);
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, uint32_t count);
 
 inline napi_value GetDoubleAndConvertToJsValue(napi_env env, double d)
 {

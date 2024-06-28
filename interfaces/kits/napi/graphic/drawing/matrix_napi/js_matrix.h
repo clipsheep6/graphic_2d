@@ -25,8 +25,7 @@ namespace OHOS::Rosen {
 namespace Drawing {
 class JsMatrix final {
 public:
-    explicit JsMatrix(std::shared_ptr<Matrix> matrix)
-        : m_matrix(matrix) {};
+    explicit JsMatrix() : m_matrix(std::make_shared<Matrix>()) {};
     ~JsMatrix();
 
     static napi_value Init(napi_env env, napi_value exportObj);
@@ -41,6 +40,8 @@ public:
     static napi_value MapPoints(napi_env env, napi_callback_info info);
     static napi_value PostScale(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
+    static napi_value SetPolyToPoly(napi_env env, napi_callback_info info);
+    static napi_value SetRectToRect(napi_env env, napi_callback_info info);
 
     std::shared_ptr<Matrix> GetMatrix();
     static napi_value GetAll(napi_env env, napi_callback_info info);
@@ -56,6 +57,8 @@ private:
     napi_value OnPostScale(napi_env env, napi_callback_info info);
     napi_value OnReset(napi_env env, napi_callback_info info);
     napi_value OnGetAll(napi_env env, napi_callback_info info);
+    napi_value OnSetPolyToPoly(napi_env env, napi_callback_info info);
+    napi_value OnSetRectToRect(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::shared_ptr<Matrix> m_matrix = nullptr;

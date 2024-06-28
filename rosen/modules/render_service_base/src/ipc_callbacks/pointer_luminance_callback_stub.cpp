@@ -22,7 +22,7 @@ int RSPointerLuminanceChangeCallbackStub::OnRemoteRequest(
 {
     RSInterfaceCodeSecurityManager securityManager =
         RSInterfaceCodeSecurityManager::CreateInstance<RSIPointerLuminanceChangeCallbackInterfaceCodeAccessVerifier>();
-    if (!securityManager_.IsInterfaceCodeAccessible(code)) {
+    if (!securityManager.IsInterfaceCodeAccessible(code)) {
         RS_LOGE("RSPointerLuminanceChangeCallbackStub::OnRemoteRequest no permission to access codeID=%{public}u",
             code);
         return ERR_INVALID_STATE;

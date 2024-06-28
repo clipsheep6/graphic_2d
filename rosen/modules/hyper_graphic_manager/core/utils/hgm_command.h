@@ -136,6 +136,7 @@ public:
         std::unordered_map<std::string, std::string> gameSceneList;
         DynamicSettingMap animationDynamicSettings;
         DynamicSettingMap aceSceneDynamicSettings;
+        std::unordered_map<std::string, std::string> animationPowerConfig;
     };
     // <"-1", ScreenSetting>
     using ScreenConfig = std::unordered_map<std::string, ScreenSetting>;

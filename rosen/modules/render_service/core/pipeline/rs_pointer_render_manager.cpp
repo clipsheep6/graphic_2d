@@ -57,6 +57,7 @@ void RSPointerRenderManager::InitInstance(const std::shared_ptr<RSEglImageManage
 
 void RSPointerRenderManager::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
+    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
     darkBuffer_ = darkBuffer;
     brightBuffer_ = brightBuffer;
     colorSamplingInterval_ = interval;
@@ -64,6 +65,7 @@ void RSPointerRenderManager::SetPointerColorInversionConfig(float darkBuffer, fl
  
 void RSPointerRenderManager::SetPointerColorInversionEnabled(bool enable)
 {
+    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
     isEnableCursorInversion_ = enable;
     if (!enable) {
         brightness_ = CursorBrightness::NONE;

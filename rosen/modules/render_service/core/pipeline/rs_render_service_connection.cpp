@@ -481,12 +481,14 @@ bool RSRenderServiceConnection::Set2DRenderCtrl(bool enable)
 int32_t RSRenderServiceConnection::SetPointerColorInversionConfig(float darkBuffer,
     float brightBuffer, int64_t interval)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     RSPointerRenderManager::GetInstance().SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
     return StatusCode::SUCCESS;
 }
  
 int32_t RSRenderServiceConnection::SetPointerColorInversionEnabled(bool enable)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     RSPointerRenderManager::GetInstance().SetPointerColorInversionEnabled(enable);
     return StatusCode::SUCCESS;
 }

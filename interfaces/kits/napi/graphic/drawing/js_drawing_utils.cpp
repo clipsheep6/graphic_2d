@@ -115,22 +115,16 @@ bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t si
     return true;
 }
 
-bool ConvertFromJsPointsArray(napi_env& env, const napi_value& array, size_t size, std::vector<Point> &out)
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, int32_t count)
 {
-    for (uint32_t i = 0; i < size; i++) {
-        napi_value tempNumber = nullptr;
-        napi_get_element(env, array, i, &tempNumber);
-        napi_value tempValue = nullptr;
-        double pointX = 0.0;
-        double pointY = 0.0;
-        napi_get_named_property(env, tempNumber, "x", &tempValue);
-        bool isPointXOk = ConvertFromJsValue(env, tempValue, pointX);
-        napi_get_named_property(env, tempNumber, "y", &tempValue);
-        bool isPointYOk = ConvertFromJsValue(env, tempValue, pointY);
-        if (!(isPointXOk && isPointYOk)) {
+    for(uint32_t i = 0; i < count; i++)  {
+        napi_value tempPoint = nullptr;
+        if (napi_get_element(env, array, i, &tempPoint) != napi_ok) {
             return false;
         }
-        out.push_back(Point(pointX, pointY));
+        if (!GetPointFromJsValue(env, tempPoint, points[i])) {
+            return false;
+        }
     }
     return true;
 }

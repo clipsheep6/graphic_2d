@@ -206,7 +206,7 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     std::vector<Point> dstPoints(count);
     std::vector<Point> srcPoints(count);
     /* Fill vector with data from input array */
-    if(!ConvertFromJsPointsArray(env, srcArray, count, srcPoints)){
+    if(!ConvertFromJsPointsArray(env, srcArray, srcPoints.data(), count)){
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array data.");
     }
 

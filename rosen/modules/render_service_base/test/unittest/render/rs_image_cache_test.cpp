@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "render/rs_image_cache.h"
+#include "platform/common/rs_log.h"
 #include "image/image.h"
 #include "pixel_map.h"
 
@@ -30,24 +31,22 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-protected:
-    std::map<>
 };
 
-void RSAnimationFractionTest::SetUpTestCase() {}
-void RSAnimationFractionTest::TearDownTestCase() {}
+void RSImageCacheTest::SetUpTestCase() {}
+void RSImageCacheTest::TearDownTestCase() {}
 
-void RSAnimationFractionTest::SetUp() {}
-void RSAnimationFractionTest::TearDown() {}
+void RSImageCacheTest::SetUp() {}
+void RSImageCacheTest::TearDown() {}
 
 HWTEST_F(RSImageCacheTest, Singleton001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest Singleton001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest Singleton001 start";
 
-    auto instance1 = RSImageCache::Instance();
-    auto instance2 = RSImageCache::Instance();
-    EXPECT_EQ(instance1, instance2);
+    auto& instance1 = RSImageCache::Instance();
+    auto& instance2 = RSImageCache::Instance();
+    EXPECT_EQ(&instance1, &instance2);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest Singleton001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest Singleton001 start";
 }
 
 /**
@@ -56,12 +55,13 @@ HWTEST_F(RSImageCacheTest, Singleton001, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, DrawingImageCache001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawingImageCache001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest DrawingImageCache001 start";
 
+    auto& instance = RSImageCache::Instance();
     const uint64_t UNADDED_ID = 100;
     EXPECT_EQ(instance.GetDrawingImageCache(UNADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawingImageCache001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest DrawingImageCache001 start";
 }
 
 /**
@@ -70,19 +70,20 @@ HWTEST_F(RSImageCacheTest, DrawingImageCache001, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, DrawingImageCache002, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawingImageCache002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest DrawingImageCache002 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     std::map<uint64_t, std::shared_ptr<Drawing::Image>>  imgMap;
     for (uint64_t uniqueId = 1;uniqueId < 16;uniqueId++) {
-        instance.CacheDrawingImage(uniqueId, std::make_shared<Drawing::Image>());
+        auto img = std::make_shared<Drawing::Image>();
+        instance.CacheDrawingImage(uniqueId, img);
         imgMap[uniqueId] = img;
     }
     for (const auto& pair : imgMap) {
         EXPECT_EQ(pair.second, instance.GetDrawingImageCache(pair.first));
     }
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawingImageCache002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest DrawingImageCache002 start";
 }
 
 /**
@@ -91,9 +92,9 @@ HWTEST_F(RSImageCacheTest, DrawingImageCache002, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyDrawingImageCacheRefCount001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyDrawingImageCacheRefCount001 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     const uint64_t ADDED_ID = 200;
     auto img = std::make_shared<Drawing::Image>();
     instance.CacheDrawingImage(ADDED_ID, img);
@@ -101,7 +102,7 @@ HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount001, TestSize.Level1) 
     instance.ReleaseDrawingImageCache(ADDED_ID);
     EXPECT_EQ(instance.GetDrawingImageCache(ADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyDrawingImageCacheRefCount001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyDrawingImageCacheRefCount001 start";
 }
 
 /**
@@ -110,9 +111,9 @@ HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount001, TestSize.Level1) 
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount002, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyDrawingImageCacheRefCount002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyDrawingImageCacheRefCount002 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     const uint64_t ADDED_ID = 300;
     auto img = std::make_shared<Drawing::Image>();
     instance.CacheDrawingImage(ADDED_ID, img);
@@ -126,7 +127,7 @@ HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount002, TestSize.Level1) 
     instance.ReleaseDrawingImageCache(ADDED_ID);
     EXPECT_EQ(instance.GetDrawingImageCache(ADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyDrawingImageCacheRefCount002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyDrawingImageCacheRefCount002 start";
 }
 
 /**
@@ -135,12 +136,13 @@ HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount002, TestSize.Level1) 
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, CachePixelMap001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest CachePixelMap001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest CachePixelMap001 start";
 
-    const uint64_t UNADDED_ID = 100;
+    auto& instance = RSImageCache::Instance();
+    const uint64_t UNADDED_ID = 400;
     EXPECT_EQ(instance.GetPixelMapCache(UNADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest CachePixelMap001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest CachePixelMap001 start";
 }
 
 /**
@@ -149,19 +151,20 @@ HWTEST_F(RSImageCacheTest, CachePixelMap001, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, CachePixelMap002, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest CachePixelMap002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest CachePixelMap002 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     std::map<uint64_t, std::shared_ptr<Media::PixelMap>>  pixelMap;
     for (uint64_t uniqueId = 1;uniqueId < 16;uniqueId++) {
-        instance.CachePixelMap(uniqueId, std::make_shared<Media::PixelMap>());
-        pixelMap[uniqueId] = img;
+        auto pixel = std::make_shared<Media::PixelMap>();
+        instance.CachePixelMap(uniqueId, pixel);
+        pixelMap[uniqueId] = pixel;
     }
     for (const auto& pair : pixelMap) {
         EXPECT_EQ(pair.second, instance.GetPixelMapCache(pair.first));
     }
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest CachePixelMap002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest CachePixelMap002 start";
 }
 
 /**
@@ -170,17 +173,17 @@ HWTEST_F(RSImageCacheTest, CachePixelMap002, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyPixelMapCacheRefCount001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyPixelMapCacheRefCount001 start";
 
-    auto instance = RSImageCache::Instance();
-    const uint64_t ADDED_ID = 200;
+    auto& instance = RSImageCache::Instance();
+    const uint64_t ADDED_ID = 500;
     auto pixel = std::make_shared<Media::PixelMap>();
     instance.CachePixelMap(ADDED_ID, pixel);
     EXPECT_EQ(instance.GetPixelMapCache(ADDED_ID), pixel);
     instance.ReleasePixelMapCache(ADDED_ID);
     EXPECT_EQ(instance.GetPixelMapCache(ADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyPixelMapCacheRefCount001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyPixelMapCacheRefCount001 start";
 }
 
 /**
@@ -189,10 +192,10 @@ HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount001, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount002, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyPixelMapCacheRefCount002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyPixelMapCacheRefCount002 start";
 
-    auto instance = RSImageCache::Instance();
-    const uint64_t ADDED_ID = 300;
+    auto& instance = RSImageCache::Instance();
+    const uint64_t ADDED_ID = 600;
     auto pixel = std::make_shared<Media::PixelMap>();
     instance.CachePixelMap(ADDED_ID, pixel);
     for (uint64_t count = 0;count < 10;count++) {
@@ -205,7 +208,7 @@ HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount002, TestSize.Level1) {
     instance.ReleasePixelMapCache(ADDED_ID);
     EXPECT_EQ(instance.GetPixelMapCache(ADDED_ID), nullptr);
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest ModifyPixelMapCacheRefCount002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest ModifyPixelMapCacheRefCount002 start";
 }
 
 /**
@@ -214,11 +217,11 @@ HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount002, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, RenderDrawingImageByPixelMapId001, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest RenderDrawingImageByPixelMapId001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest RenderDrawingImageByPixelMapId001 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     auto img = std::make_shared<Drawing::Image>();
-    const uint64_t ADDED_ID = 200;
+    const uint64_t ADDED_ID = 700;
     const pid_t P_ID = 1000;
     instance.CacheRenderDrawingImageByPixelMapId(ADDED_ID, img, P_ID);
     EXPECT_EQ(img, instance.GetRenderDrawingImageCacheByPixelMapId(ADDED_ID, P_ID));
@@ -226,10 +229,10 @@ HWTEST_F(RSImageCacheTest, RenderDrawingImageByPixelMapId001, TestSize.Level1) {
     const uint64_t P_ID1 = 1001;
     EXPECT_EQ(nullptr, instance.GetRenderDrawingImageCacheByPixelMapId(ADDED_ID, P_ID1));
 
-    const uint64_t ADDED_ID1 = 201;
+    const uint64_t ADDED_ID1 = 701;
     EXPECT_EQ(nullptr, instance.GetRenderDrawingImageCacheByPixelMapId(ADDED_ID1, P_ID));
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest RenderDrawingImageByPixelMapId001 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest RenderDrawingImageByPixelMapId001 start";
 }
 
 /**
@@ -238,21 +241,21 @@ HWTEST_F(RSImageCacheTest, RenderDrawingImageByPixelMapId001, TestSize.Level1) {
  * @tc.type:FUNC
  */
 HWTEST_F(RSImageCacheTest, RenderDrawingImageByPixelMapId002, TestSize.Level1) {
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest RenderDrawingImageByPixelMapId002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest RenderDrawingImageByPixelMapId002 start";
 
-    auto instance = RSImageCache::Instance();
+    auto& instance = RSImageCache::Instance();
     auto img = std::make_shared<Drawing::Image>();
     auto pixel = std::make_shared<Media::PixelMap>();
-    const uint64_t ADDED_ID = 300;
+    const uint64_t ADDED_ID = 800;
     const pid_t P_ID = 2000;
 
     instance.CachePixelMap(ADDED_ID, pixel);
     instance.CacheRenderDrawingImageByPixelMapId(ADDED_ID, img, P_ID);
     instance.ReleasePixelMapCache(ADDED_ID);
     EXPECT_EQ(nullptr, instance.GetPixelMapCache(ADDED_ID));
-    EXPECT_EQ(nullptr, instance.GetRenderDrawingImageCacheByPixelMapId());
+    EXPECT_EQ(nullptr, instance.GetRenderDrawingImageCacheByPixelMapId(ADDED_ID, P_ID));
 
-    GTEST_LOG_(INFO) << "RSAnimationFractionTest RenderDrawingImageByPixelMapId002 start";
+    GTEST_LOG_(INFO) << "RSImageCacheTest RenderDrawingImageByPixelMapId002 start";
 }
 }
 }

@@ -17,6 +17,8 @@
 #include "js_drawing_utils.h"
 #include "native_value.h"
 
+static constexpr uint32_t POLY_POINT_COUNT_MAX = 4;
+
 namespace OHOS::Rosen {
 namespace Drawing {
 thread_local napi_ref JsMatrix::constructor_ = nullptr;
@@ -418,32 +420,23 @@ napi_value JsMatrix::OnSetPolyToPoly(napi_env env, napi_callback_info info)
     uint32_t count = 0;
     GET_UINT32_PARAM(ARGC_TWO, count);
 
-    if (count == 0) {
+    if (count > POLY_POINT_COUNT_MAX) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-            "Invalid param 'count' == 0");
+            "Invalid param 'count' > 4");
     }
-    uint32_t srcPointsSize = 0;
-    if (napi_get_array_length(env, argv[ARGC_ZERO], &srcPointsSize) != napi_ok || (count > srcPointsSize)) {
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array size.");
-    }
-    Drawing::Point srcPoints[count];
-    if (!ConvertFromJsPointsArray(env, argv[ARGC_ZERO], srcPoints, count)){
+
+    Drawing::Point srcPoints[POLY_POINT_COUNT_MAX];
+    if (!ConvertFromJsPointsArray(env, argv[ARGC_ZERO], srcPoints, count)) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
             "Invalid 'src' Array<Point> type.");
     }
-    Drawing::Point dstPoints[count];
-    bool result = m_matrix->SetPolyToPoly(srcPoints, dstPoints, count);
-
-    if (result) {
-        for (uint32_t i = 0; i < count; i++) {
-            if (napi_set_element(env, argv[ARGC_ONE], i,
-                GetPointAndConvertToJsValue(env, dstPoints[i])) != napi_ok) {
-                return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-                       "Cannot fill 'dst' Array<Point> type.");
-            }
-        }
+    Drawing::Point dstPoints[POLY_POINT_COUNT_MAX];
+    if (!ConvertFromJsPointsArray(env, argv[ARGC_ONE], dstPoints, count)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Invalid 'dst' Array<Point> type.");
     }
 
+    bool result = m_matrix->SetPolyToPoly(srcPoints, dstPoints, count);
     return CreateJsValue(env, result);
 }
 
@@ -469,28 +462,16 @@ napi_value JsMatrix::OnSetRectToRect(napi_env env, napi_callback_info info)
             "Incorrect 'src' Rect type. The type of left, top, right and bottom must be number.");
     }
     Drawing::Rect srcRect = Drawing::Rect(ltrb[ARGC_ZERO], ltrb[ARGC_ONE], ltrb[ARGC_TWO], ltrb[ARGC_THREE]);
-    Drawing::Rect dstRect;
+    if (!ConvertFromJsRect(env, argv[ARGC_ONE], ltrb, ARGC_FOUR)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Incorrect 'dst' Rect type. The type of left, top, right and bottom must be number.");
+    }
+    Drawing::Rect dstRect = Drawing::Rect(ltrb[ARGC_ZERO], ltrb[ARGC_ONE], ltrb[ARGC_TWO], ltrb[ARGC_THREE]);
 
     int32_t stf;
     GET_ENUM_PARAM(ARGC_TWO, stf, 0, static_cast<int32_t>(ScaleToFit::END_SCALETOFIT));
 
     bool result = m_matrix->SetRectToRect(srcRect, dstRect, static_cast<ScaleToFit>(stf));
-
-    if (result) {
-        napi_value objValue = argv[ARGC_ONE];
-        if (napi_set_named_property(env, objValue, "left",
-                CreateJsNumber(env, dstRect.GetLeft())) != napi_ok ||
-            napi_set_named_property(env, objValue, "top",
-                CreateJsNumber(env, dstRect.GetTop())) != napi_ok ||
-            napi_set_named_property(env, objValue, "right",
-                CreateJsNumber(env, dstRect.GetRight())) != napi_ok ||
-            napi_set_named_property(env, objValue, "bottom",
-                CreateJsNumber(env, dstRect.GetBottom())) != napi_ok ) {
-            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-                    "Cannot fill 'dst' Rect type.");
-        }
-    }
-
     return CreateJsValue(env, result);
 }
 

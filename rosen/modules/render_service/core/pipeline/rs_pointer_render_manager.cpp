@@ -87,7 +87,6 @@ void RSPointerRenderManager::UnRegisterPointerLuminanceChangeCallback(pid_t pid)
  
 void RSPointerRenderManager::ExecutePointerLuminanceChangeCallback(int32_t brightness)
 {
-    std::lock_guard<std::mutex> lock(cursorInvertMutex_);
     for (auto it = colorChangeListeners_.begin(); it != colorChangeListeners_.end(); it++) {
         if (it->second) {
             it->second->OnPointerLuminanceChanged(brightness);

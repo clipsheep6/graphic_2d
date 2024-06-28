@@ -1401,7 +1401,9 @@ std::optional<RSWaterRipplePara> RSProperties::GetWaterRippleParams() const
  
 bool RSProperties::IsWaterRippleValid() const
 {
-    return ROSEN_GE(waterRippleProgress_, 0.0f) && waterRippleParams_.has_value();
+    return ROSEN_GE(waterRippleProgress_, 0.0f) && ROSEN_LE(waterRippleProgress_, 1.0f) &&
+           waterRippleParams_.has_value() && ROSEN_GE(waterRippleParams_->waveCount, 1.0f) &&
+           ROSEN_LE(waterRippleParams_->waveCount, 3.0f);
 }
 
 void RSProperties::SetFgBrightnessRates(const Vector4f& rates)
@@ -1688,11 +1690,11 @@ void RSProperties::SetMotionBlurPara(const std::shared_ptr<MotionBlurParam>& par
     contentDirty_ = true;
 }
 
-void RSProperties::SetMagnifierParams(const std::shared_ptr<RSMagnifierParams>& para)
+void RSProperties::SetMagnifierParams(const std::optional<Vector2f>& para)
 {
     magnifierPara_ = para;
 
-    if (para) {
+    if (para.has_value()) {
         isDrawn_ = true;
     }
     SetDirty();
@@ -1700,7 +1702,7 @@ void RSProperties::SetMagnifierParams(const std::shared_ptr<RSMagnifierParams>& 
     contentDirty_ = true;
 }
 
-const std::shared_ptr<RSMagnifierParams>& RSProperties::GetMagnifierPara() const
+const std::optional<Vector2f>& RSProperties::GetMagnifierPara() const
 {
     return magnifierPara_;
 }
@@ -2323,13 +2325,18 @@ void RSProperties::CreateAttractionEffectFilter()
     float canvasWidth = GetBoundsRect().GetWidth();
     float canvasHeight = GetBoundsRect().GetHeight();
     Vector2f destinationPoint = GetAttractionDstPoint();
+    float windowLeftPoint = GetFramePositionX();
+    float windowTopPoint = GetFramePositionY();
     auto attractionEffectFilter = std::make_shared<RSAttractionEffectFilter>(attractFraction_);
     attractionEffectFilter->CalculateWindowStatus(canvasWidth, canvasHeight, destinationPoint);
-    if (IS_UNI_RENDER) {
-        foregroundFilterCache_ = attractionEffectFilter;
-    } else {
-        foregroundFilter_ = attractionEffectFilter;
-    }
+    attractionEffectFilter->UpdateDirtyRegion(windowLeftPoint, windowTopPoint);
+    attractionEffectCurrentDirtyRegion_ = attractionEffectFilter->GetAttractionDirtyRegion();
+    foregroundFilter_ = attractionEffectFilter;
+}
+
+RectI RSProperties::GetAttractionEffectCurrentDirtyRegion() const
+{
+    return attractionEffectCurrentDirtyRegion_;
 }
 
 float RSProperties::GetAttractionFraction() const
@@ -2901,11 +2908,11 @@ void RSProperties::GenerateLinearGradientBlurFilter()
 
 void RSProperties::GenerateMagnifierFilter()
 {
-    auto magnifierFilter = std::make_shared<RSMagnifierShaderFilter>(magnifierPara_);
+    auto magnifierFilter = std::make_shared<RSMagnifierShaderFilter>(magnifierPara_->x_, magnifierPara_->y_);
 
     std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(magnifierFilter);
-    filter_ = originalFilter;
-    filter_->SetFilterType(RSFilter::MAGNIFIER);
+    backgroundFilter_ = originalFilter;
+    backgroundFilter_->SetFilterType(RSFilter::MAGNIFIER);
 }
 
 void RSProperties::GenerateWaterRippleFilter()
@@ -2931,6 +2938,8 @@ void RSProperties::GenerateBackgroundFilter()
 {
     if (aiInvert_.has_value() || systemBarEffect_) {
         GenerateAIBarFilter();
+    } else if (magnifierPara_.has_value()) {
+        GenerateMagnifierFilter();
     } else if (IsBackgroundMaterialFilterValid()) {
         GenerateBackgroundMaterialBlurFilter();
     } else if (IsBackgroundBlurRadiusXValid() && IsBackgroundBlurRadiusYValid()) {
@@ -4113,12 +4122,19 @@ void RSProperties::UpdateFilter()
                   IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
                   foregroundFilter_ != nullptr || motionBlurPara_ != nullptr || IsFgBrightnessValid() ||
                   IsBgBrightnessValid() || foregroundFilterCache_ != nullptr || IsWaterRippleValid() ||
-                  magnifierPara_ != nullptr;
+                  magnifierPara_.has_value();
 }
 
 void RSProperties::UpdateForegroundFilter()
 {
-    if (IsForegroundEffectRadiusValid()) {
+    if (motionBlurPara_ && ROSEN_GNE(motionBlurPara_->radius, 0.0)) {
+        auto motionBlurFilter = std::make_shared<RSMotionBlurFilter>(motionBlurPara_);
+        if (IS_UNI_RENDER) {
+            foregroundFilterCache_ = motionBlurFilter;
+        } else {
+            foregroundFilter_ = motionBlurFilter;
+        }
+    } else if (IsForegroundEffectRadiusValid()) {
         auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(foregroundEffectRadius_);
         if (IS_UNI_RENDER) {
             foregroundFilterCache_ = foregroundEffectFilter;
@@ -4143,10 +4159,6 @@ void RSProperties::UpdateForegroundFilter()
     } else {
         foregroundFilter_.reset();
         foregroundFilterCache_.reset();
-    }
-    if (motionBlurPara_ && ROSEN_GE(motionBlurPara_->radius, 0.0)) {
-        auto motionBlurFilter = std::make_shared<RSMotionBlurFilter>(motionBlurPara_);
-        foregroundFilter_ = motionBlurFilter;
     }
 }
 

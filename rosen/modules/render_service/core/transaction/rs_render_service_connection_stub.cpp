@@ -124,7 +124,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         return ERR_INVALID_STATE;
     }
 #endif
-    const std::set<uint32_t> descriptorCheckList = {
+    static const std::set<uint32_t> descriptorCheckList = {
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_FOCUS_APP_INFO),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_DEFAULT_SCREEN_ID),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_SCREEN_ID),
@@ -288,9 +288,11 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             auto bundleName = data.ReadString();
             bool isTextureExportNode = data.ReadBool();
             bool isSync = data.ReadBool();
+            auto surfaceWindowType = static_cast<SurfaceWindowType>(data.ReadUint8());
             RSSurfaceRenderNodeConfig config = {
                 .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type,
-                .isTextureExportNode = isTextureExportNode, .isSync = isSync};
+                .isTextureExportNode = isTextureExportNode, .isSync = isSync,
+                .surfaceWindowType = surfaceWindowType};
             sptr<Surface> surface = CreateNodeAndSurface(config);
             if (surface == nullptr) {
                 ret = ERR_NULL_OBJECT;
@@ -546,7 +548,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_APPLICATION_AGENT): {
-            uint32_t pid = data.ReadInt32();
+            auto pid = data.ReadInt32();
             RS_PROFILER_PATCH_PID(data, pid);
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {

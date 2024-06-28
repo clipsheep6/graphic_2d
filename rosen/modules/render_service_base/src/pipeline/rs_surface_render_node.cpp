@@ -2124,6 +2124,13 @@ void RSSurfaceRenderNode::ResetChildHardwareEnabledNodes()
 
 void RSSurfaceRenderNode::AddChildHardwareEnabledNode(std::weak_ptr<RSSurfaceRenderNode> childNode)
 {
+    childHardwareEnabledNodes_.erase(std::remove_if(childHardwareEnabledNodes_.begin(),
+        childHardwareEnabledNodes_.end(),
+        [&childNode](const auto& iter) {
+            auto node = iter.lock();
+            auto childNodePtr = childNode.lock();
+            return node && childNodePtr && node == childNodePtr;
+        }), childHardwareEnabledNodes_.end());
     childHardwareEnabledNodes_.emplace_back(childNode);
 }
 
@@ -2659,6 +2666,15 @@ void RSSurfaceRenderNode::SetIsParentUifirstNodeEnableParam(bool b)
     auto stagingSurfaceParams = static_cast<RSSurfaceRenderParams*>(stagingRenderParams_.get());
     if (stagingSurfaceParams) {
         stagingSurfaceParams->SetIsParentUifirstNodeEnableParam(b);
+        AddToPendingSyncList();
+    }
+}
+
+void RSSurfaceRenderNode::SetUifirstUseStarting(NodeId id)
+{
+    auto stagingSurfaceParams = static_cast<RSSurfaceRenderParams*>(stagingRenderParams_.get());
+    if (stagingSurfaceParams) {
+        stagingSurfaceParams->SetUifirstUseStarting(id);
         AddToPendingSyncList();
     }
 }

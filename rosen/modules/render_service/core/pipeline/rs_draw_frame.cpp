@@ -27,6 +27,8 @@
 #include "property/rs_filter_cache_manager.h"
 #include "rs_frame_report.h"
 
+#include "rs_profiler.h"
+
 namespace OHOS {
 namespace Rosen {
 RSDrawFrame::RSDrawFrame()
@@ -54,6 +56,7 @@ void RSDrawFrame::RenderFrame()
     unirenderInstance_.IncreaseFrameCount();
     RSUifirstManager::Instance().ProcessSubDoneNode();
     Sync();
+    RSMainThread::Instance()->ProcessUiCaptureTasks();
     const bool doJankStats = IsUniRenderAndOnVsync();
     JankStatsRenderFrameAfterSync(doJankStats);
     RSUifirstManager::Instance().PostUifistSubTasks();
@@ -70,6 +73,7 @@ void RSDrawFrame::RenderFrame()
     if (RSSystemProperties::GetPurgeBetweenFramesEnabled()) {
         unirenderInstance_.PurgeCacheBetweenFrames();
     }
+    unirenderInstance_.MemoryManagementBetweenFrames();
 }
 
 void RSDrawFrame::NotifyClearGpuCache()
@@ -88,13 +92,16 @@ void RSDrawFrame::ReleaseSelfDrawingNodeBuffer()
 void RSDrawFrame::PostAndWait()
 {
     RS_TRACE_NAME_FMT("PostAndWait, parallel type %d", static_cast<int>(rsParallelType_));
+    uint32_t renderFrameNumber = RS_PROFILER_GET_FRAME_NUMBER();
     switch (rsParallelType_) {
         case RsParallelType::RS_PARALLEL_TYPE_SYNC: { // wait until render finish in render thread
-            unirenderInstance_.PostSyncTask([this]() {
+            unirenderInstance_.PostSyncTask([this, renderFrameNumber]() {
+                RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 unirenderInstance_.SetMainLooping(true);
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
                 unirenderInstance_.SetMainLooping(false);
+                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
             });
             break;
         }
@@ -107,11 +114,13 @@ void RSDrawFrame::PostAndWait()
         default: {
             std::unique_lock<std::mutex> frameLock(frameMutex_);
             canUnblockMainThread = false;
-            unirenderInstance_.PostTask([this]() {
+            unirenderInstance_.PostTask([this, renderFrameNumber]() {
+                RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 unirenderInstance_.SetMainLooping(true);
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
                 unirenderInstance_.SetMainLooping(false);
+                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
             });
 
             frameCV_.wait(frameLock, [this] { return canUnblockMainThread; });

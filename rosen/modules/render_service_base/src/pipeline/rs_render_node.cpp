@@ -366,6 +366,20 @@ void RSRenderNode::UpdateChildrenRect(const RectI& subRect)
             childrenRect_ = childrenRect_.JoinRect(subRect);
         }
     }
+
+    if (lastFrameSubTreeSkipped_) {
+        return;
+    }
+
+    if (auto& geoPtr = GetRenderProperties().GetBoundsGeometry()) {
+        absChildrenRect_ = geoPtr->MapAbsRect(childrenRect_.ConvertTo<float>());
+    }
+
+    if (GetRenderProperties().GetClipBounds() || GetRenderProperties().GetClipToFrame()) {
+        subTreeDirtyRegion_ = absChildrenRect_.IntersectRect(GetAbsDrawRect());
+    } else {
+        subTreeDirtyRegion_ = absChildrenRect_;
+    }
 }
 
 void RSRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index)
@@ -722,6 +736,7 @@ void RSRenderNode::DumpSubClassNode(std::string& out) const
         out += ", OcclusionBg: " + std::to_string(surfaceNode->GetAbilityBgAlpha());
         out += ", SecurityLayer: " + std::to_string(surfaceNode->GetSecurityLayer());
         out += ", skipLayer: " + std::to_string(surfaceNode->GetSkipLayer());
+        out += ", surfaceType: " + std::to_string((int)surfaceNode->GetSurfaceNodeType());
     } else if (GetType() == RSRenderNodeType::ROOT_NODE) {
         auto rootNode = static_cast<const RSRootRenderNode*>(this);
         out += ", Visible: " + std::to_string(rootNode->GetRenderProperties().GetVisible());
@@ -975,7 +990,7 @@ void RSRenderNode::UpdateDrawingCacheInfoBeforeChildren(bool isScreenRotation)
 
 void RSRenderNode::UpdateDrawingCacheInfoAfterChildren()
 {
-    if (IsUifirstArkTsCardNode()) {
+    if (IsUifirstArkTsCardNode() || startingWindowFlag_) {
         SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     if (HasChildrenOutOfRect() && GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
@@ -1627,9 +1642,13 @@ void RSRenderNode::MapAndUpdateChildrenRect()
         // clean subtree means childrenRect maps to parent already
         childRect = childRect.JoinRect(childrenRect_.ConvertTo<float>());
     }
-    // map before update parent
+    // map before update parent, if parent has clip property, use clipped children rect instead.
     RectI childRectMapped = geoPtr->MapRect(childRect, geoPtr->GetMatrix());
     if (auto parentNode = parent_.lock()) {
+        const auto& parentProperties = parentNode->GetRenderProperties();
+        if (parentProperties.GetClipToBounds() || parentProperties.GetClipToFrame()) {
+            childRectMapped = parentNode->GetSelfDrawRect().ConvertTo<int>().IntersectRect(childRectMapped);
+        }
         parentNode->UpdateChildrenRect(childRectMapped);
         // check each child is inside of parent
         childRect = childRectMapped.ConvertTo<float>();
@@ -2104,14 +2123,12 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         return;
     }
     for (auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
-        auto it = std::find_if(modifiers.begin(), modifiers.end(),
-            [id](const auto& modifier) -> bool { return modifier->GetPropertyId() == id; });
-        if (it == modifiers.end()) {
-            continue;
+        bool found = EraseIf(modifiers,
+            [id](const auto& modifier) -> bool { return modifier == nullptr || modifier->GetPropertyId() == id; });
+        if (found) {
+            AddDirtyType(type);
+            return;
         }
-        AddDirtyType(type);
-        modifiers.erase(it);
-        return;
     }
 }
 
@@ -2218,6 +2235,16 @@ void RSRenderNode::MarkForegroundFilterCache()
     }
 }
 
+void RSRenderNode::ApplyModifier(RSModifierContext& context, std::shared_ptr<RSRenderModifier> modifier)
+{
+    auto modifierType = modifier->GetType();
+    if (!dirtyTypes_.test(static_cast<size_t>(modifierType))) {
+        return;
+    }
+    modifier->Apply(context);
+    isOnlyBasicGeoTransform_ = isOnlyBasicGeoTransform_ && BASIC_GEOTRANSFORM_ANIMATION_TYPE.count(modifierType);
+}
+
 void RSRenderNode::ApplyModifiers()
 {
     if (UNLIKELY(!isFullChildrenListValid_)) {
@@ -2241,14 +2268,17 @@ void RSRenderNode::ApplyModifiers()
     GetMutableRenderProperties().ResetProperty(dirtyTypes_);
 
     // Apply modifiers
-    for (auto& [id, modifier] : modifiers_) {
-        auto modifierType = modifier->GetType();
-        if (!dirtyTypes_.test(static_cast<size_t>(modifierType))) {
-            continue;
+    auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(shared_from_this());
+    if (displayNode && displayNode->GetCurrentScbPid() != -1) {
+        for (auto& [id, modifier] : modifiers_) {
+            if (ExtractPid(id) == displayNode->GetCurrentScbPid()) {
+                ApplyModifier(context, modifier);
+            }
         }
-        modifier->Apply(context);
-        isOnlyBasicGeoTransform_ = isOnlyBasicGeoTransform_ &&
-            BASIC_GEOTRANSFORM_ANIMATION_TYPE.count(modifierType);
+    } else {
+        for (auto& [id, modifier] : modifiers_) {
+            ApplyModifier(context, modifier);
+        }
     }
     // execute hooks
     GetMutableRenderProperties().OnApplyModifiers();
@@ -3133,6 +3163,9 @@ void RSRenderNode::UpdateFullScreenFilterCacheRect(
 
 void RSRenderNode::OnTreeStateChanged()
 {
+    if (!isOnTheTree_) {
+        startingWindowFlag_ = false;
+    }
     if (isOnTheTree_) {
         // Set dirty and force add to active node list, re-generate children list if needed
         SetDirty(true);
@@ -3930,6 +3963,22 @@ void RSRenderNode::AddToPendingSyncList()
     }
 }
 
+void RSRenderNode::SetStartingWindowFlag(bool startingFlag)
+{
+    if (startingFlag) {
+        UpdateDrawingCacheInfoAfterChildren();
+    }
+    if (startingWindowFlag_ == startingFlag) {
+        return;
+    }
+    startingWindowFlag_ = startingFlag;
+    auto stagingParams = stagingRenderParams_.get();
+    if (stagingParams) {
+        stagingParams->SetStartingWindowFlag(startingFlag);
+        AddToPendingSyncList();
+    }
+}
+
 void RSRenderNode::MarkUifirstNode(bool isUifirstNode)
 {
     RS_OPTIONAL_TRACE_NAME_FMT("MarkUifirstNode id:%lld, isUifirstNode:%d", GetId(), isUifirstNode);
@@ -3944,6 +3993,9 @@ void RSRenderNode::SetChildrenHasSharedTransition(bool hasSharedTransition)
 void RSRenderNode::RemoveChildFromFulllist(NodeId id)
 {
     // Make a copy of the fullChildrenList
+    if (!fullChildrenList_) {
+        return;
+    }
     auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 
     fullChildrenList->erase(std::remove_if(fullChildrenList->begin(),

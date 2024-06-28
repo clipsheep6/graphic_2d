@@ -30,6 +30,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_pointer_render_manager.h"
 
 #include "platform/common/rs_log.h"
 #include "platform/ohos/rs_node_stats.h"
@@ -150,14 +151,14 @@ bool RSSurfaceRenderNodeDrawable::PrepareOffscreenRender()
     canvasBackup_ = nullptr;
 
     // check offscreen size
+    if (curCanvas_->GetSurface() == nullptr) {
+        RS_LOGE("RSSurfaceRenderNodeDrawable::PrepareOffscreenRender, current surface is nullptr");
+        return false;
+    }
     int offscreenWidth = curCanvas_->GetSurface()->Width();
     int offscreenHeight = curCanvas_->GetSurface()->Height();
     if (offscreenWidth <= 0 || offscreenHeight <= 0) {
         RS_LOGE("RSSurfaceRenderNodeDrawable::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
-        return false;
-    }
-    if (curCanvas_->GetSurface() == nullptr) {
-        RS_LOGE("RSSurfaceRenderNodeDrawable::PrepareOffscreenRender, current surface is nullptr");
         return false;
     }
 
@@ -177,13 +178,16 @@ bool RSSurfaceRenderNodeDrawable::PrepareOffscreenRender()
 
     offscreenCanvas_ = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
 
+    // copy HDR properties into offscreen canvas
+    offscreenCanvas_->CopyHDRConfiguration(*curCanvas_);
     // copy current canvas properties into offscreen canvas
     offscreenCanvas_->CopyConfiguration(*curCanvas_);
 
     // backup current canvas and replace with offscreen canvas
     canvasBackup_ = curCanvas_;
     curCanvas_ = offscreenCanvas_.get();
-    curCanvas_->Save();
+    curCanvas_->SetDisableFilterCache(true);
+    arc_ = std::make_unique<RSAutoCanvasRestore>(curCanvas_, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     curCanvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
     return true;
 }
@@ -197,12 +201,29 @@ void RSSurfaceRenderNodeDrawable::FinishOffscreenRender(const Drawing::SamplingO
     // draw offscreen surface to current canvas
     Drawing::Brush paint;
     paint.SetAntiAlias(true);
+    paint.SetForceBrightnessDisable(true);
     canvasBackup_->AttachBrush(paint);
     auto image = offscreenSurface_->GetImageSnapshot();
     canvasBackup_->DrawImage(*image, 0, 0, sampling);
     canvasBackup_->DetachBrush();
-    curCanvas_->Restore();
+    arc_ = nullptr;
     curCanvas_ = canvasBackup_;
+}
+
+bool RSSurfaceRenderNodeDrawable::IsHardwareEnabled()
+{
+    auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
+    for (const auto& surfaceNode : hardwareNodes) {
+        if (surfaceNode == nullptr) {
+            continue;
+        }
+        auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
+        if (!params || !params->GetHardwareEnabled()) {
+            continue;
+        }
+        return true;
+    }
+    return false;
 }
 
 void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
@@ -281,7 +302,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     const auto &absDrawRect = surfaceParams->GetAbsDrawRect();
     // warning : don't delete this trace or change trace level to optional !!!
-    RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw:[%s] (%d %d %d %d)Alpha: %f", name_.c_str(),
+    RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw:[%s] (%d, %d, %d, %d)Alpha: %f", name_.c_str(),
         absDrawRect.left_, absDrawRect.top_, absDrawRect.width_, absDrawRect.height_, surfaceNode->GetGlobalAlpha());
 
     RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw node:%{public}" PRIu64 ",child size:%{public}u,"
@@ -302,7 +323,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     // Draw base pipeline start
     RSAutoCanvasRestore acr(rscanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     bool needOffscreen = surfaceParams->GetNeedOffscreen() && !rscanvas->GetTotalMatrix().IsIdentity() &&
-        surfaceParams->IsAppWindow() && surfaceNode->GetName().substr(0, 3) != "SCB";
+        surfaceParams->IsAppWindow() && surfaceNode->GetName().substr(0, 3) != "SCB" && !IsHardwareEnabled();
     curCanvas_ = rscanvas;
     if (needOffscreen) {
         releaseCount_ = 0;
@@ -333,9 +354,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 
     auto parentSurfaceMatrix = RSRenderParams::GetParentSurfaceMatrix();
-    if (!needOffscreen) {
-        RSRenderParams::SetParentSurfaceMatrix(curCanvas_->GetTotalMatrix());
-    }
+    RSRenderParams::SetParentSurfaceMatrix(curCanvas_->GetTotalMatrix());
 
     // add a blending disable rect op behind floating window, to enable overdraw buffer feature on special gpu.
     if (surfaceParams->IsLeashWindow() && RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
@@ -483,7 +502,8 @@ void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
     }
 
     if (uniParam->IsOcclusionEnabled() && surfaceNode->IsMainWindowType() &&
-        surfaceParams->GetVisibleRegionInVirtual().IsEmpty()) {
+        surfaceParams->GetVisibleRegionInVirtual().IsEmpty() &&
+        UNLIKELY(RSUniRenderThread::GetCaptureParam().isMirror_)) {
         RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnCapture occlusion skip :[" + name_ + "] " +
             surfaceParams->GetAbsDrawRect().ToString());
         return;
@@ -668,6 +688,16 @@ void RSSurfaceRenderNodeDrawable::DealWithSelfDrawingNodeBuffer(RSSurfaceRenderN
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     params.screenBrightnessNits = surfaceNode.GetDisplayNit();
 #endif
+    if (surfaceNode.IsHardwareEnabledTopSurface()) {
+        RSPointerRenderManager::GetInstance().SetCacheImgForPointer(canvas.GetSurface()->GetImageSnapshot());
+    }
+
+    DrawSelfDrawingNodeBuffer(surfaceNode, canvas, surfaceParams, params);
+}
+
+void RSSurfaceRenderNodeDrawable::DrawSelfDrawingNodeBuffer(RSSurfaceRenderNode& surfaceNode,
+    RSPaintFilterCanvas& canvas, const RSSurfaceRenderParams& surfaceParams, BufferDrawParam& params)
+{
     auto bgColor = surfaceParams.GetBackgroundColor();
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if ((surfaceParams.GetSelfDrawingNodeType() != SelfDrawingNodeType::VIDEO) &&
@@ -708,11 +738,15 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
     if (!useDmaBuffer) {
         DrawBackground(canvas, bounds);
     }
-    bool canSkipFirstWait = (enableType == MultiThreadCacheType::ARKTS_CARD) &&
-        (RSUifirstManager::Instance().GetCurrentFrameSkipFirstWait());
-
-    bool drawCacheSuccess = useDmaBuffer ?
-        DrawUIFirstCacheWithDma(canvas, surfaceParams) : DrawUIFirstCache(canvas, canSkipFirstWait);
+    bool drawCacheSuccess = true;
+    if (surfaceParams.GetUifirstUseStarting() != INVALID_NODEID) {
+        drawCacheSuccess = DrawUIFirstCacheWithStarting(canvas, surfaceParams.GetUifirstUseStarting());
+    } else {
+        bool canSkipFirstWait = (enableType == MultiThreadCacheType::ARKTS_CARD) &&
+            (RSUifirstManager::Instance().GetCurrentFrameSkipFirstWait());
+        drawCacheSuccess = useDmaBuffer ?
+            DrawUIFirstCacheWithDma(canvas, surfaceParams) : DrawUIFirstCache(canvas, canSkipFirstWait);
+    }
     if (!drawCacheSuccess) {
         RS_TRACE_NAME_FMT("[%s] reuse failed!", name_.c_str());
         RS_LOGE("DrawUIFirstCache failed!");

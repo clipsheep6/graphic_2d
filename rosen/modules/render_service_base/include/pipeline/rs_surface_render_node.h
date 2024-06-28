@@ -280,6 +280,11 @@ public:
         return needCollectHwcNode_;
     }
 
+    void SetNeedCollectHwcNode(bool needCollect)
+    {
+        needCollectHwcNode_ = needCollect;
+    }
+
     void ResetNeedCollectHwcNode()
     {
         needCollectHwcNode_ = false;
@@ -458,6 +463,7 @@ public:
     {
         return UIFirstIsPurge_;
     }
+    void SetUifirstUseStarting(NodeId id); // only cache app window, first frame not wait
 
     void SetForceUIFirstChanged(bool forceUIFirstChanged);
     bool GetForceUIFirstChanged();

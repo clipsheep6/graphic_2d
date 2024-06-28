@@ -190,6 +190,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
             endTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             FrameReport::GetInstance().SetLastSwapBufferTime(endTimeNs - startTimeNs);
+            FrameReport::GetInstance().ReportCommitTime(endTimeNs);
         }
 
         unExecuteTaskNum_--;
@@ -300,7 +301,7 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp
     }
 
     RS_TRACE_NAME_FMT("RSHardwareThread::PerformSetActiveMode setting active mode. rate: %d",
-        hgmCore.GetScreenCurrentRefreshRate(screenManager->GetDefaultScreenId()));
+        HgmCore::Instance().GetScreenCurrentRefreshRate(HgmCore::Instance().GetActiveScreenId()));
     for (auto mapIter = modeMap->begin(); mapIter != modeMap->end(); ++mapIter) {
         ScreenId id = mapIter->first;
         int32_t modeId = mapIter->second;

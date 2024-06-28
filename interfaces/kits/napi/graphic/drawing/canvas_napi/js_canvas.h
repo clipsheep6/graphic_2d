@@ -71,7 +71,9 @@ public:
     static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value Skew(napi_env env, napi_callback_info info);
     static napi_value Save(napi_env env, napi_callback_info info);
+    static napi_value SaveLayer(napi_env env, napi_callback_info info);
     static napi_value Scale(napi_env env, napi_callback_info info);
+    static napi_value SetMatrix(napi_env env, napi_callback_info info);
     static napi_value Translate(napi_env env, napi_callback_info info);
 
     Canvas* GetCanvas();
@@ -99,7 +101,9 @@ private:
     napi_value OnRestore(napi_env env, napi_callback_info info);
     napi_value OnSkew(napi_env env, napi_callback_info info);
     napi_value OnSave(napi_env env, napi_callback_info info);
+    napi_value OnSaveLayer(napi_env env, napi_callback_info info);
     napi_value OnScale(napi_env env, napi_callback_info info);
+    napi_value OnSetMatrix(napi_env env, napi_callback_info info);
     napi_value OnTranslate(napi_env env, napi_callback_info info);
 
     static bool DeclareFuncAndCreateConstructor(napi_env env);

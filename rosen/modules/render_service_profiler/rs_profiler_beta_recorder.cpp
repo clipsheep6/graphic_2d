@@ -20,6 +20,7 @@
 #include "rs_profiler_network.h"
 #include "rs_profiler_telemetry.h"
 #include "rs_profiler_utils.h"
+#include "rs_profiler_packet.h"
 
 namespace OHOS::Rosen {
 
@@ -96,14 +97,14 @@ void RSProfiler::WriteBetaRecordFileThread(RSFile& file, const std::string path)
         return;
     }
     
-    std::thread thread([fileData, path]() {
+    std::thread thread([fileDataCopy{std::move(fileData)}, path]() {
         const std::lock_guard<std::mutex> fileSavingMutex(g_fileSavingMutex);
 
         FILE* fileCopy = Utils::FileOpen(path, "wbe");
         if (!Utils::IsFileValid(fileCopy)) {
             return;
         }
-        Utils::FileWrite(fileCopy, fileData.data(), fileData.size());
+        Utils::FileWrite(fileCopy, fileDataCopy.data(), fileDataCopy.size());
         Utils::FileClose(fileCopy);
     });
     thread.detach();
@@ -262,7 +263,7 @@ void RSProfiler::WriteBetaRecordMetrics(RSFile& file, double time)
     DeviceInfoToCaptureData(time, deviceInfo, captureData);
 
     std::vector<char> out;
-    const char headerType = 3; // TYPE: GFX METRICS
+    const char headerType = static_cast<const char>(PackageID::RS_PROFILER_GFX_METRICS);
     captureData.Serialize(out);
     out.insert(out.begin(), headerType);
 

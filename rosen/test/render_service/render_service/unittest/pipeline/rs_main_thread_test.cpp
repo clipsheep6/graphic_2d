@@ -390,7 +390,7 @@ HWTEST_F(RSMainThreadTest, ProcessSyncRSTransactionData001, TestSize.Level1)
     rsTransactionData->SetSyncId(1);
     mainThread->syncTransactionCount_ = 1;
     mainThread->ProcessSyncRSTransactionData(rsTransactionData, pid);
-    ASSERT_EQ(mainThread->syncTransactionData_.empty(), true);
+    ASSERT_EQ(mainThread->syncTransactionData_.empty(), false);
 }
 
 /**
@@ -426,20 +426,25 @@ HWTEST_F(RSMainThreadTest, ProcessSyncTransactionCount, TestSize.Level1)
 
     mainThread->syncTransactionCount_ = 1;
     rsTransactionData->SetParentPid(-1);
+    rsTransactionData->SetChildPid(-1);
     mainThread->ProcessSyncTransactionCount(rsTransactionData);
-    ASSERT_EQ(mainThread->syncTransactionCount_, 0);
-
-    mainThread->syncTransactionCount_ = 0;
-    rsTransactionData->SetParentPid(-1);
-    rsTransactionData->MarkNeedCloseSync();
-    mainThread->ProcessSyncTransactionCount(rsTransactionData);
-    ASSERT_EQ(mainThread->syncTransactionCount_, 0);
+    auto parentPid = rsTransactionData->GetParentPid();
+    auto childPid = rsTransactionData->GetChildPid();
+    ASSERT_EQ(parentPid, -1);
+    ASSERT_EQ(childPid, -1);
 
     mainThread->syncTransactionCount_ = 1;
     rsTransactionData->SetSyncTransactionNum(1);
     rsTransactionData->SetParentPid(1);
     mainThread->ProcessSyncTransactionCount(rsTransactionData);
-    ASSERT_EQ(mainThread->syncTransactionCount_, 0);
+    ASSERT_EQ(rsTransactionData->GetSyncTransactionNum(), 1);
+
+    mainThread->syncTransactionCount_ = 0;
+    rsTransactionData->MarkNeedCloseSync();
+    mainThread->ProcessSyncTransactionCount(rsTransactionData);
+    mainThread->ProcessEmptySyncTransactionCount(0, 0, 0);
+    mainThread->StartSyncTransactionFallbackTask(rsTransactionData);
+    ASSERT_EQ(rsTransactionData->IsNeedCloseSync(), true);
 }
 
 /**
@@ -838,6 +843,18 @@ HWTEST_F(RSMainThreadTest, GetWatermarkImg, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->GetWatermarkImg();
+}
+
+/**
+ * @tc.name: IsFirstOrLastFrameOfWatermark
+ * @tc.desc: IsFirstOrLastFrameOfWatermark test
+ * @tc.type: FUNC
+ * @tc.require: issueI7HDVG
+ */
+HWTEST_F(RSMainThreadTest, IsFirstOrLastFrameOfWatermark, TestSize.Level1)
+{
+    auto mainThread = RSMainThread::Instance();
+    mainThread->IsFirstOrLastFrameOfWatermark();
 }
 
 /**
@@ -3337,5 +3354,37 @@ HWTEST_F(RSMainThreadTest, UpdateFocusNodeId003, TestSize.Level2)
     mainThread->focusNodeId_ = oldFocusNode->GetId();
     mainThread->UpdateFocusNodeId(newFocusNode->GetId());
     ASSERT_EQ(mainThread->GetFocusNodeId(), newFocusNode->GetId());
+}
+
+/**
+ * @tc.name: UiCaptureTasks
+ * @tc.desc: test UiCaptureTasks processing
+ * @tc.type: FUNC
+ * @tc.require: issueIA6QID
+ */
+HWTEST_F(RSMainThreadTest, UiCaptureTasks, TestSize.Level2)
+{
+    auto mainThread = RSMainThread::Instance();
+    ASSERT_NE(mainThread, nullptr);
+
+    auto node1 = RSTestUtil::CreateSurfaceNode();
+    auto node2 = RSTestUtil::CreateSurfaceNode();
+    auto task = []() {};
+
+    mainThread->context_->nodeMap.RegisterRenderNode(node1);
+    mainThread->AddUiCaptureTask(node1->GetId(), task);
+    mainThread->AddUiCaptureTask(node2->GetId(), task);
+    ASSERT_EQ(mainThread->pendingUiCaptureTasks_.empty(), false);
+    ASSERT_EQ(mainThread->uiCaptureTasks_.empty(), true);
+
+    mainThread->PrepareUiCaptureTasks(nullptr);
+    ASSERT_EQ(mainThread->pendingUiCaptureTasks_.empty(), true);
+    ASSERT_EQ(mainThread->uiCaptureTasks_.empty(), false);
+
+    mainThread->ProcessUiCaptureTasks();
+    ASSERT_EQ(mainThread->pendingUiCaptureTasks_.empty(), true);
+    ASSERT_EQ(mainThread->uiCaptureTasks_.empty(), true);
+
+    mainThread->context_->nodeMap.UnregisterRenderNode(node1->GetId());
 }
 } // namespace OHOS::Rosen

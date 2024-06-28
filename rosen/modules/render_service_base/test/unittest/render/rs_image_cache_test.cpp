@@ -99,6 +99,7 @@ HWTEST_F(RSImageCacheTest, ModifyDrawingImageCacheRefCount001, TestSize.Level1) 
     auto img = std::make_shared<Drawing::Image>();
     instance.CacheDrawingImage(ADDED_ID, img);
     EXPECT_EQ(instance.GetDrawingImageCache(ADDED_ID), img);
+    instance.IncreaseDrawingImageCacheRefCount(ADDED_ID);
     instance.ReleaseDrawingImageCache(ADDED_ID);
     EXPECT_EQ(instance.GetDrawingImageCache(ADDED_ID), nullptr);
 
@@ -180,6 +181,7 @@ HWTEST_F(RSImageCacheTest, ModifyPixelMapCacheRefCount001, TestSize.Level1) {
     auto pixel = std::make_shared<Media::PixelMap>();
     instance.CachePixelMap(ADDED_ID, pixel);
     EXPECT_EQ(instance.GetPixelMapCache(ADDED_ID), pixel);
+    instance.IncreasePixelMapCacheRefCount(ADDED_ID);
     instance.ReleasePixelMapCache(ADDED_ID);
     EXPECT_EQ(instance.GetPixelMapCache(ADDED_ID), nullptr);
 
@@ -251,6 +253,7 @@ HWTEST_F(RSImageCacheTest, RenderDrawingImageByPixelMapId002, TestSize.Level1) {
 
     instance.CachePixelMap(ADDED_ID, pixel);
     instance.CacheRenderDrawingImageByPixelMapId(ADDED_ID, img, P_ID);
+    instance.IncreasePixelMapCacheRefCount(ADDED_ID);
     instance.ReleasePixelMapCache(ADDED_ID);
     EXPECT_EQ(nullptr, instance.GetPixelMapCache(ADDED_ID));
     EXPECT_EQ(nullptr, instance.GetRenderDrawingImageCacheByPixelMapId(ADDED_ID, P_ID));

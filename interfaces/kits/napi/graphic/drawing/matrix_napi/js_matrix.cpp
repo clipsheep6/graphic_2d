@@ -193,6 +193,9 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     napi_value srcArray = argv[ARGC_ONE];
     GET_UINT32_PARAM(ARGC_TWO, count);
 
+    if (count == 0) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect count value.");
+    }
     std::vector<Point> dstPoints(count);
     std::vector<Point> srcPoints(count);
 
@@ -201,17 +204,10 @@ napi_value JsMatrix::OnMapPoints(napi_env env, napi_callback_info info)
     if (napi_get_array_length(env, srcArray, &srcPointsSize) != napi_ok || (count > srcPointsSize)) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array size.");
     }
-    uint32_t dstPointsSize = 0;
-    if (napi_get_array_length(env, srcArray, &dstPointsSize) != napi_ok) {
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect dst array size.");
-    }
 
     /* Fill vector with data from input array */
     if(!ConvertFromJsPointsArray(env, srcArray, count, srcPoints)){
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect src array data.");
-    }
-    if(!ConvertFromJsPointsArray(env, srcArray, dstPointsSize, srcPoints)){
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect dst array data.");
     }
 
     JS_CALL_DRAWING_FUNC(m_matrix->MapPoints(dstPoints, srcPoints, count));

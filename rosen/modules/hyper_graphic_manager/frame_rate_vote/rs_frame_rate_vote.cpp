@@ -51,8 +51,8 @@ void RSFrameRateVote::VideoFrameRateVote(uint64_t surfaceNodeId, OHSurfaceSource
         std::shared_ptr<RSVideoFrameRateVote> rsVideoFrameRateVote;
         if (surfaceVideoFrameRateVote_.find(surfaceNodeId) == surfaceVideoFrameRateVote_.end()) {
             rsVideoFrameRateVote = std::make_shared<RSVideoFrameRateVote>(surfaceNodeId,
-                std::bind(&RSFrameRateVote::ReleaseSurfaceMap, this, std::placeholders::_1),
-                std::bind(&RSFrameRateVote::SurfaceVideoVote, this, std::placeholders::_1, std::placeholders::_2));
+                [this] (uint64_t surfaceNodeId) { this->ReleaseSurfaceMap(surfaceNodeId); },
+                [this] (uint64_t surfaceNodeId, uint32_t rate) { this->SurfaceVideoVote(surfaceNodeId, rate); });
             surfaceVideoFrameRateVote_.insert(std::pair<uint64_t, std::shared_ptr<RSVideoFrameRateVote>>(
                 surfaceNodeId, rsVideoFrameRateVote));
         } else {

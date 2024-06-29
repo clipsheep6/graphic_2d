@@ -514,7 +514,7 @@ void VSyncDistributor::OnDVSyncTrigger(int64_t now, int64_t period, uint32_t ref
     vsyncMode_ = vsyncMode;
     dvsync_->RuntimeSwitch();
     if (IsDVsyncOn()) {
-        if (isRs_ && event_.period != 0 && event_.refreshRate != 0) {
+        if (isRs_ && event_.period != 0 && event_.refreshRate != 0 && vsyncMode_ == VSYNC_MODE_LTPO) {
             period = event_.period;
             refreshRate = event_.refreshRate;
         }
@@ -772,7 +772,7 @@ void VSyncDistributor::PostVSyncEvent(const std::vector<sptr<VSyncConnection>> &
             period = event_.period * static_cast<int64_t>(generatorRefreshRate_ / conns[i]->refreshRate_);
         }
 #if defined(RS_ENABLE_DVSYNC)
-        if (isRs_) {
+        if (isRs_ && vsyncMode_ == VSYNC_MODE_LTPO) {
             UpdateVsyncPeriodAndRefreshRate();
         }
 #endif

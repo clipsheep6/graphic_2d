@@ -64,8 +64,10 @@
 #include "render/rs_skia_filter.h"
 #include "system/rs_system_parameters.h"
 #include "scene_board_judgement.h"
+#include "rs_frame_report_ext.h"
 #include "hgm_core.h"
 #include "benchmarks/rs_recording_thread.h"
+#include "rs_frame_report.h"
 #include "scene_board_judgement.h"
 #include "metadata_helper.h"
 #include <v1_0/buffer_handle_meta_key_type.h>
@@ -4043,6 +4045,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                         surfaceNode->MarkCurrentFrameHardwareEnabled();
                     }
                 }
+                RsFrameReportExt::GetInstance().SkipGpuCommit();
                 RS_TRACE_NAME("DisplayNodeSkip skip commit");
                 return;
             }

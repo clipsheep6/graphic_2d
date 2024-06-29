@@ -35,6 +35,9 @@ public:
     void RequestNextVSync();
     void ReceiveVSync();
 
+    void SkipGpuCommit();
+    void SubmitGpuCommands();
+
 private:
     RsFrameReportExt();
     ~RsFrameReportExt();
@@ -49,6 +52,9 @@ private:
     HandleSwapBufferFunc handleSwapBufferFunc_ = nullptr;
     RequestNextVSyncFunc requestNextVSyncFunc_ = nullptr;
     ReceiveVSyncFunc receiveVSyncFunc_ = nullptr;
+
+    void *submitGpuCommandsFunc_ = nullptr;
+    void *skipGpuCommitFunc_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

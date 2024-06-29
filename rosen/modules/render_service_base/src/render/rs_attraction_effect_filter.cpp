@@ -202,8 +202,8 @@ void RSAttractionEffectFilter::CalculateBezierVelList(const std::vector<Drawing:
         curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.33f, 0.57f));
     } else {
         curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.17f, 0.83f));
-        curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.33f, 0.67f));       
-    } 
+        curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.33f, 0.67f));
+    }
     curveVelList.push_back(LerpPoint(topVelocity, bottomVelocity, 0.5f, 0.5f));
     curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.67f, 0.33f));
     curveVelList.push_back(LerpPoint(bottomVelocity, topVelocity, 0.83f, 0.17f));
@@ -311,21 +311,18 @@ std::vector<Drawing::Point> RSAttractionEffectFilter::CalculateLowerCtrlPointOfV
     float inverseWidth = (width >= 1.0f) ? (1.0f / width) : 1.0f;
     // Different regression parameters are used for different scenarios
     // Coordinates of the lower control point of the curve:(m1*(deltaX * height/width - width)), m2 * deltaY)
-    if (isBelowTarget_) {
-        Drawing::Point topLeft = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
-        Drawing::Point topRight = { (0.45f * (deltaX * height * inverseWidth - width)) * location, -0.30f * deltaY };
-        Drawing::Point bottomLeft = { (0.15f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
-        Drawing::Point bottomRight = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.112f * deltaY };
-        std::vector<Drawing::Point> lowerControlPoint = { topLeft, topRight, bottomLeft, bottomRight };
-        return lowerControlPoint;
-    } else {
-        Drawing::Point topLeft = { (0.131f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
-        Drawing::Point topRight = { (0.147f * (deltaX * height * inverseWidth - width)) * location, -0.30f * deltaY };
-        Drawing::Point bottomLeft = { (0.085f * (deltaX * height * inverseWidth - width)) * location, 0.008f * deltaY };
-        Drawing::Point bottomRight = { (0.147f * (deltaX * height * inverseWidth - width)) * location, -0.069f * deltaY };
-        std::vector<Drawing::Point> lowerControlPoint = { topLeft, topRight, bottomLeft, bottomRight };
-        return lowerControlPoint;
+    Drawing::Point topLeft = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
+    Drawing::Point topRight = { (0.45f * (deltaX * height * inverseWidth - width)) * location, -0.30f * deltaY };
+    Drawing::Point bottomLeft = { (0.15f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
+    Drawing::Point bottomRight = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.112f * deltaY };
+    if (!isBelowTarget_) {
+        topLeft = { (0.131f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
+        topRight = { (0.147f * (deltaX * height * inverseWidth - width)) * location, -0.30f * deltaY };
+        bottomLeft = { (0.085f * (deltaX * height * inverseWidth - width)) * location, 0.008f * deltaY };
+        bottomRight = { (0.147f * (deltaX * height * inverseWidth - width)) * location, -0.069f * deltaY };
     }
+    std::vector<Drawing::Point> lowerControlPoint = { topLeft, topRight, bottomLeft, bottomRight };
+    return lowerControlPoint;
 }
 
 std::vector<Drawing::Point> RSAttractionEffectFilter::CalculateVelocityCtrlPointUpper()

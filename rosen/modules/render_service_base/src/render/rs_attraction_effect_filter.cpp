@@ -311,7 +311,7 @@ std::vector<Drawing::Point> RSAttractionEffectFilter::CalculateLowerCtrlPointOfV
     float inverseWidth = (width >= 1.0f) ? (1.0f / width) : 1.0f;
     // Different regression parameters are used for different scenarios
     // Coordinates of the lower control point of the curve:(m1*(deltaX * height/width - width)), m2 * deltaY)
-    Drawing::Point topLeft = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
+    Drawing::Point topLeft = { (0.3f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
     Drawing::Point topRight = { (0.45f * (deltaX * height * inverseWidth - width)) * location, -0.30f * deltaY };
     Drawing::Point bottomLeft = { (0.15f * (deltaX * height * inverseWidth - width)) * location, -0.20f * deltaY };
     Drawing::Point bottomRight = { (0.30f * (deltaX * height * inverseWidth - width)) * location, -0.112f * deltaY };

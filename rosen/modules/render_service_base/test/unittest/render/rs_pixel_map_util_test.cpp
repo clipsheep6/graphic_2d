@@ -41,7 +41,9 @@ HWTEST_F(RsPixelMapUtilTest, ExtractDrawingImageTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 start";
 
-    ExtractDrawingImage::ExtractDrawingImageTest();
+    auto pixelMap = std::make_shared<Media::PixelMap>();
+
+    RSPixelMapUtil::ExtractDrawingImage();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 end";
 }
@@ -50,7 +52,7 @@ HWTEST_F(RsPixelMapUtilTest, TransformDataSetForAstc001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest TransformDataSetForAstc001 start";
 
-    ExtractDrawingImage::TransformDataSetForAstc();
+    RSPixelMapUtil::TransformDataSetForAstc();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest TransformDataSetForAstc001 end";
 }
@@ -59,7 +61,7 @@ HWTEST_F(RsPixelMapUtilTest, DrawPixelMap001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawPixelMap001 start";
 
-    ExtractDrawingImage::DrawPixelMap();
+    RSPixelMapUtil::DrawPixelMap();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest DrawPixelMap001 end";
 }
@@ -68,7 +70,7 @@ HWTEST_F(RsPixelMapUtilTest, IsYUVFormat001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest IsYUVFormat001 start";
 
-    ExtractDrawingImage::IsYUVFormat();
+    RSPixelMapUtil::IsYUVFormat();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest IsYUVFormat001 end";
 }
@@ -77,7 +79,7 @@ HWTEST_F(RsPixelMapUtilTest, IsSupportZeroCopy001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest IsSupportZeroCopy001 start";
 
-    ExtractDrawingImage::IsSupportZeroCopy();
+    RSPixelMapUtil::IsSupportZeroCopy();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest IsSupportZeroCopy001 end";
 }
@@ -86,7 +88,7 @@ HWTEST_F(RsPixelMapUtilTest, ConvertYUVPixelMapToDrawingImage001, TestSize.Level
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ConvertYUVPixelMapToDrawingImage001 start";
 
-    ExtractDrawingImage::ConvertYUVPixelMapToDrawingImage();
+    RSPixelMapUtil::ConvertYUVPixelMapToDrawingImage();
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ConvertYUVPixelMapToDrawingImage001 end";
 }

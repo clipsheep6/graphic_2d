@@ -1614,9 +1614,7 @@ HWTEST_F(RSRenderNodeTest, RemoveCrossParentChild009, TestSize.Level1)
     nodeTest->RemoveCrossParentChild(child1, newParent1);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
 
-    nodeTest->disappearingTransitionCount_ = 0;
-    parent = nullptr;
-    child2->recursive = false;
+    nodeTest->disappearingTransitionCount_ = 1;
     nodeTest->isFullChildrenListValid_ = true;
     nodeTest->RemoveCrossParentChild(child2, newParent2);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);

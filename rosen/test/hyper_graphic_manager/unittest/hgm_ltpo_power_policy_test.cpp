@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
-#define private public
 #include "hgm_ltpo_power_policy.h"
-#undef private
 #include "common/rs_common_hook.h"
 
 using namespace testing;

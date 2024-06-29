@@ -30,7 +30,7 @@ public:
     static void TearDownTestCase() {}
     void SetUp() {}
     void TearDown() {}
-    void setConfigEnable(std::string isEnable);
+    void SetConfigEnable(std::string isEnable);
     void SetIdleStateEnable(bool isIdle);
 };
 

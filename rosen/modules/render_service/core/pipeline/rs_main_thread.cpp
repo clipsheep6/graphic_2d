@@ -78,6 +78,7 @@
 #include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/sk_resource_manager.h"
+#include "pipeline/rs_pointer_render_manager.h"
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -497,6 +498,14 @@ void RSMainThread::Init()
 #endif
 
     RSRcdRenderManager::InitInstance();
+
+#if defined (RS_ENABLE_VK)
+    RSPointerRenderManager::InitInstance(GetRenderEngine()->GetVkImageManager());
+#endif
+
+#if defined (RS_ENABLE_GL) && defined (RS_ENABLE_EGLIMAGE)
+    RSPointerRenderManager::InitInstance(GetRenderEngine()->GetEglImageManager());
+#endif
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
     if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
@@ -1886,6 +1895,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
             RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
         }
+        lastWatermarkFlag_ = watermarkFlag_;
         isPartialRenderEnabledOfLastFrame_ = uniVisitor->GetIsPartialRenderEnabled();
         isRegionDebugEnabledOfLastFrame_ = uniVisitor->GetIsRegionDebugEnabled();
         // set params used in render thread

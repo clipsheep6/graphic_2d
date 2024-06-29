@@ -1401,7 +1401,9 @@ std::optional<RSWaterRipplePara> RSProperties::GetWaterRippleParams() const
  
 bool RSProperties::IsWaterRippleValid() const
 {
-    return ROSEN_GE(waterRippleProgress_, 0.0f) && waterRippleParams_.has_value();
+    return ROSEN_GE(waterRippleProgress_, 0.0f) && ROSEN_LE(waterRippleProgress_, 1.0f) &&
+           waterRippleParams_.has_value() && ROSEN_GE(waterRippleParams_->waveCount, 1.0f) &&
+           ROSEN_LE(waterRippleParams_->waveCount, 3.0f);
 }
 
 void RSProperties::SetFgBrightnessRates(const Vector4f& rates)
@@ -1688,11 +1690,11 @@ void RSProperties::SetMotionBlurPara(const std::shared_ptr<MotionBlurParam>& par
     contentDirty_ = true;
 }
 
-void RSProperties::SetMagnifierParams(const std::shared_ptr<RSMagnifierParams>& para)
+void RSProperties::SetMagnifierParams(const std::optional<Vector2f>& para)
 {
     magnifierPara_ = para;
 
-    if (para) {
+    if (para.has_value()) {
         isDrawn_ = true;
     }
     SetDirty();
@@ -1700,7 +1702,7 @@ void RSProperties::SetMagnifierParams(const std::shared_ptr<RSMagnifierParams>& 
     contentDirty_ = true;
 }
 
-const std::shared_ptr<RSMagnifierParams>& RSProperties::GetMagnifierPara() const
+const std::optional<Vector2f>& RSProperties::GetMagnifierPara() const
 {
     return magnifierPara_;
 }
@@ -2906,11 +2908,11 @@ void RSProperties::GenerateLinearGradientBlurFilter()
 
 void RSProperties::GenerateMagnifierFilter()
 {
-    auto magnifierFilter = std::make_shared<RSMagnifierShaderFilter>(magnifierPara_);
+    auto magnifierFilter = std::make_shared<RSMagnifierShaderFilter>(magnifierPara_->x_, magnifierPara_->y_);
 
     std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(magnifierFilter);
-    filter_ = originalFilter;
-    filter_->SetFilterType(RSFilter::MAGNIFIER);
+    backgroundFilter_ = originalFilter;
+    backgroundFilter_->SetFilterType(RSFilter::MAGNIFIER);
 }
 
 void RSProperties::GenerateWaterRippleFilter()
@@ -2936,6 +2938,8 @@ void RSProperties::GenerateBackgroundFilter()
 {
     if (aiInvert_.has_value() || systemBarEffect_) {
         GenerateAIBarFilter();
+    } else if (magnifierPara_.has_value()) {
+        GenerateMagnifierFilter();
     } else if (IsBackgroundMaterialFilterValid()) {
         GenerateBackgroundMaterialBlurFilter();
     } else if (IsBackgroundBlurRadiusXValid() && IsBackgroundBlurRadiusYValid()) {
@@ -4118,7 +4122,7 @@ void RSProperties::UpdateFilter()
                   IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
                   foregroundFilter_ != nullptr || motionBlurPara_ != nullptr || IsFgBrightnessValid() ||
                   IsBgBrightnessValid() || foregroundFilterCache_ != nullptr || IsWaterRippleValid() ||
-                  magnifierPara_ != nullptr;
+                  magnifierPara_.has_value();
 }
 
 void RSProperties::UpdateForegroundFilter()

@@ -1212,7 +1212,8 @@ void RSUniRenderVisitor::ResetDisplayDirtyRegion()
         return;
     }
     bool ret = CheckScreenPowerChange() || CheckColorFilterChange() ||
-        CheckCurtainScreenUsingStatusChange() || IsFirstFrameOfPartialRender();
+        CheckCurtainScreenUsingStatusChange() || IsFirstFrameOfPartialRender() ||
+        IsFirstOrLastFrameOfWatermark();
     if (ret) {
         curDisplayDirtyManager_->ResetDirtyAsSurfaceSize();
         RS_LOGD("RSUniRenderVisitor::ResetDisplayDirtyRegion on");
@@ -1244,6 +1245,16 @@ bool RSUniRenderVisitor::IsFirstFrameOfPartialRender() const
     }
     RS_LOGD("FirstFrameOfPartialRender");
     return true;
+}
+
+bool RSUniRenderVisitor::IsFirstOrLastFrameOfWatermark() const
+{
+    if (RSMainThread::Instance()->IsFirstOrLastFrameOfWatermark()) {
+        RS_LOGD("FirstOrLastFrameOfWatermark");
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node)
@@ -1707,12 +1718,8 @@ bool RSUniRenderVisitor::BeforeUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
     if (node.GetName().find(CAPTURE_WINDOW_NAME) != std::string::npos) {
         hasCaptureWindow_[currentVisitDisplay_] = true;
     }
-    // only need collect first level node's security & skip layer info
-    // and update it's uifirst gravity
-    if (node.GetId() == node.GetFirstLevelNodeId()) {
-        UpdateSecuritySkipAndProtectedLayersRecord(node);
-        node.UpdateUIFirstFrameGravity();
-    }
+    UpdateSecuritySkipAndProtectedLayersRecord(node);
+    node.UpdateUIFirstFrameGravity();
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         // UpdateCurCornerRadius must process before curSurfaceNode_ update
         node.UpdateCurCornerRadius(curCornerRadius_, curSurfaceNode_ != nullptr);
@@ -1760,6 +1767,9 @@ bool RSUniRenderVisitor::AfterUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
     }
     UpdateDstRect(node, geoPtr->GetAbsRect(), prepareClipRect_);
     node.UpdatePositionZ();
+    if (node.IsHardwareEnabledType() && node.GetZorderChanged() && curSurfaceNode_) {
+        curSurfaceNode_->SetNeedCollectHwcNode(true);
+    }
     UpdateSurfaceRenderNodeScale(node);
     UpdateSurfaceRenderNodeRotate(node);
     if (node.IsMainWindowType() || node.IsLeashWindow()) {

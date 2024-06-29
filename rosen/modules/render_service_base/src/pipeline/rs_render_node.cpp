@@ -2123,14 +2123,12 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         return;
     }
     for (auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
-        auto it = std::find_if(modifiers.begin(), modifiers.end(),
-            [id](const auto& modifier) -> bool { return modifier->GetPropertyId() == id; });
-        if (it == modifiers.end()) {
-            continue;
+        bool found = EraseIf(modifiers,
+            [id](const auto& modifier) -> bool { return modifier == nullptr || modifier->GetPropertyId() == id; });
+        if (found) {
+            AddDirtyType(type);
+            return;
         }
-        AddDirtyType(type);
-        modifiers.erase(it);
-        return;
     }
 }
 
@@ -2237,6 +2235,16 @@ void RSRenderNode::MarkForegroundFilterCache()
     }
 }
 
+void RSRenderNode::ApplyModifier(RSModifierContext& context, std::shared_ptr<RSRenderModifier> modifier)
+{
+    auto modifierType = modifier->GetType();
+    if (!dirtyTypes_.test(static_cast<size_t>(modifierType))) {
+        return;
+    }
+    modifier->Apply(context);
+    isOnlyBasicGeoTransform_ = isOnlyBasicGeoTransform_ && BASIC_GEOTRANSFORM_ANIMATION_TYPE.count(modifierType);
+}
+
 void RSRenderNode::ApplyModifiers()
 {
     if (UNLIKELY(!isFullChildrenListValid_)) {
@@ -2260,14 +2268,17 @@ void RSRenderNode::ApplyModifiers()
     GetMutableRenderProperties().ResetProperty(dirtyTypes_);
 
     // Apply modifiers
-    for (auto& [id, modifier] : modifiers_) {
-        auto modifierType = modifier->GetType();
-        if (!dirtyTypes_.test(static_cast<size_t>(modifierType))) {
-            continue;
+    auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(shared_from_this());
+    if (displayNode && displayNode->GetCurrentScbPid() != -1) {
+        for (auto& [id, modifier] : modifiers_) {
+            if (ExtractPid(id) == displayNode->GetCurrentScbPid()) {
+                ApplyModifier(context, modifier);
+            }
         }
-        modifier->Apply(context);
-        isOnlyBasicGeoTransform_ = isOnlyBasicGeoTransform_ &&
-            BASIC_GEOTRANSFORM_ANIMATION_TYPE.count(modifierType);
+    } else {
+        for (auto& [id, modifier] : modifiers_) {
+            ApplyModifier(context, modifier);
+        }
     }
     // execute hooks
     GetMutableRenderProperties().OnApplyModifiers();

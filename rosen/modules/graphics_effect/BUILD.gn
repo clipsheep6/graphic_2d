@@ -22,8 +22,8 @@ config("export_config") {
 ohos_source_set("graphics_effect_src") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    cfi = true
-    cfi_cross_dso = true
+    cfi = false
+    cfi_cross_dso = false
     debug = false
   }
   cflags = [
@@ -85,8 +85,8 @@ if (is_arkui_x) {
   ohos_source_set("libgraphics_effect") {
     branch_protector_ret = "pac_ret"
     sanitize = {
-      cfi = true
-      cfi_cross_dso = true
+      cfi = false
+      cfi_cross_dso = false
       debug = false
     }
 
@@ -100,8 +100,8 @@ if (is_arkui_x) {
   ohos_shared_library("libgraphics_effect") {
     branch_protector_ret = "pac_ret"
     sanitize = {
-      cfi = true
-      cfi_cross_dso = true
+      cfi = false
+      cfi_cross_dso = false
       debug = false
     }
 

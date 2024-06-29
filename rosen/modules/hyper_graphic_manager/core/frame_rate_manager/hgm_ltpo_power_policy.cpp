@@ -61,17 +61,17 @@ void HgmLtpoPowerPolicy::SetConfig(std::unordered_map<std::string, std::string> 
         return;
     }
 
-    if (animationPowerConfig.count(DEFAULT_ANIMATION_IDLE_FPS) == 0) {
-        animationIdleFps = DEFAULT_ANIMATION_IDLE_FPS;
+    if (animationPowerConfig.count(ANIMATION_DILE_FPS) == 0) {
+        animationIdleFps_ = DEFAULT_ANIMATION_IDLE_FPS;
     } else {
-        ConverStrToInt(animationIdleFps, animationPowerConfig[ANIMATION_DILE_FPS], DEFAULT_ANIMATION_IDLE_FPS);
+        ConverStrToInt(animationIdleFps_, animationPowerConfig[ANIMATION_DILE_FPS], DEFAULT_ANIMATION_IDLE_FPS);
     }
 
     if (animationPowerConfig.count(ANIMATION_IDLE_DURATION) == 0) {
-        animationIdleDuration = DEFAULT_ANIMATION_IDLE_DURATION;
+        animationIdleDuration_ = DEFAULT_ANIMATION_IDLE_DURATION;
     } else {
         ConverStrToInt(
-            animationIdleDuration, animationPowerConfig[ANIMATION_IDLE_DURATION], DEFAULT_ANIMATION_IDLE_DURATION);
+            animationIdleDuration_, animationPowerConfig[ANIMATION_IDLE_DURATION], DEFAULT_ANIMATION_IDLE_DURATION);
     }
     HGM_LOGI("HgmLtpoPowerPolicy::SetConfig update config success");
 }

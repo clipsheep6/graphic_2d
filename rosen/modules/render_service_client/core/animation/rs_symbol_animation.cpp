@@ -434,21 +434,6 @@ bool RSSymbolAnimation::SetPublicAnimation(
     return true;
 }
 
-void RSSymbolAnimation::GroupAnimationStart(
-    const std::shared_ptr<RSNode>& rsNode, std::vector<std::shared_ptr<RSAnimation>>& animations)
-{
-    if (rsNode == nullptr || animations.empty()) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
-        return;
-    }
-
-    for (int i = 0; i < static_cast<int>(animations.size()); i++) {
-        if (animations[i]) {
-            animations[i]->Start(rsNode);
-        }
-    }
-}
-
 void RSSymbolAnimation::SetNodePivot(const std::shared_ptr<RSNode>& rsNode)
 {
     // Set Node Center Offset
@@ -494,10 +479,8 @@ void RSSymbolAnimation::BounceAnimation(
         return;
     }
 
-    std::vector<std::shared_ptr<RSAnimation>> groupAnimation = {};
-    ScaleAnimationBase(scaleProperty, parameters[0], groupAnimation);
-    ScaleAnimationBase(scaleProperty, parameters[1], groupAnimation);
-    GroupAnimationStart(rsNode, groupAnimation);
+    ScaleAnimationBase(scaleProperty, parameters[0]);
+    ScaleAnimationBase(scaleProperty, parameters[1]);
 }
 
 void RSSymbolAnimation::AppearAnimation(
@@ -516,10 +499,8 @@ void RSSymbolAnimation::AppearAnimation(
         return;
     }
 
-    std::vector<std::shared_ptr<RSAnimation>> groupAnimation = {};
-    ScaleAnimationBase(scaleProperty, parameters[0], groupAnimation);
-    AlphaAnimationBase(rsNode, parameters[1], groupAnimation);
-    GroupAnimationStart(rsNode, groupAnimation);
+    ScaleAnimationBase(scaleProperty, parameters[0]);
+    AlphaAnimationBase(rsNode, parameters[1]);
 }
 
 Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path& path, const float offsetX, const float offsetY)
@@ -763,13 +744,13 @@ bool RSSymbolAnimation::AddScaleBaseModifier(const std::shared_ptr<RSNode>& rsNo
 {
     // validation input
     if (rsNode == nullptr) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
+        ROSEN_LOGD("[%{public}s] : rsNode is nullptr \n", __func__);
         return false;
     }
     if (scaleParameter.properties.count(SCALE_PROP_X) <= 0 || scaleParameter.properties.count(SCALE_PROP_Y) <= 0 ||
         scaleParameter.properties[SCALE_PROP_X].size() < PROPERTIES ||
         scaleParameter.properties[SCALE_PROP_Y].size() < PROPERTIES) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
+        ROSEN_LOGD("[%{public}s] : properties invalid \n", __func__);
         return false;
     }
 
@@ -780,7 +761,7 @@ bool RSSymbolAnimation::AddScaleBaseModifier(const std::shared_ptr<RSNode>& rsNo
 
     bool isCreate = SymbolAnimation::CreateOrSetModifierValue(scaleProperty, scaleValueBegin);
     if (!isCreate) {
-        ROSEN_LOGD("[%{public}s] : invalid parameter \n", __func__);
+        ROSEN_LOGD("[%{public}s] : SetModifierValue \n", __func__);
         return false;
     }
 
@@ -791,7 +772,7 @@ bool RSSymbolAnimation::AddScaleBaseModifier(const std::shared_ptr<RSNode>& rsNo
 
 // base atomizated animation
 void RSSymbolAnimation::ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<Vector2f>>& scaleProperty,
-    Drawing::DrawingPiecewiseParameter& scaleParameter, std::vector<std::shared_ptr<RSAnimation>>& animations)
+    Drawing::DrawingPiecewiseParameter& scaleParameter)
 {
     if (scaleProperty == nullptr) {
         ROSEN_LOGD("[%{public}s] : scaleProperty is nullptr \n", __func__);
@@ -812,23 +793,19 @@ void RSSymbolAnimation::ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<
     RSAnimationTimingCurve scaleCurve;
     SymbolAnimation::CreateAnimationTimingCurve(scaleParameter.curveType, scaleParameter.curveArgs, scaleCurve);
 
-    RSAnimationTimingProtocol scaleprotocol;
-    scaleprotocol.SetStartDelay(scaleParameter.delay);
+    RSAnimationTimingProtocol scaleProtocol;
+    scaleProtocol.SetStartDelay(scaleParameter.delay);
     if (scaleParameter.duration > 0) {
-        scaleprotocol.SetDuration(scaleParameter.duration);
+        scaleProtocol.SetDuration(scaleParameter.duration);
     }
 
     // set animation
     std::vector<std::shared_ptr<RSAnimation>> animations1 = RSNode::Animate(
-        scaleprotocol, scaleCurve, [&scaleProperty, &scaleValueEnd]() { scaleProperty->Set(scaleValueEnd); });
-
-    if (animations1.size() > 0 && animations1[0] != nullptr) {
-        animations.emplace_back(animations1[0]);
-    }
+        scaleProtocol, scaleCurve, [&scaleProperty, scaleValueEnd]() { scaleProperty->Set(scaleValueEnd); });
 }
 
 void RSSymbolAnimation::AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode,
-    Drawing::DrawingPiecewiseParameter& alphaParameter, std::vector<std::shared_ptr<RSAnimation>>& animations)
+    Drawing::DrawingPiecewiseParameter& alphaParameter)
 {
     // validation input
     if (rsNode == nullptr) {
@@ -859,11 +836,7 @@ void RSSymbolAnimation::AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode
     SymbolAnimation::CreateAnimationTimingCurve(alphaParameter.curveType, alphaParameter.curveArgs, alphaCurve);
 
     std::vector<std::shared_ptr<RSAnimation>> animations1 = RSNode::Animate(
-        alphaProtocol, alphaCurve, [&alphaProperty, &alphaValueEnd]() { alphaProperty->Set(alphaValueEnd); });
-
-    if (animations1.size() > 0 && animations1[0] != nullptr) {
-        animations.emplace_back(animations1[0]);
-    }
+        alphaProtocol, alphaCurve, [&alphaProperty, alphaValueEnd]() { alphaProperty->Set(alphaValueEnd); });
 }
 } // namespace Rosen
 } // namespace OHOS

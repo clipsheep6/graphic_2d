@@ -545,18 +545,13 @@ HWTEST_F(RSSymbolAnimationTest, ScaleAnimationBase001, TestSize.Level1)
      * @tc.steps: step1. init data
      */
     auto symbolAnimation = RSSymbolAnimation();
-    std::vector<std::shared_ptr<RSAnimation>> groupAnimation = {};
     auto bounceSecondPhaseParas = BOUNCE_SECOND_PHASE_PARAS;
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleProperty = nullptr;
-    symbolAnimation.AddScaleBaseModifier(canvasNode, bounceSecondPhaseParas, scaleProperty);
-    symbolAnimation.ScaleAnimationBase(scaleProperty, bounceSecondPhaseParas, groupAnimation);
+    symbolAnimation.AddScaleBaseModifier(canvasNode, bounceSecondPhaseParas, scaleProperty); // property is initialized
+    symbolAnimation.ScaleAnimationBase(scaleProperty, bounceSecondPhaseParas);
     /**
      * @tc.steps: step2. start ScaleAnimationBase test
      */
-    EXPECT_FALSE(groupAnimation.empty());
-    EXPECT_FALSE(groupAnimation[0] == nullptr);
-    groupAnimation[0]->Start(canvasNode);
-    EXPECT_TRUE(groupAnimation[0]->IsRunning());
     NotifyStartAnimation();
     GTEST_LOG_(INFO) << "RSSymbolAnimationTest ScaleAnimationBase001 end";
 }
@@ -573,17 +568,40 @@ HWTEST_F(RSSymbolAnimationTest, ScaleAnimationBase002, TestSize.Level1)
      * @tc.steps: step1. init data
      */
     auto symbolAnimation = RSSymbolAnimation();
-    std::vector<std::shared_ptr<RSAnimation>> groupAnimation = {};
     Drawing::DrawingPiecewiseParameter testParas = {};
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleProperty = nullptr;
+    symbolAnimation.AddScaleBaseModifier(nullptr, testParas, scaleProperty);
     symbolAnimation.AddScaleBaseModifier(canvasNode, testParas, scaleProperty);
-    symbolAnimation.ScaleAnimationBase(scaleProperty, testParas, groupAnimation);
+    symbolAnimation.ScaleAnimationBase(scaleProperty, testParas); // scaleProperty is nullptr
     /**
      * @tc.steps: step2. start ScaleAnimationBase test
      */
-    EXPECT_TRUE(groupAnimation.empty());
     NotifyStartAnimation();
     GTEST_LOG_(INFO) << "RSSymbolAnimationTest ScaleAnimationBase002 end";
+}
+
+/**
+ * @tc.name: ScaleAnimationBase003
+ * @tc.desc: Verify the basic ability, ScaleAnimationBase of RSSymbolAnimationTest
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSSymbolAnimationTest, ScaleAnimationBase003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest ScaleAnimationBase003 start";
+    /**
+     * @tc.steps: step1. init data
+     */
+    auto symbolAnimation = RSSymbolAnimation();
+    Drawing::DrawingPiecewiseParameter testParas = {};
+    auto bounceSecondPhaseParas = BOUNCE_SECOND_PHASE_PARAS;
+    std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleProperty = nullptr;
+    symbolAnimation.AddScaleBaseModifier(canvasNode, bounceSecondPhaseParas, scaleProperty); // property is initialized
+    symbolAnimation.ScaleAnimationBase(scaleProperty, testParas); // scaleParameter is null
+    /**
+     * @tc.steps: step2. start ScaleAnimationBase test
+     */
+    NotifyStartAnimation();
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest ScaleAnimationBase003 end";
 }
 
 /**

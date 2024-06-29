@@ -41,9 +41,18 @@ HWTEST_F(RsPixelMapUtilTest, ExtractDrawingImageTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 start";
 
-    auto pixelMap = std::make_shared<Media::PixelMap>();
+    std::shared_ptr<Media::PixelMap> pixelMap;
+    EXPECT_EQ(RSPixelMapUtil::ExtractDrawingImage(pixelMap), nullptr);
 
-    RSPixelMapUtil::ExtractDrawingImage();
+    GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 end";
+}
+
+HWTEST_F(RsPixelMapUtilTest, ExtractDrawingImageTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 start";
+
+    auto pixelMap = std::make_shared<Media::PixelMap>();
+    auto imgPtr = RSPixelMapUtil::ExtractDrawingImage(pixelMap);
 
     GTEST_LOG_(INFO) << "RSAnimationFractionTest ExtractDrawingImageTest001 end";
 }

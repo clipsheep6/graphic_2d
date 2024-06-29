@@ -60,8 +60,8 @@ ohos_unittest("RSRenderServiceBaseCommonTest") {
     public_deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
   }
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "../../../../../modules/render_service_base:render_service_base_src",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//third_party/googletest:gtest_main",
   ]
   include_dirs += [ "//third_party/skia/src" ]

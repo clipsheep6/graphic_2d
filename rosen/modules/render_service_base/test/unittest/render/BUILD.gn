@@ -20,7 +20,10 @@ third_party_path = "//third_party"
 ohos_unittest("RSRenderTest") {
   module_out_path = module_output_path
 
-  sources = [ "rs_image_cache_test.cpp" ]
+  sources = [
+    "rs_image_cache_test.cpp",
+    "rs_pixel_map_util_test.cpp",
+  ]
 
   configs = [ ":rs_render_test_config" ]
 

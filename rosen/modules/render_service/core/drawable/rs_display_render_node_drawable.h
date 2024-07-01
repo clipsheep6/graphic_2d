@@ -75,8 +75,6 @@ private:
     void DrawCurtainScreen() const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
-    std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(
-        std::shared_ptr<RSDisplayRenderNode> mirrorNode);
     void ResetRotateIfNeed(RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor,
         Drawing::Region& clipRegion);
     void ProcessCacheImage(Drawing::Image& cacheImageProcessed);

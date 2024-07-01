@@ -493,14 +493,20 @@ void RSSymbolAnimation::AppearAnimation(
     }
 
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleProperty = nullptr;
+    std::shared_ptr<RSAnimatableProperty<float>> alphaProperty = nullptr;
     bool isAdd = AddScaleBaseModifier(rsNode, parameters[0], scaleProperty);
     if (!isAdd) {
         ROSEN_LOGD("[%{public}s] : add scale modifier failed\n", __func__);
         return;
     }
+    isAdd = AddAlphaBaseModifier(rsNode, parameters[1], alphaProperty);
+    if (!isAdd) {
+        ROSEN_LOGD("[%{public}s] : add alpha modifier failed\n", __func__);
+        return;
+    }
 
     ScaleAnimationBase(scaleProperty, parameters[0]);
-    AlphaAnimationBase(rsNode, parameters[1]);
+    AlphaAnimationBase(alphaProperty, parameters[1]);
 }
 
 Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path& path, const float offsetX, const float offsetY)
@@ -770,6 +776,39 @@ bool RSSymbolAnimation::AddScaleBaseModifier(const std::shared_ptr<RSNode>& rsNo
     return true;
 }
 
+/**
+ * @brief creates a alphaModifier by alphaParamter and adds it to rsNode
+ * @param rsNode is the node of symbol animation
+ * @param alphaParamter is the parameter of the alpha effect
+ * @param alphaProperty property of the alpha effect
+ * @return true if add alpha modifer success
+ */
+bool RSSymbolAnimation::AddAlphaBaseModifier(const std::shared_ptr<RSNode>& rsNode,
+    Drawing::DrawingPiecewiseParameter& alphaParameter,
+    std::shared_ptr<RSAnimatableProperty<float>>& alphaProperty)
+{
+    // validation input
+    if (rsNode == nullptr) {
+        ROSEN_LOGD("[%{public}s] : rsNode is nullptr \n", __func__);
+        return false;
+    }
+    if (alphaParameter.properties.count("alpha") <= 0 || alphaParameter.properties["alpha"].size() < PROPERTIES) {
+        ROSEN_LOGD("[%{public}s] : invalid alphaParameter \n", __func__);
+        return false;
+    }
+    float alphaBegin = static_cast<float>(alphaParameter.properties["alpha"][PROP_START]);
+
+    bool isCreate = SymbolAnimation::CreateOrSetModifierValue(alphaProperty, alphaBegin);
+    if (!isCreate) {
+        ROSEN_LOGD("[%{public}s] : SetModifierValue \n", __func__);
+        return false;
+    }
+
+    auto alphaModifier = std::make_shared<Rosen::RSAlphaModifier>(alphaProperty);
+    rsNode->AddModifier(alphaModifier);
+    return true;
+}
+
 // base atomizated animation
 void RSSymbolAnimation::ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<Vector2f>>& scaleProperty,
     Drawing::DrawingPiecewiseParameter& scaleParameter)
@@ -782,7 +821,7 @@ void RSSymbolAnimation::ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<
     if (scaleParameter.properties.count(SCALE_PROP_X) <= 0 || scaleParameter.properties.count(SCALE_PROP_Y) <= 0 ||
         scaleParameter.properties[SCALE_PROP_X].size() < PROPERTIES ||
         scaleParameter.properties[SCALE_PROP_Y].size() < PROPERTIES) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
+        ROSEN_LOGD("[%{public}s] : invalid scaleParameter \n", __func__);
         return;
     }
 
@@ -804,36 +843,29 @@ void RSSymbolAnimation::ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<
         scaleProtocol, scaleCurve, [&scaleProperty, scaleValueEnd]() { scaleProperty->Set(scaleValueEnd); });
 }
 
-void RSSymbolAnimation::AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode,
+void RSSymbolAnimation::AlphaAnimationBase(std::shared_ptr<RSAnimatableProperty<float>>& alphaProperty,
     Drawing::DrawingPiecewiseParameter& alphaParameter)
 {
     // validation input
-    if (rsNode == nullptr) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
+    if (alphaProperty == nullptr) {
+        ROSEN_LOGD("[%{public}s] :  alphaProperty is nullptr \n", __func__);
         return;
     }
     if (alphaParameter.properties.count("alpha") <= 0 || alphaParameter.properties["alpha"].size() < PROPERTIES) {
-        ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
+        ROSEN_LOGD("[%{public}s] : invalid alphaParameter \n", __func__);
         return;
     }
 
-    float alphaBegin = static_cast<float>(alphaParameter.properties["alpha"][PROP_START]);
     float alphaValueEnd = static_cast<float>(alphaParameter.properties["alpha"][PROP_END]);
 
-    std::shared_ptr<RSAnimatableProperty<float>> alphaProperty;
-
-    if (!SymbolAnimation::CreateOrSetModifierValue(alphaProperty, alphaBegin)) {
-        return;
-    }
-    auto alphaModifier = std::make_shared<Rosen::RSAlphaModifier>(alphaProperty);
-
-    rsNode->AddModifier(alphaModifier);
+    RSAnimationTimingCurve alphaCurve;
+    SymbolAnimation::CreateAnimationTimingCurve(alphaParameter.curveType, alphaParameter.curveArgs, alphaCurve);
 
     RSAnimationTimingProtocol alphaProtocol;
     alphaProtocol.SetStartDelay(alphaParameter.delay);
-    alphaProtocol.SetDuration(alphaParameter.duration);
-    RSAnimationTimingCurve alphaCurve;
-    SymbolAnimation::CreateAnimationTimingCurve(alphaParameter.curveType, alphaParameter.curveArgs, alphaCurve);
+    if (scaleParameter.duration > 0) {
+        scaleProtocol.SetDuration(scaleParameter.duration);
+    }
 
     std::vector<std::shared_ptr<RSAnimation>> animations1 = RSNode::Animate(
         alphaProtocol, alphaCurve, [&alphaProperty, alphaValueEnd]() { alphaProperty->Set(alphaValueEnd); });

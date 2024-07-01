@@ -1427,7 +1427,9 @@ void RSUniRenderVisitor::CalculateOcclusion(RSSurfaceRenderNode& node)
     // check current surface Participate In Occlusion
     if (node.CheckParticipateInOcclusion()) {
         accumulatedOcclusionRegion_.OrSelf(node.GetOpaqueRegion());
-        if (IsValidInVirtualScreen(node)) {
+        auto blackList = screenManager_->GetVirtualScreenBlackList(curDisplayNode_->GetScreenId());
+        bool hasBlackList = !blackList.empty() && (blackList.find(node.GetId()) != blackList.end());
+        if (IsValidInVirtualScreen(node) && !hasBlackList) {
             occlusionRegionWithoutSkipLayer_.OrSelf(node.GetOpaqueRegion());
         }
     }
@@ -1827,7 +1829,9 @@ void RSUniRenderVisitor::UpdateHwcNodeInfoForAppNode(RSSurfaceRenderNode& node)
         if (curSurfaceNode_->GetNeedCollectHwcNode()) {
             curSurfaceNode_->AddChildHardwareEnabledNode(node.ReinterpretCastTo<RSSurfaceRenderNode>());
         }
-        node.SetHardwareForcedDisabledState(false);
+        if (!node.GetHardWareDisabledByReverse()) {
+            node.SetHardwareForcedDisabledState(false);
+        }
         node.SetHardwareForcedDisabledByVisibility(false);
         node.SetForceHardware(displayNodeRotationChanged_ || isScreenRotationAnimating_);
         if ((!node.GetForceHardware() && !IsHardwareComposerEnabled()) ||
@@ -2093,6 +2097,7 @@ void RSUniRenderVisitor::UpdateHwcNodeDirtyRegionAndCreateLayer(std::shared_ptr<
         }
         UpdateHwcNodeDirtyRegionForApp(node, hwcNodePtr);
         hwcNodePtr->SetCalcRectInPrepare(false);
+        hwcNodePtr->SetHardWareDisabledByReverse(false);
         hwcNodePtr->SetGlobalZOrder(hwcNodePtr->IsHardwareForcedDisabled() && !hwcNodePtr->GetProtectedLayer()
             ? -1.f : globalZOrder_++);
         auto transform = RSUniRenderUtil::GetLayerTransform(*hwcNodePtr, screenInfo_);
@@ -2137,12 +2142,6 @@ void RSUniRenderVisitor::UpdateSurfaceDirtyAndGlobalDirty()
         [this, &accumulatedDirtyRegion, &hasMainAndLeashSurfaceDirty](RSBaseRenderNode::SharedPtr& nodePtr) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodePtr);
         auto dirtyManager = surfaceNode->GetDirtyManager();
-        if (surfaceNode->GetLastFrameUifirstFlag() == MultiThreadCacheType::LEASH_WINDOW &&
-            !surfaceNode->IsHardwareForcedDisabled() && dirtyManager &&
-            !surfaceNode->IsHardwareForcedDisabled() == surfaceNode->GetIsLastFrameHwcEnabled()) {
-            dirtyManager->Clear();
-            return;
-        }
         RSMainThread::Instance()->GetContext().AddPendingSyncNode(nodePtr);
         // 0. update hwc node dirty region and create layer
         UpdateHwcNodeDirtyRegionAndCreateLayer(surfaceNode);
@@ -2508,7 +2507,8 @@ void RSUniRenderVisitor::PostPrepare(RSRenderNode& node, bool subTreeSkipped)
         UpdateSubSurfaceNodeRectInSkippedSubTree(node);
     }
     if (node.GetRenderProperties().NeedFilter()) {
-        UpdateHwcNodeEnableByFilterRect(curSurfaceNode_, node.GetOldDirtyInSurface());
+        UpdateHwcNodeEnableByFilterRect(
+            curSurfaceNode_, node.GetOldDirtyInSurface(), NeedPrepareChindrenInReverseOrder(node));
         auto globalFilterRect = (node.IsInstanceOf<RSEffectRenderNode>() && !node.FirstFrameHasEffectChildren()) ?
             GetVisibleEffectDirty(node) : node.GetOldDirtyInSurface();
         node.CalVisibleFilterRect(prepareClipRect_);
@@ -2620,7 +2620,7 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
 }
 
 void RSUniRenderVisitor::CalcHwcNodeEnableByFilterRect(
-    std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect)
+    std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect, bool isReverseOrder)
 {
     if (!node) {
         return;
@@ -2631,11 +2631,12 @@ void RSUniRenderVisitor::CalcHwcNodeEnableByFilterRect(
         RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by filter rect",
             node->GetName().c_str(), node->GetId());
         node->SetHardwareForcedDisabledState(true);
+        node->SetHardWareDisabledByReverse(isReverseOrder);
     }
 }
 
 void RSUniRenderVisitor::UpdateHwcNodeEnableByFilterRect(
-    std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect)
+    std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect, bool isReverseOrder)
 {
     if (filterRect.IsEmpty()) {
         return;
@@ -2646,7 +2647,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByFilterRect(
             return;
         }
         for (auto hwcNode : selfDrawingNodes) {
-            CalcHwcNodeEnableByFilterRect(hwcNode, filterRect);
+            CalcHwcNodeEnableByFilterRect(hwcNode, filterRect, isReverseOrder);
         }
     } else {
         const auto& hwcNodes = node->GetChildHardwareEnabledNodes();
@@ -2655,7 +2656,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByFilterRect(
         }
         for (auto hwcNode : hwcNodes) {
             auto hwcNodePtr = hwcNode.lock();
-            CalcHwcNodeEnableByFilterRect(hwcNodePtr, filterRect);
+            CalcHwcNodeEnableByFilterRect(hwcNodePtr, filterRect, isReverseOrder);
         }
     }
 }

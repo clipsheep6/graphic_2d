@@ -323,7 +323,8 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     // Draw base pipeline start
     RSAutoCanvasRestore acr(rscanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     bool needOffscreen = surfaceParams->GetNeedOffscreen() && !rscanvas->GetTotalMatrix().IsIdentity() &&
-        surfaceParams->IsAppWindow() && surfaceNode->GetName().substr(0, 3) != "SCB" && !IsHardwareEnabled();
+        surfaceParams->IsAppWindow() && surfaceNode->GetName().substr(0, 3) != "SCB" && !IsHardwareEnabled() &&
+        gettid() == RSUniRenderThread::Instance().GetTid();
     curCanvas_ = rscanvas;
     if (needOffscreen) {
         releaseCount_ = 0;
@@ -735,9 +736,7 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
         canvas.ConcatMatrix(surfaceParams.GetMatrix());
     }
     bool useDmaBuffer = UseDmaBuffer();
-    if (!useDmaBuffer) {
-        DrawBackground(canvas, bounds);
-    }
+    DrawBackground(canvas, bounds);
     bool drawCacheSuccess = true;
     if (surfaceParams.GetUifirstUseStarting() != INVALID_NODEID) {
         drawCacheSuccess = DrawUIFirstCacheWithStarting(canvas, surfaceParams.GetUifirstUseStarting());
@@ -751,9 +750,7 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
         RS_TRACE_NAME_FMT("[%s] reuse failed!", name_.c_str());
         RS_LOGE("DrawUIFirstCache failed!");
     }
-    if (!useDmaBuffer) {
-        DrawForeground(canvas, bounds);
-    }
+    DrawForeground(canvas, bounds);
     if (uniParams.GetUIFirstDebugEnabled()) {
         DrawUIFirstDfx(canvas, enableType, surfaceParams, drawCacheSuccess);
     }

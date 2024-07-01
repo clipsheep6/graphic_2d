@@ -35,7 +35,11 @@ public:
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSStepsInterpolator* Unmarshalling(Parcel& parcel);
 
-    InterpolatorType GetType() override { return InterpolatorType::STEPS; }
+    InterpolatorType GetType() override
+    {
+        return InterpolatorType::STEPS;
+    }
+
 private:
     RSStepsInterpolator(uint64_t id, int32_t steps, StepsCurvePosition position = StepsCurvePosition::START);
     int32_t steps_;

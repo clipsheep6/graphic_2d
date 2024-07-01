@@ -105,7 +105,7 @@ void AnimationCommandHelper::CancelAnimation(RSContext& context, NodeId targetId
 }
 
 void AnimationCommandHelper::CreateInteractiveAnimator(RSContext& context,
-    InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>> animations)
+    InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>>& animations)
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
@@ -119,25 +119,17 @@ void AnimationCommandHelper::DestoryInteractiveAnimator(RSContext& context, Inte
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("DestoryInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
     context.GetInteractiveImplictAnimatorMap().UnregisterInteractiveImplictAnimator(targetId);
-}
-
-void AnimationCommandHelper::InteractiveAnimatorAddAnimations(RSContext& context,
-    InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>> animations)
-{
-    auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
-    if (animator == nullptr) {
-        return;
-    }
-    animator->AddAnimations(animations);
 }
 
 void AnimationCommandHelper::PauseInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId)
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("PauseInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
     animator->PauseAnimator();
@@ -147,25 +139,28 @@ void AnimationCommandHelper::ContinueInteractiveAnimator(RSContext& context, Int
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("ContinueInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
     animator->ContinueAnimator();
 }
 
 void AnimationCommandHelper::FinishInteractiveAnimator(RSContext& context,
-    InteractiveImplictAnimatorId targetId, RSInteractiveAnimationPosition finishPos)
+    InteractiveImplictAnimatorId targetId, RSInteractiveAnimationPosition finishPosition)
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("FinishInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
-    animator->FinishAnimator(finishPos);
+    animator->FinishAnimator(finishPosition);
 }
 
 void AnimationCommandHelper::ReverseInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId)
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("ReverseInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
     animator->ReverseAnimator();
@@ -176,6 +171,7 @@ void AnimationCommandHelper::SetFractionInteractiveAnimator(RSContext& context,
 {
     auto animator = context.GetInteractiveImplictAnimatorMap().GetInteractiveImplictAnimator(targetId);
     if (animator == nullptr) {
+        RS_LOGE("SetFractionInteractiveAnimator failed, [%{public}" PRIu64 "] animator is nullptr", targetId);
         return;
     }
     animator->SetFractionAnimator(fraction);

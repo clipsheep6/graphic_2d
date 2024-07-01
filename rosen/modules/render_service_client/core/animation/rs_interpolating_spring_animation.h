@@ -41,11 +41,13 @@ public:
     const RSAnimationTimingCurve& GetTimingCurve() const;
 
     void SetZeroThreshold(const float zeroThreshold) override;
-
-    bool IsSupportInteractiveAnimator() override { return true; }
 protected:
     void OnStart() override;
 
+    bool IsSupportInteractiveAnimator() override
+    {
+        return true;
+    }
 private:
     void StartRenderAnimation(const std::shared_ptr<RSRenderInterpolatingSpringAnimation>& animation);
 

@@ -104,7 +104,7 @@ std::shared_ptr<InteractiveAnimatorFinishCallback> RSInteractiveImplictAnimator:
     return animatorCallback;
 }
 
-size_t RSInteractiveImplictAnimator::AddImplictAnimation(std::function<void()> callback)
+size_t RSInteractiveImplictAnimator::AddAnimation(std::function<void()> callback, bool isSupportPropertyChangeCreate)
 {
     if (state_ != RSInteractiveAnimationState::INACTIVE && state_ != RSInteractiveAnimationState::ACTIVE) {
         ROSEN_LOGE("AddAnimation failed, state_ is error");
@@ -121,39 +121,10 @@ size_t RSInteractiveImplictAnimator::AddImplictAnimation(std::function<void()> c
         return 0;
     }
 
-    implicitAnimator->OpenInterActiveImplicitAnimation(true, timingProtocol_, timingCurve_, nullptr);
+    implicitAnimator->OpenInterActiveImplicitAnimation(
+        isSupportPropertyChangeCreate, timingProtocol_, timingCurve_, nullptr);
     callback();
-    auto animations = implicitAnimator->CloseInterActiveImplicitAnimation(true);
-
-    for (auto& [animation, nodeId] : animations) {
-        if (fractionAnimationId_ == 0 && animation->IsSupportInteractiveAnimator()) {
-            fractionAnimationId_ = animation->GetId();
-            fractionNodeId_ = nodeId;
-        }
-        std::weak_ptr<RSAnimation> weakAnimation = animation;
-        animation->SetInteractiveFinishCallback(GetAnimatorFinishCallback());
-        animations_.emplace_back(weakAnimation, nodeId);
-    }
-    state_ = RSInteractiveAnimationState::ACTIVE;
-    return animations.size();
-}
-
-size_t RSInteractiveImplictAnimator::AddAnimation(std::function<void()> callback)
-{
-    if (state_ != RSInteractiveAnimationState::INACTIVE && state_ != RSInteractiveAnimationState::ACTIVE) {
-        ROSEN_LOGE("AddAnimation failed, state_ is error");
-        return 0;
-    }
-
-    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
-    if (implicitAnimator == nullptr) {
-        ROSEN_LOGE("Failed to open implicit animation, implicit animator is null!");
-        return 0;
-    }
-
-    implicitAnimator->OpenInterActiveImplicitAnimation(false, timingProtocol_, timingCurve_, nullptr);
-    callback();
-    auto animations = implicitAnimator->CloseInterActiveImplicitAnimation(false);
+    auto animations = implicitAnimator->CloseInterActiveImplicitAnimation(isSupportPropertyChangeCreate);
 
     for (auto& [animation, nodeId] : animations) {
         if (fractionAnimationId_ == 0 && animation->IsSupportInteractiveAnimator()) {
@@ -430,11 +401,27 @@ void RSInteractiveImplictAnimator::SetFinishCallBack(const std::function<void()>
 void RSInteractiveImplictAnimator::CallFinishCallback()
 {
     animations_.clear();
+    state_ = RSInteractiveAnimationState::INACTIVE;
     fractionAnimationId_ = 0;
     fractionNodeId_ = 0;
     if (finishCallback_) {
         finishCallback_();
     }
+}
+
+bool RSInteractiveImplictAnimator::IsRunning()
+{
+    return state_ == RSInteractiveAnimationState::RUNNING;
+}
+
+bool RSInteractiveImplictAnimator::IsPaused()
+{
+    return state_ == RSInteractiveAnimationState::PAUSED;
+}
+
+bool RSInteractiveImplictAnimator::IsFinished()
+{
+    return state_ == RSInteractiveAnimationState::INACTIVE;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -125,14 +125,12 @@ public:
     static void CancelAnimation(RSContext& context, NodeId targetId, PropertyId propertyId);
 
     static void CreateInteractiveAnimator(RSContext& context,
-        InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>> animations);
+        InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>>& animations);
     static void DestoryInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId);
-    static void InteractiveAnimatorAddAnimations(RSContext& context,
-        InteractiveImplictAnimatorId targetId, std::vector<std::pair<NodeId, AnimationId>> animations);
     static void PauseInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId);
     static void ContinueInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId);
     static void FinishInteractiveAnimator(RSContext& context,
-        InteractiveImplictAnimatorId targetId, RSInteractiveAnimationPosition finishPos);
+        InteractiveImplictAnimatorId targetId, RSInteractiveAnimationPosition finishPosition);
     static void ReverseInteractiveAnimator(RSContext& context, InteractiveImplictAnimatorId targetId);
     static void SetFractionInteractiveAnimator(RSContext& context,
         InteractiveImplictAnimatorId targetId, float fraction);

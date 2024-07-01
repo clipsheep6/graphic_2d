@@ -247,7 +247,7 @@ void RSAnimation::InteractiveContinue()
     }
 }
 
-void RSAnimation::InteractiveFinish(RSInteractiveAnimationPosition pos)
+void RSAnimation::InteractiveFinish(RSInteractiveAnimationPosition position)
 {
     if (state_ != AnimationState::RUNNING && state_ != AnimationState::PAUSED) {
         ROSEN_LOGD("Animation is in [%{public}d] when Finish", state_);
@@ -261,9 +261,9 @@ void RSAnimation::InteractiveFinish(RSInteractiveAnimationPosition pos)
     state_ = AnimationState::FINISHED;
 
     if (uiAnimation_ != nullptr) {
-        uiAnimation_->FinishOnPosition(pos);
+        uiAnimation_->FinishOnPosition(position);
     }
-    UpdateStagingValueOnInteractiveFinish(pos);
+    UpdateStagingValueOnInteractiveFinish(position);
 }
 
 void RSAnimation::InteractiveReverse()

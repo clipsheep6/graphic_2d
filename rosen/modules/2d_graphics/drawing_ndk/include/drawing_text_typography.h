@@ -1470,6 +1470,18 @@ OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void);
 void OH_Drawing_DestroyFontDescriptor(OH_Drawing_FontDescriptor*);
 
 /**
+ * @brief 获得匹配指定要求的所有字体描述符。
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param desc the pointer to the font descriptor object <b>OH_Drawing_FontDescriptor</b>.
+ * @param num 返回值的成员的个数。
+ * @return 返回包含多个字体描述符的数组。
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_FontDescriptor* OH_Drawing_MatchingFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t* num);
+
+/**
  * @brief Creates an <b>OH_Drawing_FontParser</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

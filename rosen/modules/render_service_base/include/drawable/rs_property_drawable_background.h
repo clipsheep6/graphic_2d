@@ -21,12 +21,22 @@
 #include "drawable/rs_property_drawable.h"
 #include "common/rs_color.h"
 
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+#include "surface_buffer.h"
+#include "external_window.h"
+#endif
+
 namespace OHOS::Rosen {
 class RSProperties;
 class RSFilter;
 namespace Drawing {
 class RuntimeEffect;
 }
+#ifdef RS_ENABLE_VK
+namespace NativeBufferUtils {
+class VulkanCleanupHelper;
+}
+#endif
 
 namespace DrawableV2 {
 class RSShadowDrawable : public RSDrawable {
@@ -109,11 +119,24 @@ public:
     RSBackgroundImageDrawable(std::shared_ptr<Drawing::DrawCmdList>&& drawCmdList)
         : RSPropertyDrawable(std::move(drawCmdList))
     {}
+    ~RSBackgroundImageDrawable() override;
     RSBackgroundImageDrawable() = default;
     static RSDrawable::Ptr OnGenerate(const RSRenderNode& node);
     bool OnUpdate(const RSRenderNode& node) override;
-
+    void OnSync() override;
+    Drawing::RecordingCanvas::DrawFunc CreateDrawFunc() const override;
 private:
+    std::shared_ptr<Drawing::Image> MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer) const;
+    mutable OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
+    mutable pid_t tid_ = 0;
+#ifdef RS_ENABLE_VK
+    mutable Drawing::BackendTexture backendTexture_ = {};
+    mutable NativeBufferUtils::VulkanCleanupHelper* cleanUpHelper_ = nullptr;
+    std::shared_ptr<RSImage> stagingBgImage_ = nullptr;
+    Drawing::Rect stagingBoundsRect_;
+    std::shared_ptr<RSImage> bgImage_ = nullptr;
+    Drawing::Rect boundsRect_;
+#endif
 };
 
 class RSBackgroundFilterDrawable : public RSFilterDrawable {

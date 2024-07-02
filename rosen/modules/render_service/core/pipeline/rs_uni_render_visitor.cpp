@@ -2204,7 +2204,10 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
             RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge transparent dirty "
                 "%{public}s rect %{public}s", surfaceNode->GetName().c_str(),
                 transparentDirtyRect.ToString().c_str());
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(transparentDirtyRect);
+            bool isPointerWindow = surfaceNode->IsHardwareEnabledTopSurface() &&
+                surfaceNode->IsHardwareForcedDisabled();
+            isPointerWindow ? curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(transparentDirtyRect) :
+                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(transparentDirtyRect);
         }
     }
     if (surfaceNode->GetZorderChanged()) {
@@ -2221,11 +2224,15 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
             "%{public}s lastFrameRect %{public}s currentFrameRect %{public}s",
             surfaceNode->GetName().c_str(), lastFrameSurfacePos.ToString().c_str(),
             currentFrameSurfacePos.ToString().c_str());
+        bool isPointerWindow = surfaceNode->IsHardwareEnabledTopSurface() &&
+            surfaceNode->IsHardwareForcedDisabled();
         if (!lastFrameSurfacePos.IsEmpty()) {
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(lastFrameSurfacePos);
+            isPointerWindow ? curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(lastFrameSurfacePos) :
+                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(lastFrameSurfacePos);
         }
         if (!currentFrameSurfacePos.IsEmpty()) {
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(currentFrameSurfacePos);
+            isPointerWindow ? curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(currentFrameSurfacePos) :
+                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(currentFrameSurfacePos);
         }
     }
     // 4 shadow disappear and appear case.
@@ -2301,8 +2308,13 @@ void RSUniRenderVisitor::CheckMergeTransparentDirtysForDisplay(std::shared_ptr<R
                 transparentDirtyRegion.GetRegionInfo().c_str());
             const std::vector<Occlusion::Rect>& rects = transparentDirtyRegion.GetRegionRects();
             for (const auto& rect : rects) {
-                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(
-                    RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                if (surfaceNode->IsHardwareEnabledTopSurface() && surfaceNode->IsHardwareForcedDisabled()) {
+                    curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(
+                        RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                } else {
+                    curDisplayNode_->GetDirtyManager()->MergeDirtyRect(
+                        RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                }
             }
         }
     }

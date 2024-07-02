@@ -559,15 +559,22 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, Drawing::Matrix& val)
         return false;
     }
     bool isMalloc = false;
-    auto data = static_cast<const Drawing::scalar*>(RSMarshallingHelper::ReadFromParcel(parcel, size, isMalloc));
-    if (data == nullptr) {
+    const void* dataRaw = RSMarshallingHelper::ReadFromParcel(parcel, size, isMalloc);
+    if (dataRaw == nullptr) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling Drawing::Matrix");
         return false;
     }
+    auto data = static_cast<const Drawing::scalar*>(dataRaw);
 
     val.SetMatrix(data[Drawing::Matrix::SCALE_X], data[Drawing::Matrix::SKEW_X], data[Drawing::Matrix::TRANS_X],
         data[Drawing::Matrix::SKEW_Y], data[Drawing::Matrix::SCALE_Y], data[Drawing::Matrix::TRANS_Y],
         data[Drawing::Matrix::PERSP_0], data[Drawing::Matrix::PERSP_1], data[Drawing::Matrix::PERSP_2]);
+
+    if (isMalloc) {
+        free(const_cast<void*>(dataRaw));
+        dataRaw = nullptr;
+        data = nullptr;
+    }
     return true;
 }
 

@@ -211,7 +211,7 @@
             "header": {
               "header_files": [
               ],
-              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer/export" 
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer/export"
             }
           },
           {

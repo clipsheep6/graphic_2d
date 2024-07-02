@@ -562,10 +562,23 @@ export class CanvasDrawPixelMapMesh extends TestBase {
 
 export class CanvasDrawColor extends TestBase {
 
-  public constructor() {
-    // 根据需求，如果与默认值不一样，请继承重写
+  public constructor(styleType: number = StyleType.DRAW_STYLE_NONE) {
     super();
-    
+    this.styleType_ = styleType;
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    let rand: OHRandom = new OHRandom();
+    for (let i = 0; i < this.testCount_; i++) {
+      let color: common2D.Color = {
+        alpha: rand.nextRangeU(0, 255),
+        red: rand.nextRangeU(0, 255),
+        green: rand.nextRangeU(0, 255),
+        blue: rand.nextRangeU(0, 255),
+      };
+      console.log(JSON.stringify(color))
+      canvas.drawColor(color, drawing.BlendMode.MULTIPLY)
+    }
   }
 
   public OnTestFunction(canvas: drawing.Canvas) {
@@ -603,4 +616,59 @@ export class CanvasDrawColor extends TestBase {
 
   }
 
+}
+
+
+export class CanvasAttachPen extends TestBase {
+  public constructor(styleType: number = StyleType.DRAW_STYLE_NONE) {
+    super();
+    this.styleType_ = styleType;
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    let pen = new drawing.Pen();
+    for (let i = 0; i < this.testCount_; i++) {
+      canvas.attachPen(pen)
+    }
+  }
+}
+
+export class CanvasDetachPen extends TestBase {
+  public constructor(styleType: number = StyleType.DRAW_STYLE_NONE) {
+    super();
+    this.styleType_ = styleType;
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    for (let i = 0; i < this.testCount_; i++) {
+      canvas.detachPen()
+    }
+  }
+}
+
+export class CanvasAttachBrush extends TestBase {
+  public constructor(styleType: number = StyleType.DRAW_STYLE_NONE) {
+    super();
+    this.styleType_ = styleType;
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    let brush = new drawing.Brush();
+    for (let i = 0; i < this.testCount_; i++) {
+      canvas.attachBrush(brush)
+    }
+  }
+}
+
+export class CanvasDetachBrush extends TestBase {
+  public constructor(styleType: number = StyleType.DRAW_STYLE_NONE) {
+    super();
+    this.styleType_ = styleType;
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    for (let i = 0; i < this.testCount_; i++) {
+      canvas.detachBrush()
+    }
+  }
 }

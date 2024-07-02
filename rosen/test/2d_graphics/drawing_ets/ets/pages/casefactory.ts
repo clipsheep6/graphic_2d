@@ -14,8 +14,21 @@
  */
 
 import {TestBase, StyleType} from './testbase';
-import { CanvasDrawRect, CanvasDrawLine, CanvasDrawPath, CanvasDrawPoint, CanvasDrawImage, CanvasDrawCircle, CanvasDrawTextBlob,
-  CanvasDrawPixelMapMesh, CanvasDrawColor } from '../testcase/interface/canvastest';
+import { 
+  CanvasDrawRect, 
+  CanvasDrawLine, 
+  CanvasDrawPath, 
+  CanvasDrawPoint, 
+  CanvasDrawImage,
+  CanvasDrawCircle, 
+  CanvasDrawTextBlob,
+  CanvasDrawPixelMapMesh, 
+  CanvasDrawColor,
+  CanvasAttachPen,
+  CanvasAttachBrush,
+  CanvasDetachPen,
+  CanvasDetachBrush
+} from '../testcase/interface/canvastest';
 import { PathLineTo, PathArcTo, PathQuadTo, PathCubicTo,PathClose, PathReset } from '../testcase/interface/pathtest';
 import { MakeFromRunBuffer } from '../testcase/interface/textblobtest'
 import { MakeFromString } from '../testcase/interface/textblobtest'
@@ -48,6 +61,11 @@ export class CaseFactory {
       ['canvas_drawcircle', () => { return new CanvasDrawCircle(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时1016ms
       ['canvas_drawtextblob', () => { return new CanvasDrawTextBlob(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时125ms
       ['canvas_drawvertices', () => { return new CanvasDrawPixelMapMesh(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时261ms
+      ['canvas_drawcolor', () => { return new CanvasDrawColor(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时156ms
+      ['canvas_attachpen', () => { return new CanvasAttachPen(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时9ms
+      ['canvas_attachbrush', () => { return new CanvasAttachBrush(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时9ms
+      ['canvas_detachpen', () => { return new CanvasDetachPen(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时5ms
+      ['canvas_detachbrush', () => { return new CanvasDetachBrush(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时5ms
       ['path_lineto', () => { return new PathLineTo(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时70ms
       ['path_arcto', () => { return new PathArcTo(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时42ms
       ['path_quadto', () => { return new PathQuadTo(StyleType.DRAW_STYLE_COMPLEX); }], // 1000次耗时156ms

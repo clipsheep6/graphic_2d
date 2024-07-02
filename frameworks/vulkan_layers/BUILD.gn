@@ -83,8 +83,6 @@ ohos_prebuilt_etc("vulkan_swapchain_layer_json") {
 }
 ## Build VkLayer_swapchain.json }}}
 
-
-
 ## Build libVkLayer_Trace3DCaptureLoader.so {{{
 config("VkLayer_Trace3DCaptureLoader_config") {
   defines = [ "TRACE3D_LOADER_OHOS" ]

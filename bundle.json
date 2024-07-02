@@ -43,7 +43,7 @@
         "graphic_2d_feature_enable_afbc",
         "graphic_2d_feature_freemem_enable",
         "graphic_2d_feature_parallel_render_enable",
-        "graphic_2d_feature_tp_switch_enbale" ,
+        "graphic_2d_feature_tp_switch_enbale",
         "graphic_2d_feature_rs_enable_profiler"
       ],
       "rom": "10000KB",
@@ -97,9 +97,9 @@
           "libuv",
           "icu",
           "libpng",
-          "ffrt" ,
-          "libxml2" ,
-          " skia "
+          "ffrt",
+          "libxml2",
+          "skia"
         ],
         "third_party": [
           "flutter",
@@ -206,14 +206,14 @@
             }
           },
           {
-            "type" : "so" , 
-            "name" : "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer" , 
-            "header" : { 
-              "header_files" : [ 
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+            "header": {
+              "header_files": [
               ],
-              "header_base" : "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer/export" 
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer/export" 
             }
-          } ,
+          },
           {
             "type": "so",
             "name": "//foundation/graphic/graphic_2d/utils:libgraphic_utils",

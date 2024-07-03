@@ -22,7 +22,8 @@ namespace OHOS::Rosen {
 class TestTemplateTest : public RSGraphicTest {
 public:
     // called before each tests
-    void BeforeEach() override {
+    void BeforeEach() override
+    {
         auto size = GetScreenSize();
         SetSurfaceBounds({0, 0, size.x_ / 2.0f, size.y_ / 2.0f});
         SetSurfaceColor(RSColor(0xffff0000));

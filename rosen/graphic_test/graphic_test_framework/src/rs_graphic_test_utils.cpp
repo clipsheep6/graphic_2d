@@ -66,14 +66,14 @@ static bool WriteToPng(const std::string &filename, const WriteToPngParam &param
 
 bool WriteToPngWithPixelMap(const std::string& fileName, OHOS::Media::PixelMap& pixelMap)
 {
-    constexpr int BITMAP_DEPTH = 8;
+    constexpr int bitDepth = 8;
 
     WriteToPngParam param;
     param.width = static_cast<uint32_t>(pixelMap.GetWidth());
     param.height = static_cast<uint32_t>(pixelMap.GetHeight());
     param.data = pixelMap.GetPixels();
     param.stride = static_cast<uint32_t>(pixelMap.GetRowBytes());
-    param.bitDepth = BITMAP_DEPTH;
+    param.bitDepth = bitDepth;
     return WriteToPng(fileName, param);
 }
 

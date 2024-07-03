@@ -48,10 +48,10 @@ public:
         }
     }
 
-    void Wait (int ms)
+    void Wait(int ms)
     {
         std::unique_lock lock(mutex_);
-        cv_.wait_for(lock, std::chrono::milliseconds(ms), [&]{return ready_;});
+        cv_.wait_for(lock, std::chrono::milliseconds(ms), [&] { return ready_; });
     }
 
     std::mutex mutex_;
@@ -81,7 +81,8 @@ void RSGraphicTestDirector::Run()
 
     auto runner = OHOS::AppExecFwk::EventRunner::Create(true);
     auto handler = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    rsUiDirector_->SetUITaskRunner([handler](const std::function<void()>& task, uint32_t delay) { handler->PostTask(task); });
+    rsUiDirector_->SetUITaskRunner(
+        [handler](const std::function<void()>& task,uint32_t delay) { handler->PostTask(task); });
     runner->Run();
 
     screenId_ = RSInterfaces::GetInstance().GetDefaultScreenId();

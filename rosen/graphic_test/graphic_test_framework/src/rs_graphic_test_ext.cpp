@@ -30,7 +30,8 @@ TestDefManager& TestDefManager::Instance()
     return instance;
 }
 
-bool TestDefManager::Regist(const char* testCaseName, const char* testName, RSGraphicTestType type, RSGraphicTestMode mode)
+bool TestDefManager::Regist(const char* testCaseName, const char* testName,
+    RSGraphicTestType type, RSGraphicTestMode mode)
 {
     const auto& name = GetTestName(testCaseName, testName);
     if (testInfos_.find(name) != testInfos_.end()) {

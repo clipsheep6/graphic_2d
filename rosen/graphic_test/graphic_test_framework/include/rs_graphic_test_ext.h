@@ -26,7 +26,7 @@ enum RSGraphicTestType {
     ANIMATION_TEST,
     CONTENT_DISPLAY_TEST,
     SCREEN_MANAGER_TEST,
-    HWC_TEST,
+    HARDWARE_PRESENT_TEST,
     DRAWING_TEST,
     LTPO_TEST,
     TEXT_TEST,
@@ -78,7 +78,7 @@ public:
 #define GRAPHIC_N_TEST_3(test_case_name, test_type, test_name) \
     GRAPHIC_TEST_PARAMS(test_case_name, test_name, test_type, RSGraphicTestMode::MANUAL)
 
-#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
 #define GRAPHIC_TEST(...) GET_MACRO(__VA_ARGS__, GRAPHIC_TEST_3, GRAPHIC_TEST_2)(__VA_ARGS__)
 #define GRAPHIC_N_TEST(...) GET_MACRO(__VA_ARGS__, GRAPHIC_N_TEST_3, GRAPHIC_N_TEST_2)(__VA_ARGS__)
 

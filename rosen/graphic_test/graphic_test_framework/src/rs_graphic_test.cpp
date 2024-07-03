@@ -31,7 +31,7 @@ constexpr uint32_t SURFACE_COLOR = 0xffffffff;
 
 bool ShouldRunCurrentTest()
 {
-    const ::testing::TestInfo* const testInfo = 
+    const ::testing::TestInfo* const testInfo =
         ::testing::UnitTest::GetInstance()->current_test_info();
     const auto& extInfo = ::OHOS::Rosen::TestDefManager::Instance().GetTestInfo(
         testInfo->test_case_name(), testInfo->name());
@@ -62,7 +62,7 @@ void RSGraphicTest::SetUpTestCase()
 
 void RSGraphicTest::TearDownTestCase()
 {
-    
+    return;
 }
 
 void RSGraphicTest::SetUp()
@@ -94,7 +94,7 @@ void RSGraphicTest::TearDown()
     RSGraphicTestDirector::Instance().FlushMessage();
     WaitTimeout(RSParameterParse::Instance().testCaseWaitTime);
 
-    const ::testing::TestInfo* const testInfo = 
+    const ::testing::TestInfo* const testInfo =
         ::testing::UnitTest::GetInstance()->current_test_info();
     const auto& extInfo = ::OHOS::Rosen::TestDefManager::Instance().GetTestInfo(
         testInfo->test_case_name(), testInfo->name());
@@ -118,7 +118,7 @@ void RSGraphicTest::TearDown()
                 LOGW("RSGraphicTest file exists %{public}s", filename.c_str());
             }
             if (!WriteToPngWithPixelMap(filename, *pixelMap)) {
-                LOGE("RSGraphicTest::TearDown write image failed %{public}s-%{public}s", 
+                LOGE("RSGraphicTest::TearDown write image failed %{public}s-%{public}s",
                     testInfo->test_case_name(), testInfo->name());
             }
         }

@@ -168,7 +168,7 @@ constexpr const char* MEM_MGR = "MemMgr";
 constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
 const std::string PERF_FOR_BLUR_IF_NEEDED_TASK_NAME = "PerfForBlurIfNeeded";
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
-constexpr const char* FLUTTER_BUFFER_NAME = "oh_flutter";
+constexpr const char* NAME_FOR_FLUTTER_FRAME = "oh_flutter";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
@@ -1208,7 +1208,7 @@ void RSMainThread::ProcessAllSyncTransactionData()
 void RSMainThread::GetTextureFlutterIdleState()
 {
     if (frameRateMgr_ != nullptr && !RSRenderNode::GetTextureFlutterIdleState()) {
-        frameRateMgr_->UpdateSurfaceTime(FLUTTER_BUFFER_NAME, timestamp_);
+        frameRateMgr_->UpdateSurfaceTime(NAME_FOR_FLUTTER_FRAME, timestamp_);
     }
 }
 

@@ -82,7 +82,7 @@ void RSGraphicTestDirector::Run()
     auto runner = OHOS::AppExecFwk::EventRunner::Create(true);
     auto handler = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     rsUiDirector_->SetUITaskRunner(
-        [handler](const std::function<void()>& task,uint32_t delay) { handler->PostTask(task); });
+        [handler](const std::function<void()>& task, uint32_t delay) { handler->PostTask(task); });
     runner->Run();
 
     screenId_ = RSInterfaces::GetInstance().GetDefaultScreenId();

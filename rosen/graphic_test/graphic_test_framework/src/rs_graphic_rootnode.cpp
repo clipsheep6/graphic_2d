@@ -25,7 +25,8 @@ RSGraphicRootNode::RSGraphicRootNode()
     screenSurfaceNode_ = RSSurfaceNode::Create(config);
 }
 
-void RSGraphicRootNode::SetTestSurface(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node)
+void RSGraphicRootNode::SetTestSurface(
+    std::shared_ptr<OHOS::Rosen::RSSurfaceNode> node)
 {
     testSurfaceNode_ = node;
     screenSurfaceNode_->AddChild(testSurfaceNode_, -1);

@@ -33,11 +33,11 @@ ohos_fuzztest("RSVulkanContextFuzzTest") {
     "../../../../../modules/render_service_base:librender_service_base",
     "../../../../../modules/render_service_base:librender_service_base_static",
     "../../../../../modules/render_service_client:librender_service_client",
-    "//third_party/vulkan-headers:vulkan_headers",
   ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "vulkan-headers:vulkan_headers",
   ]
   cflags = [
     "-g",

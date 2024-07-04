@@ -764,6 +764,30 @@ void RSSurfaceNode::SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdate
         texture->SetUpdateCallback(updateCallback);
     }
 }
+
+void RSSurfaceNode::SetSurfaceTextureCopyBufferCallBack(const RSSurfaceTextureCopyBufferCallBack& copyBufferCallback)
+{
+    RSSurfaceTextureConfig config = {
+        .type = RSSurfaceExtType::SURFACE_PLATFORM_TEXTURE,
+        .additionalData = nullptr
+    };
+    auto texture = surface_->GetSurfaceExt(config);
+    if (texture) {
+        texture->SetCopyBufferCallback(copyBufferCallback);
+    }
+}
+
+void RSSurfaceNode::SetSurfaceTextureFlushEndCallBack(const RSSurfaceTextureFlushEndCallBack& flushEndCallback)
+{
+    RSSurfaceTextureConfig config = {
+        .type = RSSurfaceExtType::SURFACE_PLATFORM_TEXTURE,
+        .additionalData = nullptr
+    };
+    auto texture = surface_->GetSurfaceExt(config);
+    if (texture) {
+        texture->SetFlushEndCallback(flushEndCallback);
+    }
+}
 #endif
 
 void RSSurfaceNode::SetForeground(bool isForeground)

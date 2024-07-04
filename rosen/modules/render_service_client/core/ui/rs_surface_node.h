@@ -137,6 +137,9 @@ public:
     void MarkUiFrameAvailable(bool available);
     void SetSurfaceTextureAttachCallBack(const RSSurfaceTextureAttachCallBack& attachCallback);
     void SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdateCallBack& updateCallback);
+    void SetSurfaceTextureCopyBufferCallBack(const RSSurfaceTextureCopyBufferCallBack& copyBufferCallback);
+    void SetSurfaceTextureFlushEndCallBack(const RSSurfaceTextureFlushEndCallBack& flushEndCallback);
+   
 #endif
     void SetForeground(bool isForeground);
     // Force enable UIFirst when set TRUE

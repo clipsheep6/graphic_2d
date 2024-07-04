@@ -268,7 +268,8 @@ struct RSSurfaceExtConfig {
 using RSSurfaceTextureConfig = RSSurfaceExtConfig;
 using RSSurfaceTextureAttachCallBack = std::function<void(int64_t textureId, bool attach)>;
 using RSSurfaceTextureUpdateCallBack = std::function<void(std::vector<float>&)>;
-
+using RSSurfaceTextureCopyBufferCallBack = std::function<void(void* textureRef)>;
+using RSSurfaceTextureFlushEndCallBack = std::function<void(void* textureRef)>;
 struct RSDisplayNodeConfig {
     uint64_t screenId = 0;
     bool isMirrored = false;

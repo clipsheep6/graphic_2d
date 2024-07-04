@@ -40,6 +40,10 @@ public:
     {
         RSRenderAnimation::FinishOnCurrentPosition();
     }
+    std::string GetTargeName()
+    {
+        return RSRenderAnimation::GetTargetName();
+    }
 
 protected:
     explicit RSRenderAnimationMock(AnimationId id) : RSRenderAnimation(id) {}
@@ -128,6 +132,20 @@ HWTEST_F(RSRenderAnimationTest, SetReversed001, TestSize.Level1)
     renderAnimation->SetReversed(true);
     EXPECT_TRUE(renderAnimation != nullptr);
     GTEST_LOG_(INFO) << "RSRenderAnimationTest SetReversed001 end";
+}
+
+/**
+ * @tc.name: GetTargetName001
+ * @tc.desc: Verify the GetTargetName
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSRenderAnimationTest, GetTargetName001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSRenderAnimationTest GetTargetName001 start";
+    auto renderAnimation = std::make_shared<RSRenderAnimationMock>();
+    renderAnimation->GetTargeName();
+    EXPECT_TRUE(renderAnimation != nullptr);
+    GTEST_LOG_(INFO) << "RSRenderAnimationTest GetTargetName001 end";
 }
 } // namespace Rosen
 } // namespace OHOS

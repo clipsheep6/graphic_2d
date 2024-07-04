@@ -15,7 +15,6 @@
 
 #include "animation/rs_render_spring_animation.h"
 
-#include "animation/rs_animation_trace_utils.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_render_node.h"
@@ -171,12 +170,6 @@ void RSRenderSpringAnimation::OnAnimate(float fraction)
             needLogicallyFinishCallback_ = false;
         }
     }
-}
-
-void RSRenderSpringAnimation::DumpFraction(float fraction, int64_t time)
-{
-    RSAnimationTraceUtils::GetInstance().addAnimationFrameTrace(
-        GetTargetId(), GetAnimationId(), GetPropertyId(), fraction, GetPropertyValue(), time);
 }
 
 void RSRenderSpringAnimation::OnAttach()

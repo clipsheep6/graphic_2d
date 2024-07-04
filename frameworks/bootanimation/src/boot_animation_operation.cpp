@@ -54,7 +54,7 @@ void BootAnimationOperation::StartEventHandler(const BootAnimationConfig& config
     LOGI("StartEventHandler");
     runner_ = AppExecFwk::EventRunner::Create(false);
     mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    mainHandler_->PostTask([this] { this->this->InitRsDisplayNode(); });
+    mainHandler_->PostTask([this] { this->InitRsDisplayNode(); });
     mainHandler_->PostTask([this, &config] { this->InitRsSurfaceNode(config.rotateDegree); });
     mainHandler_->PostTask([this] { this->StopBootAnimation(); }, duration_);
 #ifdef PLAYER_FRAMEWORK_ENABLE

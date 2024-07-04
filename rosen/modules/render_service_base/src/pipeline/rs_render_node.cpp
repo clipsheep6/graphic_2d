@@ -164,6 +164,10 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr const char* NAME_FOR_FLUTTER_FRAME = "oh_flutter";
+constexpr const int MAX_NODE_NAME_LEN = 10;
+};
 void RSRenderNode::OnRegister(const std::weak_ptr<RSContext>& context)
 {
     context_ = context;
@@ -3493,8 +3497,16 @@ bool RSRenderNode::IsStaticCached() const
 {
     return false;
 }
+bool RSRenderNode::flutterIdle_ = true;
 void RSRenderNode::SetNodeName(const std::string& nodeName)
 {
+    if (nodeName.substr(0, MAX_NODE_NAME_LEN) == NAME_FOR_FLUTTER_FRAME) {
+        flutterIdle_ = false;
+        return;
+    } else {
+        flutterIdle_ = true;
+    }
+
     nodeName_ = nodeName;
 }
 const std::string& RSRenderNode::GetNodeName() const

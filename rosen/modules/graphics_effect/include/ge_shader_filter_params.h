@@ -65,6 +65,16 @@ struct GEKawaseBlurShaderFilterParams {
     int radius;
 };
 
+constexpr char GE_FILTER_GREY_KAWASE[] = "GREY_KAWASE";
+constexpr char GE_FILTER_GREY_KAWASE_RADIUS[] = "GREY_KAWASE_RADIUS";
+constexpr char GE_FILTER_GREY_KAWASE_COEF_1[] = "GREY_KAWASE_COEF_1";
+constexpr char GE_FILTER_GREY_KAWASE_COEF_2[] = "GREY_KAWASE_COEF_2";
+struct GEGreyKawaseShaderFilterParams {
+    int radius;
+    float greyCoef1;
+    float greyCoef2;
+};
+
 constexpr char GE_FILTER_HPS_BLUR[] = "HPS_BLUR";
 constexpr char GE_FILTER_HPS_BLUR_RADIUS[] = "HPS_BLUR_RADIUS";
 constexpr char GE_FILTER_HPS_BLUR_SATURATION[] = "HPS_BLUR_SATURATION";

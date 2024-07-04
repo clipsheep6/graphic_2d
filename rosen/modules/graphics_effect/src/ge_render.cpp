@@ -18,6 +18,7 @@
 #include "ge_grey_shader_filter.h"
 #include "ge_hps_blur_shader_filter.h"
 #include "ge_kawase_blur_shader_filter.h"
+#include "ge_grey_kawase_shader_filter.h"
 #include "ge_linear_gradient_blur_shader_filter.h"
 #include "ge_log.h"
 #include "ge_magnifier_shader_filter.h"
@@ -101,6 +102,14 @@ std::vector<std::shared_ptr<GEShaderFilter>> GERender::GenerateShaderFilter(
             case Drawing::GEVisualEffectImpl::FilterType::GREY: {
                 const auto& greyParams = ve->GetGreyParams();
                 shaderFilter = std::make_shared<GEGreyShaderFilter>(*greyParams);
+                break;
+            }
+            case Drawing::GEVisualEffectImpl::FilterType::GREY_KAWASE: {
+                const auto& greyXParams = ve->GetGreyXParams();
+                LOGD("GERender::GREY_KAWASE %{public}d,", greyXParams->radius);
+                LOGD("GERender::GREY_KAWASE %{public}f,", greyXParams->greyCoef1);
+                LOGD("GERender::GREY_KAWASE %{public}f,", greyXParams->greyCoef2);
+                shaderFilter = std::make_shared<GEGreyKawaseShaderFilter>(*greyXParams);
                 break;
             }
             case Drawing::GEVisualEffectImpl::FilterType::LINEAR_GRADIENT_BLUR: {

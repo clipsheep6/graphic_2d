@@ -543,6 +543,13 @@ bool RSSystemProperties::GetKawaseEnabled()
     return kawaseBlurEnabled;
 }
 
+bool RSSystemProperties::GetGreyKawaseEnabled()
+{
+    static bool hpsBlurEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.greyXEnable", "0")).c_str()) != 0;
+    return hpsBlurEnabled;
+}
+
 bool RSSystemProperties::GetHpsBlurEnabled()
 {
     static bool hpsBlurEnabled =

@@ -33,7 +33,9 @@ public:
     enum class FilterType {
         NONE,
         KAWASE_BLUR,
-        GREY, AIBAR,
+        GREY,
+        GREY_KAWASE,
+        AIBAR,
         LINEAR_GRADIENT_BLUR,
         HPS_BLUR,
         WATER_RIPPLE,
@@ -108,6 +110,16 @@ public:
         return greyParams_;
     }
 
+    void MakeGreyXParams()
+    {
+        greyXParams_ = std::make_shared<GEGreyKawaseShaderFilterParams>();
+    }
+
+    const std::shared_ptr<GEGreyKawaseShaderFilterParams>& GetGreyXParams() const
+    {
+        return greyXParams_;
+    }
+
     void MakeLinearGradientBlurParams()
     {
         linearGradientBlurParams_ = std::make_shared<GELinearGradientBlurShaderFilterParams>();
@@ -133,6 +145,7 @@ private:
 
     void SetAIBarParams(const std::string& tag, float param);
     void SetGreyParams(const std::string& tag, float param);
+    void SetGreyXParams(const std::string& tag, float param);
     void SetLinearGradientBlurParams(const std::string& tag, float param);
     void SetWaterRippleParams(const std::string& tag, float param);
     void SetHpsBlurParams(const std::string& tag, float param);
@@ -142,6 +155,7 @@ private:
     std::shared_ptr<GEKawaseBlurShaderFilterParams> kawaseParams_ = nullptr;
     std::shared_ptr<GEAIBarShaderFilterParams> aiBarParams_ = nullptr;
     std::shared_ptr<GEGreyShaderFilterParams> greyParams_ = nullptr;
+    std::shared_ptr<GEGreyKawaseShaderFilterParams> greyXParams_ = nullptr;
     std::shared_ptr<GELinearGradientBlurShaderFilterParams> linearGradientBlurParams_ = nullptr;
     std::shared_ptr<GEWaterRippleFilterParams> waterRippleParams_ = nullptr;
     std::shared_ptr<HpsBlurFilterParams> hpsBlurParams_ = nullptr;

@@ -36,6 +36,12 @@ std::map<const std::string, std::function<void(GEVisualEffectImpl*)>> GEVisualEf
             impl->MakeGreyParams();
         }
     },
+    { GE_FILTER_GREY_KAWASE,
+        [](GEVisualEffectImpl* impl) {
+            impl->SetFilterType(GEVisualEffectImpl::FilterType::GREY_KAWASE);
+            impl->MakeGreyXParams();
+        }
+    },
     { GE_FILTER_AI_BAR,
         [](GEVisualEffectImpl* impl) {
             impl->SetFilterType(GEVisualEffectImpl::FilterType::AIBAR);
@@ -100,6 +106,16 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, int32_t param)
             }
             break;
         }
+        case FilterType::GREY_KAWASE: {
+            if (greyXParams_ == nullptr) {
+                return;
+            }
+
+            if (tag == GE_FILTER_GREY_KAWASE_RADIUS) {
+                greyXParams_->radius = param;
+            }
+            break;
+        }
         default:
             break;
     }
@@ -136,7 +152,10 @@ void GEVisualEffectImpl::SetParam(const std::string& tag, float param)
             SetGreyParams(tag, param);
             break;
         }
-
+        case FilterType::GREY_KAWASE: {
+            SetGreyXParams(tag, param);
+            break;
+        }
         case FilterType::LINEAR_GRADIENT_BLUR: {
             SetLinearGradientBlurParams(tag, param);
             break;
@@ -233,6 +252,23 @@ void GEVisualEffectImpl::SetGreyParams(const std::string& tag, float param)
     static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
         { GE_FILTER_GREY_COEF_1, [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef1 = p; } },
         { GE_FILTER_GREY_COEF_2, [](GEVisualEffectImpl* obj, float p) { obj->greyParams_->greyCoef2 = p; } }
+    };
+
+    auto it = actions.find(tag);
+    if (it != actions.end()) {
+        it->second(this, param);
+    }
+}
+
+void GEVisualEffectImpl::SetGreyXParams(const std::string& tag, float param)
+{
+    if (greyXParams_ == nullptr) {
+        return;
+    }
+
+    static std::unordered_map<std::string, std::function<void(GEVisualEffectImpl*, float)>> actions = {
+        { GE_FILTER_GREY_KAWASE_COEF_1, [](GEVisualEffectImpl* obj, float p) { obj->greyXParams_->greyCoef1 = p; } },
+        { GE_FILTER_GREY_KAWASE_COEF_2, [](GEVisualEffectImpl* obj, float p) { obj->greyXParams_->greyCoef2 = p; } }
     };
 
     auto it = actions.find(tag);

@@ -175,11 +175,6 @@ sk_sp<SkSVGDOM> RSMask::GetSvgDom() const
     return svgDom_;
 }
 
-std::shared_ptr<Drawing::Picture> RSMask::GetSvgPicture() const
-{
-    return svgPicture_;
-}
-
 void RSMask::SetMaskType(MaskType type)
 {
     type_ = type;

@@ -52,7 +52,6 @@ using RSFontStyleSet = RSDrawing::FontStyleSet;
 using RSPath = RSDrawing::Path;
 using RSPen = RSDrawing::Pen;
 using RSPoint = RSDrawing::Point;
-using RSPicture = RSDrawing::Picture;
 using RSPathEffect = RSDrawing::PathEffect;
 using RSPathDashStyle = RSDrawing::PathDashStyle;
 using RSRecordingPathEffect = RSDrawing::PathEffect;

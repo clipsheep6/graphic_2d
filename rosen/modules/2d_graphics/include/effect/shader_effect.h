@@ -64,9 +64,6 @@ public:
     static std::shared_ptr<ShaderEffect> CreateImageShader(
         const Image& image, TileMode tileX, TileMode tileY, const SamplingOptions& sampling, const Matrix& matrix);
 
-    static std::shared_ptr<ShaderEffect> CreatePictureShader(const Picture& picture, TileMode tileX, TileMode tileY,
-        FilterMode mode, const Matrix& matrix, const Rect& rect);
-
     static std::shared_ptr<ShaderEffect> CreateLinearGradient(const Point& startPt, const Point& endPt,
         const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode,
         const Matrix *matrix = nullptr);
@@ -114,10 +111,6 @@ public:
     /* ImageShader */
     ShaderEffect(ShaderEffectType t, const Image& image, TileMode tileX, TileMode tileY,
         const SamplingOptions& sampling, const Matrix& matrix) noexcept;
-
-    /* PictureShader */
-    ShaderEffect(ShaderEffectType t, const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode,
-        const Matrix& matrix, const Rect& rect) noexcept;
 
     /* LinearGradient */
     ShaderEffect(ShaderEffectType t, const Point& startPt, const Point& endPt, const std::vector<ColorQuad>& colors,

@@ -46,6 +46,8 @@ public:
     virtual void UpdateSurfaceDefaultSize(float width, float height) = 0;
     virtual void SetAttachCallback(const RSSurfaceTextureAttachCallBack& attachCallback) = 0;
     virtual void SetUpdateCallback(const RSSurfaceTextureUpdateCallBack& updateCallback) = 0;
+    virtual void SetCopyBufferCallback(const RSSurfaceTextureCopyBufferCallBack& copyBufferCallback) = 0;
+    virtual void SetFlushEndCallback(const RSSurfaceTextureFlushEndCallBack& flushEndCallback) = 0;
     virtual void MarkUiFrameAvailable(bool available) = 0;
     virtual bool IsUiFrameAvailable() const = 0;
 #endif

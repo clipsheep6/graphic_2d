@@ -963,6 +963,7 @@ void RSRenderThreadVisitor::SendCommandFromRT(std::unique_ptr<RSCommand>& comman
 #ifdef USE_SURFACE_TEXTURE
 void RSRenderThreadVisitor::ProcessTextureSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+     ROSEN_LOGE("liuwei::ProcessTextureSurfaceRenderNode %{public}" PRIu64, node.GetId());
     auto texture = node.GetSurfaceTexture();
     if (texture == nullptr) {
         ROSEN_LOGE("ProcessTextureSurfaceRenderNode %{public}" PRIu64, node.GetId());
@@ -989,6 +990,12 @@ void RSRenderThreadVisitor::ProcessTextureSurfaceRenderNode(RSSurfaceRenderNode&
     Drawing::Rect originRect = Drawing::Rect(x, y, width + x, height + y);
 
     if (node.IsNotifyRTBufferAvailable()) {
+//         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
+//         #ifndef USE_ROSEN_DRAWING
+//             canvas_->clear(backgroundColor.AsArgbInt());
+// #else
+//             canvas_->Clear(backgroundColor.AsArgbInt());
+// #endif
         texture->DrawTextureImage(*canvas_, false, originRect);
     } else {
         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();

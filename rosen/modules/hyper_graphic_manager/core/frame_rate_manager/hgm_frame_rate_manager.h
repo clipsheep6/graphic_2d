@@ -129,6 +129,11 @@ public:
     std::string GetCurScreenStrategyId() const { return curScreenStrategyId_; };
     void HandleRefreshRateMode(int32_t refreshRateMode);
     void HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
+    void HandleRsFrame();
+    void SetShowRefreshRateEnabled(bool enable)
+    {
+        isShowRefreshRateEnabled_ = enable;
+    }
     bool IsLtpo() const { return isLtpo_; };
     void UniProcessDataForLtpo(uint64_t timestamp, std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,
         const FrameRateLinkerMap& appFrameRateLinkers, bool idleTimerExpired, const DvsyncInfo& dvsyncInfo);
@@ -200,6 +205,7 @@ private:
     void ReportHiSysEvent(const VoteInfo& frameRateVoteInfo);
     void SetResultVoteInfo(VoteInfo& voteInfo, uint32_t min, uint32_t max);
     void ClearScene();
+    void InitRsIdleTimer();
 
     uint32_t currRefreshRate_ = 0;
     uint32_t controllerRate_ = 0;
@@ -233,7 +239,10 @@ private:
     std::string curScreenStrategyId_ = "LTPO-DEFAULT";
     bool isLtpo_ = true;
     bool isRefreshNeed_ = true;
+    bool isShowRefreshRateEnabled_ = false;
     int32_t idleFps_ = 60;
+    std::atomic<int32_t> skipCount_;
+    std::unique_ptr<HgmOneShotTimer> rsIdleTimer_;
     VoteInfo lastVoteInfo_;
     HgmMultiAppStrategy multiAppStrategy_;
     HgmTouchManager touchManager_;

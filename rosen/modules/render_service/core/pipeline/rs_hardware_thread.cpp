@@ -458,7 +458,8 @@ void RSHardwareThread::AddRefreshRateCount()
     if (frameRateMgr == nullptr) {
         return;
     }
-    frameRateMgr->GetTouchManager().HandleRsFrame();
+    frameRateMgr->SetShowRefreshRateEnabled(RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled());
+    frameRateMgr->HandleRsFrame();
 }
 
 void RSHardwareThread::SubScribeSystemAbility()

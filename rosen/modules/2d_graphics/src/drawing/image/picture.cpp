@@ -13,24 +13,12 @@
  * limitations under the License.
  */
 
-#include "image/picture.h"
 
 #include "impl_factory.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Picture::Picture() noexcept : pictureImplPtr(ImplFactory::CreatePictureImpl()) {}
-
-std::shared_ptr<Data> Picture::Serialize() const
-{
-    return pictureImplPtr->Serialize();
-}
-
-bool Picture::Deserialize(std::shared_ptr<Data> data)
-{
-    return pictureImplPtr->Deserialize(data);
-}
 
 } // namespace Drawing
 } // namespace Rosen

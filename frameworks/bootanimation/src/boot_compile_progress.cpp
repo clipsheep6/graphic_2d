@@ -157,7 +157,7 @@ bool BootCompileProgress::RegisterVsyncCallback()
 
     Rosen::VSyncReceiver::FrameCallback fcb = {
         .userData_ = this,
-        .callback_ = [this](int64_t, vold*) { this->OnVsync(); },
+        .callback_ = [this](int64_t, void*) { this->OnVsync(); },
     };
     ret = receiver_->SetVSyncRate(fcb, CHANGE_FREQ);
     if (ret) {

@@ -1096,9 +1096,6 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable(bool isTextureExportNode)
         ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %{public}" PRIu64 " RenderThread", GetId());
         RSRTRefreshCallback::Instance().ExecuteRefresh();
     }
-    if (isTextureExportNode) {
-        SetContentDirty();
-    }
 
     {
         std::lock_guard<std::mutex> lock(mutexRT_);

@@ -218,6 +218,16 @@ public:
     virtual void ClearFrameBufferIfNeed() = 0;
 
     virtual int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) = 0;
+    virtual bool IsFirstTimeToProcessor(ScreenId id) const = 0;
+    virtual void SetOriginScreenRotation(ScreenId id, const ScreenRotation& rotate) = 0;
+    virtual ScreenRotation GetOriginScreenRotation(ScreenId id) const = 0;
+#ifdef NEW_RENDER_CONTEXT
+    virtual void SetVirtualSurface(ScreenId id, std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId) = 0;
+    virtual std::shared_ptr<RSRenderSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId) = 0;
+#else
+    virtual void SetVirtualSurface(ScreenId id, std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId) = 0;
+    virtual std::shared_ptr<RSSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId) = 0;
+#endif
 };
 
 sptr<RSScreenManager> CreateOrGetScreenManager();
@@ -417,6 +427,16 @@ public:
     void ClearFrameBufferIfNeed() override;
 
     int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) override;
+    bool IsFirstTimeToProcessor(ScreenId id) const override;
+    void SetOriginScreenRotation(ScreenId id, const ScreenRotation& rotate) override;
+    ScreenRotation GetOriginScreenRotation(ScreenId id) const override;
+#ifdef NEW_RENDER_CONTEXT
+    void SetVirtualSurface(ScreenId id, std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId) override;
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId) override;
+#else
+    void SetVirtualSurface(ScreenId id, std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId) override;
+    std::shared_ptr<RSSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId) override;
+#endif
 
 private:
     RSScreenManager();

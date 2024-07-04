@@ -25,6 +25,11 @@
 #include <hdi_screen.h>
 #include <hdi_display_type.h>
 #include <screen_manager/screen_types.h>
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/rs_render_surface.h"
+#else
+#include "platform/drawing/rs_surface.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -108,6 +113,16 @@ public:
     virtual const std::unordered_set<uint64_t>& GetBlackList() const = 0;
     virtual bool GetCastScreenEnableSkipWindow() = 0;
     virtual int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) = 0;
+    virtual bool IsFirstTimeToProcessor() const = 0;
+    virtual void SetOriginScreenRotation(const ScreenRotation& rotate) = 0;
+    virtual ScreenRotation GetOriginScreenRotation() const = 0;
+#ifdef NEW_RENDER_CONTEXT
+    virtual void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId) = 0;
+    virtual std::shared_ptr<RSRenderSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId) = 0;
+#else
+    virtual void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId) = 0;
+    virtual std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId) = 0;
+#endif
 };
 
 namespace impl {
@@ -188,8 +203,25 @@ public:
     const std::unordered_set<uint64_t>& GetBlackList() const override;
     bool GetCastScreenEnableSkipWindow() override;
     int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) override;
-
+    bool IsFirstTimeToProcessor() const override;
+    void SetOriginScreenRotation(const ScreenRotation& rotate) override;
+    ScreenRotation GetOriginScreenRotation() const override;
+#ifdef NEW_RENDER_CONTEXT
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId) override;
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId) override;
+#else
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId) override;
+    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId) override;
+#endif
 private:
+    bool isFirstTimeToProcessor_ = true;
+    ScreenRotation originScreenRotation_ = ScreenRotation::ROTATION_0;
+    uint64_t virtualSurfaceUniqueId_ = 0;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> virtualSurface_ = nullptr;
+#else
+    std::shared_ptr<RSSurface> virtualSurface_ = nullptr;
+#endif
     // create hdiScreen and get some information from drivers.
     void PhysicalScreenInit() noexcept;
     void ScreenCapabilityInit() noexcept;

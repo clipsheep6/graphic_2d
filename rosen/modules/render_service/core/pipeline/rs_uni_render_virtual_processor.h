@@ -43,7 +43,6 @@ public:
 
     RSUniRenderVirtualProcessor() = default;
     ~RSUniRenderVirtualProcessor() noexcept override = default;
-
     bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
               std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread = false) override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
@@ -77,7 +76,12 @@ public:
     int32_t GetBufferAge() const;
     // when virtual screen partial refresh closed, use this function to reset RoiRegion in buffer
     GSError SetRoiRegionToCodec(std::vector<RectI>& damageRegion);
+    bool InitVirtualProcess(RSDisplayRenderParams& params);
+    void CalculateTransform(RSDisplayRenderParams& params);
+    void ScaleMirrorIfNeed(RSPaintFilterCanvas& canvas);
+    void ProcessVirtualDisplaySurface(RSDisplayRenderParams& params);
 private:
+    void CanvasInit();
     void CanvasInit(RSDisplayRenderNode& node);
     void OriginScreenRotation(ScreenRotation screenRotation, float width, float height);
 
@@ -90,6 +94,10 @@ private:
     float mirrorHeight_ = 0.f;
     float mainWidth_ = 0.f;
     float mainHeight_ = 0.f;
+    float virtualScreenWidth_ = 0.f;
+    float virtualScreenHeight_ = 0.f;
+    float mirroredScreenWidth_ = 0.f;
+    float mirroredScreenHeight_ = 0.f;
     bool canvasRotation_ = false;
     ScreenScaleMode scaleMode_ = ScreenScaleMode::INVALID_MODE;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
@@ -97,6 +105,10 @@ private:
     float mirrorScaleX_ = 1.0f;
     float mirrorScaleY_ = 1.0f;
     Drawing::Matrix canvasMatrix_;
+    BufferRequestConfig bufferRequestConfig_ = {};
+    sptr<RSScreenManager> screenManager_ = nullptr;
+    ScreenId virtualScreenId_ = INVALID_SCREEN_ID;
+    ScreenId mirroredScreenId_ = INVALID_SCREEN_ID;
 };
 } // namespace Rosen
 } // namespace OHOS

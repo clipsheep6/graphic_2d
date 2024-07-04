@@ -57,6 +57,10 @@ public:
     {
         return screenInfo_;
     }
+    bool IsForceSoftComposite() const
+    {
+        return forceSoftComposite_;
+    }
     std::weak_ptr<RSDisplayRenderNode> GetMirrorSource()
     {
         return mirrorSource_;
@@ -97,6 +101,22 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    const sptr<SurfaceBuffer>& GetBuffer() const
+    {
+        return buffer_;
+    }
+    const sptr<SyncFence>& GetAcquireFence() const
+    {
+        return acquireFence_;
+    }
+    const sptr<IConsumerSurface>& GetConsumer() const
+    {
+        return consumer_;
+    }
+    bool GetSecurityDisplay() const
+    {
+        return isSecurityDisplay_;
+    }
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -132,6 +152,11 @@ private:
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     uint64_t screenId_ = 0;
+    sptr<SurfaceBuffer> buffer_ = nullptr;
+    sptr<SyncFence> acquireFence_ = nullptr;
+    sptr<IConsumerSurface> consumer_ = nullptr;
+    bool forceSoftComposite_ = false;
+    bool isSecurityDisplay_ = false;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     ScreenInfo screenInfo_;
     ScreenId mirroredId_ = INVALID_SCREEN_ID;

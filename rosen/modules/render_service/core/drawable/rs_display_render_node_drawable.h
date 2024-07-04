@@ -32,6 +32,14 @@ namespace OHOS::Rosen {
 namespace DrawableV2 {
 class RSDisplayRenderNodeDrawable : public RSRenderNodeDrawable {
 public:
+    enum CompositeType {
+        UNI_RENDER_COMPOSITE = 0,
+        UNI_RENDER_MIRROR_COMPOSITE,
+        UNI_RENDER_EXPAND_COMPOSITE,
+        HARDWARE_COMPOSITE,
+        SOFTWARE_COMPOSITE,
+        UNSUPPORTED,
+    };
     ~RSDisplayRenderNodeDrawable() override = default;
 
     static RSRenderNodeDrawable::Ptr OnGenerate(std::shared_ptr<const RSRenderNode> node);
@@ -62,7 +70,7 @@ private:
     void RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight);
 
     void DrawMirrorScreen(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
-        std::shared_ptr<RSProcessor> processor);
+        std::shared_ptr<RSUniRenderVirtualProcessor> processor);
     std::vector<RectI> CalculateVirtualDirty(RSDisplayRenderNode& displayNode,
         std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser,
         RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
@@ -71,7 +79,7 @@ private:
         std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser, DrawFuncPtr drawFunc,
         RSRenderThreadParams& uniParam);
     void DrawExpandScreen(RSUniRenderVirtualProcessor& processor);
-    void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
+    void SetCompositeType(RSDisplayRenderParams& params, const ScreenInfo& screenInfo);
     void DrawCurtainScreen() const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
@@ -104,6 +112,7 @@ private:
     bool isDisplayNodeSkipStatusChanged_ = false;
     Drawing::Matrix lastMatrix_;
     bool useFixedOffscreenSurfaceSize_ = false;
+    CompositeType compositeType_ = CompositeType::UNSUPPORTED;
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

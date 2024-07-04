@@ -1014,6 +1014,41 @@ int32_t RSScreen::SetScreenConstraint(uint64_t frameId, uint64_t timestamp, Scre
     }
     return StatusCode::HDI_ERROR;
 }
+bool RSScreen::IsFirstTimeToProcessor() const
+{
+    return isFirstTimeToProcessor_;
+}
+
+void RSScreen::SetOriginScreenRotation(const ScreenRotation& rotate)
+{
+    originScreenRotation_ = rotate;
+    isFirstTimeToProcessor_ = false;
+}
+ScreenRotation RSScreen::GetOriginScreenRotation() const
+{
+    return originScreenRotation_;
+}
+#ifdef NEW_RENDER_CONTEXT
+void RSScreen::SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+{
+    virtualSurface_ = virtualSurface;
+    virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+}
+std::shared_ptr<RSRenderSurface> RSScreen::GetVirtualSurface(uint64_t pSurfaceUniqueId)
+{
+    return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+}
+#else
+void RSScreen::SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+{
+    virtualSurface_ = virtualSurface;
+    virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+}
+std::shared_ptr<RSSurface> RSScreen::GetVirtualSurface(uint64_t pSurfaceUniqueId)
+{
+    return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+}
+#endif
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

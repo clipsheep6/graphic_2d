@@ -847,23 +847,21 @@ void RSDisplayRenderNodeDrawable::DrawMirror(std::shared_ptr<RSDisplayRenderNode
     }
     curCanvas_->Save();
     virtualProcesser->ScaleMirrorIfNeed(*displayNodeSp, *curCanvas_);
-    curCanvas_->ConcatMatrix(mirroredParams->GetMatrix());
-    PrepareOffscreenRender(*mirroredNode);
-    curCanvas_->Save();
-    Drawing::Region clipRegion;
-    clipRegion.Clone(uniParam.GetClipRegion());
-    ResetRotateIfNeed(*mirroredNode, *virtualProcesser, clipRegion);
-
     RSDirtyRectsDfx rsDirtyRectsDfx(displayNodeSp, &params);
     if (uniParam.IsVirtualDirtyEnabled()) {
-        Drawing::Matrix matrix = canvasBackup_->GetTotalMatrix();
-        matrix.PreConcat(curCanvas_->GetTotalMatrix());
+        Drawing::Matrix matrix = curCanvas_->GetTotalMatrix();
         std::vector<RectI> dirtyRects = CalculateVirtualDirty(*displayNodeSp, virtualProcesser, params, matrix);
         rsDirtyRectsDfx.SetVirtualDirtyRects(dirtyRects, params.GetScreenInfo());
     } else {
         std::vector<RectI> emptyRects = {};
         virtualProcesser->SetRoiRegionToCodec(emptyRects);
     }
+    curCanvas_->ConcatMatrix(mirroredParams->GetMatrix());
+    PrepareOffscreenRender(*mirroredNode);
+    curCanvas_->Save();
+    Drawing::Region clipRegion;
+    clipRegion.Clone(uniParam.GetClipRegion());
+    ResetRotateIfNeed(*mirroredNode, *virtualProcesser, clipRegion);
 
     std::shared_ptr<Drawing::Image> cacheImageProcessed = GetCacheImageFromMirrorNode(mirroredNode);
     mirroredNode->SetCacheImgForCapture(nullptr);

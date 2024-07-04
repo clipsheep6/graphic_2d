@@ -476,6 +476,16 @@ void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, 
     }
 }
 
+void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
+{
+    if (params.useCPU) {
+        DrawBuffer(canvas, params);
+    } else {
+        RegisterDeleteBufferListener(params.consumer);
+        DrawImage(canvas, params);
+    }
+}
+
 void RSBaseRenderEngine::SetColorFilterMode(ColorFilterMode mode)
 {
     uint32_t uMode = static_cast<uint32_t>(mode);

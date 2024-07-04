@@ -417,6 +417,11 @@ public:
     void ClearFrameBufferIfNeed() override;
 
     int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) override;
+    bool IsFirstTimeToProcessor(ScreenId id) const;
+    void SetOriginScreenRotation(ScreenId id, const ScreenRotation& rotate);
+    ScreenRotation GetOriginScreenRotation(ScreenId id) const;
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId);
+    void SetVirtualSurface(ScreenId id, std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId);
 
 private:
     RSScreenManager();

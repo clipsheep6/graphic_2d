@@ -37,7 +37,6 @@ ohos_fuzztest("RSVulkanContextFuzzTest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-    "vulkan-headers:vulkan_headers",
   ]
   cflags = [
     "-g",

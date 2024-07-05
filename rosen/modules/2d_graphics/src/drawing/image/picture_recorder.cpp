@@ -13,22 +13,34 @@
  * limitations under the License.
  */
 
-#include "image/picture.h"
+
+#include "image/picture_recorder.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Picture::Picture(std::shared_ptr<DrawCmdList> cmdList)
-    : drawCmdList(cmdList) {
+
+PictureRecorder::PictureRecorder() {
 }
 
-Picture::~Picture() {
+PictureRecorder::~PictureRecorder() {
 }
 
-void Picture::Playback(Canvas* canvas) {
-    if (drawCmdList) {
-        drawCmdList->Playback(*canvas);
+std::shared_ptr<RecordingCanvas> PictureRecorder::BeginRecording(int32_t width, int32_t height) {
+    record = std::make_shared<RecordingCanvas>(width, height);
+    return record;
+}
+
+std::shared_ptr<Picture> PictureRecorder::FinishingRecording() {
+    if (!record) {
+        return nullptr;
     }
+    // 获取 RecordingCanvas 记录的绘制命令列表
+    std::shared_ptr<DrawCmdList> cmdList = record->GetDrawCmdList();
+    // 创建一个新的 Picture 对象,并传入绘制命令列表
+    std::shared_ptr<Picture> picture = std::make_shared<Picture>(cmdList);
+    record = nullptr;
+    return picture;
 }
 
 } // namespace Drawing

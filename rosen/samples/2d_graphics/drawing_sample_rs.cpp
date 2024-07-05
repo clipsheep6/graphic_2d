@@ -38,6 +38,7 @@
 
 #include "image/bitmap.h"
 #include "image/image.h"
+#include "image/picture.h"
 
 #include "draw/brush.h"
 #include "draw/canvas.h"

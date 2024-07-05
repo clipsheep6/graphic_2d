@@ -241,7 +241,7 @@ private:
     bool isRefreshNeed_ = true;
     bool isShowRefreshRateEnabled_ = false;
     int32_t idleFps_ = 60;
-    int32_t skipCount_;
+    int32_t skipCount_ = 0xFF;
     std::unique_ptr<HgmOneShotTimer> rsIdleTimer_;
     VoteInfo lastVoteInfo_;
     HgmMultiAppStrategy multiAppStrategy_;

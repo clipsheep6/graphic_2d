@@ -886,7 +886,7 @@ void HgmFrameRateManager::HandleRsFrame()
 {
     // 2: 跳过决策和下发产生的两帧，防止因此反复触发升帧
     // 4: 开启开发者模式下的动态帧率显示时，需要额外跳过帧率显示的更新产生的两帧：(屏幕刷新率和实时帧率的更新)
-    int skip = isShowRefreshRateEnabled_ ? 4 : 2;
+    int32_t skip = isShowRefreshRateEnabled_ ? 4 : 2;
     if (skipCount_ < skip) {
         skipCount_++;
     } else {

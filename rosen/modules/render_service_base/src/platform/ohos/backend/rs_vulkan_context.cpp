@@ -14,6 +14,8 @@
  */
 
 #include "platform/ohos/backend/rs_vulkan_context.h"
+#include <memory>
+#include <mutex>
 #include <set>
 #include <dlfcn.h>
 #include <vector>
@@ -24,6 +26,7 @@
 #include "unistd.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_ohos.h"
+#include "sync_fence.h"
 
 #define ACQUIRE_PROC(name, context)                         \
     if (!(vk##name = AcquireProc("vk" #name, context))) {   \
@@ -83,6 +86,17 @@ void RsVulkanInterface::Init(bool isProtected)
 
 RsVulkanInterface::~RsVulkanInterface()
 {
+    for (auto && semaphore : freeSemaphoreList_) {
+        vkDestroySemaphore(device_, semaphore, nullptr);
+    }
+    freeSemaphoreList_.clear();
+    for (auto && semaphoreFence : usedSemaphoreFenceList_) {
+        if (semaphoreFence.fence != nullptr) {
+            semaphoreFence.fence->Wait(-1);
+        }
+        vkDestroySemaphore(device_, semaphoreFence.semaphore, nullptr);
+    }
+    usedSemaphoreFenceList_.clear();
     if (protectedMemoryFeatures_) {
         delete protectedMemoryFeatures_;
     }
@@ -446,6 +460,45 @@ std::shared_ptr<Drawing::GPUContext> RsVulkanInterface::CreateDrawingContext(boo
         drawingContext->SetResourceCacheLimits(GR_CACHE_MAX_COUNT, GR_CACHE_MAX_BYTE_SIZE);
     }
     return drawingContext;
+}
+
+VkSemaphore RsVulkanInterface::RequireSemaphore()
+{
+    std::unique_lock<std::mutex> lock(semaphoreLock_);
+    for (auto it = usedSemaphoreFenceList_.begin(); it != usedSemaphoreFenceList_.end();) {
+        auto& fence = it->fence;
+        if (fence == nullptr || fence->GetStatus() == FenceStatus::SIGNALED) {
+            freeSemaphoreList_.push_back(it->semaphore);
+            it = usedSemaphoreFenceList_.erase(it);
+        } else {
+            break;
+        }
+    }
+
+    if (!freeSemaphoreList_.empty()) {
+        auto semaphore = freeSemaphoreList_.front();
+        freeSemaphoreList_.pop_front();
+        return semaphore;
+    }
+    lock.unlock();
+    VkSemaphoreCreateInfo semaphoreInfo;
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    semaphoreInfo.pNext = nullptr;
+    semaphoreInfo.flags = 0;
+    VkSemaphore semaphore;
+    auto err = vkCreateSemaphore(device_, &semaphoreInfo, nullptr, &semaphore);
+    if (err != VK_SUCCESS) {
+        return VK_NULL_HANDLE;
+    }
+    return semaphore;
+}
+
+void RsVulkanInterface::SendSemaphoreWithFd(VkSemaphore semaphore, int fenceFd)
+{
+    std::lock_guard<std::mutex> lock(semaphoreLock_);
+    auto& semaphoreFence = usedSemaphoreFenceList_.emplace_back();
+    semaphoreFence.semaphore = semaphore;
+    semaphoreFence.fence = (fenceFd != -1 ? std::make_unique<SyncFence>(fenceFd) : nullptr);
 }
 
 std::shared_ptr<Drawing::GPUContext> RsVulkanInterface::CreateNewDrawingContext(bool isProtected)

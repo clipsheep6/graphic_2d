@@ -595,6 +595,23 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     return params;
 }
 
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderParams& params, bool forceCPU)
+{
+    BufferDrawParam drawParams = {};
+    drawParams.useCPU = forceCPU;
+    Drawing::Filter filter;
+    filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
+    drawParams.paint.SetFilter(filter);
+
+    const sptr<SurfaceBuffer>& buffer = params.GetBuffer();
+    drawParams.buffer = buffer;
+    drawParams.consumer = params.GetConsumer();
+    drawParams.acquireFence = params.GetAcquireFence();
+    drawParams.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    drawParams.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    return drawParams;
+}
+
 BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& layer, bool forceCPU)
 {
     BufferDrawParam params;

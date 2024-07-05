@@ -46,12 +46,16 @@ public:
 
     bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
               std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread = false) override;
+    bool Init(RSDisplayRenderParams& params);
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void CalculateTransform(RSDisplayRenderNode& node);
+    void CalculateTransform();
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
+    void ProcessRcdSurface(RSDisplayRenderParams& params);
     void PostProcess() override;
     void ScaleMirrorIfNeed(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas);
+    void ScaleMirrorIfNeed(RSPaintFilterCanvas& canvas);
     void Fill(RSPaintFilterCanvas& canvas,
         float mainWidth, float mainHeight, float mirrorWidth, float mirrorHeight);
     void UniScale(RSPaintFilterCanvas& canvas,
@@ -79,6 +83,7 @@ public:
     GSError SetRoiRegionToCodec(std::vector<RectI>& damageRegion);
 private:
     void CanvasInit(RSDisplayRenderNode& node);
+    void CanvasInit();
     void OriginScreenRotation(ScreenRotation screenRotation, float width, float height);
 
     sptr<Surface> producerSurface_;
@@ -90,6 +95,10 @@ private:
     float mirrorHeight_ = 0.f;
     float mainWidth_ = 0.f;
     float mainHeight_ = 0.f;
+    float virtualScreenWidth_ = 0.f;
+    float virtualScreenHeight_ = 0.f;
+    float mirroredScreenWidth_ = 0.f;
+    float mirroredScreenHeight_ = 0.f;
     bool canvasRotation_ = false;
     ScreenScaleMode scaleMode_ = ScreenScaleMode::INVALID_MODE;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
@@ -97,6 +106,10 @@ private:
     float mirrorScaleX_ = 1.0f;
     float mirrorScaleY_ = 1.0f;
     Drawing::Matrix canvasMatrix_;
+    BufferRequestConfig bufferRequestConfig_ = {};
+    sptr<RSScreenManager> screenManager_ = nullptr;
+    ScreenId virtualScreenId_ = INVALID_SCREEN_ID;
+    ScreenId mirroredScreenId_ = INVALID_SCREEN_ID;
 };
 } // namespace Rosen
 } // namespace OHOS

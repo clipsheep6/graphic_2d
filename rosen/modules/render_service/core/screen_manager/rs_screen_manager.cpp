@@ -1493,6 +1493,45 @@ int32_t RSScreenManager::SetScreenConstraint(ScreenId id, uint64_t timestamp, Sc
     return screensIt->second->SetScreenConstraint(frameId_, timestamp, type);
 }
 
+bool RSScreenManager::IsFirstTimeToProcessor(ScreenId id) const{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->IsFirstTimeToProcessor();
+}
+
+void RSScreenManager::SetOriginScreenRotation(ScreenId id, const ScreenRotation& rotate) {
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->SetOriginScreenRotation(rotate);
+}
+ScreenRotation RSScreenManager::GetOriginScreenRotation(ScreenId id) const {
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->GetOriginScreenRotation();
+}
+std::shared_ptr<RSRenderSurface> RSScreenManager::GetVirtualSurface(ScreenId id, uint64_t pSurfaceUniqueId)
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->GetVirtualSurface(pSurfaceUniqueId);
+}
+void RSScreenManager::SetVirtualSurface(ScreenId id, std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->SetVirtualSurface(virtualSurface, pSurfaceUniqueId);
+}
+
 void RSScreenManager::HitchsDump(std::string& dumpString, std::string& arg)
 {
     std::lock_guard<std::mutex> lock(mutex_);

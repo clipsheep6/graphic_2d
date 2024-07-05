@@ -189,7 +189,36 @@ public:
     bool GetCastScreenEnableSkipWindow() override;
     int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) override;
 
+    bool IsFirstTimeToProcessor() const {
+        return isFirstTimeToProcessor_;
+    }
+
+    void SetOriginScreenRotation(const ScreenRotation& rotate) {
+        originScreenRotation_ = rotate;
+        isFirstTimeToProcessor_ = false;
+    }
+    ScreenRotation GetOriginScreenRotation() const {
+        return originScreenRotation_;
+    }
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
 private:
+    bool isFirstTimeToProcessor_ = true;
+    ScreenRotation originScreenRotation_ = ScreenRotation::ROTATION_0;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> virtualSurface_;
+#else
+    std::shared_ptr<RSSurface> virtualSurface_;
+#endif
+    uint64_t virtualSurfaceUniqueId_ = 0;
     // create hdiScreen and get some information from drivers.
     void PhysicalScreenInit() noexcept;
     void ScreenCapabilityInit() noexcept;

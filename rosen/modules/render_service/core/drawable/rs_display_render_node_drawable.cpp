@@ -477,13 +477,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (mirroredNode ||
         displayNodeSp->GetCompositeType() == RSDisplayRenderNode::CompositeType::UNI_RENDER_EXPAND_COMPOSITE) {
         auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
-        if (renderEngine == nullptr) {
-            RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw RenderEngine is null!");
-            return;
-        }
-        bool isRenderThread = true;
-        if (!processor->Init(*displayNodeSp, params->GetDisplayOffsetX(), params->GetDisplayOffsetY(),
-            mirroredNode ? mirroredNode->GetScreenId() : INVALID_SCREEN_ID, renderEngine, isRenderThread)) {
+        if (!processor->Init(params)) {
             RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw processor init failed!");
             return;
         }
@@ -731,8 +725,15 @@ void RSDisplayRenderNodeDrawable::DrawMirrorScreen(std::shared_ptr<RSDisplayRend
     } else {
         bool isOpDropped = uniParam->IsOpDropped();
         uniParam->SetOpDropped(false);
-        mirroredNode->SetOriginScreenRotation(displayNodeSp->GetOriginScreenRotation());
-        virtualProcesser->CalculateTransform(*mirroredNode);
+        auto screenManager = CreateOrGetScreenManager();
+        if (screenManager == nullptr) {
+            return false;
+        }
+        auto virtualScreenId = params.GetScreenId();
+        auto mirroredScreenId = mirroredParams->GetScreenId();
+        auto originScreenRotation = screenManager->GetOriginScreenRotation(virtualScreenId);
+        screenManager->SetOriginScreenRotation(mirroredScreenId, originScreenRotation);
+        virtualProcesser->CalculateTransform(*mirroredParams);
         RSDirtyRectsDfx rsDirtyRectsDfx(displayNodeSp, &params);
         if (uniParam->IsVirtualDirtyEnabled()) {
             auto dirtyRects = CalculateVirtualDirty(
@@ -742,7 +743,7 @@ void RSDisplayRenderNodeDrawable::DrawMirrorScreen(std::shared_ptr<RSDisplayRend
             std::vector<RectI> emptyRects = {};
             virtualProcesser->SetRoiRegionToCodec(emptyRects);
         }
-        processor->ProcessDisplaySurface(*mirroredNode);
+        processor->ProcessDisplaySurface(*mirroredParams);
         uniParam->SetOpDropped(isOpDropped);
         curCanvas_ = virtualProcesser->GetCanvas();
         if (curCanvas_) {

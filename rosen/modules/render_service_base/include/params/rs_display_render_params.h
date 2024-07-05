@@ -101,6 +101,18 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    const sptr<SurfaceBuffer>& GetBuffer() const
+    {
+        return buffer_;
+    }
+    const sptr<SyncFence>& GetAcquireFence() const
+    {
+        return acquireFence_;
+    }
+    const sptr<IConsumerSurface>& GetConsumer() const
+    {
+        return consumer_;
+    }
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -136,6 +148,9 @@ private:
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     uint64_t screenId_ = 0;
+    sptr<SurfaceBuffer> buffer_ = nullptr;
+    sptr<SyncFence> acquireFence_ = nullptr;
+    sptr<IConsumerSurface> consumer_ = nullptr;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     NodeId mirrorSourceId_ = INVALID_NODEID;
     ScreenInfo screenInfo_;

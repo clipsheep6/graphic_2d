@@ -119,8 +119,10 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
 
     multiAppStrategy_.RegisterStrategyChangeCallback([this] (const PolicyConfigData::StrategyConfig& strategy) {
         DeliverRefreshRateVote({"VOTER_PACKAGES", strategy.min, strategy.max}, ADD_VOTE);
-        idleFps_ = std::max(strategy.min, static_cast<int32_t>(OLED_60_HZ));
-        HandleIdleEvent(true);
+        if (idleFps_ != strategy.idleFps) {
+            idleFps_ = strategy.idleFps;
+            HandleIdleEvent(true);
+        }
     });
     InitRsIdleTimer();
     InitTouchManager();

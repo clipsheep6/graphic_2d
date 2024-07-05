@@ -46,6 +46,7 @@ namespace {
     constexpr uint32_t FIRST_FRAME_TIME_OUT = 50000000; // 50ms
     constexpr uint32_t SCENE_BEFORE_XML = 1;
     constexpr uint32_t SCENE_AFTER_TOUCH = 3;
+    constexpr uint32_t RS_IDLE_TIMEOUT = 100; // ms, The time RS haven't updated new frame to vote idle fps
     constexpr uint64_t ENERGY_ASSURANCE_TASK_DELAY_TIME = 1000; //1s
     const static std::string ENERGY_ASSURANCE_TASK_ID = "ENERGY_ASSURANCE_TASK_ID";
     // CAUTION: with priority
@@ -121,8 +122,35 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
         idleFps_ = std::max(strategy.min, static_cast<int32_t>(OLED_60_HZ));
         HandleIdleEvent(true);
     });
+    InitRsIdleTimer();
     InitTouchManager();
     multiAppStrategy_.CalcVote();
+}
+
+void HgmFrameRateManager::InitRsIdleTimer()
+{
+    static std::once_flag createFlag;
+    std::call_once(createFlag, [this] () {
+        rsIdleTimer_ = std::make_unique<HgmOneShotTimer>("rs_idle_timer", std::chrono::milliseconds(RS_IDLE_TIMEOUT),
+            [this] () {
+                PolicyConfigData::StrategyConfig strategy;
+                multiAppStrategy_.GetVoteRes(strategy);
+                auto resetRefreshRate = std::max(strategy.min, static_cast<int32_t>(OLED_60_HZ));
+                if (idleFps_ != resetRefreshRate) {
+                    idleFps_ = resetRefreshRate;
+                    HandleIdleEvent(true);
+                }
+            }, [this] () {
+                PolicyConfigData::StrategyConfig strategy;
+                multiAppStrategy_.GetVoteRes(strategy);
+                if (idleFps_ != strategy.idleFps) {
+                    idleFps_ = strategy.idleFps;
+                    HandleIdleEvent(true);
+                    skipCount_ = 0;
+                }
+            });
+        rsIdleTimer_->Start();
+    });
 }
 
 void HgmFrameRateManager::InitTouchManager()
@@ -769,7 +797,7 @@ void HgmFrameRateManager::HandleTouchEvent(pid_t pid, int32_t touchStatus, int32
 void HgmFrameRateManager::HandleIdleEvent(bool isIdle)
 {
     if (isIdle) {
-        HGM_LOGD("HandleIdleEvent status:%{public}u", isIdle);
+        HGM_LOGD("HandleIdleEvent status:%{public}u, fps:%{public}d", isIdle, idleFps_);
         DeliverRefreshRateVote({"VOTER_IDLE", idleFps_, idleFps_}, ADD_VOTE);
     } else {
         DeliverRefreshRateVote({"VOTER_IDLE"}, REMOVE_VOTE);
@@ -849,6 +877,19 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
     // hgm warning: use !isLtpo_ instead after GetDisplaySupportedModes ready
     if (curScreenStrategyId_.find("LTPO") == std::string::npos) {
         DeliverRefreshRateVote({"VOTER_LTPO"}, REMOVE_VOTE);
+    }
+}
+
+void HgmFrameRateManager::HandleRsFrame()
+{
+    // 2: 跳过决策和下发产生的两帧，防止因此反复触发升帧
+    // 4: 开启开发者模式下的动态帧率显示时，需要额外跳过帧率显示的更新产生的两帧：(屏幕刷新率和实时帧率的更新)
+    int skip = isShowRefreshRateEnabled_ ? 4 : 2;
+    if (skipCount_ < skip) {
+        skipCount_++;
+    } else {
+        rsIdleTimer_->Reset();
+        touchManager_.HandleRsFrame();
     }
 }
 

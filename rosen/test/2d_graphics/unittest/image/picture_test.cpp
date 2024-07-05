@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 
+#include "image/picture.h"
+
 using namespace testing;
 using namespace testing::ext;
 

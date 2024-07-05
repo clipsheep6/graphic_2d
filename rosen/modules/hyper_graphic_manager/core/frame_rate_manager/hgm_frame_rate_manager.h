@@ -204,7 +204,6 @@ private:
     void UpdateVoteRule();
     void ReportHiSysEvent(const VoteInfo& frameRateVoteInfo);
     void SetResultVoteInfo(VoteInfo& voteInfo, uint32_t min, uint32_t max);
-    void ClearScene();
     void InitRsIdleTimer();
 
     uint32_t currRefreshRate_ = 0;
@@ -212,6 +211,7 @@ private:
     std::shared_ptr<uint32_t> pendingRefreshRate_;
     uint64_t pendingConstraintRelativeTime_ = 0;
     std::shared_ptr<HgmVSyncGeneratorController> controller_;
+    std::mutex appChangeDataMutex_;
     std::vector<std::pair<FrameRateLinkerId, uint32_t>> appChangeData_;
 
     std::function<void(bool, bool)> forceUpdateCallback_;
@@ -241,7 +241,7 @@ private:
     bool isRefreshNeed_ = true;
     bool isShowRefreshRateEnabled_ = false;
     int32_t idleFps_ = 60;
-    std::atomic<int32_t> skipCount_;
+    int32_t skipCount_;
     std::unique_ptr<HgmOneShotTimer> rsIdleTimer_;
     VoteInfo lastVoteInfo_;
     HgmMultiAppStrategy multiAppStrategy_;

@@ -485,6 +485,21 @@ void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing
     canvas->DrawRoundRect(CastToRoundRect(*cRoundRect));
 }
 
+void OH_Drawing_CanvasDrawNestedRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RoundRect* cOuter,
+    const OH_Drawing_RoundRect *cInner)
+{
+    if (cOuter == nullptr || cInner == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    canvas->DrawNestedRoundRect(CastToRoundRect(*cOuter),CastToRoundRect(*cInner));
+}
+
 void OH_Drawing_CanvasDrawTextBlob(OH_Drawing_Canvas* cCanvas, const OH_Drawing_TextBlob* cTextBlob, float x, float y)
 {
     if (cTextBlob == nullptr) {
@@ -728,6 +743,17 @@ void OH_Drawing_CanvasDrawImageRect(OH_Drawing_Canvas* cCanvas, OH_Drawing_Image
     }
     canvas->DrawImageRect(CastToImage(*cImage), CastToRect(*dst),
         cSampling ? CastToSamplingOptions(*cSampling) : Drawing::SamplingOptions());
+}
+
+void OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Image* cImage,
+    float left, float top, const OH_Drawing_SamplingOptions* cSampingOptions)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr || cImage == nullptr || cSampingOptions == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    canvas->DrawImage(CastToImage(*cImage), left, top, CastToSamplingOptions(*cSampingOptions));
 }
 
 bool OH_Drawing_CanvasReadPixels(OH_Drawing_Canvas* cCanvas, OH_Drawing_Image_Info* cImageInfo,

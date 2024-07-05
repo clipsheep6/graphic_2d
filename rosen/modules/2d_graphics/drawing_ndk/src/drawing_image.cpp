@@ -18,11 +18,16 @@
 #include "drawing_canvas_utils.h"
 
 #include "image/image.h"
+#include <mutex>
+#include <unordered_map>
 #include "utils/data.h"
 
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
+
+static std::mutex g_imageLockMutex;
+static std::unordered_map<void*, std::shared_ptr<Image>> g_imageMap;
 
 static Image* CastToImage(OH_Drawing_Image* cImage)
 {
@@ -41,6 +46,12 @@ OH_Drawing_Image* OH_Drawing_ImageCreate()
 
 void OH_Drawing_ImageDestroy(OH_Drawing_Image* cImage)
 {
+    std::lock_guard<std::mutex> lock(g_imageLockMutex);
+    auto it = g_imageMap.find(cImage);
+    if (it != g_imageMap.end()) {
+        g_imageMap.erase(it);
+        return;
+    }
     delete CastToImage(cImage);
 }
 
@@ -83,4 +94,26 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image* cImage, OH_Drawing_Image_Inf
     cImageInfo->height = imageInfo.GetHeight();
     cImageInfo->colorType = static_cast<OH_Drawing_ColorFormat>(imageInfo.GetColorType());
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
+}
+
+bool OH_Drawing_ImageIsOpaque(OH_Drawing_Image* cImage)
+{
+    if (cImage == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+    return CastToImage(cImage)->IsOpaque();
+}
+
+OH_Drawing_Image* OH_Drawing_ImageCreateFromRaster(OH_Drawing_Pixmap* pixmap,
+    void (*rasterReleaseProc)(const OH_Drawing_Pixmap* pixmap, void* releaseContext), void* releaseContext)
+{
+    if (pixmap == nullptr) {
+        return nullptr;
+    }
+    auto image = Image::MakeFromRaster(*reinterpret_cast<Pixmap*>(pixmap), (RasterReleaseProc)rasterReleaseProc,
+                                       reinterpret_cast<ReleaseContext>(releaseContext));
+    std::lock_guard<std::mutex> lock(g_imageLockMutex);
+    g_imageMap.insert({image.get(), image});
+    return (OH_Drawing_Image*)image.get();
 }

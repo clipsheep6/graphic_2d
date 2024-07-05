@@ -82,3 +82,12 @@ void OH_Drawing_SurfaceDestroy(OH_Drawing_Surface* cSurface)
     }
     g_surfaceMap.erase(it);
 }
+
+OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface * cSurface)
+{
+    Surface* surface = CastToSurface(cSurface);
+    if (surface == nullptr) {
+        return nullptr;
+    }
+    return (OH_Drawing_Image*)surface->GetImageSnapshot().get();
+}

@@ -407,6 +407,18 @@ void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas*, const OH_Drawing_Rect*, float 
 void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas*, const OH_Drawing_RoundRect*);
 
 /**
+ * @brief Draws a nestedroundrect.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_RoundRect Indicates the pointer to an <b>OH_Drawing_RoundRect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawNestedRoundRect(OH_Drawing_Canvas*, const OH_Drawing_RoundRect* Outer,
+    const OH_Drawing_RoundRect* Inner);
+
+/**
  * @brief Draws a textblob.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -706,6 +718,21 @@ void OH_Drawing_CanvasDrawImageRectWithSrc(OH_Drawing_Canvas*, const OH_Drawing_
  */
 void OH_Drawing_CanvasDrawImageRect(OH_Drawing_Canvas*, OH_Drawing_Image*,
     OH_Drawing_Rect* dst, OH_Drawing_SamplingOptions*);
+
+/**
+ * @brief draw a image.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @param left Indicates the left position of the <b>OH_Drawing_Image</b>
+ * @param top Indicates the top position of the <b>OH_Drawing_Image</b>.
+ * @param OH_Drawing_SamplingOptions Indicates the sampling mode.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas*, const OH_Drawing_Image*,
+    float left, float top, const OH_Drawing_SamplingOptions*);
 
 /**
  * @brief Enumerates of vertices flags.

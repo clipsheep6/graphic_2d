@@ -122,6 +122,18 @@ uint32_t OH_Drawing_PenGetColor(const OH_Drawing_Pen*);
 void OH_Drawing_PenSetColor(OH_Drawing_Pen*, uint32_t color);
 
 /**
+ * @brief Sets the color for a Pen. The color is used by the pen to outline a shape.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_Color4f Indicates the pointer to an <b>OH_Drawing_Color4f</b> object.
+ * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenSetColor4f(OH_Drawing_Pen*, OH_Drawing_Color4f*, OH_Drawing_ColorSpace*);
+
+/**
  * @brief Obtains the alpha of a pen. The alpha is used by the pen to outline a shape.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

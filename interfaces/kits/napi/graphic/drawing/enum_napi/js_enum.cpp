@@ -131,6 +131,19 @@ static const std::vector<struct JsEnumInt> g_fontMetricsFlags = {
     { "BOUNDS_INVALID", static_cast<int32_t>(Drawing::FontMetrics::FontMetricsFlags::BOUNDS_INVALID_FLAG) },
 };
 
+static const std::vector<struct JsEnumInt> g_fontEdging = {
+    { "ALIAS", static_cast<int32_t>(FontEdging::ALIAS) },
+    { "ANTI_ALIAS", static_cast<int32_t>(FontEdging::ANTI_ALIAS) },
+    { "SUBPIXEL_ANTI_ALIAS", static_cast<int32_t>(FontEdging::SUBPIXEL_ANTI_ALIAS) },
+};
+
+static const std::vector<struct JsEnumInt> g_fontHinting = {
+    { "NONE", static_cast<int32_t>(FontHinting::NONE) },
+    { "SLIGHT", static_cast<int32_t>(FontHinting::SLIGHT) },
+    { "NORMAL", static_cast<int32_t>(FontHinting::NORMAL) },
+    { "FULL", static_cast<int32_t>(FontHinting::FULL) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
@@ -141,6 +154,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "CapStyle", g_capStyle },
     { "BlurType", g_blurType },
     { "FontMetricsFlags", g_fontMetricsFlags },
+    { "FontEdging", g_fontEdging },
+    { "FontHinting", g_fontHinting },
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

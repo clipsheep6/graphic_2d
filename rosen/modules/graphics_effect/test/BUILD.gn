@@ -20,11 +20,11 @@ group("test") {
   deps = [ "unittest:unittest" ]
 }
 
-ohos_executable("graphics_effect_exe") {
+ohos_executable("graphics_effect_test_exe") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    cfi = true
-    cfi_cross_dso = true
+    cfi = false
+    cfi_cross_dso = false
     debug = false
   }
 

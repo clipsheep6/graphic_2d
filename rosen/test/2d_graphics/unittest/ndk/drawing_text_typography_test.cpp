@@ -380,6 +380,12 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest010, TestSize.Level
 #else
     EXPECT_EQ(ConvertToOriginalText(txtStyle)->decoration, TextDecoration::NONE);
 #endif
+    OH_Drawing_SetTextStyleDecoration(txtStyle, TEXT_DECORATION_UNDERLINE | TEXT_DECORATION_LINE_THROUGH);
+#ifndef USE_GRAPHIC_TEXT_GINE
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->decoration_, TextDecoration::UNDERLINE | TextDecoration::LINE_THROUGH);
+#else
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->decoration, TextDecoration::UNDERLINE | TextDecoration::LINE_THROUGH);
+#endif
 }
 
 /*
@@ -2842,5 +2848,54 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest103, TestSize.Level
     OH_Drawing_DestroyTextStyle(txtStyle);
     OH_Drawing_PathDestroy(cPath);
     OH_Drawing_CanvasDestroy(cCanvas);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest105
+ * @tc.desc: test for the textbox.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest105, TestSize.Level1)
+{
+    OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
+    OH_Drawing_TypographyCreate* handler = OH_Drawing_CreateTypographyHandler(typoStyle,
+    OH_Drawing_CreateFontCollection());
+    OH_Drawing_Typography* typography = OH_Drawing_CreateTypography(handler);
+    
+    OH_Drawing_TextBox* textBox = OH_Drawing_TypographyGetRectsForPlaceholders(typography);
+    EXPECT_EQ(textBox == nullptr, false);
+    OH_Drawing_DestroyTypographyStyle(typoStyle);
+    OH_Drawing_DestroyTypographyHandler(handler);
+    OH_Drawing_TypographyDestroyTextBox(textBox);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest106
+ * @tc.desc: test for the textshadow.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest106, TestSize.Level1)
+{
+    OH_Drawing_TextShadow* shadow = OH_Drawing_CreateTextShadow();
+    uint32_t color = 0;
+    OH_Drawing_Point* offset = OH_Drawing_PointCreate(0, 0);
+    double blurRadius = 0.0;
+    OH_Drawing_SetTextShadow(shadow, color, offset, blurRadius);
+    OH_Drawing_DestroyTextShadow(shadow);
+    EXPECT_TRUE(shadow != nullptr);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest107
+ * @tc.desc: test for the underline and linethrough.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest107, TestSize.Level1)
+{
+    OH_Drawing_TextStyle* style = OH_Drawing_CreateTextStyle();
+    OH_Drawing_SetTextStyleDecoration(style, TEXT_DECORATION_UNDERLINE_LINETHROUGH);
+    EXPECT_EQ(ConvertToOriginalText(style )->decoration, TextDecoration::UNDERLINE | TextDecoration::LINE_THROUGH);
+    OH_Drawing_DestroyTextStyle(style);
+    EXPECT_TRUE(style != nullptr);
 }
 }

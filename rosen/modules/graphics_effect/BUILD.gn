@@ -24,6 +24,7 @@ ohos_source_set("graphics_effect_src") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   cflags = [
@@ -84,10 +85,13 @@ ohos_source_set("graphics_effect_src") {
 if (is_arkui_x) {
   ohos_source_set("libgraphics_effect") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
+    if (!is_mingw && !is_win && !is_linux) {
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        cfi_vcall_icall_only = true
+        debug = false
+      }
     }
 
     public_deps = [ ":graphics_effect_src" ]
@@ -99,10 +103,13 @@ if (is_arkui_x) {
 } else {
   ohos_shared_library("libgraphics_effect") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
+    if (!is_mingw && !is_win && !is_linux) {
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        cfi_vcall_icall_only = true
+        debug = false
+      }
     }
 
     public_deps = [ ":graphics_effect_src" ]

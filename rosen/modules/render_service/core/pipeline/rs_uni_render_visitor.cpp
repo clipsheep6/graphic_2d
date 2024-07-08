@@ -2192,7 +2192,8 @@ void RSUniRenderVisitor::UpdateSurfaceOcclusionInfo()
     std::swap(lastVisVec_, dstCurVisVec_);
 }
 
-void RSUniRenderVisitor::MergeDirtySurfaceToDssOrDirty(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode, const RectI& dirtyRect) const
+void RSUniRenderVisitor::MergeDirtySurfaceToDssOrDirty(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
+    const RectI& dirtyRect) const
 {
     if (surfaceNode->IsHardwareEnabledTopSurface() && surfaceNode->IsHardwareForcedDisabled()) {
         curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(dirtyRect);
@@ -2310,7 +2311,8 @@ void RSUniRenderVisitor::CheckMergeTransparentDirtysForDisplay(std::shared_ptr<R
                 transparentDirtyRegion.GetRegionInfo().c_str());
             const std::vector<Occlusion::Rect>& rects = transparentDirtyRegion.GetRegionRects();
             for (const auto& rect : rects) {
-                MergeDirtySurfaceToDssOrDirty(surfaceNode, RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                MergeDirtySurfaceToDssOrDirty(surfaceNode, RectI{ rect.left_, rect.top_,
+                    rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
             }
         }
     }

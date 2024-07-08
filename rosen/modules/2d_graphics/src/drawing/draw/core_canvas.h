@@ -447,7 +447,7 @@ public:
      * draw commands for later playback.
      * @param picture recorded drawing commands to play
      */
-    virtual void DrawPicture(const std::shared_ptr<Picture> picture);
+    virtual void DrawPicture(std::shared_ptr<Picture> picture);
 
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom);

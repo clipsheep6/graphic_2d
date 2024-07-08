@@ -19,7 +19,6 @@
 #include "effect/image_filter.h"
 #include "image/image.h"
 #include "image/image_info.h"
-#include "image/picture.h"
 #include "text/text_blob.h"
 #include "text/typeface.h"
 #include "utils/data.h"

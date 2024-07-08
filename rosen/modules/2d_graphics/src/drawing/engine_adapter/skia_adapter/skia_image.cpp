@@ -29,7 +29,6 @@
 #include "draw/surface.h"
 #include "image/bitmap.h"
 #include "image/image.h"
-#include "image/picture.h"
 #include "utils/data.h"
 #include "utils/log.h"
 #include "utils/system_properties.h"

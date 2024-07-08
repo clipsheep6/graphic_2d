@@ -93,7 +93,6 @@ static const std::vector<struct JsEnumInt> g_textDecoration = {
     { "UNDERLINE", static_cast<size_t>(TextDecoration::UNDERLINE) },
     { "OVERLINE", static_cast<size_t>(TextDecoration::OVERLINE) },
     { "LINE_THROUGH", static_cast<size_t>(TextDecoration::LINE_THROUGH) },
-    { "UNDERLINE_THROUGH", static_cast<size_t>(TextDecoration::UNDERLINE | TextDecoration::LINE_THROUGH) },
 };
 
 static const std::vector<struct JsEnumInt> g_placeholderVerticalAlignment = {

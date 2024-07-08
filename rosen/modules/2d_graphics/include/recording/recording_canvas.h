@@ -99,7 +99,6 @@ public:
     void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
         SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT) override;
     void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling) override;
-    void DrawPicture(const Picture& picture) override;
     void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) override;
     void DrawSymbol(const DrawingHMSymbolData& symbol, Point locate) override;
 

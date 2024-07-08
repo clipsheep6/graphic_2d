@@ -63,10 +63,6 @@ private:
 
     void InitSupportAnimationTable();
 
-    // to start animations for one path group
-    void GroupAnimationStart(
-        const std::shared_ptr<RSNode>& rsNode, std::vector<std::shared_ptr<RSAnimation>>& animations);
-
     // Set Node Center Offset
     void SetNodePivot(const std::shared_ptr<RSNode>& rsNode);
 
@@ -80,16 +76,20 @@ private:
     void AppearAnimation(
         const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters);
 
-    // add scaleModifier to rsNode
+    // add scaleModifier to rsNode, modifier is a vital requirement for animation
     bool AddScaleBaseModifier(const std::shared_ptr<RSNode>& rsNode,
         Drawing::DrawingPiecewiseParameter& scaleParameter,
         std::shared_ptr<RSAnimatableProperty<Vector2f>>& scaleProperty);
+    // add alphaModifier to rsNode
+    bool AddAlphaBaseModifier(const std::shared_ptr<RSNode>& rsNode,
+        Drawing::DrawingPiecewiseParameter& alphaParameter,
+        std::shared_ptr<RSAnimatableProperty<float>>& alphaProperty);
 
     // atomizated animation construct
     void ScaleAnimationBase(std::shared_ptr<RSAnimatableProperty<Vector2f>>& scaleProperty,
-        Drawing::DrawingPiecewiseParameter& scaleParameter, std::vector<std::shared_ptr<RSAnimation>>& animations);
-    void AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode, Drawing::DrawingPiecewiseParameter& alphaParamter,
-        std::vector<std::shared_ptr<RSAnimation>>& animations);
+        Drawing::DrawingPiecewiseParameter& scaleParameter);
+    void AlphaAnimationBase(std::shared_ptr<RSAnimatableProperty<float>>& alphaProperty,
+        Drawing::DrawingPiecewiseParameter& alphaParamter);
 
     // drawing a path group : symbol drawing or path drawing
     void GroupDrawing(const std::shared_ptr<RSCanvasNode>& canvasNode, TextEngine::SymbolNode& symbolNode,

@@ -97,6 +97,14 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    void SetIsMouseDirty(bool mouseDirty)
+    {
+        isMouseDirty_ = mouseDirty;
+    }
+    bool GetIsMouseDirty() const
+    {
+        return isMouseDirty_;
+    }
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -140,6 +148,7 @@ private:
     bool needOffscreen_ = false;
     bool isRotationChanged_ = false;
     bool hasHdrPresent_ = false;
+    bool isMouseDirty_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSDisplayRenderNode;

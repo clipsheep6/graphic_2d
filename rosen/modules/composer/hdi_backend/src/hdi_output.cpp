@@ -37,6 +37,7 @@ using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 namespace OHOS {
 namespace Rosen {
 static constexpr uint32_t NUMBER_OF_HISTORICAL_FRAMES = 2;
+static const std::string GENERIC_METADATA_KEY_ARSR_PRE_NEEDED = "ArsrDoEnhance";
 
 std::shared_ptr<HdiOutput> HdiOutput::CreateHdiOutput(uint32_t screenId)
 {
@@ -119,23 +120,27 @@ RosenError HdiOutput::SetHdiOutputDevice(HdiDevice* device)
 
 void HdiOutput::SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos)
 {
-    for (auto &layerInfo : layerInfos) {
-        if (layerInfo == nullptr || layerInfo->GetSurface() == nullptr) {
-            HLOGE("current layerInfo or layerInfo's cSurface is null");
-            continue;
-        }
+    {
+        std::unique_lock<std::mutex> lock(surfaceIdMapMutex_);
+        for (auto &layerInfo : layerInfos) {
+            if (layerInfo == nullptr || layerInfo->GetSurface() == nullptr) {
+                HLOGE("current layerInfo or layerInfo's cSurface is null");
+                continue;
+            }
 
-        uint64_t surfaceId = layerInfo->GetSurface()->GetUniqueId();
-        auto iter = surfaceIdMap_.find(surfaceId);
-        if (iter != surfaceIdMap_.end()) {
-            const LayerPtr &layer = iter->second;
-            layer->UpdateLayerInfo(layerInfo);
-            continue;
-        }
+            uint64_t surfaceId = layerInfo->GetSurface()->GetUniqueId();
+            auto iter = surfaceIdMap_.find(surfaceId);
+            if (iter != surfaceIdMap_.end()) {
+                const LayerPtr &layer = iter->second;
+                layer->UpdateLayerInfo(layerInfo);
+                continue;
+            }
 
-        int32_t ret = CreateLayer(surfaceId, layerInfo);
-        if (ret != GRAPHIC_DISPLAY_SUCCESS) {
-            return;
+            int32_t ret = CreateLayer(surfaceId, layerInfo);
+            if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+                HLOGE("CreateLayer fail, ret=%{public}d", ret);
+                return;
+            }
         }
     }
 
@@ -145,13 +150,16 @@ void HdiOutput::SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos)
 
 void HdiOutput::DeletePrevLayers()
 {
-    auto surfaceIter = surfaceIdMap_.begin();
-    while (surfaceIter != surfaceIdMap_.end()) {
-        const LayerPtr &layer = surfaceIter->second;
-        if (!layer->GetLayerStatus()) {
-            surfaceIdMap_.erase(surfaceIter++);
-        } else {
-            ++surfaceIter;
+    {
+        std::unique_lock<std::mutex> lock(surfaceIdMapMutex_);
+        auto surfaceIter = surfaceIdMap_.begin();
+        while (surfaceIter != surfaceIdMap_.end()) {
+            const LayerPtr &layer = surfaceIter->second;
+            if (!layer->GetLayerStatus()) {
+                surfaceIdMap_.erase(surfaceIter++);
+            } else {
+                ++surfaceIter;
+            }
         }
     }
 
@@ -201,7 +209,6 @@ int32_t HdiOutput::CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo
     }
 
     const auto& validKeys = device_->GetSupportedLayerPerFrameParameterKey();
-    const std::string GENERIC_METADATA_KEY_ARSR_PRE_NEEDED = "ArsrDoEnhance";
     if (std::find(validKeys.begin(), validKeys.end(), GENERIC_METADATA_KEY_ARSR_PRE_NEEDED) != validKeys.end()) {
         if (CheckIfDoArsrPre(layerInfo)) {
             const std::vector<int8_t> valueBlob{static_cast<int8_t>(1)};
@@ -335,12 +342,8 @@ int32_t HdiOutput::PreProcessLayersComp()
 
         uint32_t layersNum = layerIdMap_.size();
         // If doClientCompositionDirectly is true then layer->SetHdiLayerInfo and UpdateLayerCompType is no need to run.
-        doClientCompositionDirectly = ((layerCompCapacity_ != LAYER_COMPOSITION_CAPACITY_INVALID) &&
-                                            (layersNum > layerCompCapacity_));
-        if (!directClientCompositionEnabled_) {
-            doClientCompositionDirectly = false;
-        }
-
+        doClientCompositionDirectly = directClientCompositionEnabled_ &&
+            ((layerCompCapacity_ != LAYER_COMPOSITION_CAPACITY_INVALID) && (layersNum > layerCompCapacity_));
         for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); ++iter) {
             const LayerPtr &layer = iter->second;
             if (doClientCompositionDirectly) {
@@ -522,7 +525,6 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
         return ret;
     }
 
-    CHECK_DEVICE_NULL(device_);
     if (bufferCached && index < bufferCacheCountMax_) {
         ret = device_->SetScreenClientBuffer(screenId_, nullptr, index, fbAcquireFence);
     } else {
@@ -558,6 +560,10 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
 
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
+    }
+    if (thirdFrameAheadPresentFence_ == nullptr) {
+        HLOGE("thirdFrameAheadPresentFence is nullptr");
+        return GRAPHIC_DISPLAY_NULL_PTR;
     }
     int64_t timestamp = thirdFrameAheadPresentFence_->SyncFileReadTimestamp();
     bool startSample = false;
@@ -713,7 +719,6 @@ std::map<LayerInfoPtr, sptr<SyncFence>> HdiOutput::GetLayersReleaseFence()
 int32_t HdiOutput::StartVSyncSampler(bool forceReSample)
 {
     ScopedBytrace func("HdiOutput::StartVSyncSampler, forceReSample:" + std::to_string(forceReSample));
-    CHECK_DEVICE_NULL(device_);
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
     }
@@ -849,17 +854,24 @@ void HdiOutput::ClearFpsDump(std::string &result, const std::string &arg)
 
 static inline bool Cmp(const LayerDumpInfo &layer1, const LayerDumpInfo &layer2)
 {
+    if (layer1.layer == nullptr || layer1.layer->GetLayerInfo() == nullptr ||
+        layer2.layer == nullptr || layer2.layer->GetLayerInfo() == nullptr) {
+        return false;
+    }
     return layer1.layer->GetLayerInfo()->GetZorder() < layer2.layer->GetLayerInfo()->GetZorder();
 }
 
 void HdiOutput::ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const
 {
-    for (auto iter = surfaceIdMap_.begin(); iter != surfaceIdMap_.end(); ++iter) {
-        struct LayerDumpInfo layerInfo = {
-            .surfaceId = iter->first,
-            .layer = iter->second,
-        };
-        dumpLayerInfos.emplace_back(layerInfo);
+    {
+        std::unique_lock<std::mutex> lock(surfaceIdMapMutex_);
+        for (auto iter = surfaceIdMap_.begin(); iter != surfaceIdMap_.end(); ++iter) {
+            struct LayerDumpInfo layerInfo = {
+                .surfaceId = iter->first,
+                .layer = iter->second,
+            };
+            dumpLayerInfos.emplace_back(layerInfo);
+        }
     }
 
     std::sort(dumpLayerInfos.begin(), dumpLayerInfos.end(), Cmp);

@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -153,6 +154,20 @@ void OH_Drawing_BrushSetAlpha(OH_Drawing_Brush*, uint8_t alpha);
  * @version 1.0
  */
 void OH_Drawing_BrushSetShaderEffect(OH_Drawing_Brush*, OH_Drawing_ShaderEffect*);
+
+/**
+ * @brief Gets the shaderEffect from a brush.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
+ * @param OH_Drawing_ShaderEffect Indicates the pointer to an <b>OH_Drawing_ShaderEffect</b> object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBrush or cShaderEffect is nullptr.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ErrorCode OH_Drawing_BrushGetShaderEffect(OH_Drawing_Brush* cBrush, OH_Drawing_ShaderEffect* cShaderEffect);
 
 /**
  * @brief Sets the shadowLayer for a brush.

@@ -57,6 +57,25 @@ typedef struct {
 } OH_Drawing_BitmapFormat;
 
 /**
+ * @brief Enumerations bitmap color space type.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum {
+    /** No color space type */
+    NO_TYPE,
+    /** SRGB color space type */
+    SRGB,
+    /** SRGB color space types with linear properties */
+    SRGB_LINEAR,
+    /** The spatial type of the reference image */
+    REF_IMAGE,
+    /** RGB color space */
+    RGB,
+} OH_Drawing_ColorSpaceType;
+
+/**
  * @brief Creates an <b>OH_Drawing_Bitmap</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -189,6 +208,90 @@ void OH_Drawing_BitmapGetImageInfo(OH_Drawing_Bitmap*, OH_Drawing_Image_Info*);
  */
 bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info* dstInfo,
     void* dstPixels, size_t dstRowBytes, int32_t srcX, int32_t srcY);
+
+/**
+ * @brief Baseds on the information provided by <b>OH_Drawing_Image_Info</b>, create a <b>OH_Drawing_Bitmap</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @param rowBytes Indicates the row bytes of the <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns a <b>OH_Drawing_Bitmap</b> object.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromImageInfo(const OH_Drawing_Image_Info*, OH_Drawing_ColorSpace*,
+    int32_t rowBytes);
+
+/**
+ * @brief Gets the row bytes of the <b>OH_Drawing_Bitmap</b> bject.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns the row bytes of the <b>OH_Drawing_Bitmap</b> bject.
+ * @since 12
+ * @version 1.0
+ */
+uint32_t OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap*);
+
+/**
+ * @brief Gets the color space type of the <b>OH_Drawing_Bitmap</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns bitmap color space type.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ColorSpaceType OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap*);
+
+/**
+ * @brief Gets a subset of this bitmap.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param dstBitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @return Returns <b>true</b> if the subset was retrieved, <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapExtractSubset(const OH_Drawing_Bitmap* bitmap, const OH_Drawing_Bitmap* dstBitmap,
+    const OH_Drawing_Rect* subset);
+
+/**
+ * @brief Gets whether the content of the <b>OH_Drawing_Bitmap</b> object is immutable.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns <b>true</b> if it is immutable, <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap*);
+
+/**
+ * @brief Sets the <b>OH_Drawing_Bitmap</b> object as immutable.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap*);
+
+/**
+ * @brief Allocates the memory for the <b>OH_Drawing_Bitmap</b> object using the specified
+ * <b>OH_Drawing_Image_Info</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @return Returns <b>true</b> if the allocation was successful, <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*);
 #ifdef __cplusplus
 }
 #endif

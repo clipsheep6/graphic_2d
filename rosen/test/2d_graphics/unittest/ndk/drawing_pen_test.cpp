@@ -648,6 +648,26 @@ HWTEST_F(NativeDrawingPenTest, NativeDrawingPenTest_PenReset, TestSize.Level1)
     EXPECT_EQ(OH_Drawing_ErrorCodeGet(), OH_DRAWING_ERROR_INVALID_PARAMETER);
 }
 
+/*
+ * @tc.name: NativeDrawingPenTest_penGetShaderEffect012
+ * @tc.desc: test for the set methods of pen.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingPenTest, NativeDrawingPenTest_penGetShaderEffect012, TestSize.Level1)
+{
+    OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+    OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateColorShader(0xFFFF0000);
+    EXPECT_NE(shaderEffect, nullptr);
+    OH_Drawing_PenGetShaderEffect(nullptr, shaderEffect);
+    OH_Drawing_PenGetShaderEffect(pen, nullptr);
+    OH_Drawing_ShaderEffect* retrievedShaderEffect = nullptr;
+    OH_Drawing_PenSetShaderEffect(pen, retrievedShaderEffect);
+    OH_Drawing_PenGetShaderEffect(pen, retrievedShaderEffect);
+    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_ShaderEffectDestroy(shaderEffect);
+    OH_Drawing_ShaderEffectDestroy(retrievedShaderEffect);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

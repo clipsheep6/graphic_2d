@@ -149,7 +149,7 @@ public:
      * immutable Bitmap checks trigger an assert only on debug builds.
      * @return true if pixels are immutable
      */
-    bool IsImmutable();
+    bool IsImmutable() const;
 
     /**
      * @brief Sets internal flag to mark Bitmap as immutable. Once set, pixels can not change.
@@ -242,6 +242,7 @@ public:
 
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
+    std::shared_ptr<ColorSpace> GetColorSpace();
 
 private:
     std::shared_ptr<BitmapImpl> bmpImplPtr;

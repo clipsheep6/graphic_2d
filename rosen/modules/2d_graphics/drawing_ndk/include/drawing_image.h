@@ -108,6 +108,54 @@ int32_t OH_Drawing_ImageGetHeight(OH_Drawing_Image*);
  */
 void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image*, OH_Drawing_Image_Info*);
 
+/**
+ * @brief Gets an <b>OH_Drawing_ColorSpace</b> object from an <b>OH_Drawing_Image</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ColorSpace* OH_Drawing_ImageGetColorSpace(const OH_Drawing_Image*);
+
+/**
+ * @brief Gets the unique id of image.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns the unique id of image.
+ * @since 12
+ * @version 1.0
+ */
+uint32_t OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image*);
+
+/**
+ * @brief Gets whether the image is opaque.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns <b>true</b> if the image is opaque; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image*);
+
+/**
+ * @brief Gets whether the image is scaled to fit the bitmap.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_SamplingOptions Indicates the pointer to an <b>OH_Drawing_SamplingOptions</b> object.
+ * @param isAllowCachingHint Indicates whether the image will be cached locally.
+ * @return Returns <b>true</b> if the image is scaled to fit the bitmap; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_ImageScalePixels(const OH_Drawing_Image*, const OH_Drawing_Bitmap*, const OH_Drawing_SamplingOptions*,
+    bool isAllowCachingHint);
+
 #ifdef __cplusplus
 }
 #endif

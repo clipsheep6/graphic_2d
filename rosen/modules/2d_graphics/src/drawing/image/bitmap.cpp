@@ -103,7 +103,7 @@ bool Bitmap::InstallPixels(const ImageInfo& info, void* pixels, size_t rowBytes,
     return bmpImplPtr->InstallPixels(info, pixels, rowBytes, releaseProc, context);
 }
 
-bool Bitmap::IsImmutable()
+bool Bitmap::IsImmutable() const
 {
     return bmpImplPtr->IsImmutable();
 }
@@ -185,6 +185,11 @@ std::shared_ptr<Data> Bitmap::Serialize() const
 bool Bitmap::Deserialize(std::shared_ptr<Data> data)
 {
     return bmpImplPtr->Deserialize(data);
+}
+
+std::shared_ptr<ColorSpace> Bitmap::GetColorSpace()
+{
+    return bmpImplPtr->GetColorSpace();
 }
 
 } // namespace Drawing

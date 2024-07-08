@@ -18,6 +18,8 @@
 #include "drawing_bitmap.h"
 #include "drawing_error_code.h"
 #include "drawing_types.h"
+#include "drawing_rect.h"
+#include "drawing_color_space.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -291,6 +293,178 @@ HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_GetAlphaFormat009, Tes
         alphaFormat_ = OH_Drawing_BitmapGetAlphaFormat(bitmap);
         EXPECT_EQ(alphaFormat_, alphaFormats[i]);
     }
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_CreateFromImageInfo010
+ * @tc.desc: test for drawing_BitmapCreateFromImageInfo.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_CreateFromImageInfo010, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    const unsigned int rowBytes = width * height * 4;
+    OH_Drawing_ColorFormat colorFormat = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, colorFormat, alphaFormat };
+    OH_Drawing_ColorSpace* colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    EXPECT_NE(colorSpace, nullptr);
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpace, rowBytes);
+    EXPECT_NE(bitmap, nullptr);
+    EXPECT_EQ(width, OH_Drawing_BitmapGetWidth(bitmap));
+    EXPECT_EQ(height, OH_Drawing_BitmapGetHeight(bitmap));
+    EXPECT_EQ(colorFormat, OH_Drawing_BitmapGetColorFormat(bitmap));
+    EXPECT_EQ(alphaFormat, OH_Drawing_BitmapGetAlphaFormat(bitmap));
+    EXPECT_EQ(rowBytes, OH_Drawing_BitmapGetRowBytes(bitmap));
+    EXPECT_EQ(OH_Drawing_ColorSpaceType::NO_TYPE, OH_Drawing_BitmapGetColorSpaceType(bitmap));
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_ColorSpaceDestroy(colorSpace);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_GetRowBytes011
+ * @tc.desc: test for drawing_BitmapGetRowBytes.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_GetRowBytes011, TestSize.Level1)
+{
+    const unsigned int width = 600;
+    const unsigned int height = 600;
+    const unsigned int rowBytes = width * height * 4;
+    OH_Drawing_ColorFormat format = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, format, alphaFormat };
+    OH_Drawing_ColorSpace* colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    EXPECT_NE(colorSpace, nullptr);
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpace, rowBytes);
+    EXPECT_NE(bitmap, nullptr);
+    EXPECT_EQ(0, OH_Drawing_BitmapGetRowBytes(nullptr));
+    EXPECT_EQ(rowBytes, OH_Drawing_BitmapGetRowBytes(bitmap));
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_ColorSpaceDestroy(colorSpace);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_GetColorSpaceType012
+ * @tc.desc: test for drawing_BitmapGetColorSpaceType.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_GetColorSpaceType012, TestSize.Level1)
+{
+    const unsigned int width = 600;
+    const unsigned int height = 600;
+    const unsigned int rowBytes = width * height * 4;
+    OH_Drawing_ColorFormat format = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, format, alphaFormat };
+    OH_Drawing_ColorSpace* colorSpaceSrgb = OH_Drawing_ColorSpaceCreateSrgb();
+    EXPECT_NE(colorSpaceSrgb, nullptr);
+    OH_Drawing_ColorSpace* colorSpaceSrgbLinear = OH_Drawing_ColorSpaceCreateSrgbLinear();
+    EXPECT_NE(colorSpaceSrgbLinear, nullptr);
+    OH_Drawing_Bitmap* bitmapSrgb = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpaceSrgb, rowBytes);
+    EXPECT_NE(bitmapSrgb, nullptr);
+    OH_Drawing_Bitmap* bitmapSrgbLinear = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpaceSrgbLinear, rowBytes);
+    EXPECT_NE(bitmapSrgbLinear, nullptr);
+    EXPECT_EQ(NO_TYPE, OH_Drawing_BitmapGetColorSpaceType(nullptr));
+    EXPECT_EQ(NO_TYPE, OH_Drawing_BitmapGetColorSpaceType(bitmapSrgb));
+    EXPECT_EQ(NO_TYPE, OH_Drawing_BitmapGetColorSpaceType(bitmapSrgbLinear));
+    OH_Drawing_BitmapDestroy(bitmapSrgb);
+    OH_Drawing_BitmapDestroy(bitmapSrgbLinear);
+    OH_Drawing_ColorSpaceDestroy(colorSpaceSrgb);
+    OH_Drawing_ColorSpaceDestroy(colorSpaceSrgbLinear);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_ExtractSubset013
+ * @tc.desc: test for drawing_BitmapExtractSubset.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_ExtractSubset013, TestSize.Level1)
+{
+    const unsigned int width = 600;
+    const unsigned int height = 600;
+    const unsigned int rowBytes = width * height * 4;
+    OH_Drawing_ColorFormat format = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, format, alphaFormat };
+    OH_Drawing_ColorSpace* colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    EXPECT_NE(colorSpace, nullptr);
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpace, rowBytes);
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_Bitmap* dstBitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(dstBitmap, nullptr);
+
+    const unsigned int left = 100;
+    const unsigned int top = 200;
+    const unsigned int right = 500;
+    const unsigned int bottom = 300;
+    const unsigned int dstWidth = right - left;
+    const unsigned int dstHeight = bottom - top;
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(left, top, right, bottom);
+    EXPECT_NE(rect, nullptr);
+    EXPECT_EQ(true, OH_Drawing_BitmapExtractSubset(bitmap, dstBitmap, rect));
+    EXPECT_EQ(dstWidth, OH_Drawing_BitmapGetWidth(dstBitmap));
+    EXPECT_EQ(dstHeight, OH_Drawing_BitmapGetHeight(dstBitmap));
+    EXPECT_EQ(rowBytes, OH_Drawing_BitmapGetRowBytes(dstBitmap));
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_BitmapDestroy(dstBitmap);
+    OH_Drawing_ColorSpaceDestroy(colorSpace);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_IsAndSetImmutable014
+ * @tc.desc: test for drawing_BitmapIsImmutable and drawing_BitmapSetImmutable.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_IsAndSetImmutable014, TestSize.Level1)
+{
+    const unsigned int width = 200;
+    const unsigned int height = 200;
+    const unsigned int rowBytes = width * height * 4;
+    OH_Drawing_ColorFormat format = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, format, alphaFormat };
+    OH_Drawing_ColorSpace* colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    EXPECT_NE(colorSpace, nullptr);
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreateFromImageInfo(&imageInfo, colorSpace, rowBytes);
+    EXPECT_EQ(false, OH_Drawing_BitmapIsImmutable(nullptr));
+    EXPECT_EQ(false, OH_Drawing_BitmapIsImmutable(bitmap));
+    OH_Drawing_BitmapSetImmutable(bitmap);
+    EXPECT_EQ(true, OH_Drawing_BitmapIsImmutable(bitmap));
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_ColorSpaceDestroy(colorSpace);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_TryAllocPixels015
+ * @tc.desc: test for drawing_BitmapTryAllocPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_TryAllocPixels015, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    OH_Drawing_ColorFormat colorFormat = COLOR_FORMAT_RGBA_8888;
+    OH_Drawing_AlphaFormat alphaFormat = ALPHA_FORMAT_PREMUL;
+    OH_Drawing_Image_Info imageInfo { width, height, colorFormat, alphaFormat };
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    EXPECT_EQ(false, OH_Drawing_BitmapTryAllocPixels(nullptr, nullptr));
+    EXPECT_EQ(false, OH_Drawing_BitmapTryAllocPixels(nullptr, &imageInfo));
+    EXPECT_EQ(false, OH_Drawing_BitmapTryAllocPixels(bitmap, nullptr));
+    EXPECT_EQ(true, OH_Drawing_BitmapTryAllocPixels(bitmap, &imageInfo));
+    EXPECT_EQ(width, OH_Drawing_BitmapGetWidth(bitmap));
+    EXPECT_EQ(height, OH_Drawing_BitmapGetHeight(bitmap));
+    EXPECT_EQ(colorFormat, OH_Drawing_BitmapGetColorFormat(bitmap));
+    EXPECT_EQ(alphaFormat, OH_Drawing_BitmapGetAlphaFormat(bitmap));
+    OH_Drawing_BitmapDestroy(bitmap);
 }
 } // namespace Drawing
 } // namespace Rosen

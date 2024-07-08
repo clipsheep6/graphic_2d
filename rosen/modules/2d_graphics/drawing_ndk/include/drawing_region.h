@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -136,6 +137,23 @@ bool OH_Drawing_RegionSetRect(OH_Drawing_Region* region, const OH_Drawing_Rect* 
  * @version 1.0
  */
 bool OH_Drawing_RegionSetPath(OH_Drawing_Region* region, const OH_Drawing_Path* path, const OH_Drawing_Region* clip);
+
+/**
+ * @brief Gets whether other region is in the <b>OH_Drawing_Region</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param cRegion Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param cOther Indicates the pointer to an <b>OH_Drawing_Region</b> object.
+ * @param cIsRegionContainded Indicates if other region is completely inside the region object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if any of cRegion, cOther
+ *                 and cIsRegionContainded is nullptr.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ErrorCode OH_Drawing_RegionIsRegionContained(const OH_Drawing_Region* cRegion,
+    const OH_Drawing_Region* cOther, bool* cIsRegionContainded);
 
 /**
  * @brief Destroys an <b>OH_Drawing_Region</b> object and reclaims the memory occupied by the object.

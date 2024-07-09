@@ -14,6 +14,9 @@
  */
 
 #include "drawing_canvas.h"
+
+#include "src/utils/SkUTF.h"
+
 #include "drawing_canvas_utils.h"
 #include "image_pixel_map_mdk.h"
 #include "native_pixel_map.h"
@@ -98,6 +101,11 @@ static const Image& CastToImage(const OH_Drawing_Image& cImage)
 static const SamplingOptions& CastToSamplingOptions(const OH_Drawing_SamplingOptions& cSamplingOptions)
 {
     return reinterpret_cast<const SamplingOptions&>(cSamplingOptions);
+}
+
+static const Font& CastToFont(const OH_Drawing_Font& cFont)
+{
+    return reinterpret_cast<const Font&>(cFont);
 }
 
 OH_Drawing_Canvas* OH_Drawing_CanvasCreate()
@@ -264,6 +272,11 @@ void OH_Drawing_CanvasDrawPoints(OH_Drawing_Canvas* cCanvas, OH_Drawing_PointMod
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
+
+    if (mode < POINT_MODE_POINTS || mode > POINT_MODE_POLYGON) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        return;
+    }
     const Point* points = reinterpret_cast<const Point*>(pts);
     canvas->DrawPoints(static_cast<PointMode>(mode), count, points);
 }
@@ -281,6 +294,16 @@ void OH_Drawing_CanvasDrawVertices(OH_Drawing_Canvas* cCanvas, OH_Drawing_Vertex
     Canvas* canvas = CastToCanvas(cCanvas);
     if (canvas == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+
+    if (vertexMode < VERTEX_MODE_TRIANGLES || vertexMode > VERTEX_MODE_TRIANGLE_FAN) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        return;
+    }
+
+    if (mode < BLEND_MODE_CLEAR || mode > BLEND_MODE_LUMINOSITY) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
         return;
     }
 
@@ -470,6 +493,26 @@ void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing
     canvas->DrawRoundRect(CastToRoundRect(*cRoundRect));
 }
 
+OH_Drawing_ErrorCode OH_Drawing_CanvasDrawSingleCharacter(OH_Drawing_Canvas* cCanvas, const char* str,
+    const OH_Drawing_Font* cFont, float x, float y)
+{
+    if (str == nullptr || cFont == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    size_t len = strlen(str);
+    if (len == 0) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    const char* currentStr = str;
+    int32_t unicode = SkUTF::NextUTF8(&currentStr, currentStr + len);
+    canvas->DrawSingleCharacter(unicode, CastToFont(*cFont), x, y);
+    return OH_DRAWING_SUCCESS;
+}
+
 void OH_Drawing_CanvasDrawTextBlob(OH_Drawing_Canvas* cCanvas, const OH_Drawing_TextBlob* cTextBlob, float x, float y)
 {
     if (cTextBlob == nullptr) {
@@ -484,22 +527,6 @@ void OH_Drawing_CanvasDrawTextBlob(OH_Drawing_Canvas* cCanvas, const OH_Drawing_
     canvas->DrawTextBlob(CastToTextBlob(cTextBlob), x, y);
 }
 
-static ClipOp CClipOpCastToClipOp(OH_Drawing_CanvasClipOp cClipOp)
-{
-    ClipOp clipOp = ClipOp::INTERSECT;
-    switch (cClipOp) {
-        case DIFFERENCE:
-            clipOp = ClipOp::DIFFERENCE;
-            break;
-        case INTERSECT:
-            clipOp = ClipOp::INTERSECT;
-            break;
-        default:
-            break;
-    }
-    return clipOp;
-}
-
 void OH_Drawing_CanvasClipRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect* cRect,
     OH_Drawing_CanvasClipOp cClipOp, bool doAntiAlias)
 {
@@ -512,7 +539,12 @@ void OH_Drawing_CanvasClipRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-    canvas->ClipRect(CastToRect(*cRect), CClipOpCastToClipOp(cClipOp), doAntiAlias);
+
+    if (cClipOp < DIFFERENCE || cClipOp > INTERSECT) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        return;
+    }
+    canvas->ClipRect(CastToRect(*cRect), static_cast<ClipOp>(cClipOp), doAntiAlias);
 }
 
 void OH_Drawing_CanvasClipRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RoundRect* cRoundRect,
@@ -527,7 +559,12 @@ void OH_Drawing_CanvasClipRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-    canvas->ClipRoundRect(CastToRoundRect(*cRoundRect), CClipOpCastToClipOp(cClipOp), doAntiAlias);
+
+    if (cClipOp < DIFFERENCE || cClipOp > INTERSECT) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        return;
+    }
+    canvas->ClipRoundRect(CastToRoundRect(*cRoundRect), static_cast<ClipOp>(cClipOp), doAntiAlias);
 }
 
 void OH_Drawing_CanvasClipPath(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Path* cPath,
@@ -542,7 +579,12 @@ void OH_Drawing_CanvasClipPath(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Path
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-    canvas->ClipPath(CastToPath(*cPath), CClipOpCastToClipOp(cClipOp), doAntiAlias);
+
+    if (cClipOp < DIFFERENCE || cClipOp > INTERSECT) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        return;
+    }
+    canvas->ClipPath(CastToPath(*cPath), static_cast<ClipOp>(cClipOp), doAntiAlias);
 }
 
 void OH_Drawing_CanvasRotate(OH_Drawing_Canvas* cCanvas, float degrees, float px, float py)
@@ -653,33 +695,12 @@ void OH_Drawing_CanvasConcatMatrix(OH_Drawing_Canvas* cCanvas, OH_Drawing_Matrix
     canvas->ConcatMatrix(*reinterpret_cast<Matrix*>(cMatrix));
 }
 
-static ShadowFlags CClipOpCastToClipOp(OH_Drawing_CanvasShadowFlags cFlag)
-{
-    ShadowFlags shadowFlags = ShadowFlags::NONE;
-    switch (cFlag) {
-        case OH_Drawing_CanvasShadowFlags::SHADOW_FLAGS_NONE:
-            shadowFlags = ShadowFlags::NONE;
-            break;
-        case OH_Drawing_CanvasShadowFlags::SHADOW_FLAGS_TRANSPARENT_OCCLUDER:
-            shadowFlags = ShadowFlags::TRANSPARENT_OCCLUDER;
-            break;
-        case OH_Drawing_CanvasShadowFlags::SHADOW_FLAGS_GEOMETRIC_ONLY:
-            shadowFlags = ShadowFlags::GEOMETRIC_ONLY;
-            break;
-        case OH_Drawing_CanvasShadowFlags::SHADOW_FLAGS_ALL:
-            shadowFlags = ShadowFlags::ALL;
-            break;
-        default:
-            break;
-    }
-    return shadowFlags;
-}
-
 void OH_Drawing_CanvasDrawShadow(OH_Drawing_Canvas* cCanvas, OH_Drawing_Path* cPath, OH_Drawing_Point3D cPlaneParams,
     OH_Drawing_Point3D cDevLightPos, float lightRadius, uint32_t ambientColor, uint32_t spotColor,
     OH_Drawing_CanvasShadowFlags flag)
 {
-    if (cCanvas == nullptr || cPath == nullptr) {
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr || cPath == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
@@ -687,10 +708,9 @@ void OH_Drawing_CanvasDrawShadow(OH_Drawing_Canvas* cCanvas, OH_Drawing_Path* cP
         g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
         return;
     }
-    Canvas* canvas = CastToCanvas(cCanvas);
     canvas->DrawShadow(*reinterpret_cast<Path*>(cPath), CastToPoint3(cPlaneParams),
         CastToPoint3(cDevLightPos), lightRadius, Color(ambientColor), Color(spotColor),
-        CClipOpCastToClipOp(flag));
+        static_cast<ShadowFlags>(flag));
 }
 
 void OH_Drawing_CanvasSetMatrix(OH_Drawing_Canvas* cCanvas, OH_Drawing_Matrix* matrix)
@@ -798,7 +818,11 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasClipRegion(OH_Drawing_Canvas* cCanvas, con
     if (canvas == nullptr) {
         return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    canvas->ClipRegion(CastToRegion(*cRegion), CClipOpCastToClipOp(op));
+
+    if (op < DIFFERENCE || op > INTERSECT) {
+        return OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+    }
+    canvas->ClipRegion(CastToRegion(*cRegion), static_cast<ClipOp>(op));
     return OH_DRAWING_SUCCESS;
 }
 
@@ -822,6 +846,11 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint
     if (canvas == nullptr) {
         return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
+
+    if (cBlendMode < BLEND_MODE_CLEAR || cBlendMode > BLEND_MODE_LUMINOSITY) {
+        return OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+    }
+
     canvas->DrawColor(color, static_cast<BlendMode>(cBlendMode));
     return OH_DRAWING_SUCCESS;
 }

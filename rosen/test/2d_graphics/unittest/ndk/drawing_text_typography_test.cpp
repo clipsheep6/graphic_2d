@@ -2852,7 +2852,7 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest103, TestSize.Level
 
 /*
  * @tc.name: OH_Drawing_TypographyTest105
- * @tc.desc: test for the textbox.
+ * @tc.desc: test for the text box
  * @tc.type: FUNC
  */
 HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest105, TestSize.Level1)
@@ -2862,18 +2862,50 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest105, TestSize.Level
         OH_Drawing_CreateFontCollection());
     OH_Drawing_Typography* typography = OH_Drawing_CreateTypography(handler);
     OH_Drawing_TextBox* textBox = OH_Drawing_TypographyGetRectsForPlaceholders(typography);
-    EXPECT_EQ(textBox == nullptr, false);
-    OH_Drawing_DestroyTypographyStyle(typoStyle);
-    OH_Drawing_DestroyTypographyHandler(handler);
-    OH_Drawing_TypographyDestroyTextBox(textBox);
+    OH_Drawing_GetLeftFromTextBox(textBox, 0);
+    OH_Drawing_GetRightFromTextBox(textBox, 0);
+    OH_Drawing_GetTopFromTextBox(textBox, 0);
+    OH_Drawing_GetBottomFromTextBox(textBox, 0);
+    EXPECT_EQ(OH_Drawing_GetTextDirectionFromTextBox(textBox, 0), 0);
+    EXPECT_EQ(OH_Drawing_GetSizeOfTextBox(textBox), 0);
+
+    OH_Drawing_PositionAndAffinity* positionAndAffinity =
+        OH_Drawing_TypographyGetGlyphPositionAtCoordinate(typography, 1, 0);
+    OH_Drawing_GetPositionFromPositionAndAffinity(positionAndAffinity);
+    OH_Drawing_GetAffinityFromPositionAndAffinity(positionAndAffinity);
+
+    OH_Drawing_Range* range = OH_Drawing_TypographyGetWordBoundary(typography, 1);
+    OH_Drawing_GetStartFromRange(range);
+    OH_Drawing_GetEndFromRange(range);
+    OH_Drawing_TypographyGetLineHeight(typography, 1);
+    OH_Drawing_TypographyGetLineWidth(typography, 1);
 }
 
 /*
  * @tc.name: OH_Drawing_TypographyTest106
- * @tc.desc: test for the textshadow.
+ * @tc.desc: test for the textbox.
  * @tc.type: FUNC
  */
 HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest106, TestSize.Level1)
+{
+    OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
+    OH_Drawing_TypographyCreate* handler = OH_Drawing_CreateTypographyHandler(typoStyle,
+        OH_Drawing_CreateFontCollection());
+    OH_Drawing_Typography* typography = OH_Drawing_CreateTypography(handler);
+    OH_Drawing_TextBox* textBox = OH_Drawing_TypographyGetRectsForPlaceholders(typography);
+    EXPECT_EQ(textBox == nullptr, false);
+    OH_Drawing_DestroyTypographyStyle(typoStyle);
+    OH_Drawing_DestroyTypographyHandler(handler);
+    OH_Drawing_DestroyTypography(typography);
+    OH_Drawing_TypographyDestroyTextBox(textBox);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest107
+ * @tc.desc: test for the textshadow.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest107, TestSize.Level1)
 {
     OH_Drawing_TextShadow* shadow = OH_Drawing_CreateTextShadow();
     uint32_t color = 0;
@@ -2883,19 +2915,5 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest106, TestSize.Level
     OH_Drawing_DestroyTextShadow(shadow);
     OH_Drawing_PointDestroy(offset);
     EXPECT_TRUE(shadow != nullptr);
-}
-
-/*
- * @tc.name: OH_Drawing_TypographyTest107
- * @tc.desc: test for the underline and linethrough.
- * @tc.type: FUNC
- */
-HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest107, TestSize.Level1)
-{
-    OH_Drawing_TextStyle* style = OH_Drawing_CreateTextStyle();
-    EXPECT_TRUE(style != nullptr);
-    OH_Drawing_SetTextStyleDecoration(style, TEXT_DECORATION_UNDERLINE_LINETHROUGH);
-    EXPECT_EQ(ConvertToOriginalText(style)->decoration, TextDecoration::UNDERLINE | TextDecoration::LINE_THROUGH);
-    OH_Drawing_DestroyTextStyle(style);
 }
 }

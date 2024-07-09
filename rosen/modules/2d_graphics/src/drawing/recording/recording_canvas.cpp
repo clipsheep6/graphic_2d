@@ -340,6 +340,16 @@ void RecordingCanvas::DrawImageRect(
     AddDrawOpImmediate<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling, constraint);
 }
 
+void RecordingCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
+{
+    // if (!addDrawOpImmediate_) {
+    //     cmdList_->AddDrawOp(std::make_shared<DrawPictureOpItem>(picture));
+    //     return;
+    // }
+    // auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
+    // cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
+}
+
 void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
 {
     if (!addDrawOpImmediate_) {

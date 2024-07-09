@@ -13,29 +13,29 @@
  * limitations under the License.
  */
 
-#include "image/picture.h"
-<<<<<<< HEAD
-=======
-#include "recording/draw_cmd_list.h"
-#include "draw/canvas.h"
->>>>>>> 4d96d2d5fe... CoreCanvas的drawpicture
+#ifndef PICTURE_H
+#define PICTURE_H
+
+#include <memory>
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Picture::Picture(std::shared_ptr<DrawCmdList> cmdList)
-    : drawCmdList(cmdList) {
-}
+class Canvas;
+class DrawCmdList;
+class Picture {
+public:
+    Picture(std::shared_ptr<DrawCmdList> cmdList);
 
-Picture::~Picture() {
-}
+    ~Picture();
 
-void Picture::Playback(Canvas* canvas) {
-    if (drawCmdList) {
-        drawCmdList->Playback(*canvas);
-    }
-}
+    void Playback(Canvas* canvas);
 
+private:
+    std::shared_ptr<DrawCmdList> drawCmdList = nullptr;
+    friend class PictureRecorder;
+};
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
+#endif

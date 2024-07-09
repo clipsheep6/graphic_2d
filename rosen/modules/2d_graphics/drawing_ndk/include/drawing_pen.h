@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -128,10 +129,14 @@ void OH_Drawing_PenSetColor(OH_Drawing_Pen*, uint32_t color);
  * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
  * @param OH_Drawing_Color4f Indicates the pointer to an <b>OH_Drawing_Color4f</b> object.
  * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cPen or color4f or colorSpace is nullptr.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_PenSetColor4f(OH_Drawing_Pen*, OH_Drawing_Color4f*, OH_Drawing_ColorSpace*);
+OH_Drawing_ErrorCode OH_Drawing_PenSetColor4f(OH_Drawing_Pen* cPen, OH_Drawing_Color4f* color4f,
+    OH_Drawing_ColorSpace* colorSpace);
 
 /**
  * @brief Obtains the alpha of a pen. The alpha is used by the pen to outline a shape.

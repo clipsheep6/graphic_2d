@@ -412,11 +412,14 @@ void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas*, const OH_Drawing_RoundRe
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
  * @param OH_Drawing_RoundRect Indicates the pointer to an <b>OH_Drawing_RoundRect</b> object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cCanvas or cOuter or cInner is nullptr.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_CanvasDrawNestedRoundRect(OH_Drawing_Canvas*, const OH_Drawing_RoundRect* Outer,
-    const OH_Drawing_RoundRect* Inner);
+OH_Drawing_ErrorCode OH_Drawing_CanvasDrawNestedRoundRect(OH_Drawing_Canvas* cCanvas,
+    const OH_Drawing_RoundRect* cOuter, const OH_Drawing_RoundRect *cInner);
 
 /**
  * @brief Draws a textblob.
@@ -728,11 +731,14 @@ void OH_Drawing_CanvasDrawImageRect(OH_Drawing_Canvas*, OH_Drawing_Image*,
  * @param left Indicates the left position of the <b>OH_Drawing_Image</b>
  * @param top Indicates the top position of the <b>OH_Drawing_Image</b>.
  * @param OH_Drawing_SamplingOptions Indicates the sampling mode.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cCanvas or cImage is nullptr.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas*, const OH_Drawing_Image*,
-    float left, float top, const OH_Drawing_SamplingOptions*);
+OH_Drawing_ErrorCode OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Image* cImage,
+    float left, float top, const OH_Drawing_SamplingOptions* cSampingOptions);
 
 /**
  * @brief Enumerates of vertices flags.

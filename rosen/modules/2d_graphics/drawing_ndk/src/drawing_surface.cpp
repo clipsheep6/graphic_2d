@@ -83,11 +83,13 @@ void OH_Drawing_SurfaceDestroy(OH_Drawing_Surface* cSurface)
     g_surfaceMap.erase(it);
 }
 
-OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface * cSurface)
+OH_Drawing_ErrorCode OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface * cSurface, OH_Drawing_Image* cImage)
 {
     Surface* surface = CastToSurface(cSurface);
     if (surface == nullptr) {
-        return nullptr;
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+
     }
-    return (OH_Drawing_Image*)surface->GetImageSnapshot().get();
+    cImage = (OH_Drawing_Image*)surface->GetImageSnapshot().get();
+    return OH_DRAWING_SUCCESS;
 }

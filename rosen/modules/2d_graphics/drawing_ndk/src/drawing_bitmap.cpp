@@ -149,51 +149,52 @@ bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Im
     return CastToBitmap(cBitmap)->ReadPixels(imageInfo, dstPixels, dstRowBytes, srcX, srcY);
 }
 
-bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo, void* pixels, size_t rowBytes,
-        void (*releaseProc)(void* addr, void* context), void* context)
+OH_Drawing_ErrorCode OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo,
+    void* pixels, size_t rowBytes, void (*releaseProc)(void* addr, void* context), void* context, bool* isset)
 {
-    if (cBitmap == nullptr || cImageInfo == nullptr ) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (cBitmap == nullptr || cImageInfo == nullptr || isset == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
     ImageInfo imageInfo(cImageInfo->width, cImageInfo->height,
         static_cast<ColorType>(cImageInfo->colorType), static_cast<AlphaType>(cImageInfo->alphaType));
 
-    return CastToBitmap(cBitmap)->InstallPixels(imageInfo, pixels, rowBytes, releaseProc, context);
+    *isset = CastToBitmap(cBitmap)->InstallPixels(imageInfo, pixels, rowBytes, releaseProc, context);
+    return OH_DRAWING_SUCCESS;
 }
 
-bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Pixmap* cPixmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Pixmap* cPixmap, bool* isset)
 {
-    if (cBitmap == nullptr || cPixmap == nullptr ) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (cBitmap == nullptr || cPixmap == nullptr || isset == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
     Pixmap* pirmap = reinterpret_cast<Pixmap*>(cPixmap);
 
-    return CastToBitmap(cBitmap)->PeekPixels(*pirmap);
+    *isset = CastToBitmap(cBitmap)->PeekPixels(*pirmap);
+    return OH_DRAWING_SUCCESS;
 }
 
-bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo)
+OH_Drawing_ErrorCode OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_Image_Info* cImageInfo, bool* isallocated)
 {
-    if (cBitmap == nullptr || cImageInfo == nullptr ) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (cBitmap == nullptr || cImageInfo == nullptr || isallocated == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
     ImageInfo imageInfo(cImageInfo->width, cImageInfo->height,
         static_cast<ColorType>(cImageInfo->colorType), static_cast<AlphaType>(cImageInfo->alphaType));
 
-    return CastToBitmap(cBitmap)->TryAllocPixels(imageInfo);
+    *isallocated = CastToBitmap(cBitmap)->TryAllocPixels(imageInfo);
+    return OH_DRAWING_SUCCESS;
 }
 
-size_t OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap* cBitmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap* cBitmap, size_t* bufsize)
 {
-    if (cBitmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return 0;
+    if (cBitmap == nullptr || bufsize == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
-    return CastToBitmap(cBitmap)->ComputeByteSize();
+    *bufsize = CastToBitmap(cBitmap)->ComputeByteSize();
+    return OH_DRAWING_SUCCESS;
 }

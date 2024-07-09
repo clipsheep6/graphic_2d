@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -128,10 +129,14 @@ void OH_Drawing_BrushSetColor(OH_Drawing_Brush*, uint32_t color);
  * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
  * @param OH_Drawing_Color4f Indicates the pointer to an <b>OH_Drawing_Color4f</b> object.
  * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBrush or color4f or colorSpace is nullptr.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_BrushSetColor4f(OH_Drawing_Brush*, OH_Drawing_Color4f*, OH_Drawing_ColorSpace*);
+OH_Drawing_ErrorCode OH_Drawing_BrushSetColor4f(OH_Drawing_Brush* cBrush, OH_Drawing_Color4f* color4f,
+    OH_Drawing_ColorSpace* colorSpace);
 
 /**
  * @brief Obtains the alpha of a brush. The alpha is used by the brush to fill in a shape.

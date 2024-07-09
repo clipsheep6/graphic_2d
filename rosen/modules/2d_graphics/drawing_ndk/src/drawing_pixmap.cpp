@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "c/drawing_pixmap.h"
+#include "drawing_pixmap.h"
 
 #include "image/pixmap.h"
 #include "drawing_canvas_utils.h"
@@ -37,22 +37,22 @@ void OH_Drawing_PixmapDestroy(OH_Drawing_Pixmap* cPixmap)
     delete CastToPixmap(cPixmap);
 }
 
-uint32_t OH_Drawing_PixmapGetWidth(OH_Drawing_Pixmap* cPixmap)
+OH_Drawing_ErrorCode OH_Drawing_PixmapGetWidth(OH_Drawing_Pixmap* cPixmap, uint32_t* width)
 {
     Pixmap* pixmap = CastToPixmap(cPixmap);
-    if (pixmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return 0;
+    if (pixmap == nullptr || width == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return pixmap->GetWidth();
+    *width = pixmap->GetWidth();
+    return OH_DRAWING_SUCCESS;
 }
 
-uint32_t OH_Drawing_PixmapGetHeight(OH_Drawing_Pixmap* cPixmap)
+OH_Drawing_ErrorCode OH_Drawing_PixmapGetHeight(OH_Drawing_Pixmap* cPixmap, uint32_t* height)
 {
     Pixmap* pixmap = CastToPixmap(cPixmap);
-    if (pixmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return 0;
+    if (pixmap == nullptr || height == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return pixmap->GetHeight();
+    *height = pixmap->GetHeight();
+    return OH_DRAWING_SUCCESS;
 }

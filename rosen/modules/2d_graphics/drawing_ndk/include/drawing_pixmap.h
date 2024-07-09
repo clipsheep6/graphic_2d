@@ -28,6 +28,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -59,22 +60,28 @@ void OH_Drawing_PixmapDestroy(OH_Drawing_Pixmap*);
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Pixmap Indicates the pointer to an <b>OH_Drawing_Pixmap</b> object.
- * @return Returns the width.
+ * @param width Indicates the width of a pixmap.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cPixmap or width is nullptr.
  * @since 12
  * @version 1.0
  */
-uint32_t OH_Drawing_PixmapGetWidth(OH_Drawing_Pixmap*);
+OH_Drawing_ErrorCode OH_Drawing_PixmapGetWidth(OH_Drawing_Pixmap* cPixmap, uint32_t* width);
 
 /**
  * @brief Obtains the height of a pixmap.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Pixmap Indicates the pointer to an <b>OH_Drawing_Pixmap</b> object.
- * @return Returns the height.
+ * @param height Indicates the height of a pixmap.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cPixmap or height is nullptr.
  * @since 12
  * @version 1.0
  */
-uint32_t OH_Drawing_PixmapGetHeight(OH_Drawing_Pixmap*);
+OH_Drawing_ErrorCode OH_Drawing_PixmapGetHeight(OH_Drawing_Pixmap* cPixmap, uint32_t* height);
 
 #ifdef __cplusplus
 }

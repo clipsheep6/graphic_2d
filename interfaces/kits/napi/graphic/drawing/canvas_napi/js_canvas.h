@@ -66,9 +66,15 @@ public:
     static napi_value DrawPoints(napi_env env, napi_callback_info info);
     static napi_value DrawPath(napi_env env, napi_callback_info info);
     static napi_value DrawPixelMapMesh(napi_env env, napi_callback_info info);
+    static napi_value DrawShadow(napi_env env, napi_callback_info info);
     static napi_value DrawRegion(napi_env env, napi_callback_info info);
     static napi_value DrawSingleCharacter(napi_env env, napi_callback_info info);
     static napi_value DrawText(napi_env env, napi_callback_info info);
+    static napi_value DrawBackground(napi_env env, napi_callback_info info);
+    static napi_value DrawRoundRect(napi_env env, napi_callback_info info);
+    static napi_value DrawVertices(napi_env env, napi_callback_info info);
+    static napi_value GetTotalMatrix(napi_env env, napi_callback_info info);
+    static napi_value DrawNestedRoundRect(napi_env env, napi_callback_info info);
     static napi_value DetachBrush(napi_env env, napi_callback_info info);
     static napi_value DetachPen(napi_env env, napi_callback_info info);
     static napi_value GetSaveCount(napi_env env, napi_callback_info info);
@@ -83,6 +89,7 @@ public:
     static napi_value Scale(napi_env env, napi_callback_info info);
     static napi_value SetMatrix(napi_env env, napi_callback_info info);
     static napi_value Translate(napi_env env, napi_callback_info info);
+    static napi_value GetLocalClipBounds(napi_env env, napi_callback_info info);
 
     Canvas* GetCanvas();
     DRAWING_API void ResetCanvas();
@@ -106,9 +113,11 @@ private:
     napi_value OnDrawPoints(napi_env env, napi_callback_info info);
     napi_value OnDrawPath(napi_env env, napi_callback_info info);
     napi_value OnDrawPixelMapMesh(napi_env env, napi_callback_info info);
+    napi_value OnDrawShadow(napi_env env, napi_callback_info info);
     napi_value OnDrawRegion(napi_env env, napi_callback_info info);
     napi_value OnDrawSingleCharacter(napi_env env, napi_callback_info info);
     napi_value OnDrawText(napi_env env, napi_callback_info info);
+    napi_value OnDrawVertices(napi_env env, napi_callback_info info);
     napi_value OnGetSaveCount(napi_env env, napi_callback_info info);
     napi_value OnGetWidth(napi_env env, napi_callback_info info);
     napi_value OnGetHeight(napi_env env, napi_callback_info info);
@@ -121,7 +130,12 @@ private:
     napi_value OnScale(napi_env env, napi_callback_info info);
     napi_value OnSetMatrix(napi_env env, napi_callback_info info);
     napi_value OnTranslate(napi_env env, napi_callback_info info);
-
+    napi_value OnDrawBitmap(napi_env env, napi_callback_info info);
+    napi_value OnDrawBackground(napi_env env, napi_callback_info info);
+    napi_value OnDrawRoundRect(napi_env env, napi_callback_info info);
+    napi_value OnDrawNestedRoundRect(napi_env env, napi_callback_info info);
+    napi_value OnGetLocalClipBounds(napi_env env, napi_callback_info info);
+    
     static bool DeclareFuncAndCreateConstructor(napi_env env);
     static thread_local napi_ref constructor_;
     Canvas* m_canvas = nullptr;

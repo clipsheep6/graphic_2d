@@ -24,6 +24,7 @@
 #include "params/rs_render_thread_params.h"
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uni_render_virtual_processor.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -63,7 +64,7 @@ private:
     void RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight);
 
     void DrawMirrorScreen(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
-        std::shared_ptr<RSProcessor> processor);
+        std::shared_ptr<RSUniRenderVirtualProcessor> processor);
     std::vector<RectI> CalculateVirtualDirty(RSDisplayRenderNode& displayNode,
         std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser,
         RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
@@ -72,7 +73,6 @@ private:
         std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser, DrawFuncPtr drawFunc,
         RSRenderThreadParams& uniParam);
     void DrawExpandScreen(RSUniRenderVirtualProcessor& processor);
-    void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
     void DrawCurtainScreen() const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
@@ -87,7 +87,7 @@ private:
     void PrepareOffscreenRender(const RSRenderNode& node);
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool SkipDisplayIfScreenOff() const;
-    bool CheckIfHasSpecialLayer(RSDisplayRenderParams& params);
+    bool CheckIfHasSpecialLayer(RSDisplayRenderParams& params, ScreenId paramScreenId);
     void SetDisplayNodeSkipFlag(RSRenderThreadParams& uniParam, bool flag);
     void CreateUIFirstLayer(std::shared_ptr<RSProcessor>& processor);
 
@@ -106,6 +106,7 @@ private:
     Drawing::Matrix lastMatrix_;
     Drawing::Matrix lastMirrorMatrix_;
     bool useFixedOffscreenSurfaceSize_ = false;
+    RSDisplayRenderNode::CompositeType compositeType_ = RSDisplayRenderNode::CompositeType::UNKNOWN;
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

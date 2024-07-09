@@ -101,6 +101,22 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    const sptr<SurfaceBuffer>& GetBuffer() const
+    {
+        return buffer_;
+    }
+    const sptr<SyncFence>& GetAcquireFence() const
+    {
+        return acquireFence_;
+    }
+    const sptr<IConsumerSurface>& GetConsumer() const
+    {
+        return consumer_;
+    }
+    bool GetSecurityDisplay() const
+    {
+        return isSecurityDisplay_;
+    }
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -124,6 +140,41 @@ public:
     // dfx
     std::string ToString() const override;
 
+    std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> GetMirrorSourceDrawable()
+    {
+        return mirrorSourceDrawable_;
+    }
+    bool IsFirstTimeToProcessor() const {
+        return isFirstTimeToProcessor_;
+    }
+    void SetOriginScreenRotation(const ScreenRotation& rotate) {
+        originScreenRotation_ = rotate;
+        isFirstTimeToProcessor_ = false;
+    }
+    ScreenRotation GetOriginScreenRotation() const {
+        return originScreenRotation_;
+    }
+#ifdef NEW_RENDER_CONTEXT
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#else
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#endif
 private:
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::map<ScreenId, bool> displayHasSkipSurface_;
@@ -136,7 +187,12 @@ private:
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     uint64_t screenId_ = 0;
+    sptr<SurfaceBuffer> buffer_ = nullptr;
+    sptr<SyncFence> acquireFence_ = nullptr;
+    sptr<IConsumerSurface> consumer_ = nullptr;
+    bool isSecurityDisplay_ = false;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
+    std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> mirrorSourceDrawable_ = nullptr;
     NodeId mirrorSourceId_ = INVALID_NODEID;
     ScreenInfo screenInfo_;
     ScreenId mirroredId_ = INVALID_SCREEN_ID;
@@ -154,6 +210,14 @@ private:
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledTopNodes_;
     GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     GraphicPixelFormat newPixelFormat_ = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
+    bool isFirstTimeToProcessor_ = false;
+    ScreenRotation originScreenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
+    uint64_t virtualSurfaceUniqueId_ = 0;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> virtualSurface_ = nullptr;
+#else
+    std::shared_ptr<RSSurface> virtualSurface_ = nullptr;
+#endif
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PARAMS_RS_DISPLAY_RENDER_PARAMS_H

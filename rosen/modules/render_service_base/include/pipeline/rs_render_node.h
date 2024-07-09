@@ -708,6 +708,10 @@ public:
     {
         return childrenHasUIExtension_;
     }
+    std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> GetRenderDrawable()
+    {
+        return renderDrawable_;
+    }
 protected:
     virtual void OnApplyModifiers() {}
     void SetOldDirtyInSurface(RectI oldDirtyInSurface);

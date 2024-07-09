@@ -158,6 +158,35 @@ bool RSProcessor::InitForRenderThread(RSDisplayRenderNode& node, ScreenId mirror
     return true;
 }
 
+bool RSProcessor::InitUniProcessor(RSDisplayRenderParams& params)
+{
+    offsetX_ = params.GetDisplayOffsetX();
+    offsetY_ = params.GetDisplayOffsetY();
+
+    screenInfo_ = params.GetScreenInfo();
+    screenInfo_.rotation = params.GetNodeRotation();
+
+    // CalculateScreenTransformMatrix
+    auto mirrorNode = params.GetMirrorSourceDrawable();
+    if (!mirrorNode) {
+        screenTransformMatrix_ = params.GetMatrix();
+    } else {
+        auto mirrorNodeParam = static_cast<RSDisplayRenderParams*>(mirrorNode->GetRenderParams().get());
+        screenTransformMatrix_ = mirrorNodeParam->GetMatrix();
+        if (mirroredId_ != INVALID_SCREEN_ID) {
+            auto mirroredScreenInfo = mirrorNodeParam->GetScreenInfo();
+            CalculateMirrorAdaptiveCoefficient(
+                static_cast<float>(screenInfo_.width), static_cast<float>(screenInfo_.height),
+                static_cast<float>(mirroredScreenInfo.width), static_cast<float>(mirroredScreenInfo.height)
+            );
+        }
+    }
+
+    // set default render frame config
+    renderFrameConfig_ = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_);
+    return true;
+}
+
 bool RSProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
     std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread)
 {

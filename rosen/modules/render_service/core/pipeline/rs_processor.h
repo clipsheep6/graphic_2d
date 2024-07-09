@@ -46,6 +46,7 @@ public:
     void operator=(const RSProcessor&) = delete;
     virtual bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
         std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread = false);
+    virtual bool InitUniProcessor(RSDisplayRenderParams& params);
     virtual void CreateLayer(const RSSurfaceRenderNode& node, RSSurfaceRenderParams& params) {}
     virtual void CreateUIFirstLayer(DrawableV2::RSSurfaceRenderNodeDrawable& drawable,
         RSSurfaceRenderParams& params) {}

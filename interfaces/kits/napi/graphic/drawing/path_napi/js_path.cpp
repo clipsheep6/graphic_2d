@@ -45,6 +45,7 @@ napi_value JsPath::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("getBounds", JsPath::GetBounds),
         DECLARE_NAPI_FUNCTION("close", JsPath::Close),
         DECLARE_NAPI_FUNCTION("reset", JsPath::Reset),
+        DECLARE_NAPI_FUNCTION("op", JsPath::Op),
         DECLARE_NAPI_FUNCTION("getLength", JsPath::GetLength),
     };
 
@@ -222,6 +223,11 @@ napi_value JsPath::GetLength(napi_env env, napi_callback_info info)
     JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
     return (me != nullptr) ? me->OnGetLength(env, info) : nullptr;
 }
+napi_value JsPath::Op(napi_env env, napi_callback_info info)
+{
+    JsPath* me = CheckParamsAndGetThis<JsPath>(env, info);
+    return (me != nullptr) ? me->OnOp(env, info) : nullptr;
+}
 
 napi_value JsPath::OnMoveTo(napi_env env, napi_callback_info info)
 {
@@ -336,6 +342,33 @@ napi_value JsPath::OnCubicTo(napi_env env, napi_callback_info info)
 
     JS_CALL_DRAWING_FUNC(m_path->CubicTo(Point(px1, py1), Point(px2, py2), Point(px3, py3)));
     return nullptr;
+}
+
+napi_value JsPath::OnOp(napi_env env, napi_callback_info info)
+{
+    if (m_path == nullptr) {
+        ROSEN_LOGE("JsPath::OnOp path is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+    JsPath* firstJsPath = nullptr;
+    JsPath* secondJsPath = nullptr;
+    GET_UNWRAP_PARAM(ARGC_ZERO, firstJsPath);
+    GET_UNWRAP_PARAM(ARGC_ONE, secondJsPath);
+    if (firstJsPath->GetPath() == nullptr || secondJsPath->GetPath() == nullptr) {
+        ROSEN_LOGE("JsPath::OnOp path is nullptr");
+        return nullptr;
+    }
+
+    uint32_t jsPathOp = 0;
+    // GET_ENUM_PARAM(ARGC_TWO, jsPathOp, 0, static_cast<int32_t>(PathOp::REVERSE_DIFFERENCE));
+    if (!(ConvertFromJsValue(env, argv[ARGC_TWO], jsPathOp))) {
+        ROSEN_LOGE("JsPath::OnOp Argv is invalid");
+        return nullptr;
+    }
+    PathOp pathOp = static_cast<PathOp>(jsPathOp);
+    return CreateJsValue(env, m_path->Op(*firstJsPath->GetPath(), *secondJsPath->GetPath(), pathOp));
 }
 
 napi_value JsPath::OnClose(napi_env env, napi_callback_info info)

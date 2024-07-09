@@ -54,6 +54,8 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsRoundRect::Init(env, exportObj);
     JsShadowLayer::Init(env, exportObj);
     JsMatrix::Init(env, exportObj);
+    // JsSurface::Init(env, exportObj);
+    // JsPixmap::Init(env, exportObj);
     return exportObj;
 }
 } // namespace Drawing

@@ -230,7 +230,11 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     ProcessChildren(node);
     auto func = [nodePtr = node.ReinterpretCastTo<RSSurfaceRenderNode>(), this]() {
-        nodePtr->SetGlobalZOrder(globalZOrder_);
+        auto surfaceHandler = nodePtr->GetMutableRSSurfaceHandler();
+        if (!surfaceHandler) {
+            return;
+        }
+        surfaceHandler->SetGlobalZOrder(globalZOrder_);
         globalZOrder_ = globalZOrder_ + 1;
         processor_->ProcessSurface(*nodePtr);
     };

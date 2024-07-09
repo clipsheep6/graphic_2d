@@ -277,7 +277,7 @@ public:
     bool GetOccludedByFilterCache() const;
 
     void SetLayerInfo(const RSLayerInfo& layerInfo);
-    const RSLayerInfo& GetLayerInfo() const;
+    const RSLayerInfo& GetLayerInfo() const override;
     void SetHardwareEnabled(bool enabled);
     bool GetHardwareEnabled() const;
     void SetLastFrameHardwareEnabled(bool enabled);
@@ -315,12 +315,12 @@ public:
     }
 
 #ifndef ROSEN_CROSS_PLATFORM
-    void SetBuffer(const sptr<SurfaceBuffer>& buffer);
-    sptr<SurfaceBuffer> GetBuffer() const;
-    void SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer);
-    sptr<SurfaceBuffer>& GetPreBuffer();
-    void SetAcquireFence(const sptr<SyncFence>& acquireFence);
-    sptr<SyncFence> GetAcquireFence() const;
+    void SetBuffer(const sptr<SurfaceBuffer>& buffer) override;
+    sptr<SurfaceBuffer> GetBuffer() const override;
+    void SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer) override;
+    sptr<SurfaceBuffer> GetPreBuffer() override;
+    void SetAcquireFence(const sptr<SyncFence>& acquireFence) override;
+    sptr<SyncFence> GetAcquireFence() const override;
 #endif
 
     virtual void OnSync(const std::unique_ptr<RSRenderParams>& target) override;
@@ -396,6 +396,7 @@ private:
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
+    sptr<SurfaceBuffer> preBufferFence_;
     sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
 #endif
     bool isHardwareEnabled_ = false;

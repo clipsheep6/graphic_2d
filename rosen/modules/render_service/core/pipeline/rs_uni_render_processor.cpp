@@ -63,6 +63,11 @@ void RSUniRenderProcessor::PostProcess()
 
 void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfaceRenderParams& params)
 {
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return;
+    }
+    auto surfaceDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
     auto buffer = params.GetBuffer();
     if (buffer == nullptr) {
         return;
@@ -70,16 +75,16 @@ void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfac
     auto& layerInfo = params.layerInfo_;
     RS_OPTIONAL_TRACE_NAME_FMT(
         "CreateLayer name:%s src:[%d, %d, %d, %d] dst:[%d, %d, %d, %d] buffer:[%d, %d] alpha:[%f]",
-        node.GetName().c_str(), layerInfo.srcRect.x, layerInfo.srcRect.y, layerInfo.srcRect.w, layerInfo.srcRect.h,
+        surfaceDrawable->GetName().c_str(), layerInfo.srcRect.x, layerInfo.srcRect.y, layerInfo.srcRect.w, layerInfo.srcRect.h,
         layerInfo.dstRect.x, layerInfo.dstRect.y, layerInfo.dstRect.w, layerInfo.dstRect.h,
         buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(), layerInfo.alpha);
-    auto& preBuffer = params.GetPreBuffer();
+    auto preBuffer = params.GetPreBuffer();
     ScalingMode scalingMode = params.GetPreScalingMode();
-    if (node.GetConsumer()->GetScalingMode(buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
+    if (surfaceDrawable->GetConsumerOnDraw()->GetScalingMode(buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
         params.SetPreScalingMode(scalingMode);
     }
     LayerInfoPtr layer = GetLayerInfo(
-        params, buffer, preBuffer, node.GetConsumer(), params.GetAcquireFence());
+        params, buffer, preBuffer, surfaceDrawable->GetConsumerOnDraw(), params.GetAcquireFence());
     if (layer != nullptr) {
         layer->SetDisplayNit(node.GetDisplayNit());
         layer->SetBrightnessRatio(node.GetBrightnessRatio());
@@ -93,27 +98,30 @@ void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfac
 void RSUniRenderProcessor::CreateUIFirstLayer(DrawableV2::RSSurfaceRenderNodeDrawable& drawable,
     RSSurfaceRenderParams& params)
 {
-    auto buffer = drawable.GetBuffer();
-    if (buffer == nullptr && drawable.GetAvailableBufferCount() <= 0) {
+    auto surfaceHandler = drawable.GetMutableRSSurfaceHandlerUiFirstOnDraw();
+    if (!surfaceHandler) {
+        return;
+    }
+    auto buffer = surfaceHandler->GetBuffer();
+    if (buffer == nullptr && surfaceHandler->GetAvailableBufferCount() <= 0) {
         RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", params.GetId());
         RSSubThreadManager::Instance()->WaitNodeTask(params.GetId());
     }
-    auto& surfaceHandler = static_cast<RSSurfaceHandler&>(drawable);
-    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler, true) || !drawable.GetBuffer()) {
+    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(*surfaceHandler, true) || !surfaceHandler->GetBuffer()) {
         RS_LOGE("CreateUIFirstLayer ConsumeAndUpdateBuffer or GetBuffer return  false");
         return;
     }
-    buffer = drawable.GetBuffer();
-    auto preBuffer = drawable.GetPreBuffer();
+    buffer = surfaceHandler->GetBuffer();
+    auto preBuffer = surfaceHandler->GetPreBuffer();
     LayerInfoPtr layer = GetLayerInfo(
-        params, buffer, preBuffer.buffer, drawable.GetConsumer(), drawable.GetAcquireFence());
-    uniComposerAdapter_->SetMetaDataInfoToLayer(layer, params.GetBuffer(), drawable.GetConsumer());
+        params, buffer, preBuffer.buffer, surfaceHandler->GetConsumer(), surfaceHandler->GetAcquireFence());
+    uniComposerAdapter_->SetMetaDataInfoToLayer(layer, params.GetBuffer(), surfaceHandler->GetConsumer());
     layers_.emplace_back(layer);
     auto& layerInfo = params.layerInfo_;
     RS_LOGD("RSUniRenderProcessor::CreateUIFirstLayer: [%{public}s-%{public}" PRIu64 "] "
         "src: %{public}d %{public}d %{public}d %{public}d, "
         "dst: %{public}d %{public}d %{public}d %{public}d, zOrder: %{public}d",
-        drawable.GetName().c_str(), drawable.GetNodeId(),
+        drawable.GetName().c_str(), surfaceHandler->GetNodeId(),
         layerInfo.srcRect.x, layerInfo.srcRect.y, layerInfo.srcRect.w, layerInfo.srcRect.h,
         layerInfo.dstRect.x, layerInfo.dstRect.y, layerInfo.dstRect.w, layerInfo.dstRect.h, layerInfo.zOrder);
 }
@@ -189,7 +197,16 @@ void RSUniRenderProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
     }
     layers_.emplace_back(layer);
     layerNum_ = node.GetSurfaceCountForMultiLayersPerf();
-    RSUniRenderThread::Instance().SetAcquireFence(node.GetAcquireFence());
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable);
+    auto surfaceHandler = displayDrawable->GetRSSurfaceHandlerOnDraw();
+    if (!surfaceHandler) {
+        return;
+    }
+    RSUniRenderThread::Instance().SetAcquireFence(surfaceHandler->GetAcquireFence());
 }
 
 void RSUniRenderProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node)

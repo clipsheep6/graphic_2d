@@ -48,7 +48,7 @@ namespace OHOS {
 namespace Rosen {
 class RSCommand;
 class RSDirtyRegionManager;
-class RSB_EXPORT RSSurfaceRenderNode : public RSRenderNode, public RSSurfaceHandler {
+class RSB_EXPORT RSSurfaceRenderNode : public RSRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceRenderNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;
@@ -843,9 +843,8 @@ public:
 
     bool IsFocusedNode(uint64_t focusedNodeId)
     {
-        return GetNodeId() == focusedNodeId;
+        return GetId() == focusedNodeId;
     }
-
 
     void CheckAndUpdateOpaqueRegion(const RectI& screeninfo, const ScreenRotation screenRotation,
         const bool isFocusWindow);
@@ -1201,6 +1200,16 @@ public:
         return nodeType_ == RSSurfaceNodeType::UI_EXTENSION_NODE;
     }
 
+    const std::shared_ptr<RSSurfaceHandler> GetRSSurfaceHandler() const
+    {
+        return surfaceHandler_;
+    }
+
+    std::shared_ptr<RSSurfaceHandler> GetMutableRSSurfaceHandler()
+    {
+        return surfaceHandler_;
+    }
+
 protected:
     void OnSync() override;
     void OnSkipSync() override;
@@ -1465,6 +1474,8 @@ private:
 
     bool doDirectComposition_ = true;
     bool isSkipDraw_ = false;
+
+    std::shared_ptr<RSSurfaceHandler> surfaceHandler_;
 
     // UIExtension record, <UIExtension, hostAPP>
     inline static std::unordered_map<NodeId, NodeId> secUIExtensionNodes_ = {};

@@ -24,6 +24,7 @@
 #include "params/rs_render_thread_params.h"
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uni_render_virtual_processor.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -44,12 +45,64 @@ public:
     void SwitchColorFilter(RSPaintFilterCanvas& canvas) const;
     void SetHighContrastIfEnabled(RSPaintFilterCanvas& canvas) const;
 
+
+    const std::shared_ptr<RSSurfaceHandler> GetRSSurfaceHandlerOnDraw() const
+    {
+        return surfaceHandler_;
+    }
+
+    std::shared_ptr<RSSurfaceHandler> GetMutableRSSurfaceHandlerOnDraw()
+    {
+        return surfaceHandler_;
+    }
+
+
+#ifndef ROSEN_CROSS_PLATFORM
+    bool CreateSurface(sptr<IBufferConsumerListener> listener);
+    sptr<IBufferConsumerListener> GetConsumerListener() const
+    {
+        return consumerListener_;
+    }
+#endif
+    bool IsSurfaceCreated() const
+    {
+        return surfaceCreated_;
+    }
+
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> GetRSSurface() const
+    {
+        return surface_;
+    }
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface)
+    {
+        virtualSurface_ = virtualSurface;
+    }
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface()
+    {
+        return virtualSurface_;
+    }
+#else
+    std::shared_ptr<RSSurface> GetRSSurface() const
+    {
+        return surface_;
+    }
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface)
+    {
+        virtualSurface_ = virtualSurface;
+    }
+    std::shared_ptr<RSSurface> GetVirtualSurface()
+    {
+        return virtualSurface_;
+    }
+#endif
+
 private:
     explicit RSDisplayRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     bool CheckDisplayNodeSkip(std::shared_ptr<RSDisplayRenderNode> displayNode, RSDisplayRenderParams* params,
         std::shared_ptr<RSProcessor> processor);
     std::unique_ptr<RSRenderFrame> RequestFrame(std::shared_ptr<RSDisplayRenderNode> displayNodeSp,
-        RSDisplayRenderParams& params, std::shared_ptr<RSProcessor> processor) const;
+        RSDisplayRenderParams& params, std::shared_ptr<RSProcessor> processor);
     void FindHardwareEnabledNodes();
     void AdjustZOrderAndDrawSurfaceNode(
         std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes,
@@ -106,6 +159,20 @@ private:
     Drawing::Matrix lastMatrix_;
     Drawing::Matrix lastMirrorMatrix_;
     bool useFixedOffscreenSurfaceSize_ = false;
+
+    bool surfaceCreated_ = false;
+    std::shared_ptr<RSSurfaceHandler> surfaceHandler_;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> surface_;
+    std::shared_ptr<RSRenderSurface> virtualSurface_;
+#else
+    std::shared_ptr<RSSurface> surface_;
+    std::shared_ptr<RSSurface> virtualSurface_;
+#endif
+
+#ifndef ROSEN_CROSS_PLATFORM
+    sptr<IBufferConsumerListener> consumerListener_;
+#endif
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

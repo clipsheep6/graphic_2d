@@ -539,6 +539,39 @@ void CanvasFuzzTest010(const uint8_t* data, size_t size)
 
     OH_Drawing_CanvasDestroy(canvas);
 }
+
+void CanvasFuzzTest011(const uint8_t* data, size_t size)
+{
+    if (data == nullptr || size < DATA_MIN_SIZE) {
+        return;
+    }
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    OH_Drawing_Canvas* canvas = OH_Drawing_CanvasCreate();
+    OH_Drawing_Font* font = OH_Drawing_FontCreate();
+    uint32_t count = GetObject<uint32_t>() % MAX_ARRAY_MAX + 1;
+    char* strOne = new char[count];
+    for (size_t i = 0; i < count; i++) {
+        strOne[i] = GetObject<char>();
+    }
+    strOne[count - 1] = '\0';
+    float x = GetObject<float>();
+    float y = GetObject<float>();
+    OH_Drawing_CanvasDrawSingleCharacter(canvas, strOne, font, x, y);
+    OH_Drawing_CanvasDrawSingleCharacter(nullptr, strOne, font, x, y);
+    OH_Drawing_CanvasDrawSingleCharacter(canvas, nullptr, font, x, y);
+    OH_Drawing_CanvasDrawSingleCharacter(canvas, strOne, nullptr, x, y);
+    const char* strTwo = "";
+    OH_Drawing_CanvasDrawSingleCharacter(canvas, strTwo, font, x, y);
+    OH_Drawing_FontDestroy(font);
+    if (strOne != nullptr) {
+        delete [] strOne;
+        strOne = nullptr;
+    }
+    OH_Drawing_CanvasDestroy(canvas);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
@@ -557,5 +590,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::Drawing::CanvasFuzzTest008(data, size);
     OHOS::Rosen::Drawing::CanvasFuzzTest009(data, size);
     OHOS::Rosen::Drawing::CanvasFuzzTest010(data, size);
+    OHOS::Rosen::Drawing::CanvasFuzzTest011(data, size);
     return 0;
 }

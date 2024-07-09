@@ -19,20 +19,12 @@
 #include <cstdlib>
 #include <fstream>
 #include "drawing_register_font.h"
-#ifndef USE_GRAPHIC_TEXT_GINE
-#include "rosen_text/ui/font_collection.h"
-#else
 #include "rosen_text/font_collection.h"
-#endif
 #include "text/font_mgr.h"
 #include "text/typeface.h"
 #include "utils/log.h"
 
-#ifndef USE_GRAPHIC_TEXT_GINE
-using namespace rosen;
-#else
 using namespace OHOS::Rosen;
-#endif
 
 #define SUCCESSED 0
 #define ERROR_FILE_NOT_EXISTS 1
@@ -71,17 +63,10 @@ static uint32_t LoadFromFontCollection(OH_Drawing_FontCollection* fontCollection
         return ERROR_NULL_FONT_COLLECTION;
     }
     auto fc = ConvertToOriginalText<FontCollection>(fontCollection);
-#ifndef USE_GRAPHIC_TEXT_GINE
-    auto face = fc->LoadFontFromList(data, dataLength, familyName);
-    if (face == nullptr) {
-        return ERROR_FILE_CORRUPTION;
-    }
-#else
     auto face = fc->LoadFont(familyName, data, dataLength);
     if (face == nullptr) {
         return ERROR_FILE_CORRUPTION;
     }
-#endif
     return 0;
 }
 

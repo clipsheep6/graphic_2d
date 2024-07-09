@@ -59,9 +59,9 @@ public:
     static void ExitScope();
 
     Logger(const std::string &file, const std::string &func, int line, enum LOG_LEVEL level, ...);
-    Logger(const Logger &logger);
-    Logger(Logger &&logger);
-    virtual ~Logger() override;
+    explicit Logger(const Logger &logger);
+    explicit Logger(Logger &&logger);
+    ~Logger() override;
 
     const std::string &GetFile() const;
     const std::string &GetFunc() const;
@@ -122,11 +122,11 @@ public:
 
 class ScopedLogger {
 public:
-    ScopedLogger(const ScopedLogger &) = default;
-    ScopedLogger(NoLogger &&logger);
+    explicit ScopedLogger(const ScopedLogger &) = default;
+    explicit ScopedLogger(NoLogger &&logger);
     ScopedLogger(NoLogger &&logger, const std::string &name);
-    ScopedLogger(Logger &&logger);
-    ScopedLogger(Logger &&logger, const std::string &name);
+    explicit ScopedLogger(Logger &&logger);
+    explicit ScopedLogger(Logger &&logger, const std::string &name);
     ScopedLogger &operator=(const ScopedLogger &) = default;
     ~ScopedLogger();
 
@@ -141,8 +141,8 @@ private:
 
 #define LOGSCOPED(name, logger, ...) ScopedLogger name(logger, ##__VA_ARGS__)
 #define LOGSCOPED_FINISH(name) (name).Finish()
-#define LOGENTER() Logger::EnterScope()
-#define LOGEXIT() Logger::ExitScope()
+#define LOGENTER Logger::EnterScope
+#define LOGEXIT Logger::ExitScope
 
 /*
  * @brief stdout

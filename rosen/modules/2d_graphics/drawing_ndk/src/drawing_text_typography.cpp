@@ -814,7 +814,8 @@ OH_Drawing_Range* OH_Drawing_TypographyGetLineTextRange(OH_Drawing_Typography* t
     return (OH_Drawing_Range*)originalRange;
 }
 
-static void ConvertFontMetrics(const RosenDrawing::FontMetrics& fontMetrics, OH_Drawing_Font_Metrics& drawingFontMetrics)
+static void ConvertFontMetrics(const RosenDrawing::FontMetrics& fontMetrics,
+                               OH_Drawing_Font_Metrics& drawingFontMetrics)
 {
     drawingFontMetrics.flags = fontMetrics.fFlags;
     drawingFontMetrics.top = fontMetrics.fTop;
@@ -1014,7 +1015,8 @@ char** OH_Drawing_FontParserGetSystemFontList(OH_Drawing_FontParser* fontParser,
     char** fontList = nullptr;
     icu::Locale locale = icu::Locale::getDefault();
     std::vector<RosenTextEngine::FontParser::FontDescriptor> systemFontList =
-        ConvertToOriginalText<RosenTextEngine::FontParser>(fontParser)->GetVisibilityFonts(std::string(locale.getName()));
+        ConvertToOriginalText<RosenTextEngine::FontParser>(fontParser)
+            ->GetVisibilityFonts(std::string(locale.getName()));
     fontList = new char* [systemFontList.size()];
     if (fontList == nullptr) {
         return nullptr;
@@ -2455,7 +2457,8 @@ static bool CopyDrawingAliasInfoSet(OH_Drawing_FontAliasInfo** drawAliasInfoSet,
     return true;
 }
 
-static void CopyDrawingAdjustInfo(OH_Drawing_FontAdjustInfo& drawAdjustInfo, const RosenTextEngine::AdjustInfo& adjustInfo)
+static void CopyDrawingAdjustInfo(OH_Drawing_FontAdjustInfo& drawAdjustInfo,
+                                  const RosenTextEngine::AdjustInfo& adjustInfo)
 {
     drawAdjustInfo.weight = adjustInfo.origValue;
     drawAdjustInfo.to = adjustInfo.newValue;

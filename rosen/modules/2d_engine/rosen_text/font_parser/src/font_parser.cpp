@@ -36,8 +36,6 @@ namespace TextEngine {
 #define FONT_CONFIG_FILE  "/system/fonts/visibility_list.json"
 #define SYSTEM_FONT_PATH "/system/fonts/"
 
-#define HALF(a) ((a) / 2)
-
 // "weight" and "italic" will assigned value 0 and 1, -1 used to exclude unassigned
 FontParser::FontDescriptor::FontDescriptor(): path(""), postScriptName(""), fullName(""),
     fontFamily(""), fontSubfamily(""), postScriptNameLid(0), fullNameLid(0), fontFamilyLid(0),

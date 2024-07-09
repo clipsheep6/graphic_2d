@@ -22,7 +22,7 @@
 
 #ifdef BUILD_NON_SDK_VER
 #include <sys/syscall.h>
-#define GET_TID() syscall(__NR_gettid)
+#define GET_TID syscall(__NR_gettid)
 #else
 #ifdef _WIN32
 #include <windows.h>
@@ -32,12 +32,12 @@
 #ifdef BUILD_SDK_MAC
 #include <stdlib.h>
 #include <sys/syscall.h>
-#define GET_TID() syscall(SYS_thread_selfid)
+#define GET_TID syscall(SYS_thread_selfid)
 #else
 #ifdef __gnu_linux__
 #include <sys/types.h>
 #include <sys/syscall.h>
-#define GET_TID() syscall(SYS_gettid)
+#define GET_TID syscall(SYS_gettid)
 #endif
 #endif
 
@@ -195,7 +195,7 @@ void Logger::AppendFileFuncLine(Logger &logger, enum LOG_PHASE phase)
 void Logger::AppendPidTid(Logger &logger, enum LOG_PHASE phase)
 {
     if (phase == LOG_PHASE::BEGIN) {
-        logger << getpid() << ":" << GET_TID() << " ";
+        logger << getpid() << ":" << GET_TID << " ";
     }
 }
 

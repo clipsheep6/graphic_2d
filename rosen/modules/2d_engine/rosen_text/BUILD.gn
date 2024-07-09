@@ -19,8 +19,6 @@ if (enable_text_gine) {
   config("rosen_text_public_config") {
     include_dirs = [
       "export",
-      "//third_party/skia",
-      "//third_party/skia/third_party/externals/harfbuzz/src",
       "$graphic_2d_root/rosen/modules/2d_graphics/include",
       "$graphic_2d_root/rosen/modules/2d_graphics/src",
       "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
@@ -39,7 +37,10 @@ if (enable_text_gine) {
 
   ohos_shared_library("rosen_text") {
     include_dirs = [ "$graphic_2d_root/rosen/modules/2d_graphics/include" ]
-    deps = [ ":rosen_text_inner" ]
+    deps = [
+      ":rosen_text_inner",
+      "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    ]
     public_configs =
         [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_config" ]
     platform = current_os
@@ -60,87 +61,7 @@ if (enable_text_gine) {
   }
 
   ohos_source_set("rosen_text_inner") {
-    if (use_texgine) {
-      public_deps = [ ":rosen_text_texgine" ]
-    } else if (use_skia_txt) {
-      public_deps = [ ":rosen_text_skia" ]
-    } else {
-      public_deps = [ ":rosen_text_txt" ]
-    }
-
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-
-  ohos_source_set("rosen_text_texgine") {
-    public_configs = [ ":rosen_text_public_config" ]
-    public_external_deps = [ "bounds_checking_function:libsec_shared" ]
-
-    defines += [ "USE_GRAPHIC_TEXT_GINE" ]
-    cflags = [ "-std=c++17" ]
-
-    include_dirs = [ "$rosen_root/modules/render_service_base/include" ]
-
-    sources = [
-      "adapter/common/hm_symbol_txt.cpp",
-      "adapter/common/text_style.cpp",
-      "adapter/common/typography_style.cpp",
-      "adapter/texgine/convert.cpp",
-      "adapter/texgine/font_collection.cpp",
-      "adapter/texgine/typography.cpp",
-      "adapter/texgine/typography_create.cpp",
-    ]
-
-    if (defined(use_rosen_drawing) && use_rosen_drawing) {
-      defines += [ "USE_ROSEN_DRAWING" ]
-      if (ace_enable_gpu) {
-        defines += [ "ACE_ENABLE_GPU" ]
-      }
-    }
-
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-
-  ohos_source_set("rosen_text_txt") {
-    public_configs = [ ":rosen_text_public_config" ]
-    public_external_deps = [ "bounds_checking_function:libsec_shared" ]
-
-    include_dirs = [ "$rosen_root/modules/render_service_base/include" ]
-
-    defines += [
-      "USE_GRAPHIC_TEXT_GINE",
-      "WINDOWS_PLATFORM",
-    ]
-    cflags = [ "-std=c++17" ]
-
-    if (!defined(use_new_skia)) {
-      include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
-    }
-
-    sources = [
-      "adapter/common/hm_symbol_txt.cpp",
-      "adapter/common/text_style.cpp",
-      "adapter/common/typography_style.cpp",
-      "adapter/txt/convert.cpp",
-      "adapter/txt/font_collection.cpp",
-      "adapter/txt/typography.cpp",
-      "adapter/txt/typography_create.cpp",
-    ]
-
-    platform = current_os
-    if (platform == "mingw") {
-      platform = "windows"
-    }
-
-    if (defined(use_rosen_drawing) && use_rosen_drawing) {
-      defines += [ "USE_ROSEN_DRAWING" ]
-      if (ace_enable_gpu) {
-        defines += [ "ACE_ENABLE_GPU" ]
-      }
-    }
-
-    deps = [ "$skia_root_new:skia_$platform" ]
+    public_deps = [ ":rosen_text_skia" ]
 
     part_name = "graphic_2d"
     subsystem_name = "graphic"
@@ -175,16 +96,16 @@ if (enable_text_gine) {
       "adapter/skia_txt/text_line_base.cpp",
       "adapter/skia_txt/typography.cpp",
       "adapter/skia_txt/typography_create.cpp",
+      "font_parser/src/font_config.cpp",
+      "font_parser/src/font_parser.cpp",
       "font_parser/src/opentype_parser/cmap_parser.cpp",
       "font_parser/src/opentype_parser/cmap_table_parser.cpp",
       "font_parser/src/opentype_parser/name_table_parser.cpp",
       "font_parser/src/opentype_parser/opentype_basic_type.cpp",
       "font_parser/src/opentype_parser/post_table_parser.cpp",
       "font_parser/src/opentype_parser/ranges.cpp",
-      "font_parser/src/font_config.cpp",
-      "font_parser/src/font_parser.cpp",
+      "font_parser/utils/exlog.cpp",
       "font_parser/utils/logger.cpp",
-      "font_parser/utils/exlog.cpp"
     ]
 
     platform = current_os
@@ -202,23 +123,20 @@ if (enable_text_gine) {
       }
     }
 
-    # this needs to be rechecked, currently just to get the thread id right 
+    # this needs to be rechecked, currently just to get the thread id right
     if (platform == "ohos") {
       defines += [ "BUILD_NON_SDK_VER" ]
     }
 
-    deps = []
-    if (!(host_os == "linux" && host_cpu == "arm64")) {
-       deps += [
-          "$skia_root_new:skia_$platform",
-          "./skia_txt:skia_libtxt_$platform",
-       ]
-    }
+    public_deps = [
+      "$skia_root_new:skia_$platform",
+      "./skia_txt:skia_libtxt_$platform",
+    ]
 
     external_deps = [
-      "hilog:libhilog",
       "bounds_checking_function:libsec_static",
-      "cJSON:cjson_static"
+      "cJSON:cjson_static",
+      "hilog:libhilog",
     ]
 
     is_cross_platform =
@@ -240,8 +158,6 @@ if (enable_text_gine) {
 
   ohos_shared_library("rosen_text") {
     public_configs = [ ":rosen_text_config" ]
-
-    public_deps = [ "ui:rosen_text_ui" ]
 
     part_name = "graphic_2d"
     subsystem_name = "graphic"

@@ -20,29 +20,38 @@ namespace Rosen {
 namespace TextEngine {
 namespace OpenTypeBasicType {
 #define MAX_NUM 65536.0
+#define ZERO 0
+#define FIRST 0
+#define SECOND 1
+#define THIRD 2
+#define FORTH 3
+#define FIFTH 4
+#define ARRAY_END 5
+#define ONE_BYTE 8
+#define THREE_BYTES 24
 
 constexpr union {
     unsigned int i;
     unsigned char big;
-} G_ENDIAN{1};
+} G_ENDIAN{0x01};
 
 const std::string Tag::Get() const
 {
     // 5 is the size of open type table tags length
-    int size = 5;
+    int size = ARRAY_END;
     char tagsWithZero[size];
-    tagsWithZero[0] = tags[0];  // numbers means array subscripts
-    tagsWithZero[1] = tags[1];
-    tagsWithZero[2] = tags[2];
-    tagsWithZero[3] = tags[3];
-    tagsWithZero[4] = 0;
+    tagsWithZero[FIRST] = tags[FIRST];  // numbers means array subscripts
+    tagsWithZero[SECOND] = tags[SECOND];
+    tagsWithZero[THIRD] = tags[THIRD];
+    tagsWithZero[FORTH] = tags[FORTH];
+    tagsWithZero[FIFTH] = ZERO;
     return tagsWithZero;
 }
 
 int16_t Int16::Get() const
 {
     if (G_ENDIAN.big != '\0') {
-        return ((data & 0x0000ff00) >> 8) | ((data & 0x000000ff) << 8);     // 8 means offset
+        return ((data & 0x0000ff00) >> ONE_BYTE) | ((data & 0x000000ff) << ONE_BYTE);
     } else {
         return data;
     }
@@ -51,8 +60,8 @@ int16_t Int16::Get() const
 uint16_t Uint16::Get() const
 {
     if (G_ENDIAN.big != '\0') {
-        return ((static_cast<uint32_t>(data) & 0x0000ff00) >> 8) | // 8 means offset
-               ((static_cast<uint32_t>(data) & 0x000000ff) << 8); // 8 means offset
+        return ((static_cast<uint32_t>(data) & 0x0000ff00) >> ONE_BYTE) |
+               ((static_cast<uint32_t>(data) & 0x000000ff) << ONE_BYTE);
     } else {
         return data;
     }
@@ -61,10 +70,10 @@ uint16_t Uint16::Get() const
 int32_t Int32::Get() const
 {
     if (G_ENDIAN.big != '\0') {
-        return ((static_cast<uint32_t>(data) & 0xff000000) >> 24) |
-            ((static_cast<uint32_t>(data) & 0x00ff0000) >> 8) |         // 8 & 24 means offset
-            ((static_cast<uint32_t>(data) & 0x0000ff00) << 8) |
-            ((static_cast<uint32_t>(data) & 0x000000ff) << 24);
+        return ((static_cast<uint32_t>(data) & 0xff000000) >> THREE_BYTES) |
+            ((static_cast<uint32_t>(data) & 0x00ff0000) >> ONE_BYTE) |
+            ((static_cast<uint32_t>(data) & 0x0000ff00) << ONE_BYTE) |
+            ((static_cast<uint32_t>(data) & 0x000000ff) << THREE_BYTES);
     } else {
         return data;
     }
@@ -73,8 +82,8 @@ int32_t Int32::Get() const
 uint32_t Uint32::Get() const
 {
     if (G_ENDIAN.big != '\0') {
-        return ((data & 0xff000000) >> 24) | ((data & 0x00ff0000) >> 8) |   // 8 & 24 means offset
-            ((data & 0x0000ff00) << 8) | ((data & 0x000000ff) << 24);
+        return ((data & 0xff000000) >> THREE_BYTES) | ((data & 0x00ff0000) >> ONE_BYTE) |
+            ((data & 0x0000ff00) << ONE_BYTE) | ((data & 0x000000ff) << THREE_BYTES);
     } else {
         return data;
     }

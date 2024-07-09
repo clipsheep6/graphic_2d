@@ -18,11 +18,7 @@
 
 #include "rosen_text/typography.h"
 
-#ifndef USE_GRAPHIC_TEXT_GINE
-#include "third_party/flutter/txt/src/txt/paragraph.h"
-#else
 #include "txt/paragraph.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {

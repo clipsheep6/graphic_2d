@@ -125,6 +125,7 @@
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
+            "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json",
             "//foundation/graphic/graphic_2d/rosen/modules/graphics_effect:libgraphics_effect",
@@ -363,6 +364,15 @@
           },
           {
             "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/texgine/"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager:color_space_object_convertor",
             "header": {
               "header_files": [
@@ -396,7 +406,6 @@
                 "typography_types.h",
                 "font_config.h",
                 "font_parser.h",
-                "drawing.h",
 		"opentype_parser/cmap_table_parser.h",
 		"opentype_parser/post_table_parser.h",
 		"opentype_parser/name_table_parser.h",

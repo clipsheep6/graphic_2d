@@ -29,7 +29,8 @@ void RSRenderEngine::DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSu
     BufferDrawParam& params, PreProcessFunc preProcess, PostProcessFunc postProcess)
 {
     if (!params.useCPU) {
-        RegisterDeleteBufferListener(node.GetConsumer());
+        // TO-DO if in uniRenderThread will use consumer as drawable->GetConsumerOnDraw()
+        RegisterDeleteBufferListener(node.GetRSSurfaceHandler()->GetConsumer());
     }
 
     auto nodePreProcessFunc = [&preProcess, &node](RSPaintFilterCanvas& canvas, BufferDrawParam& params) {

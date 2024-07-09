@@ -75,17 +75,22 @@ bool RSUniHwcPrevalidateUtil::PreValidate(
 bool RSUniHwcPrevalidateUtil::CreateSurfaceNodeLayerInfo(uint32_t zorder,
     RSSurfaceRenderNode::SharedPtr node, GraphicTransformType transform, uint32_t fps, RequestLayerInfo &info)
 {
-    if (!node || !node->GetConsumer() || !node->GetBuffer()) {
+    if (!node) {
         return false;
     }
+    auto surfaceHandler = node->GetRSSurfaceHandler();
+    if (!surfaceHandler || !surfaceHandler->GetConsumer() || !surfaceHandler->GetBuffer()) {
+        return false;
+    }
+
     info.id = node->GetId();
     auto src = node->GetSrcRect();
     info.srcRect = {src.left_, src.top_, src.width_, src.height_};
     auto dst = node->GetDstRect();
     info.dstRect = {dst.left_, dst.top_, dst.width_, dst.height_};
     info.zOrder = zorder;
-    info.usage = node->GetBuffer()->GetUsage();
-    info.format = node->GetBuffer()->GetFormat();
+    info.usage = surfaceHandler->GetBuffer()->GetUsage();
+    info.format = surfaceHandler->GetBuffer()->GetFormat();
     info.fps = fps;
     info.transform = static_cast<int>(transform);
     return true;
@@ -94,17 +99,31 @@ bool RSUniHwcPrevalidateUtil::CreateSurfaceNodeLayerInfo(uint32_t zorder,
 bool RSUniHwcPrevalidateUtil::CreateDisplayNodeLayerInfo(uint32_t zorder,
     RSDisplayRenderNode::SharedPtr node, const ScreenInfo &screenInfo, uint32_t fps, RequestLayerInfo &info)
 {
-    if (!node || !node->GetConsumer() || !node->GetBuffer()) {
+    if (!node) {
         return false;
     }
+    auto drawable = node->GetRenderDrawable();
+    if (!drawable) {
+        return false;
+    }
+    // TO-DO
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable);
+    auto surfaceHandler = displayDrawable->GetRSSurfaceHandlerOnDraw();
+    if (!surfaceHandler) {
+        return false;
+    }
+    if (!surfaceHandler->GetConsumer() || !surfaceHandler->GetBuffer()) {
+        return false;
+    }
+    auto buffer = surfaceHandler->GetBuffer();
     info.id = node->GetId();
-    info.srcRect = {0, 0, node->GetBuffer()->GetSurfaceBufferWidth(), node->GetBuffer()->GetSurfaceBufferHeight()};
+    info.srcRect = {0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight()};
     info.dstRect = {0, 0, screenInfo.GetRotatedPhyWidth(), screenInfo.GetRotatedPhyHeight()};
     info.zOrder = zorder;
-    info.usage = node->GetBuffer()->GetUsage() | USAGE_UNI_LAYER;
-    info.format = node->GetBuffer()->GetFormat();
+    info.usage = buffer->GetUsage() | USAGE_UNI_LAYER;
+    info.format = buffer->GetFormat();
     info.fps = fps;
-    LayerRotate(info, node->GetConsumer(), screenInfo);
+    LayerRotate(info, surfaceHandler->GetConsumer(), screenInfo);
     return true;
 }
 
@@ -119,7 +138,7 @@ bool RSUniHwcPrevalidateUtil::CreateUIFirstLayerInfo(
     info.srcRect = {src.left_, src.top_, src.width_, src.height_};
     auto dst = node->GetDstRect();
     info.dstRect = {dst.left_, dst.top_, dst.width_, dst.height_};
-    info.zOrder = node->GetGlobalZOrder();
+    info.zOrder = node->GetRSSurfaceHandler()->GetGlobalZOrder();
     info.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
     info.usage = BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_MEM_DMA;
     info.fps = fps;
@@ -189,7 +208,11 @@ void RSUniHwcPrevalidateUtil::CollectUIFirstLayerInfo(std::vector<RequestLayerIn
             !RSUifirstManager::Instance().GetUseDmaBuffer(iter.second->GetName())) {
             continue;
         }
-        iter.second->SetGlobalZOrder(zOrder++);
+        auto surfaceHandler = iter.second->GetMutableRSSurfaceHandler();
+        if (!surfaceHandler) {
+            continue;
+        }
+        surfaceHandler->SetGlobalZOrder(zOrder++);
         auto transform = RSUniRenderUtil::GetLayerTransform(*iter.second, screenInfo);
         RequestLayerInfo uiFirstLayer;
         if (RSUniHwcPrevalidateUtil::GetInstance().CreateUIFirstLayerInfo(

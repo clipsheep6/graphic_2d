@@ -16,6 +16,7 @@
 #include "params/rs_render_params.h"
 #include <string>
 
+#include "params/rs_surface_render_params.h"
 #include "pipeline/rs_render_node.h"
 #include "property/rs_properties.h"
 
@@ -473,4 +474,11 @@ ScreenRotation RSRenderParams::GetScreenRotation() const
     return defaultRotation;
 }
 
+
+// surface params
+const RSLayerInfo& RSRenderParams::GetLayerInfo() const
+{
+    static const RSLayerInfo defaultLayerInfo = {};
+    return defaultLayerInfo;
+}
 } // namespace OHOS::Rosen

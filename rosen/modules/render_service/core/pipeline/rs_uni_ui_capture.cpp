@@ -417,10 +417,15 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     if (isSelfDrawingSurface) {
         canvas_->Restore();
     }
-    if (node.GetBuffer() != nullptr) {
+
+    auto surfaceHandler = node.GetMutableRSSurfaceHandler();
+    if (surfaceHandler) {
+        return;
+    }
+    if (surfaceHandler->GetBuffer() != nullptr) {
         if (auto recordingCanvas = static_cast<ExtendRecordingCanvas*>(canvas_->GetRecordingCanvas())) {
             auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
-            auto buffer = node.GetBuffer();
+            auto buffer = surfaceHandler->GetBuffer();
             DrawingSurfaceBufferInfo rsSurfaceBufferInfo(buffer, params.dstRect.GetLeft(), params.dstRect.GetTop(),
                 params.dstRect.GetWidth(), params.dstRect.GetHeight());
             recordingCanvas->ConcatMatrix(params.matrix);
@@ -447,6 +452,11 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         translateMatrix.PreTranslate(
             thisNodetranslateX - parentNodeTranslateX, thisNodetranslateY - parentNodeTranslateY);
     }
+
+    auto surfaceHandler = node.GetMutableRSSurfaceHandler();
+    if (!surfaceHandler) {
+        return;
+    }
     if (node.GetChildrenCount() > 0) {
         if (node.GetId() != nodeId_) {
             canvas_->ConcatMatrix(translateMatrix);
@@ -454,7 +464,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         const auto saveCnt = canvas_->Save();
         ProcessChildren(node);
         canvas_->RestoreToCount(saveCnt);
-        if (node.GetBuffer() != nullptr) {
+        if (surfaceHandler->GetBuffer() != nullptr) {
             // in node's local coordinate.
             auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
@@ -464,7 +474,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         if (node.GetId() != nodeId_) {
             canvas_->ConcatMatrix(translateMatrix);
         }
-        if (node.GetBuffer() != nullptr) {
+        if (surfaceHandler->GetBuffer() != nullptr) {
             // in node's local coordinate.
             auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);

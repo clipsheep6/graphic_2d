@@ -1685,5 +1685,15 @@ void RSUniRenderUtil::AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNo
     alpha *= parentProperty.GetAlpha();
     matrix.PostConcat(parentProperty.GetBoundsGeometry()->GetMatrix());
 }
+
+bool RSUniRenderUtil::IsGpuDeviceSupportOverDraw()
+{
+#ifdef ES_ENABLE_VK
+    auto& vkContext = OHOS::Rosen::RsVulkanContext::GetSingleton().GetRsVulkanInterface();
+    return vkContext.SupportFeatures() & RsVulkanInterface::SupportFeatures::OVERDRAW_FEATURE;
+#endif
+    return false;
+}
+
 } // namespace Rosen
 } // namespace OHOS

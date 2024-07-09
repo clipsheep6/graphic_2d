@@ -121,6 +121,7 @@ public:
         Drawing::GPUContext* const grContext, bool optFenceWait = true);
     static void AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNode>& hwcNode,
         Drawing::Matrix& matrix, float& alpha);
+    static bool IsGpuDeviceSupportOverDraw();
 private:
     static RectI SrcRectRotateTransform(RSSurfaceRenderNode& node);
     static void AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,

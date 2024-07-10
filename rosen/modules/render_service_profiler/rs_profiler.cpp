@@ -1185,8 +1185,7 @@ void RSProfiler::CalcPerfNodePrepareLo(const std::shared_ptr<RSRenderNode>& node
         g_calcPerfSavedChildren.emplace_back(parent, childList);
         parent->RemoveChild(node);
         node->ResetParent();
-    }
-    else {
+    } else {
         g_calcPerfSavedChildren.clear();
     }
 }

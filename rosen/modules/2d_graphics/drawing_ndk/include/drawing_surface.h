@@ -84,16 +84,12 @@ void OH_Drawing_SurfaceDestroy(OH_Drawing_Surface*);
  * @brief Gets Image capturing Surface contents.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param cSurface Indicates the pointer to an <b>OH_Drawing_Surface</b> object.
- * @param cImage Indicates the pointer to an <b>OH_Drawing_Image</b> object.
- * @return Returns the error code.
- *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
- *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cSurface is nullptr.
+ * @param OH_Drawing_Surface Indicates the pointer to an <b>OH_Drawing_Surface</b> object.
+ * @return Returns the pointer to the <b>OH_Drawing_Image</b> object created.
  * @since 12
  * @version 1.0
  */
-OH_Drawing_ErrorCode OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface * cSurface, OH_Drawing_Image* cImage);
-
+OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface*);
 #ifdef __cplusplus
 }
 #endif

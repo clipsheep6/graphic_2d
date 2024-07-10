@@ -51,7 +51,8 @@ static std::shared_ptr<Drawing::RuntimeEffect> g_mixEffect = Drawing::RuntimeEff
 } // namespace
 
 GEHpsBlurShaderFilter::GEHpsBlurShaderFilter(const Drawing::HpsBlurFilterParams& params)
-    : radius_(params.radius), saturation_(params.saturation), brightness_(params.brightness)
+    : radius_(params.radius), saturation_(params.saturation), brightness_(params.brightness),
+    onScreenDraw_(params.onScreenDraw)
 {}
 
 std::shared_ptr<Drawing::Image> GEHpsBlurShaderFilter::ProcessImage(Drawing::Canvas& canvas,
@@ -62,7 +63,8 @@ std::shared_ptr<Drawing::Image> GEHpsBlurShaderFilter::ProcessImage(Drawing::Can
         return image;
     }
 
-    Drawing::HpsBlurParameter hpsParam = Drawing::HpsBlurParameter(src, dst, radius_, saturation_, brightness_);
+    Drawing::HpsBlurParameter hpsParam = Drawing::HpsBlurParameter(src, dst, radius_, saturation_, brightness_,
+        onScreenDraw_);
 
     return ApplyHpsBlur(canvas, image, hpsParam);
 }
@@ -100,8 +102,8 @@ std::shared_ptr<Drawing::Image> GEHpsBlurShaderFilter::ApplyHpsBlur(
         return image;
     }
 
-    auto offscreenHpsParam =
-        Drawing::HpsBlurParameter(param.src, param.src, param.sigma, param.saturation, param.brightness);
+    auto offscreenHpsParam = Drawing::HpsBlurParameter(param.src, param.src, param.sigma, param.saturation,
+        param.brightness, param.onScreenDraw);
     if (!offscreenCanvas->DrawBlurImage(*image, offscreenHpsParam)) {
         LOGE("GEHpsBlurShaderFilter::ApplyHpsBlur Hps DrawBlurImage failed");
         return image;

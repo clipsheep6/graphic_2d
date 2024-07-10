@@ -355,7 +355,8 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
     }
     // if hps blur failed, use kawase blur
     if (HPS_BLUR_ENABLED &&
-        canvas.DrawBlurImage(*greyImage, Drawing::HpsBlurParameter(src, dst, GetRadius(), saturation_, brightness_))) {
+        canvas.DrawBlurImage(*greyImage, Drawing::HpsBlurParameter(src, dst, GetRadius(), saturation_, brightness_,
+            RSSystemProperties::GetDrawFilterOnScreenEnabled()))) {
         RS_OPTIONAL_TRACE_NAME("ApplyHPSBlur " + std::to_string(GetRadius()));
         return;
     }

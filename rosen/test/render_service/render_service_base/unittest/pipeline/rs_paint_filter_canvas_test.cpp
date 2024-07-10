@@ -1346,7 +1346,7 @@ HWTEST_F(RSPaintFilterCanvasTest, DrawBlurImageTest003, TestSize.Level1)
     Drawing::Image image;
     Drawing::Rect s = { 0.0f, 0.0f, 1.0f, 1.0f };
     Drawing::Rect d = { 0.0f, 0.0f, 1.0f, 1.0f };
-    Drawing::HpsBlurParameter blurParams = { s, d, 0.0f, 0.0f, 1.0f };
+    Drawing::HpsBlurParameter blurParams = { s, d, 0.0f, 0.0f, 1.0f, false };
     paintFilterCanvasBase->DrawBlurImage(image, blurParams);
 }
 

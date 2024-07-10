@@ -126,13 +126,19 @@ bool RSFilterCacheManager::CanDrawFilterOnScreen(RSPaintFilterCanvas& canvas,
     if (canvas.HasOffscreenLayer()) {
         return false;
     }
+    // HPS algorithm doesn't support non-rectangle clips, need use offscreen surface
+    if (filter->GetFilterType() == RSFilter::MATERIAL && RSSystemProperties::GetHpsBlurEnabled() &&
+        !canvas.IsClipRect()) {
+        return false;
+    }
     return true;
 }
 
 bool RSFilterCacheManager::CanDrawWithoutOffscreenSurface(RSPaintFilterCanvas& canvas,
     const std::shared_ptr<RSDrawingFilter>& filter) const
 {
-    return true;
+    return (filter->GetFilterType() != RSFilter::MATERIAL || !RSSystemProperties::GetHpsBlurEnabled() ||
+        (canvas.IsClipRect() && !canvas.HasOffscreenLayer()));
 }
 
 // Caller should guarantee that image is valid

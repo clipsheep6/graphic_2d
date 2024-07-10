@@ -21,7 +21,7 @@ namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSHpsBlurShaderFilter : public RSShaderFilter {
 public:
-    RSHpsBlurShaderFilter(float radius, float saturation, float brightness);
+    RSHpsBlurShaderFilter(float radius, float saturation, float brightness, bool onScreenDraw);
     ~RSHpsBlurShaderFilter() override;
 
     void GenerateGEVisualEffect(std::shared_ptr<Drawing::GEVisualEffectContainer> visualEffectContainer) override;
@@ -30,6 +30,7 @@ private:
     float radius_ = 0.f;
     float saturation_ = 1.f;
     float brightness_ = 1.f;
+    bool onScreenDraw_ = false;
     friend class RSMarshallingHelper;
 };
 } // namespace Rosen

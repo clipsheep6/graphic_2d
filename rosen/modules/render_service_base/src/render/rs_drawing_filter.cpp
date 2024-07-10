@@ -312,8 +312,8 @@ void RSDrawingFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_p
         auto tmpFilter = std::static_pointer_cast<RSKawaseBlurShaderFilter>(kawaseShaderFilter);
         auto radius = tmpFilter->GetRadius();
         if (RSSystemProperties::GetHpsBlurEnabled() && GetFilterType() == RSFilter::MATERIAL &&
-            canvas.DrawBlurImage(
-                *outImage, Drawing::HpsBlurParameter(src, dst, radius, saturationForHPS_, brightnessForHPS_))) {
+            canvas.DrawBlurImage(*outImage, Drawing::HpsBlurParameter(src, dst, radius, saturationForHPS_,
+                brightnessForHPS_, RSSystemProperties::GetDrawFilterOnScreenEnabled()))) {
             RS_OPTIONAL_TRACE_NAME("ApplyHPSBlur " + std::to_string(radius));
             return;
         } else {

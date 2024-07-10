@@ -69,10 +69,12 @@ constexpr char GE_FILTER_HPS_BLUR[] = "HPS_BLUR";
 constexpr char GE_FILTER_HPS_BLUR_RADIUS[] = "HPS_BLUR_RADIUS";
 constexpr char GE_FILTER_HPS_BLUR_SATURATION[] = "HPS_BLUR_SATURATION";
 constexpr char GE_FILTER_HPS_BLUR_BRIGHTNESS[] = "HPS_BLUR_BRIGHTNESS";
+constexpr char GE_FILTER_HPS_BLUR_ONSCREENDRAW[] = "HPS_BLUR_ONSCREENDRAW";
 struct HpsBlurFilterParams {
     float radius;
     float saturation;
     float brightness;
+    bool onScreenDraw;
 };
 
 constexpr char GE_FILTER_LINEAR_GRADIENT_BLUR[] = "LINEAR_GRADIENT_BLUR";

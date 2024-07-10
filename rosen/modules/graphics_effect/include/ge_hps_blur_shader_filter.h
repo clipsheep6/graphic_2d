@@ -49,6 +49,7 @@ private:
     float radius_ { 0.0 };
     float saturation_ { 1.0 };
     float brightness_ { 1.0 };
+    bool onScreenDraw_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

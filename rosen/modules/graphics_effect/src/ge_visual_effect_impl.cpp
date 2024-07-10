@@ -276,7 +276,10 @@ void GEVisualEffectImpl::SetHpsBlurParams(const std::string& tag, float param)
         { GE_FILTER_HPS_BLUR_RADIUS, [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->radius = p; } },
         { GE_FILTER_HPS_BLUR_SATURATION,
             [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->saturation = p; } },
-        { GE_FILTER_HPS_BLUR_BRIGHTNESS, [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->brightness = p; } }
+        { GE_FILTER_HPS_BLUR_BRIGHTNESS,
+            [](GEVisualEffectImpl* obj, float p) { obj->hpsBlurParams_->brightness = p; } },
+        { GE_FILTER_HPS_BLUR_ONSCREENDRAW,
+            [](GEVisualEffectImpl* obj, bool p) { obj->hpsBlurParams_->onScreenDraw = p; } }
     };
 
     auto it = actions.find(tag);

@@ -276,7 +276,7 @@ private:
     RSB_EXPORT static pid_t PatchPlainPid(const Parcel& parcel, pid_t pid);
 
     RSB_EXPORT static uint32_t PerfTreeFlatten(
-        std::shared_ptr<RSRenderNode> node, std::vector<std::pair<NodeId, uint32_t>>& nodeSet, 
+        std::shared_ptr<RSRenderNode> node, std::vector<std::pair<NodeId, uint32_t>>& nodeSet,
         std::unordered_map<NodeId, uint32_t>& mapNode2Count, int depth);
     RSB_EXPORT static uint32_t CalcNodeCmdListCount(RSRenderNode& node);
     RSB_EXPORT static void CalcPerfNodePrepare(NodeId nodeId, uint32_t timeCount, bool excludeDown);

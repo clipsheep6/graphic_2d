@@ -884,8 +884,8 @@ void RSProfiler::ExecuteCommand(const RSCommand* command)
     g_commandExecuteCount++;
 }
 
-uint32_t RSProfiler::PerfTreeFlatten(const std::shared_ptr<RSRenderNode> node, 
-    std::vector<std::pair<NodeId, uint32_t>>& nodeSet, 
+uint32_t RSProfiler::PerfTreeFlatten(const std::shared_ptr<RSRenderNode> node,
+    std::vector<std::pair<NodeId, uint32_t>>& nodeSet,
     std::unordered_map<NodeId, uint32_t>& mapNode2Count, int depth)
 {
     if (!node) {

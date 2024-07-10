@@ -69,7 +69,7 @@ static NodeId g_calcPerfNode = 0;
 static uint32_t g_calcPerfNodeTry = 0;
 static bool g_calcPerfNodeExcludeDown = false;
 
-static std::vector<std::pair<std::shared_ptr<RSRenderNode>, 
+static std::vector<std::pair<std::shared_ptr<RSRenderNode>,
             std::vector<std::shared_ptr<RSRenderNode>>>> g_calcPerfSavedChildren;
 static NodeId g_blinkNodeId = 0;
 static uint32_t g_blinkNodeCount = 0;
@@ -482,26 +482,24 @@ void RSProfiler::CalcNodeWeigthOnFrameEnd(uint64_t frameLength)
     const uint16_t startCnt = g_effectiveNodeTimeCount / 4;
     const uint16_t endCnt = g_effectiveNodeTimeCount - startCnt;
     uint64_t avgValue = 0;
-    for(auto i = startCnt; i < endCnt; i++) {
+    for (auto i = startCnt; i < endCnt; i++) {
         avgValue += g_calcPerfNodeTime[i];
     }
-    avgValue /= endCnt - startCnt;  
+    avgValue /= endCnt - startCnt;
 
     if (g_calcPerfNodeExcludeDown) {
         g_mapNode2UpTime[g_calcPerfNode] = avgValue;
-    }
-    else {
+    } else {
         g_mapNode2UpDownTime[g_calcPerfNode] = avgValue;
     }
 
     constexpr float nanoToMs = 1000'000.0f;
 
     if (g_calcPerfNodeExcludeDown) {
-        Respond("CALC_PERF_NODE_RESULT: U->" + std::to_string(g_calcPerfNode) + " " + std::to_string(avgValue) + 
+        Respond("CALC_PERF_NODE_RESULT: U->" + std::to_string(g_calcPerfNode) + " " + std::to_string(avgValue) +
             " inMS=" + std::to_string(avgValue / nanoToMs) + " tries=" + std::to_string(g_effectiveNodeTimeCount));
-    }
-    else {
-        Respond("CALC_PERF_NODE_RESULT: UD->" + std::to_string(g_calcPerfNode) + " " + std::to_string(avgValue) + 
+    } else {
+        Respond("CALC_PERF_NODE_RESULT: UD->" + std::to_string(g_calcPerfNode) + " " + std::to_string(avgValue) +
             " inMS=" + std::to_string(avgValue / nanoToMs) + " tries=" + std::to_string(g_effectiveNodeTimeCount));
     }
 
@@ -1016,8 +1014,7 @@ void RSProfiler::KillNode(const ArgList& args)
 void RSProfiler::BlinkNode(const ArgList& args)
 {
     if (const auto node = GetRenderNode(args.Node())) {
-
-            const auto parent = node->GetParent().lock();
+        const auto parent = node->GetParent().lock();
         auto parentChildren = parent ? parent->GetChildren() : nullptr;
         if (!parentChildren) {
             return;
@@ -1156,7 +1153,7 @@ void RSProfiler::GetPerfTree(const ArgList& args)
     }
 
     std::unordered_set<uint64_t> perfNodesSet;
-    for(const auto& item : g_nodeListPerf) {
+    for (const auto& item : g_nodeListPerf) {
         perfNodesSet.insert(item.first);
     }
 
@@ -1196,7 +1193,7 @@ void RSProfiler::CalcPerfNodePrepareLo(const std::shared_ptr<RSRenderNode>& node
 
 void RSProfiler::CalcPerfNodePrepare(NodeId nodeId, uint32_t timeCount, bool excludeDown)
 {
-    Respond("Debug: CalcPerfNodePrepare nodeId=" + std::to_string(nodeId) + 
+    Respond("Debug: CalcPerfNodePrepare nodeId=" + std::to_string(nodeId) +
             " timeCount=" + std::to_string(timeCount) +
             " excludeDown=" + std::to_string(excludeDown ? 1 : 0));
 
@@ -1251,7 +1248,7 @@ void RSProfiler::PrintNodeCache(const ArgList& args)
     if (node == nullptr) {
         Respond("node not found");
         return;
-    }    
+    }
     PrintNodeCacheLo(node);
 }
 
@@ -1319,7 +1316,7 @@ void RSProfiler::CalcPerfNodeAllStep()
     if (g_nodeListPerfCalcIndex >= doublePerfListSize) {
         g_nodeListPerfCalcIndex = -1;
 
-        for(auto it : g_nodeListPerf) {
+        for (auto it : g_nodeListPerf) {
             const auto node = GetRenderNode(it.first);
             const auto parent = node ? node->GetParent().lock() : nullptr;
             if (!parent || !g_mapNode2UpTime.count(node->id_) || !g_mapNode2UpDownTime.count(node->id_)) {
@@ -1749,23 +1746,22 @@ void RSProfiler::BlinkNodeUpdate()
         // restore node
         const auto parentNode = g_blinkSavedParentChildren[0];
         if (!parentNode) {
-           return;
+            return;
         }
-        for(size_t i = 1; i < g_blinkSavedParentChildren.size(); i++) {
+        for (size_t i = 1; i < g_blinkSavedParentChildren.size(); i++) {
             const auto child = g_blinkSavedParentChildren[i];
-            parentNode->RemoveChild(child);            
+            parentNode->RemoveChild(child);
             child->ResetParent();
         }
-        for(size_t i = 1; i < g_blinkSavedParentChildren.size(); i++) {
+        for (size_t i = 1; i < g_blinkSavedParentChildren.size(); i++) {
             const auto child = g_blinkSavedParentChildren[i];
-            parentNode->AddChild(child);            
+            parentNode->AddChild(child);
         }
         if (blinkStage > blinkTotalCount) {
             g_blinkNodeCount = 0;
             g_blinkSavedParentChildren.clear();
         }
-    }
-    else {
+    } else {
         // remove node
         const auto parentNode = g_blinkSavedParentChildren[0];
         auto blinkNode = GetRenderNode(g_blinkNodeId);
@@ -1788,17 +1784,17 @@ void RSProfiler::CalcPerfNodeUpdate()
         CalcPerfNodeAllStep();
         return;
     }
-    for(const auto& item : g_calcPerfSavedChildren) {
+    for (const auto& item : g_calcPerfSavedChildren) {
         const auto parentNode = item.first;
         if (!parentNode) {
             continue;
         }
-        for(const auto& child : item.second) {
-            parentNode->RemoveChild(child);            
+        for (const auto& child : item.second) {
+            parentNode->RemoveChild(child);
             child->ResetParent();
         }
-        for(const auto& child : item.second) {
-            parentNode->AddChild(child);            
+        for (const auto& child : item.second) {
+            parentNode->AddChild(child);
         }
     }
     g_calcPerfSavedChildren.clear();

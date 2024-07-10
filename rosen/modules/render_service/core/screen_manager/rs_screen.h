@@ -188,7 +188,6 @@ public:
     const std::unordered_set<uint64_t>& GetBlackList() const override;
     bool GetCastScreenEnableSkipWindow() override;
     int32_t SetScreenConstraint(uint64_t frameId, uint64_t timestamp, ScreenConstraintType type) override;
-
 private:
     // create hdiScreen and get some information from drivers.
     void PhysicalScreenInit() noexcept;

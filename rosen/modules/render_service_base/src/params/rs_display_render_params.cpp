@@ -137,6 +137,10 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->nodeRotation_ = nodeRotation_;
     targetDisplayParams->screenRotation_ = screenRotation_;
     targetDisplayParams->screenId_ = screenId_;
+    targetDisplayParams->buffer_ = buffer_;
+    targetDisplayParams->acquireFence_ = acquireFence_;
+    targetDisplayParams->consumer_ = consumer_;
+    targetDisplayParams->isSecurityDisplay_ = isSecurityDisplay_;
     targetDisplayParams->mirroredId_ = mirroredId_;
     targetDisplayParams->compositeType_ = compositeType_;
     targetDisplayParams->mirrorSource_ = mirrorSource_;

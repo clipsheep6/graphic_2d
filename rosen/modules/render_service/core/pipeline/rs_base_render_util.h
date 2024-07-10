@@ -59,6 +59,7 @@ constexpr float DEFAULT_SCREEN_LIGHT_NITS = 500;
 #endif
 struct BufferDrawParam {
     sptr<OHOS::SurfaceBuffer> buffer;
+    sptr<IConsumerSurface> consumer;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
 
     Drawing::Matrix matrix; // for moving canvas to layer(surface)'s leftTop point.

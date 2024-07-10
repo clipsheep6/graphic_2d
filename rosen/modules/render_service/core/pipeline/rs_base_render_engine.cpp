@@ -471,13 +471,12 @@ void RSBaseRenderEngine::SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& re
 #endif
 }
 
-void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSDisplayRenderNode& node,
-    BufferDrawParam& params)
+void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
     if (params.useCPU) {
         DrawBuffer(canvas, params);
     } else {
-        RegisterDeleteBufferListener(node.GetConsumer());
+        RegisterDeleteBufferListener(params.consumer);
         DrawImage(canvas, params);
     }
 }

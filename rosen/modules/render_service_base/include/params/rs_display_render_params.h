@@ -101,6 +101,53 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    const sptr<SurfaceBuffer>& GetBuffer() const
+    {
+        return buffer_;
+    }
+    const sptr<SyncFence>& GetAcquireFence() const
+    {
+        return acquireFence_;
+    }
+    const sptr<IConsumerSurface>& GetConsumer() const
+    {
+        return consumer_;
+    }
+    bool GetSecurityDisplay() const
+    {
+        return isSecurityDisplay_;
+    }
+    bool IsFirstTimeToProcessor() const {
+        return isFirstTimeToProcessor_;
+    }
+    void SetOriginScreenRotation(const ScreenRotation& rotate) {
+        originScreenRotation_ = rotate;
+        isFirstTimeToProcessor_ = false;
+    }
+    ScreenRotation GetOriginScreenRotation() const {
+        return originScreenRotation_;
+    }
+#ifdef NEW_RENDER_CONTEXT
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#else
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#endif
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -136,6 +183,18 @@ private:
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     uint64_t screenId_ = 0;
+    sptr<SurfaceBuffer> buffer_ = nullptr;
+    sptr<SyncFence> acquireFence_ = nullptr;
+    sptr<IConsumerSurface> consumer_ = nullptr;
+    bool isSecurityDisplay_ = false;
+    bool isFirstTimeToProcessor_ = false;
+    ScreenRotation originScreenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
+    uint64_t virtualSurfaceUniqueId_ = 0;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> virtualSurface_ = nullptr;
+#else
+    std::shared_ptr<RSSurface> virtualSurface_ = nullptr;
+#endif
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     NodeId mirrorSourceId_ = INVALID_NODEID;
     ScreenInfo screenInfo_;

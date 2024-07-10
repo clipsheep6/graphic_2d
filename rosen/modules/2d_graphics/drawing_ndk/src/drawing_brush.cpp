@@ -107,17 +107,17 @@ void OH_Drawing_BrushSetColor(OH_Drawing_Brush* cBrush, uint32_t color)
     brush->SetColor(color);
 }
 
-void OH_Drawing_BrushSetColor4f(OH_Drawing_Brush* cBrush, OH_Drawing_Color4f* color4f,
+OH_Drawing_ErrorCode OH_Drawing_BrushSetColor4f(OH_Drawing_Brush* cBrush, OH_Drawing_Color4f* color4f,
     OH_Drawing_ColorSpace* colorSpace)
 {
     Brush* brush = CastToBrush(cBrush);
     if (brush == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return;
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
     brush->SetColor(*(Color4f*)color4f,
         std::shared_ptr<ColorSpace>{reinterpret_cast<ColorSpace*>(colorSpace), [](auto p) {}});
+        return OH_DRAWING_SUCCESS;
 }
 
 uint8_t OH_Drawing_BrushGetAlpha(const OH_Drawing_Brush* cBrush)

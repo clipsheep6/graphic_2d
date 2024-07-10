@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -89,7 +90,6 @@ void OH_Drawing_SurfaceDestroy(OH_Drawing_Surface*);
  * @version 1.0
  */
 OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface*);
-
 #ifdef __cplusplus
 }
 #endif

@@ -87,7 +87,8 @@ OH_Drawing_Image* OH_Drawing_SurfaceGetImageSnapshot(OH_Drawing_Surface * cSurfa
 {
     Surface* surface = CastToSurface(cSurface);
     if (surface == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
-    return (OH_Drawing_Image*)surface->GetImageSnapshot().get();
+    return (OH_Drawing_Image*)(surface->GetImageSnapshot().get());
 }

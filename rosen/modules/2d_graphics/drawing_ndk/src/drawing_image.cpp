@@ -96,19 +96,20 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image* cImage, OH_Drawing_Image_Inf
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
 }
 
-bool OH_Drawing_ImageIsOpaque(OH_Drawing_Image* cImage)
+OH_Drawing_ErrorCode OH_Drawing_ImageIsOpaque(OH_Drawing_Image* cImage, bool* isOpaque)
 {
-    if (cImage == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (cImage == nullptr || isOpaque == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return CastToImage(cImage)->IsOpaque();
+    *isOpaque = CastToImage(cImage)->IsOpaque();
+    return OH_DRAWING_SUCCESS;
 }
 
 OH_Drawing_Image* OH_Drawing_ImageCreateFromRaster(OH_Drawing_Pixmap* pixmap,
     void (*rasterReleaseProc)(const OH_Drawing_Pixmap* pixmap, void* releaseContext), void* releaseContext)
 {
     if (pixmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
     auto image = Image::MakeFromRaster(*reinterpret_cast<Pixmap*>(pixmap), (RasterReleaseProc)rasterReleaseProc,

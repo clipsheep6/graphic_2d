@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -201,12 +202,15 @@ bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info
  * @param rowBytes Size of pixel row or larger.
  * @param releaseProc Function called when pixels can be deleted; may be nullptr.
  * @param context Caller state passed to releaseProc; may be nullptr.
- * @return Returns true if OH_Drawing_Image_Info is set to ImageInfo.
+ * @param isset Indicates if OH_Drawing_Image_Info is set to ImageInfo.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or cImageInfo is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*, void* pixels, size_t rowBytes, 
-        void (*releaseProc)(void* addr, void* context), void* context);
+OH_Drawing_ErrorCode OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo,
+    void* pixels, size_t rowBytes, void (*releaseProc)(void* addr, void* context), void* context, bool* isset);
 
 /**
  * @brief Copies Bitmap pixel address, row bytes, and ImageInfo to pixmap, if address
@@ -216,11 +220,14 @@ bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_I
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
  * @param OH_Drawing_Pixmap Indicates the pointer to an <b>OH_Drawing_Pixmap</b> object.
- * @return Returns true if Image has direct access to pixels.
+ * @param isset Indicates if Image has direct access to pixels.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or cPixmap is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap*, OH_Drawing_Pixmap*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Pixmap* cPixmap, bool* isset);
 
 /**
  * @brief Sets OH_Drawing_Image_Info to ImageInfo following the rules in setInfo() and allocates pixel
@@ -229,22 +236,29 @@ bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap*, OH_Drawing_Pixmap*);
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
  * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
- * @return Returns true if pixel storage is allocated.
+ * @param isallocated Indicates if pixel storage is allocated.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or cImageInfo or isallocated is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_Image_Info* cImageInfo, bool* isallocated);
 
 /**
  * @brief Calculate the storage space required for pixel arrays.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @return Return memory required by pixel buffer.
+ * @param bufsize Indicates if pixel storage is allocated.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or bufsize is nullptr.
  * @since 12
  * @version 1.0
  */
-size_t OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap* cBitmap, size_t* bufsize);
 #ifdef __cplusplus
 }
 #endif

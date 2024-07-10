@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -113,11 +114,14 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image*, OH_Drawing_Image_Info*);
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
- * @return Returns true if image is opaque.
+ * @param isOpaque The opaque property of image.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cImage or isOpaque is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_ImageIsOpaque(OH_Drawing_Image*);
+OH_Drawing_ErrorCode OH_Drawing_ImageIsOpaque(OH_Drawing_Image* cImage, bool* isOpaque);
 
 /**
  * @brief Create an <b>OH_Drawing_Image</b> object from Pixmap.

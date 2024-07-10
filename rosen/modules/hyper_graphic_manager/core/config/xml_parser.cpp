@@ -205,6 +205,7 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         auto min = ExtractPropertyValue("min", *currNode);
         auto max = ExtractPropertyValue("max", *currNode);
         auto dynamicMode = ExtractPropertyValue("dynamicMode", *currNode);
+        auto idleFps = ExtractPropertyValue("idleFps", *currNode);
         auto isFactor = ExtractPropertyValue("isFactor", *currNode) == "1"; // 1:true, other:false
         auto drawMin = ExtractPropertyValue("drawMin", *currNode);
         auto drawMax = ExtractPropertyValue("drawMax", *currNode);
@@ -217,10 +218,16 @@ int32_t XMLParser::ParseStrategyConfig(xmlNode &node)
         strategy.min = std::stoi(min);
         strategy.max = std::stoi(max);
         strategy.dynamicMode = static_cast<DynamicModeType>(std::stoi(dynamicMode));
+        strategy.idleFps = IsNumber(idleFps) ? std::stoi(idleFps) : strategy.min;
         strategy.isFactor = isFactor;
         strategy.drawMin = IsNumber(drawMin) ? std::stoi(drawMin) : 0;
         strategy.drawMax = IsNumber(drawMax) ? std::stoi(drawMax) : 0;
         strategy.down = IsNumber(down) ? std::stoi(down) : strategy.max;
+        if (strategy.idleFps < strategy.min || strategy.idleFps > strategy.max) {
+            HGM_LOGW("StrategyConfig name=%{public}s idleFps=%{public}d should be in range of [%{public}d, %{public}d]",
+                     name.c_str(), strategy.idleFps, strategy.min, strategy.max);
+            strategy.idleFps = std::clamp(strategy.idleFps, strategy.min, strategy.max);
+        }
 
         mParsedData_->strategyConfigs_[name] = strategy;
         HGM_LOGI("HgmXMLParser ParseStrategyConfig name=%{public}s min=%{public}d drawMin=%{public}d",

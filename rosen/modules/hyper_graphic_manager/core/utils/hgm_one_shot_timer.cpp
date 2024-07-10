@@ -87,7 +87,6 @@ void HgmOneShotTimer::Loop()
 {
     HgmTimerState state = HgmTimerState::RESET;
     while (true) {
-        bool resetFlag = false;
         bool expiredFlag = false;
         state = CheckForResetAndStop(state);
         if (state == HgmTimerState::STOP) {
@@ -100,10 +99,7 @@ void HgmOneShotTimer::Loop()
             }
             continue;
         }
-        if (state == HgmTimerState::RESET) {
-            resetFlag = true;
-        }
-        if (resetFlag && resetCallback_) {
+        if (state == HgmTimerState::RESET && resetCallback_) {
             resetCallback_();
         }
         state = CheckForResetAndStop(state);

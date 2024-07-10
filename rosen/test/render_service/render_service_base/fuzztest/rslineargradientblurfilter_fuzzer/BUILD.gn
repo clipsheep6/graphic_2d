@@ -24,6 +24,7 @@ ohos_fuzztest("RSLinearGradientBlurFilterFuzzTest") {
     "../../../../../modules/render_service_base/src",
     "../../../../../modules/2d_graphics/include",
     "../../../../../modules/render_service_base/include",
+    "../../../../../modules/2d_graphics/src/drawing/engine_adapter",
   ]
   deps = [
     "../../../../../modules/2d_graphics:2d_graphics",

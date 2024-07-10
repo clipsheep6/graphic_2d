@@ -158,6 +158,14 @@ bool DoCommitTransaction(const uint8_t* data, size_t size)
     transactionData->AddCommand(command, nodeId, followType);
     rsRenderServiceConnectionProxy.CommitTransaction(transactionData);
     rsRenderServiceConnectionProxy.FillParcelWithTransactionData(transactionData, parcel);
+    rsRenderServiceConnectionProxy.NotifyRefreshRateEvent(eventInfo);
+    rsRenderServiceConnectionProxy.NotifyTouchEvent(pid1, "", 0, uid);
+    rsRenderServiceConnectionProxy.ReportEventResponse(info);
+    rsRenderServiceConnectionProxy.ReportEventComplete(info);
+    rsRenderServiceConnectionProxy.ReportEventJankFrame(info);
+    rsRenderServiceConnectionProxy.ReportGameStateData(gameStateDataInfo);
+    rsRenderServiceConnectionProxy.SetHardwareEnabled(id1, true, SelfDrawingNodeType::DEFAULT);
+    rsRenderServiceConnectionProxy.SetCacheEnabledForRotation(true);
     rsRenderServiceConnectionProxy.SetOnRemoteDiedCallback(onRemoteDiedCallback);
     return true;
 }
@@ -511,6 +519,31 @@ bool DoSetScreenPowerStatus(const uint8_t* data, size_t size)
 
     return true;
 }
+
+#ifdef TP_FEATURE_ENABLE
+bool OHOS::Rosen::DoSetTpFeatureConfigFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    // get data
+    int32_t tpFeature = GetData<int32_t>();
+    std::string tpConfig = GetData<std::string>();
+
+    // test
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
+    RSRenderServiceConnectionProxy rsRenderServiceConnectionProxy(remoteObject);
+    RSRenderServiceConnectionProxy.SetTpFeatureConfig(tpFeature, tpConfig);
+    return true;
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS
 
@@ -534,5 +567,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoGetMemoryGraphics(data, size);
     OHOS::Rosen::DoRemoveVirtualScreen(data, size);
     OHOS::Rosen::DoSetScreenPowerStatus(data, size);
+#ifdef TP_FEATURE_ENABLE
+    OHOS::Rosen::DoSetTpFeatureConfigFuzzTest(data, size);
+#endif
     return 0;
 }

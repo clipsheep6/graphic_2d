@@ -33,7 +33,6 @@
 
 #include "effect/shader_effect.h"
 #include "image/image.h"
-#include "image/picture.h"
 #include "utils/matrix.h"
 #include "utils/data.h"
 #include "utils/log.h"
@@ -85,27 +84,6 @@ void SkiaShaderEffect::InitWithImage(
                     static_cast<SkMipmapMode>(sampling.GetMipmapMode()));
             }
             shader_ = skiaImage->makeShader(modeX, modeY, samplingOptions, &skiaMatrix);
-        }
-    }
-}
-
-void SkiaShaderEffect::InitWithPicture(
-    const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode, const Matrix& matrix, const Rect& rect)
-{
-    SkTileMode modeX = static_cast<SkTileMode>(tileX);
-    SkTileMode modeY = static_cast<SkTileMode>(tileY);
-    SkRect r = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
-
-    auto p = picture.GetImpl<SkiaPicture>();
-    auto m = matrix.GetImpl<SkiaMatrix>();
-    sk_sp<SkPicture> skiaPicture;
-    SkMatrix skiaMatrix;
-    if (p != nullptr && m != nullptr) {
-        skiaPicture = p->GetPicture();
-        skiaMatrix = m->ExportSkiaMatrix();
-        if (skiaPicture != nullptr) {
-            SkFilterMode skFilterMode = static_cast<SkFilterMode>(mode);
-            shader_ = skiaPicture->makeShader(modeX, modeY, skFilterMode, &skiaMatrix, &r);
         }
     }
 }

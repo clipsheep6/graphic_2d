@@ -1761,7 +1761,7 @@ const std::optional<Vector2f>& RSProperties::GetGreyCoef() const
 bool RSProperties::IsDynamicDimValid() const
 {
     return dynamicDimDegree_.has_value() &&
-           ROSEN_GE(*dynamicDimDegree_, 0.0) && ROSEN_LE(*dynamicDimDegree_, 1.0);
+           ROSEN_GE(*dynamicDimDegree_, 0.0) && ROSEN_LNE(*dynamicDimDegree_, 1.0);
 }
 
 const std::shared_ptr<RSFilter>& RSProperties::GetFilter() const
@@ -4123,7 +4123,7 @@ void RSProperties::UpdateFilter()
     needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
                   IsDynamicLightUpValid() || greyCoef_.has_value() || linearGradientBlurPara_ != nullptr ||
                   IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
-                  foregroundFilter_ != nullptr || motionBlurPara_ != nullptr || IsFgBrightnessValid() ||
+                  foregroundFilter_ != nullptr || IsFgBrightnessValid() ||
                   IsBgBrightnessValid() || foregroundFilterCache_ != nullptr || IsWaterRippleValid() ||
                   magnifierPara_.has_value();
 }

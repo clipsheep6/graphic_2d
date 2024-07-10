@@ -152,9 +152,12 @@ void RSSubThread::DestroyShareEglContext()
 void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask)
 {
     RS_TRACE_NAME("RSSubThread::RenderCache");
-    if (threadTask == nullptr || threadTask->GetTaskSize() == 0) {
-        RS_LOGE("RSSubThread::RenderCache threadTask == nullptr %p || threadTask->GetTaskSize() == 0 %d",
-            threadTask.get(), int(threadTask->GetTaskSize()));
+    if (threadTask == nullptr) {
+        RS_LOGE("RSSubThread::RenderCache threadTask is nullptr");
+        return;
+    }
+    if (threadTask->GetTaskSize() == 0) {
+        RS_LOGE("RSSubThread::RenderCache no task");
         return;
     }
     if (grContext_ == nullptr) {
@@ -230,7 +233,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
 #endif
 }
 
-void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+void RSSubThread::DrawableCache(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeDrawable> nodeDrawable)
 {
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
@@ -315,7 +318,12 @@ std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
         std::string vulkanVersion = RsVulkanContext::GetSingleton().GetVulkanVersion();
         auto size = vulkanVersion.size();
         handler->ConfigureContext(&options, vulkanVersion.c_str(), size);
-        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext(), options)) {
+        bool useHBackendContext = false;
+        if (RSSystemProperties::GetVkQueueDividedEnable()) {
+            useHBackendContext = RSMainThread::Instance()->GetDeviceType() == DeviceType::PC;
+        }
+        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext(useHBackendContext),
+            options)) {
             RS_LOGE("nullptr gpuContext is null");
             return nullptr;
         }
@@ -325,8 +333,12 @@ std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
     return nullptr;
 }
 
-void RSSubThread::DrawableCacheWithSkImage(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+void RSSubThread::DrawableCacheWithSkImage(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeDrawable> nodeDrawable)
 {
+    if (!nodeDrawable) {
+        RS_LOGE("RSSubThread::DrawableCacheWithSkImage nodeDrawable is nullptr");
+        return;
+    }
     auto cacheSurface = nodeDrawable->GetCacheSurface(threadIndex_, true);
     if (!cacheSurface || nodeDrawable->NeedInitCacheSurface()) {
         DrawableV2::RSSurfaceRenderNodeDrawable::ClearCacheSurfaceFunc func = std::bind(
@@ -352,6 +364,8 @@ void RSSubThread::DrawableCacheWithSkImage(DrawableV2::RSSurfaceRenderNodeDrawab
     rscanvas->SetParallelThreadIdx(threadIndex_);
     rscanvas->SetHDRPresent(nodeDrawable->GetHDRPresent());
     rscanvas->SetBrightnessRatio(nodeDrawable->GetBrightnessRatio());
+    rscanvas->SetScreenId(nodeDrawable->GetScreenId());
+    rscanvas->SetTargetColorGamut(nodeDrawable->GetTargetColorGamut());
     rscanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
     nodeDrawable->SubDraw(*rscanvas);
     RSUniRenderUtil::OptimizedFlushAndSubmit(cacheSurface, grContext_.get());
@@ -364,9 +378,13 @@ void RSSubThread::DrawableCacheWithSkImage(DrawableV2::RSSurfaceRenderNodeDrawab
     RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(cacheSurface, nodeDrawable->GetName());
 }
 
-void RSSubThread::DrawableCacheWithDma(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+void RSSubThread::DrawableCacheWithDma(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeDrawable> nodeDrawable)
 {
     RS_TRACE_NAME("DrawableCacheWithDma");
+    if (!nodeDrawable) {
+        RS_LOGE("RSSubThread::DrawableCache nodeDrawable is nullptr");
+        return;
+    }
     if (!nodeDrawable->IsSurfaceCreated()) {
         nodeDrawable->CreateSurface();
     }
@@ -391,6 +409,8 @@ void RSSubThread::DrawableCacheWithDma(DrawableV2::RSSurfaceRenderNodeDrawable* 
     rsCanvas->SetParallelThreadIdx(threadIndex_);
     rsCanvas->SetHDRPresent(nodeDrawable->GetHDRPresent());
     rsCanvas->SetBrightnessRatio(nodeDrawable->GetBrightnessRatio());
+    rsCanvas->SetScreenId(nodeDrawable->GetScreenId());
+    rsCanvas->SetTargetColorGamut(nodeDrawable->GetTargetColorGamut());
     nodeDrawable->ClipRoundRect(*rsCanvas);
     rsCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
 
@@ -449,7 +469,7 @@ MemoryGraphic RSSubThread::CountSubMem(int pid)
     return memoryGraphic;
 }
 
-void RSSubThread::ReleaseCacheSurfaceOnly(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+void RSSubThread::ReleaseCacheSurfaceOnly(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeDrawable> nodeDrawable)
 {
     if (!nodeDrawable) {
         return;

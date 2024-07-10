@@ -1063,6 +1063,9 @@ RSRenderNode::~RSRenderNode()
     if (appPid_ != 0) {
         RSSingleFrameComposer::AddOrRemoveAppPidToMap(false, appPid_);
     }
+    if (fallbackAnimationOnDestroy_) {
+        FallbackAnimationsToRoot();
+    }
     if (clearCacheSurfaceFunc_ && (cacheSurface_ || cacheCompletedSurface_)) {
         clearCacheSurfaceFunc_(std::move(cacheSurface_), std::move(cacheCompletedSurface_), cacheSurfaceThreadIndex_,
             completedSurfaceThreadIndex_);
@@ -1318,8 +1321,8 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManag
         // currently CheckAndUpdateGeoTrans without dirty check
         auto& geoPtr = properties.boundsGeo_;
         // selfdrawing node's geo may not dirty when its dirty region changes
-        if (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty || properties.geoDirty_ || isSelfDrawingNode_ ||
-            selfDrawRectChanged) {
+        if (geoPtr && (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty || properties.geoDirty_ ||
+            isSelfDrawingNode_ || selfDrawRectChanged)) {
             absDrawRect_ = geoPtr->MapAbsRect(selfDrawRect_);
             if (isSelfDrawingNode_) {
                 selfDrawingNodeAbsDirtyRect_ = geoPtr->MapAbsRect(selfDrawingNodeDirtyRect_);
@@ -4008,6 +4011,7 @@ void RSRenderNode::MarkUifirstNode(bool isUifirstNode)
 {
     RS_OPTIONAL_TRACE_NAME_FMT("MarkUifirstNode id:%lld, isUifirstNode:%d", GetId(), isUifirstNode);
     isUifirstNode_ = isUifirstNode;
+    isUifirstDelay_ = 0;
 }
 
 void RSRenderNode::SetChildrenHasSharedTransition(bool hasSharedTransition)
@@ -4047,6 +4051,15 @@ RSRenderNode::SharedPtr SharedTransitionParam::GetPairedNode(const NodeId nodeId
         return inNode_.lock();
     }
     return nullptr;
+}
+
+void RSRenderNode::SetChildrenHasUIExtension(bool childrenHasUIExtension)
+{
+    childrenHasUIExtension_ = childrenHasUIExtension;
+    auto parent = GetParent().lock();
+    if (parent && parent->ChildrenHasUIExtension() != childrenHasUIExtension) {
+        parent->SetChildrenHasUIExtension(childrenHasUIExtension);
+    }
 }
 
 bool SharedTransitionParam::UpdateHierarchyAndReturnIsLower(const NodeId nodeId)

@@ -53,11 +53,6 @@ public:
 private:
     void CleanVirtualScreens() noexcept;
     void CleanRenderNodes() noexcept;
-    void MoveRenderNodeMap(
-        std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap) noexcept;
-    static void RemoveRenderNodeMap(
-        std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap) noexcept;
-    void CleanRenderNodeMap() noexcept;
     void CleanFrameRateLinkers() noexcept;
     void CleanAll(bool toDelete = false) noexcept;
 
@@ -109,6 +104,14 @@ private:
 #endif
 
     void RemoveVirtualScreen(ScreenId id) override;
+
+    int32_t SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval) override;
+ 
+    int32_t SetPointerColorInversionEnabled(bool enable) override;
+ 
+    int32_t RegisterPointerLuminanceChangeCallback(sptr<RSIPointerLuminanceChangeCallback> callback) override;
+ 
+    int32_t UnRegisterPointerLuminanceChangeCallback() override;
 
     int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) override;
 
@@ -270,6 +273,9 @@ private:
     GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo() override;
 
     LayerComposeInfo GetLayerComposeInfo() override;
+
+    int32_t RegisterUIExtensionCallback(uint64_t userId, sptr<RSIUIExtensionCallback> callback) override;
+
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config) override;
 #endif

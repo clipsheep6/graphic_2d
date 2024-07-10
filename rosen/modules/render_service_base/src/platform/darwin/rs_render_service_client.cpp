@@ -154,6 +154,26 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
 {
 }
 
+int32_t RSRenderServiceClient::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::SetPointerColorInversionEnabled(bool enable)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::UnRegisterPointerLuminanceChangeCallback()
+{
+    return 0;
+}
+
 int32_t RSRenderServiceClient::SetScreenChangeCallback(const ScreenChangeCallback &callback)
 {
     return 0;
@@ -536,6 +556,11 @@ void RSRenderServiceClient::SetVirtualScreenUsingStatus(bool isVirtualScreenUsin
 
 void RSRenderServiceClient::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 {
+}
+
+int32_t RSRenderServiceClient::RegisterUIExtensionCallback(uint64_t userId, const UIExtensionCallback& callback)
+{
+    return {};
 }
 } // namespace Rosen
 } // namespace OHOS

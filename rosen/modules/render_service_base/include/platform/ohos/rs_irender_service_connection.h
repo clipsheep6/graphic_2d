@@ -40,6 +40,7 @@
 #include "ivsync_connection.h"
 #include "ipc_callbacks/rs_ihgm_config_change_callback.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_iuiextension_callback.h"
 #include "vsync_iconnection_token.h"
 
 namespace OHOS {
@@ -99,6 +100,14 @@ public:
 #endif
 
     virtual void RemoveVirtualScreen(ScreenId id) = 0;
+
+    virtual int32_t SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval) = 0;
+ 
+    virtual int32_t SetPointerColorInversionEnabled(bool enable) = 0;
+ 
+    virtual int32_t RegisterPointerLuminanceChangeCallback(sptr<RSIPointerLuminanceChangeCallback> callback) = 0;
+ 
+    virtual int32_t UnRegisterPointerLuminanceChangeCallback() = 0;
 
     virtual int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) = 0;
 
@@ -267,6 +276,8 @@ public:
     virtual GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo() = 0;
 
     virtual LayerComposeInfo GetLayerComposeInfo() = 0;
+
+    virtual int32_t RegisterUIExtensionCallback(uint64_t userId, sptr<RSIUIExtensionCallback> callback) = 0;
 
 #ifdef TP_FEATURE_ENABLE
     virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;

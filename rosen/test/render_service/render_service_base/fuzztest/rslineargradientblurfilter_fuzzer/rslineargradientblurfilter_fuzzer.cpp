@@ -25,6 +25,8 @@
 #include <securec.h>
 #include <unistd.h>
 
+#include "skia_adapter/skia_image.h"
+
 #include "draw/canvas.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "render/rs_gradient_blur_para.h"
@@ -37,6 +39,18 @@ namespace {
 const uint8_t* g_data = nullptr;
 size_t g_size = 0;
 size_t g_pos;
+float g_zero = 0.0f float g_one = 1.0f;
+float g_value = 0.1f;
+float g_width = 100;
+int g_number0 = 0;
+int g_number1 = 1;
+int g_number3 = 3;
+int g_number5 = 5;
+int g_number6 = 6;
+int g_number7 = 7;
+int g_number8 = 8;
+int g_number10 = 10;
+int g_number16 = 16;
 } // namespace
 
 template<class T>
@@ -54,37 +68,7 @@ T GetData()
     g_pos += objectSize;
     return object;
 }
-bool DoPostProcess(const uint8_t* data, size_t size)
-{
-    if (data == nullptr) {
-        return false;
-    }
 
-    // initialize
-    g_data = data;
-    g_size = size;
-    g_pos = 0;
-
-    std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
-    int value = GetData<int>();
-    float blurRadius = GetData<float>();
-    GradientDirection direction = (GradientDirection)value;
-    std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
-        std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
-
-    int32_t width1 = GetData<int32_t>();
-    int32_t height1 = GetData<int32_t>();
-    Canvas canvas(width1, height1);
-    float alpha = GetData<float>();
-    RSPaintFilterCanvas filterCanvas(&canvas, alpha);
-    filter->PostProcess(filterCanvas);
-    return true;
-}
 bool DoOtherFunc(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
@@ -97,16 +81,14 @@ bool DoOtherFunc(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
 
     filter->GetDescription();
     filter->GetDetailedDescription();
@@ -126,22 +108,17 @@ bool DoDrawImageRect(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
-    int value = GetData<int>();
-    float blurRadius = GetData<float>();
-    GradientDirection direction = (GradientDirection)value;
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
-        std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
+        std::make_shared<RSLinearGradientBlurPara>(g_number16, fractionStops, GradientDirection::BOTTOM);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
     Drawing::Canvas canvas;
     Drawing::Rect src;
     Drawing::Rect dst;
     std::shared_ptr<Drawing::Image> image;
-    int value1 = 8;
-    linearGradientBlurPara->direction_ = (GradientDirection)value1;
+    filter->DrawImageRect(canvas, image, src, dst);
+    linearGradientBlurPara->direction_ = GradientDirection::NONE;
     image = std::make_shared<Drawing::Image>();
     filter->DrawImageRect(canvas, image, src, dst);
     return true;
@@ -158,16 +135,14 @@ bool DoPreProcess(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
 
     auto image = std::make_shared<Image>();
     filter->PreProcess(image);
@@ -185,17 +160,14 @@ bool DoCompose(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
-
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
     std::shared_ptr<RSDrawingFilterOriginal> other = nullptr;
     filter->Compose(other);
     return true;
@@ -213,17 +185,14 @@ bool DoSetGeometry(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
-
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
     int32_t width1 = GetData<int32_t>();
     int32_t height1 = GetData<int32_t>();
     Canvas canvas(width1, height1);
@@ -244,16 +213,14 @@ bool DoIsOffscreenCanvas(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    float width = 100;
-    float height = 100;
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, width, height);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
     bool isOffscreenCanvas = GetData<bool>();
     filter->IsOffscreenCanvas(isOffscreenCanvas);
     return true;
@@ -273,6 +240,19 @@ bool DoTransformGradientBlurDirection(const uint8_t* data, size_t size)
     uint8_t direction = GetData<uint8_t>();
     uint8_t directionBias = GetData<uint8_t>();
     RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
+    direction = g_number5;
+    directionBias = g_number6;
+    RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
+    directionBias = g_number3;
+    RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
+    direction = g_number1;
+    RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
+    direction = g_number7;
+    directionBias = g_number1;
+    RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
+    direction = g_number8;
+    directionBias = g_number1;
+    RSLinearGradientBlurFilter::TransformGradientBlurDirection(direction, directionBias);
     return true;
 }
 bool DoComputeScale(const uint8_t* data, size_t size)
@@ -290,6 +270,9 @@ bool DoComputeScale(const uint8_t* data, size_t size)
     float height1 = GetData<float>();
     bool useMaskAlgorithm = GetData<bool>();
     RSLinearGradientBlurFilter::ComputeScale(width1, height1, useMaskAlgorithm);
+    RSLinearGradientBlurFilter::ComputeScale(g_width, g_width, true);
+    RSLinearGradientBlurFilter::ComputeScale(g_width, g_width, false);
+    RSLinearGradientBlurFilter::ComputeScale(g_number10, g_number10, false);
     return true;
 }
 bool DoCalcDirectionBias(const uint8_t* data, size_t size)
@@ -304,6 +287,15 @@ bool DoCalcDirectionBias(const uint8_t* data, size_t size)
     g_pos = 0;
 
     Matrix mat;
+    RSLinearGradientBlurFilter::CalcDirectionBias(mat);
+    mat.Set(Drawing::Matrix::Index::SKEW_X, -g_number1);
+    mat.Set(Drawing::Matrix::Index::SKEW_Y, g_number1);
+    RSLinearGradientBlurFilter::CalcDirectionBias(mat);
+    mat.Set(Drawing::Matrix::Index::SCALE_X, -g_number1);
+    mat.Set(Drawing::Matrix::Index::SCALE_Y, -g_number1);
+    RSLinearGradientBlurFilter::CalcDirectionBias(mat);
+    mat.Set(Drawing::Matrix::Index::SKEW_X, g_number1);
+    mat.Set(Drawing::Matrix::Index::SKEW_Y, -g_number1);
     RSLinearGradientBlurFilter::CalcDirectionBias(mat);
     return true;
 }
@@ -327,18 +319,24 @@ bool DoGetGradientDirectionPoints(const uint8_t* data, size_t size)
     Point point2(z, k);
     points[0] = point1;
     points[1] = point2;
-
     int l = GetData<int>();
     int t = GetData<int>();
     int r = GetData<int>();
     int b = GetData<int>();
     RectI value(l, t, r, b);
     Rect clipBounds(value);
-
     int dir = GetData<int>();
-
     GradientDirection direction = (GradientDirection)dir;
     RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, direction);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::BOTTOM);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::TOP);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::RIGHT);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::LEFT);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::RIGHT_BOTTOM);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::LEFT_TOP);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::LEFT_BOTTOM);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::RIGHT_TOP);
+    RSLinearGradientBlurFilter::GetGradientDirectionPoints(points, clipBounds, GradientDirection::LEFT);
     return true;
 }
 bool DoMakeAlphaGradientShader(const uint8_t* data, size_t size)
@@ -352,23 +350,16 @@ bool DoMakeAlphaGradientShader(const uint8_t* data, size_t size)
     g_size = size;
     g_pos = 0;
 
-    int l = GetData<int>();
-    int t = GetData<int>();
-    int r = GetData<int>();
-    int b = GetData<int>();
-    Rect clipBounds(l, t, r, b);
-
     std::vector<std::pair<float, float>> fractionStops;
-    float value1 = GetData<float>();
-    float value2 = GetData<float>();
-    float blurRadius = GetData<float>();
-    fractionStops.push_back(std::make_pair(value1, value2));
-    int value = GetData<int>();
-    GradientDirection direction = (GradientDirection)value;
-    auto para = std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-
-    uint8_t directionBias = GetData<uint8_t>();
-    RSLinearGradientBlurFilter::MakeAlphaGradientShader(clipBounds, para, directionBias);
+    std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
+        std::make_shared<RSLinearGradientBlurPara>(g_number16, fractionStops, GradientDirection::BOTTOM);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
+    Drawing::Rect clipBounds = { g_one, g_one, g_one, g_one };
+    filter->MakeAlphaGradientShader(clipBounds, linearGradientBlurPara, g_number1);
+    linearGradientBlurPara->fractionStops_.push_back(std::make_pair(g_one, g_one));
+    linearGradientBlurPara->fractionStops_.push_back(std::make_pair(g_value, g_value));
+    filter->MakeAlphaGradientShader(clipBounds, linearGradientBlurPara, g_number1);
+    filter->MakeAlphaGradientShader(clipBounds, linearGradientBlurPara, g_number0);
     return true;
 }
 bool DoDrawMaskLinearGradientBlur(const uint8_t* data, size_t size)
@@ -383,22 +374,22 @@ bool DoDrawMaskLinearGradientBlur(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     int value = GetData<int>();
     float blurRadius = GetData<float>();
     GradientDirection direction = (GradientDirection)value;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
         std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, 100, 100);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
     std::shared_ptr<Drawing::Image> imagef = nullptr;
     Drawing::Canvas canvas;
-    Drawing::Rect dst = { 1.f, 1.f, 1.f, 1.f };
+    Drawing::Rect dst = { g_one, g_one, g_one, g_one };
     auto image = std::make_shared<Drawing::Image>();
     auto blurFilter =
         std::static_pointer_cast<RSDrawingFilterOriginal>(linearGradientBlurPara->LinearGradientBlurFilter_);
     auto alphaGradientShader = std::make_shared<Drawing::ShaderEffect>();
-    filter->DrawMaskLinearGradientBlur(imagef, canvas, blurFilter, alphaGradientShader, dst);
+    RSLinearGradientBlurFilter::DrawMaskLinearGradientBlur(imagef, canvas, blurFilter, alphaGradientShader, dst);
     return true;
 }
 bool DoMakeMaskLinearGradientBlurShader(const uint8_t* data, size_t size)
@@ -429,19 +420,51 @@ bool DoDrawMeanLinearGradientBlur(const uint8_t* data, size_t size)
     g_pos = 0;
 
     std::vector<std::pair<float, float>> fractionStops;
-    fractionStops.push_back(std::make_pair(0.f, 0.f));
-    fractionStops.push_back(std::make_pair(1.f, 1.f));
-    int value = GetData<int>();
-    float blurRadius = GetData<float>();
-    GradientDirection direction = (GradientDirection)value;
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
-        std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
-    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, 100, 100);
-    Drawing::Canvas canvas;
-    Drawing::Rect dst = { 1.f, 1.f, 1.f, 1.f };
+        std::make_shared<RSLinearGradientBlurPara>(g_number16, fractionStops, GradientDirection::BOTTOM);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
+    Drawing::Canvas canvas = RSPaintFilterCanvas(std::make_shared<Drawing::Canvas>().get());
+    canvas.gpuContext_ = std::make_shared<Drawing::GPUContext>();
+    Drawing::Rect dst = { g_one, g_one, g_one, g_one };
     std::shared_ptr<Drawing::Image> image = nullptr;
     auto alphaGradientShader = std::make_shared<Drawing::ShaderEffect>();
-    filter->DrawMeanLinearGradientBlur(image, canvas, 0.f, alphaGradientShader, dst);
+    filter->DrawMeanLinearGradientBlur(image, canvas, g_zero, alphaGradientShader, dst);
+    filter->MakeVerticalMeanBlurEffect();
+    filter->MakeHorizontalMeanBlurEffect();
+    image = std::make_shared<Drawing::Image>();
+    image->imageImplPtr = std::make_shared<Drawing::SkiaImage>();
+    filter->DrawMeanLinearGradientBlur(image, canvas, g_zero, alphaGradientShader, dst);
+    return true;
+}
+bool DoDrawImageRectByDDGRGpuApiType(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    std::vector<std::pair<float, float>> fractionStops;
+    fractionStops.push_back(std::make_pair(g_zero, g_zero));
+    fractionStops.push_back(std::make_pair(g_one, g_one));
+    std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
+        std::make_shared<RSLinearGradientBlurPara>(g_number16, fractionStops, GradientDirection::BOTTOM);
+    auto filter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara, g_width, g_width);
+    Drawing::Canvas canvas;
+    uint8_t directionBias = g_number0;
+    Drawing::RectF clipIPadding;
+    auto image = std::make_shared<Drawing::Image>();
+    linearGradientBlurPara->direction_ = GradientDirection::NONE;
+    RSLinearGradientBlurFilter::DrawImageRectByDDGRGpuApiType(
+        canvas, directionBias, clipIPadding, image, linearGradientBlurPara);
+    linearGradientBlurPara->useMaskAlgorithm_ = false;
+    RSLinearGradientBlurFilter::DrawImageRectByDDGRGpuApiType(
+        canvas, directionBias, clipIPadding, image, linearGradientBlurPara);
     return true;
 }
 } // namespace Rosen
@@ -451,7 +474,6 @@ bool DoDrawMeanLinearGradientBlur(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Rosen::DoPostProcess(data, size);
     OHOS::Rosen::DoOtherFunc(data, size);
     OHOS::Rosen::DoDrawImageRect(data, size);
     OHOS::Rosen::DoPreProcess(data, size);
@@ -466,5 +488,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoDrawMaskLinearGradientBlur(data, size);
     OHOS::Rosen::DoMakeMaskLinearGradientBlurShader(data, size);
     OHOS::Rosen::DoDrawMeanLinearGradientBlur(data, size);
+    OHOS::Rosen::DoDrawImageRectByDDGRGpuApiType(data, size);
     return 0;
 }

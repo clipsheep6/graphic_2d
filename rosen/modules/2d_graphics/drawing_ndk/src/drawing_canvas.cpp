@@ -744,7 +744,7 @@ void OH_Drawing_CanvasDrawImageRect(OH_Drawing_Canvas* cCanvas, OH_Drawing_Image
         cSampling ? CastToSamplingOptions(*cSampling) : Drawing::SamplingOptions());
 }
 
-void OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Image* cImage,
+OH_Drawing_ErrorCode OH_Drawing_CanvasDrawImage(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Image* cImage,
     float left, float top, const OH_Drawing_SamplingOptions* cSampingOptions)
 {
     Canvas* canvas = CastToCanvas(cCanvas);

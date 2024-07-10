@@ -150,12 +150,12 @@ HWTEST_F(RSFilterCacheManagerTest, UpdateCacheStateWithDirtyRegionTest002, TestS
 }
 
 /**
- * @tc.name: DrawFilterWithoutSnapshotTest
- * @tc.desc: test results of DrawFilterWithoutSnapshot
+ * @tc.name: DrawFilterForCachedImageTest
+ * @tc.desc: test results of DrawFilterForCachedImage
  * @tc.type: FUNC
  * @tc.require: issueIA5FLZ
  */
-HWTEST_F(RSFilterCacheManagerTest, DrawFilterWithoutSnapshotTest, TestSize.Level1)
+HWTEST_F(RSFilterCacheManagerTest, DrawFilterForCachedImageTest, TestSize.Level1)
 {
     auto rsFilterCacheManager = std::make_shared<RSFilterCacheManager>();
     Drawing::Canvas canvas;
@@ -164,7 +164,7 @@ HWTEST_F(RSFilterCacheManagerTest, DrawFilterWithoutSnapshotTest, TestSize.Level
     auto filter = std::make_shared<RSDrawingFilter>(shaderFilter);
     Drawing::RectI src;
     Drawing::RectI dst;
-    EXPECT_FALSE(rsFilterCacheManager->DrawFilterWithoutSnapshot(filterCanvas, filter, src, dst, false));
+    EXPECT_FALSE(rsFilterCacheManager->DrawFilterForCachedImage(filterCanvas, filter, src, dst, false));
 }
 
 /**
@@ -180,13 +180,11 @@ HWTEST_F(RSFilterCacheManagerTest, DrawFilterTest, TestSize.Level1)
     RSPaintFilterCanvas filterCanvas(&canvas);
     auto shaderFilter = std::make_shared<RSShaderFilter>();
     auto filter = std::make_shared<RSDrawingFilter>(shaderFilter);
-    RSFilterCacheManager::DrawFilterParams params;
-    params.needSnapshotOutset = true;
-    params.shouldClearFilteredCache = false;
+    bool shouldClearFilteredCache = false;
     // for test
     std::optional<Drawing::RectI> srcRect(Drawing::RectI { 0, 0, 100, 100 });
     std::optional<Drawing::RectI> dstRect(Drawing::RectI { 0, 0, 100, 100 });
-    rsFilterCacheManager->DrawFilter(filterCanvas, filter, params, srcRect, dstRect);
+    rsFilterCacheManager->DrawFilter(filterCanvas, filter, shouldClearFilteredCache, srcRect, dstRect);
     EXPECT_TRUE(filterCanvas.GetDeviceClipBounds().IsEmpty());
 }
 

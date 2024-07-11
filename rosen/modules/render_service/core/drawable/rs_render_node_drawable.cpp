@@ -584,6 +584,7 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
         cacheCanvas->SetHighContrast(renderEngine->IsHighContrastEnabled());
     }
     cacheCanvas->CopyConfiguration(*curCanvas);
+    // Record the transformation matrix between the original surface and the new surface.
     cacheCanvas->SetEffectMatrix(curCanvas->GetTotalMatrix());
     // Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures
     // [PLANNNING] disable it in sub-thread.

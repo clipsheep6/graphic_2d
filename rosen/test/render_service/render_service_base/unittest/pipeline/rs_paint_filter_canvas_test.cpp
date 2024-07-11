@@ -1188,6 +1188,38 @@ HWTEST_F(RSPaintFilterCanvasTest, CopyConfigurationTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetEffectMatrixTest
+ * @tc.desc: SetEffectMatrix Test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSPaintFilterCanvasTest, SetEffectMatrixTest, TestSize.Level1)
+{
+    // building a new RSPaintFilterCanvas object
+    auto drawingCanvas = std::make_unique<Drawing::Canvas>();
+    RSPaintFilterCanvas::Env env;
+    RSPaintFilterCanvas::Env envOther;
+    RSPaintFilterCanvas rsPaintFilterCanvas(drawingCanvas.get());
+
+    paintFilterCanvas_->envStack_.push(env);
+    rsPaintFilterCanvas.envStack_.push(envOther);
+
+    rsPaintFilterCanvas.SetHighContrast(false);
+    RSPaintFilterCanvas.SetEffectMatrix(Drawing::Matrix());
+    paintFilterCanvas_->CopyConfiguration(rsPaintFilterCanvas);
+    paintFilterCanvas_->SetEffectMatrix(Drawing::Matrix());
+
+    std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> effectData = nullptr;
+    effectData = std::make_shared<RSPaintFilterCanvas::CachedEffectData>();
+    EXPECT_NE(effectData, nullptr);
+    effectData->cachedImage_ = nullptr;
+    rsPaintFilterCanvas.SetEffectData(effectData);
+    rsPaintFilterCanvas.SetEffectMatrix(Drawing::Matrix());
+    paintFilterCanvas_->CopyConfiguration(rsPaintFilterCanvas);
+    paintFilterCanvas_->SetEffectMatrix(Drawing::Matrix());
+}
+
+/**
  * @tc.name: ReplaceOrSwapMainScreenTest
  * @tc.desc: ReplaceMainScreenData and SwapBackMainScreenData Test
  * @tc.type:FUNC

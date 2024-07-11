@@ -166,7 +166,7 @@ int32_t XMLParser::ParseSubSequentParams(xmlNode &node, std::string &paraName)
                 setResult = ParseSimplex(node, mParsedData_->virtualDisplayConfigs_, "strategy");
                 mParsedData_->virtualDisplaySwitch_ = true;
             } else {
-            mParsedData_->virtualDisplayConfigs_.clear();
+                mParsedData_->virtualDisplayConfigs_.clear();
                 mParsedData_->virtualDisplaySwitch_ = false;
             }
             break;

@@ -3794,9 +3794,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     }
     ScreenInfo curScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
     // skip frame according to skipFrameInterval value of SetScreenSkipFrameInterval interface
-    if (node.SkipFrame(curScreenInfo.skipFrameInterval)) {
+    if (node.SkipFrame(curScreenInfo.skipFrameInterval) && RSMainThread::Instance()->IsRequestedNextVSync()) {
         RS_TRACE_NAME("SkipFrame, screenId:" + std::to_string(node.GetScreenId()));
-        screenManager->ForceRefreshOneFrameIfNoRNV();
         return;
     }
 

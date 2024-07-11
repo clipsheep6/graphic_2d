@@ -293,7 +293,7 @@ void XMLParser::ParseAppBufferList(xmlNode &node)
 
     if (!mParsedData_) {
         HGM_LOGE("XMLParser mParsedData_ is not initialized");
-        return HGM_ERROR;
+        return;
     }
     mParsedData_->appBufferList_.clear();
     currNode = currNode->xmlChildrenNode;
@@ -310,7 +310,7 @@ void XMLParser::ParseBufferStrategyList(xmlNode &node, PolicyConfigData::Strateg
 {
     if (!mParsedData_) {
         HGM_LOGE("XMLParser mParsedData_ is not initialized");
-        return HGM_ERROR;
+        return;
     }
     if (mParsedData_->appBufferList_.empty()) {
         return;

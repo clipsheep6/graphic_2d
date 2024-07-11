@@ -1006,8 +1006,9 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     canvas->AttachBrush(brush);
     canvas->DrawImage(*effectData->cachedImage_, static_cast<float>(effectData->cachedRect_.GetLeft()),
         static_cast<float>(effectData->cachedRect_.GetTop()), Drawing::SamplingOptions());
-    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, DeviceClipBounds:%s",
-        effectData->cachedRect_.ToString().c_str(), canvas->GetDeviceClipBounds().ToString().c_str());
+    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, DeviceClipBounds:%s, IdentityMatrix: %d",
+        effectData->cachedRect_.ToString().c_str(), canvas->GetDeviceClipBounds().ToString().c_str(),
+        effectData->cachedMatrix_.IsIdentity());
     canvas->DetachBrush();
 }
 

@@ -53,3 +53,30 @@ void SurfaceCreateFromGpuContext::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_RectDestroy(dst);
     OH_Drawing_GpuContextDestroy(gpuContext);
 }
+
+void SurfaceGetImageSnapshot::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    // 只能用gpu来画，用cpu会闪退
+    const int32_t width = 256;  // 256 绘图表面的宽度
+    const int32_t height = 256; // 256 绘图表面的高度
+    OH_Drawing_GpuContextOptions options;
+    options.allowPathMaskCaching = false;
+    OH_Drawing_GpuContext *gpuContext = OH_Drawing_GpuContextCreateFromGL(options);
+    OH_Drawing_Image_Info imageInfo = {
+        width, height, COLOR_FORMAT_RGBA_8888,
+        ALPHA_FORMAT_OPAQUE}; // COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE 绘图表面的颜色和透明度
+    OH_Drawing_Surface *surface;
+    surface = OH_Drawing_SurfaceCreateFromGpuContext(gpuContext, budgeted, imageInfo);
+    OH_Drawing_Image *image = nullptr;
+    for (int i = 0; i < testCount_; i++) {
+        image = OH_Drawing_SurfaceGetImageSnapshot(surface);
+    }
+    if (image == nullptr) {
+        DRAWING_LOGE("SurfaceGetImageSnapshot:: OH_Drawing_SurfaceGetImageSnapshot failed");
+    } else {
+        DRAWING_LOGE("SurfaceGetImageSnapshot::OH_Drawing_SurfaceGetImageSnapshot success");
+    }
+    OH_Drawing_Rect *dst = OH_Drawing_RectCreate(0, 0, 256, 256); // 0, 0, 256, 256 创建矩形
+    OH_Drawing_CanvasDrawRect(canvas, dst);
+    OH_Drawing_RectDestroy(dst);
+    OH_Drawing_GpuContextDestroy(gpuContext);
+}

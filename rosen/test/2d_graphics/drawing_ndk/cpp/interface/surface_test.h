@@ -35,4 +35,16 @@ protected:
     bool budgeted;
 };
 
+class SurfaceGetImageSnapshot : public TestBase {
+public:
+    SurfaceGetImageSnapshot(int type, bool budgeted) : TestBase(type), budgeted(budgeted) {
+        fileName_ = "SurfaceGetImageSnapshot";
+    };
+    ~SurfaceGetImageSnapshot() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+    bool budgeted;
+};
+
 #endif // INTERFACE_SURFACE_TEST_H

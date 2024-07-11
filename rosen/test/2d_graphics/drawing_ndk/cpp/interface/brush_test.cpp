@@ -16,8 +16,11 @@
 
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_color.h>
+#include <native_drawing/drawing_color_space.h>
 #include <native_drawing/drawing_font.h>
 #include <native_drawing/drawing_rect.h>
+
+#include "test_common.h"
 
 #include "common/log_common.h"
 
@@ -38,4 +41,24 @@ void BrushReset::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_RectDestroy(rect2);
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(DemoRef);
+};
+
+void BrushSetColor4f::OnTestPerformance(OH_Drawing_Canvas *canvas){
+    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetColor(
+        brush, OH_Drawing_ColorSetArgb(DRAW_COLORBLACK, DRAW_COLORBLACK, DRAW_COLORTRANSPARENT, DRAW_COLORTRANSPARENT));
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(400, 400, 500, 500); // 400, 400, 500, 500 矩形参数
+    OH_Drawing_ColorSpace *colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    OH_Drawing_Color4f color4f = {1, 0, 1, 0.5}; // 颜色属性red 1,green 0,blue 1,alpha 0.5
+    OH_Drawing_ErrorCode code;
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_BrushSetColor4f(brush, &color4f, colorSpace);
+    }
+    DRAWING_LOGE("BrushSetColor4f:: OH_Drawing_ErrorCode is %{public}d", code);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_RectDestroy(rect);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_BrushDestroy(brush);
 };

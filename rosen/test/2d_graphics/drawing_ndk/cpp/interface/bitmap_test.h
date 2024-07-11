@@ -36,6 +36,24 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class ImageIsOpaque : public TestBase {
+public:
+    explicit ImageIsOpaque(int type) : TestBase(type) { fileName_ = "ImageIsOpaque"; };
+    ~ImageIsOpaque() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class ImageCreateFromRaster : public TestBase {
+public:
+    explicit ImageCreateFromRaster(int type) : TestBase(type) { fileName_ = "ImageCreateFromRaster"; };
+    ~ImageCreateFromRaster() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
 class BitmapReadPixels : public TestBase {
 public:
     explicit BitmapReadPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
@@ -77,5 +95,61 @@ protected:
     int rectWidth_ = 0;
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapInstallPixels : public TestBase {
+public:
+    explicit BitmapInstallPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
+        : TestBase(type), fCT(ct), fAT(at) {
+        fileName_ = "BitmapInstallPixels";
+    };
+    ~BitmapInstallPixels() override = default;
+
+protected:
+    OH_Drawing_ColorFormat fCT;
+    OH_Drawing_AlphaFormat fAT;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class BitmapPeekPixels : public TestBase {
+public:
+    explicit BitmapPeekPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
+        : TestBase(type), fCT(ct), fAT(at) {
+        fileName_ = "BitmapPeekPixels";
+    };
+    ~BitmapPeekPixels() override = default;
+
+protected:
+    OH_Drawing_ColorFormat fCT;
+    OH_Drawing_AlphaFormat fAT;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class BitmapTryAllocPixels : public TestBase {
+public:
+    explicit BitmapTryAllocPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
+        : TestBase(type), fCT(ct), fAT(at) {
+        fileName_ = "BitmapTryAllocPixels";
+    };
+    ~BitmapTryAllocPixels() override = default;
+
+protected:
+    OH_Drawing_ColorFormat fCT;
+    OH_Drawing_AlphaFormat fAT;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class BitmapComputeByteSize : public TestBase {
+public:
+    explicit BitmapComputeByteSize(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
+        : TestBase(type), fCT(ct), fAT(at) {
+        fileName_ = "BitmapComputeByteSize";
+    };
+    ~BitmapComputeByteSize() override = default;
+
+protected:
+    OH_Drawing_ColorFormat fCT;
+    OH_Drawing_AlphaFormat fAT;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
 };
 #endif // INTERFACE_BITMAP_TEST_H

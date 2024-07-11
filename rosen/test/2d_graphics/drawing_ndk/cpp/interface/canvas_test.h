@@ -466,4 +466,22 @@ public:
 protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
+
+class CanvasDrawNestedRoundRect : public TestBase {
+public:
+    explicit CanvasDrawNestedRoundRect(int type) : TestBase(type) { fileName_ = "CanvasDrawNestedRoundRect"; };
+    ~CanvasDrawNestedRoundRect() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class CanvasDrawImage : public TestBase {
+public:
+    explicit CanvasDrawImage(int type) : TestBase(type) { fileName_ = "CanvasDrawImage"; };
+    ~CanvasDrawImage() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
 #endif // INTERFACE_CANVAS_TEST_H

@@ -73,6 +73,7 @@ ohos_shared_library("drawing_napi_impl") {
     "path_effect_napi/js_path_effect.cpp",
     "path_napi/js_path.cpp",
     "pen_napi/js_pen.cpp",
+    "rect_napi/js_rectf.cpp",
     "region_napi/js_region.cpp",
     "roundRect_napi/js_roundrect.cpp",
     "sampling_options_napi/js_sampling_options.cpp",

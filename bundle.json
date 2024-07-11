@@ -99,7 +99,8 @@
           "libpng",
           "ffrt",
           "libxml2",
-          "skia"
+          "skia",
+          "container_hmos_service_broker"
         ],
         "third_party": [
           "flutter",

@@ -992,7 +992,7 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     }
     RS_TRACE_FUNC();
     Drawing::AutoCanvasRestore acr(*canvas, true);
-    canvas->SetMatrix(effectData->effectMatrix_);
+    canvas->SetMatrix(effectData->cachedMatrix_);
     auto visibleRect = canvas->GetVisibleRect();
     visibleRect.Round();
     auto visibleIRect = Drawing::RectI(

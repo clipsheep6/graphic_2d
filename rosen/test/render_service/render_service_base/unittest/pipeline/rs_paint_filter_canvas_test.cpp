@@ -1205,7 +1205,7 @@ HWTEST_F(RSPaintFilterCanvasTest, SetEffectMatrixTest, TestSize.Level1)
     rsPaintFilterCanvas.envStack_.push(envOther);
 
     rsPaintFilterCanvas.SetHighContrast(false);
-    rSPaintFilterCanvas.SetEffectMatrix(Drawing::Matrix());
+    rsPaintFilterCanvas.SetEffectMatrix(Drawing::Matrix());
     paintFilterCanvas_->CopyConfiguration(rsPaintFilterCanvas);
     paintFilterCanvas_->SetEffectMatrix(Drawing::Matrix());
 

@@ -65,10 +65,7 @@ if (!enable_text_gine) {
       "../properties/typography_style.cpp",
       "../properties/typography_txt.cpp",
     ]
-    deps = [
-      "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
-      "//third_party/bounds_checking_function:libsec_static",
-    ]
+    deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
     external_deps = [ "bounds_checking_function:libsec_static" ]
     part_name = "graphic_2d"
     subsystem_name = "graphic"

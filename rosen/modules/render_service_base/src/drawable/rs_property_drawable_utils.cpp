@@ -1007,7 +1007,7 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     Drawing::Brush brush;
     brush.SetForceBrightnessDisable(true);
     canvas->AttachBrush(brush);
-    // Draw cached image in the device coordinate system of EC's canvas, image outside the device clip bounds 
+    // Draw cached image in the device coordinate system of EC's canvas, image outside the device clip bounds
     // will be clipped automatically.
     canvas->DrawImage(*effectData->cachedImage_, static_cast<float>(effectData->cachedRect_.GetLeft()),
         static_cast<float>(effectData->cachedRect_.GetTop()), Drawing::SamplingOptions());

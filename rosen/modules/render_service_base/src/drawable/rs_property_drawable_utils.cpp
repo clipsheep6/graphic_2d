@@ -992,7 +992,7 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     }
     RS_TRACE_FUNC();
     Drawing::AutoCanvasRestore acr(*canvas, true);
-    canvas->ResetMatrix();
+    canvas->SetMatrix(effectData->effectMatrix_);
     auto visibleRect = canvas->GetVisibleRect();
     visibleRect.Round();
     auto visibleIRect = Drawing::RectI(
@@ -1004,15 +1004,10 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     Drawing::Brush brush;
     brush.SetForceBrightnessDisable(true);
     canvas->AttachBrush(brush);
-    // dstRect: canvas clip region
-    Drawing::Rect dstRect = canvas->GetDeviceClipBounds();
-    // srcRect: map dstRect onto cache coordinate
-    Drawing::Rect srcRect = dstRect;
-    srcRect.Offset(-effectData->cachedRect_.GetLeft(), -effectData->cachedRect_.GetTop());
-    canvas->DrawImageRect(*effectData->cachedImage_, srcRect, dstRect,
-        Drawing::SamplingOptions(), Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
-    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, src:%s, dst:%s",
-        effectData->cachedRect_.ToString().c_str(), srcRect.ToString().c_str(), dstRect.ToString().c_str());
+    canvas->DrawImage(*effectData->cachedImage_, static_cast<float>(effectData->cachedRect_.GetLeft()),
+        static_cast<float>(effectData->cachedRect_.GetTop()), Drawing::SamplingOptions());
+    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, DeviceClipBounds:%s",
+        effectData->cachedRect_.ToString().c_str(), canvas->GetDeviceClipBounds().ToString().c_str());
     canvas->DetachBrush();
 }
 

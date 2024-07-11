@@ -36,6 +36,9 @@ namespace {
 const uint8_t* g_data = nullptr;
 size_t g_size = 0;
 size_t g_pos;
+int g_zero = 0;
+int g_one = 1;
+int g_two = 2;
 } // namespace
 
 template<class T>
@@ -84,15 +87,40 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSColorExtract::QuantizedGreen(color);
     RSColorExtract::QuantizedBlue(color);
     RSColorExtract::QuantizeFromRGB888(color);
-    RSColorExtract::ModifyWordWidth(0, 1, 0);
+    RSColorExtract::ModifyWordWidth(g_zero, g_one, g_zero);
     RSColorExtract::ApproximateToRGB888(r, g, b);
     RSColorExtract::ApproximateToRGB888(color);
     RSColorExtract::cmp(a, c);
     RSColorExtract::Rgb2Gray(color);
     RSColorExtract::NormalizeRgb(color);
     RSColorExtract::CalcRelativeLum(color);
+    return true;
+}
 
-    RSColorExtract::VBox vBox(1, 0, &rsColorExtract);
+bool DoSplitBoxes(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    std::shared_ptr<RSColorExtract> extract;
+    std::priority_queue<RSColorExtract::VBox, std::vector<RSColorExtract::VBox>, std::less<RSColorExtract::VBox>>
+        colorVBoxPriorityQueue;
+    std::shared_ptr<Drawing::Pixmap> pixmap = nullptr;
+    RSColorExtract colorExtract(pixmap);
+    RSColorExtract::VBox colorExtractionBox(g_one, g_zero, &colorExtract);
+    colorVBoxPriorityQueue.push(colorExtractionBox);
+    colorExtract.SplitBoxes(colorVBoxPriorityQueue, g_zero);
+    colorVBoxPriorityQueue.empty();
+    extract->SplitBoxes(colorVBoxPriorityQueue, g_two);
+    colorVBoxPriorityQueue.empty();
+    
+    RSColorExtract::VBox vBox(g_one, g_zero, &colorExtract);
     vBox.fitBox();
     vBox.GetVolume();
     vBox.CanSplit();
@@ -100,6 +128,28 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     vBox.GetLongestColorDimension();
     vBox.FindSplitPoint();
     vBox.GetAverageColor();
+    return true;
+}
+bool DoGenerateAverageColors(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    std::shared_ptr<RSColorExtract> extract;
+    std::priority_queue<RSColorExtract::VBox, std::vector<RSColorExtract::VBox>, std::less<RSColorExtract::VBox>>
+        colorVBoxPriorityQueue;
+    std::shared_ptr<Drawing::Pixmap> pixmap = nullptr;
+    extract->GenerateAverageColors(colorVBoxPriorityQueue).empty();
+    RSColorExtract colorExtract(pixmap);
+    RSColorExtract::VBox colorExtractionBox(g_one, g_zero, &colorExtract);
+    colorVBoxPriorityQueue.push(colorExtractionBox);
+    extract->GenerateAverageColors(colorVBoxPriorityQueue).empty();
     return true;
 }
 
@@ -111,5 +161,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     OHOS::Rosen::DoSomethingInterestingWithMyAPI(data, size);
+    OHOS::Rosen::DoSplitBoxes(data, size);
+    OHOS::Rosen::DoGenerateAverageColors(data, size);
     return 0;
 }

@@ -511,6 +511,31 @@ bool DoSetScreenPowerStatus(const uint8_t* data, size_t size)
 
     return true;
 }
+
+#ifdef TP_FEATURE_ENABLE
+bool OHOS::Rosen::DoSetTpFeatureConfigFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    // get data
+    int32_t tpFeature = GetData<int32_t>();
+    std::string tpConfig = GetData<std::string>();
+
+    // test
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
+    RSRenderServiceConnectionProxy rsRenderServiceConnectionProxy(remoteObject);
+    RSRenderServiceConnectionProxy.SetTpFeatureConfig(tpFeature, tpConfig);
+    return true;
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS
 

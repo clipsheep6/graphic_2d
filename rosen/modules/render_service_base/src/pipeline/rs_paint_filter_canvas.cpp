@@ -1292,9 +1292,9 @@ void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
     // copy env
     envStack_.top() = other.envStack_.top();
     // deep copy effecData
-    auto effectData = other.envStack_.top().effecData_;
+    auto effectData = other.envStack_.top().effectData_;
     if (effectData != nullptr) {
-        envStack_.top().effecData_ = std::make_shared<CachedEffectData>(
+        envStack_.top().effectData_ = std::make_shared<CachedEffectData>(
             effectData->cachedImage_, effectData->cachedRect_, Drawing::Matrix());
     }
 

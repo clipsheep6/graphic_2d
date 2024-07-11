@@ -992,6 +992,9 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     }
     RS_TRACE_FUNC();
     Drawing::AutoCanvasRestore acr(*canvas, true);
+    // Transfrom the current canvas local coordinate system to the device coordinate system of EC's canvas.
+    // In most case, the EffectComponent and UseEffect are in the same surface, and the cachedMatrix should be
+    // an identity matrix.
     canvas->SetMatrix(effectData->cachedMatrix_);
     auto visibleRect = canvas->GetVisibleRect();
     visibleRect.Round();
@@ -1004,11 +1007,13 @@ void RSPropertyDrawableUtils::DrawUseEffect(RSPaintFilterCanvas* canvas)
     Drawing::Brush brush;
     brush.SetForceBrightnessDisable(true);
     canvas->AttachBrush(brush);
+    // Draw cached image in the device coordinate system of EC's canvas, image outside the device clip bounds 
+    // will be clipped automatically.
     canvas->DrawImage(*effectData->cachedImage_, static_cast<float>(effectData->cachedRect_.GetLeft()),
         static_cast<float>(effectData->cachedRect_.GetTop()), Drawing::SamplingOptions());
-    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, DeviceClipBounds:%s, IdentityMatrix: %d",
-        effectData->cachedRect_.ToString().c_str(), canvas->GetDeviceClipBounds().ToString().c_str(),
-        effectData->cachedMatrix_.IsIdentity());
+    RS_OPTIONAL_TRACE_NAME_FMT("RSPropertyDrawableUtils::DrawUseEffect cachedRect_:%s, DeviceClipBounds:%s,",
+        "IdentityMatrix: %d", effectData->cachedRect_.ToString().c_str(),
+        canvas->GetDeviceClipBounds().ToString().c_str(), effectData->cachedMatrix_.IsIdentity());
     canvas->DetachBrush();
 }
 

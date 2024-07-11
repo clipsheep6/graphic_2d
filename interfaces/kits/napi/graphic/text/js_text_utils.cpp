@@ -665,4 +665,15 @@ napi_value CreateFontMetricsJsValue(napi_env env, Drawing::FontMetrics& fontMetr
     }
     return objValue;
 }
+
+void AssignmentContextBaseArguments(ContextBase& contextBase, std::string message,
+    const DrawingErrorCode errCode, bool changeStatus)
+{
+    if (changeStatus) {
+        contextBase.status = napi_invalid_arg;
+    }
+    contextBase.errMessage = message;
+    contextBase.errCode = static_cast<int32_t>(errCode);
+    ROSEN_LOGE("AssignmentContextBaseArguments error, errCode : %d message : %s ", errCode, message.c_str());
+}
 } // namespace OHOS::Rosen

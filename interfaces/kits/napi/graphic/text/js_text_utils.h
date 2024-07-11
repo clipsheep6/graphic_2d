@@ -28,6 +28,7 @@
 #include "typography_create.h"
 #include "typography_style.h"
 #include <codecvt>
+#include "napi_async_work.h"
 
 namespace OHOS::Rosen {
 constexpr size_t ARGC_ONE = 1;
@@ -60,11 +61,13 @@ enum class ResourceType {
 };
 
 enum class DrawingErrorCode : int32_t {
+    ERROR = -1,
     OK = 0,
     ERROR_NO_PERMISSION = 201, // the value do not change. It is defined on all system
     ERROR_INVALID_PARAM = 401, // the value do not change. It is defined on all system
     ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change. It is defined on all system
     ERROR_ABNORMAL_PARAM_VALUE = 18600001, // the value do not change. It is defined on color manager system
+    ERR_NO_MEMORY = 8800100, // no memory
 };
 
 template<class T>
@@ -509,5 +512,8 @@ void SetTextShadowProperty(napi_env env, napi_value argValue, TextStyle& textSty
 void SetStrutStyleFromJS(napi_env env, napi_value argValue, TypographyStyle& pographyStyle);
 
 void SetRectStyleFromJS(napi_env env, napi_value argValue, RectStyle& rectStyle);
+
+void AssignmentContextBaseArguments(ContextBase& contextBase, std::string message,
+    const DrawingErrorCode errCode, bool changeStatus = true);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

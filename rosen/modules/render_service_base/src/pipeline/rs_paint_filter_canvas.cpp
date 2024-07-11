@@ -1371,7 +1371,8 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanva
     return envStack_.top().effectData_;
 }
 
-void RSPaintFilterCanvas::SetEffectMatrix(const Drawing::Matrix& matrix) {
+void RSPaintFilterCanvas::SetEffectMatrix(const Drawing::Matrix& matrix)
+{
     auto effectData = envStack_.top().effectData_;
     if (effectData == nullptr) {
         ROSEN_LOGE("RSPaintFilterCanvas::SetEffectMatrix effectData null.");

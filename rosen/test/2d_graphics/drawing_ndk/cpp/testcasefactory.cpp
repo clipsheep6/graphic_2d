@@ -145,383 +145,431 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
 
     // interface canvas
-    {"canvas_drawrect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_rotate",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasRotate>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawimagerect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImageRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_translate",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasTranslate>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_scale",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasScale>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_clear",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClear>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_setmatrix",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSetMatrix>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_resetmatrix",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasResetMatrix>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_readpixels",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasReadPixels>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_readpixelstobitmap",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasReadPixelsToBitmap>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_drawimagerectwithsrc",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasDrawImageRectWithSrc>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_drawshadow",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawShadow>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_skew",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSkew>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawvertices",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawVertices>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawbitmaprect",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasDrawBitmapRect>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_drawcircle",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawCircle>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawoval",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawOval>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawarc",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawArc>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawroundrect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRoundRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawtextblob",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawTextBlob>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawcliprect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawcliproundrect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipRoundRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawclippath",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPath>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawpath",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPath>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawbitmap",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitmap>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawlayer",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawLayer>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawpoints",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPoints>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawline",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawLine>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawbackground",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasDrawBackground>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_drawregion",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRegion>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_restoretocount",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasRestoreToCount>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_save",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSave>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawpixelmaprect",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasDrawPixelMapRect>(TestBase::DRAW_STYLE_COMPLEX);
-     }}, // OH_PixelMap_CreatePixelMap传入参数napi_env env无法获取，无法实现
-    {"canvas_gettotalmatrix",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasGetTotalMatrix>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_restore",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasRestore>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_getlocalclipbounds",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasGetLocalClipBounds>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_getsavecount",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetSaveCount>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_getheight",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetHeight>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_getwidth",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetWidth>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"canvas_drawnestedroundrect",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<CanvasDrawNestedRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"canvas_drawimage",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImage>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "canvas_drawrect",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_rotate",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasRotate>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawimagerect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawImageRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_translate",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasTranslate>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_scale",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasScale>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_clear",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClear>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_setmatrix",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSetMatrix>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_resetmatrix",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasResetMatrix>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_readpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasReadPixels>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_readpixelstobitmap",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasReadPixelsToBitmap>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawimagerectwithsrc",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawImageRectWithSrc>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadow",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadow>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_skew",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSkew>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawvertices",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawVertices>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawbitmaprect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawBitmapRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawcircle",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawCircle>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawoval",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawOval>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawarc",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawArc>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawroundrect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawtextblob",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlob>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawcliprect",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipRect>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawcliproundrect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasClipRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawclippath",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPath>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawpath",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPath>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawbitmap",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawBitmap>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawlayer",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawLayer>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawpoints",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawPoints>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawline",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawLine>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawbackground",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawBackground>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawregion",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawRegion>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_restoretocount",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasRestoreToCount>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_save",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSave>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawpixelmaprect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawPixelMapRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } }, // OH_PixelMap_CreatePixelMap传入参数napi_env env无法获取，无法实现
+    { "canvas_gettotalmatrix",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasGetTotalMatrix>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_restore",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasRestore>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_getlocalclipbounds",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasGetLocalClipBounds>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_getsavecount",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasGetSaveCount>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_getheight",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetHeight>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_getwidth",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetWidth>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawnestedroundrect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawNestedRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawimage",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImage>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // path
-    {"path_create",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreate>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_lineto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathLineTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_arcto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathArcTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_quadto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathQuadTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_copy",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCopy>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_effectcreatedashpatheffect",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathEffectCreateDashPathEffect>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"path_addovalwithinitialpoint",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathAddOvalWithInitialPoint>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"path_addarc",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddArc>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addpathwithmatrixandmode",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathAddPathWithMatrixAndMode>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"path_conicto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathConicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_transformwithclip",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathTransformWithPerspectiveClip>(TestBase::DRAW_STYLE_COMPLEX, false);
-     }},
-    {"path_setfilltype",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathSetFillType>(TestBase::DRAW_STYLE_COMPLEX,
-                                                  OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
-     }},
-    {"path_getlength",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathGetLength>(TestBase::DRAW_STYLE_COMPLEX, true); }},
-    {"path_close",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathClose>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_offset",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathOffset>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_reset",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathReset>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_transform",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathTransform>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addoval",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddOval>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_contain",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathContains>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_cubicto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCubicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_rmoveto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRMoveTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_rlineto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRLineTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_rquadto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRQuadTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_rconicto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRConicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_rcubicto",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRCubicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addrect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addrect_withcorner",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathAddRectWithInitialCorner>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"path_addroundrect",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRoundRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addpath",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPath>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"path_addpathwithmode",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathAddPathWithMode>(TestBase::DRAW_STYLE_COMPLEX,
-                                                      OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND);
-     }},
-    {"path_addpathwithoffsetmode",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<PathAddPathWithOffsetAndMode>(TestBase::DRAW_STYLE_COMPLEX,
-                                                               OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND);
-     }},
+    { "path_create",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreate>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_lineto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathLineTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_arcto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathArcTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_quadto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathQuadTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_copy",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCopy>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_effectcreatedashpatheffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathEffectCreateDashPathEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_addovalwithinitialpoint",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddOvalWithInitialPoint>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_addarc",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddArc>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_addpathwithmatrixandmode",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddPathWithMatrixAndMode>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_conicto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathConicTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_transformwithclip",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathTransformWithPerspectiveClip>(TestBase::DRAW_STYLE_COMPLEX, false);
+        } },
+    { "path_setfilltype",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathSetFillType>(
+                TestBase::DRAW_STYLE_COMPLEX, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
+        } },
+    { "path_getlength",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathGetLength>(TestBase::DRAW_STYLE_COMPLEX, true);
+        } },
+    { "path_close",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathClose>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_offset",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathOffset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_reset",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_transform",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathTransform>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_addoval",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddOval>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_contain",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathContains>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_cubicto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCubicTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_rmoveto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRMoveTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_rlineto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRLineTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_rquadto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRQuadTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_rconicto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRConicTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_rcubicto",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRCubicTo>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_addrect",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRect>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_addrect_withcorner",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddRectWithInitialCorner>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_addroundrect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_addpath",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPath>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "path_addpathwithmode",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddPathWithMode>(
+                TestBase::DRAW_STYLE_COMPLEX, OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND);
+        } },
+    { "path_addpathwithoffsetmode",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathAddPathWithOffsetAndMode>(
+                TestBase::DRAW_STYLE_COMPLEX, OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND);
+        } },
 
     // textblob
-    {"textblob_createbuilder",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"textblob_createfrom_text",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"textblob_createfrom_postext",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<TextBlobCreateFromPosText>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"textblob_createfrom_string",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<TextBlobCreateFromString>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
-    {"textblob_getbounds",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobGetBounds>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"textblob_builderallocrunpos",
-     []() -> std::shared_ptr<TestBase> {
-         return std::make_shared<TextBlobBuilderAllocRunPos>(TestBase::DRAW_STYLE_COMPLEX);
-     }},
+    { "textblob_createbuilder",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "textblob_createfrom_text",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "textblob_createfrom_postext",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobCreateFromPosText>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "textblob_createfrom_string",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobCreateFromString>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "textblob_getbounds",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobGetBounds>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "textblob_builderallocrunpos",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobBuilderAllocRunPos>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // shader_effect
-    {"shader_effectcreatelineargradient",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ShaderEffectCreateLinearGradient>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"shader_effectcreateradialgradient",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ShaderEffectCreateRadialGradient>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"shader_effectcreateimageshader",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ShaderEffectCreateImageShader>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"shader_effectcreatesweepgradient",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ShaderEffectCreateSweepGradient>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "shader_effectcreatelineargradient",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ShaderEffectCreateLinearGradient>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "shader_effectcreateradialgradient",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ShaderEffectCreateRadialGradient>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "shader_effectcreateimageshader",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ShaderEffectCreateImageShader>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "shader_effectcreatesweepgradient",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ShaderEffectCreateSweepGradient>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // typeface
-    {"typeface_createdefault",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<TypefaceCreateDefault>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"typeface_createfromfile",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<TypefaceCreateFromFile>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"typeface_createfromstream",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<TypefaceCreateFromStream>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "typeface_createdefault",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TypefaceCreateDefault>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "typeface_createfromfile",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TypefaceCreateFromFile>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "typeface_createfromstream",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TypefaceCreateFromStream>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // matrix
-    {"matrix_reset",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixReset>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_concat",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixConcat>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_invert",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixInvert>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_setpolytopoly",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixSetPolyToPoly>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_prerotate",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixPreRotate>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_postscale",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixPostScale>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_posttranslate",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixPostTranslate>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"matrix_is_equal",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixIsEqual>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "matrix_reset",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "matrix_concat",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixConcat>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "matrix_invert",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixInvert>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "matrix_setpolytopoly",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<MatrixSetPolyToPoly>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "matrix_prerotate",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixPreRotate>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "matrix_postscale",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixPostScale>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "matrix_posttranslate",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<MatrixPostTranslate>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "matrix_is_equal",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<MatrixIsEqual>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // mask_filter
-    {"mask_filter_createblur",
-     []()
-         -> std::shared_ptr<TestBase> { return std::make_shared<MaskFilterCreateBlur>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "mask_filter_createblur",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<MaskFilterCreateBlur>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // color
-    {"color_filtercreateblendmode",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateBlendMode>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_filtercreatecompose",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateCompose>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_filtercreatematrix",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateMatrix>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_filtercreatelineartosrgbgamma",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateLinearToSrgbGamma>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_filtercreatesrgbgammatolinear",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateSrgbGammaToLinear>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_filtercreateluma",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorFilterCreateLuma>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_spacecreatesrgb",
-     []()
-         -> std::shared_ptr<TestBase> { return std::make_shared<ColorSpaceCreateSrgb>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"color_spacecreatesrgblinear",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ColorSpaceCreateSrgbLinear>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "color_filtercreateblendmode",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateBlendMode>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_filtercreatecompose",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateCompose>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_filtercreatematrix",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateMatrix>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_filtercreatelineartosrgbgamma",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateLinearToSrgbGamma>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_filtercreatesrgbgammatolinear",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateSrgbGammaToLinear>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_filtercreateluma",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreateLuma>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_spacecreatesrgb",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorSpaceCreateSrgb>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "color_spacecreatesrgblinear",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorSpaceCreateSrgbLinear>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // bitmap and image
-    {"bitmap_readpixels",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<BitmapReadPixels>(TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888,
-                                                            ALPHA_FORMAT_OPAQUE);
-              }},
-    {"image_buildfrombitmap",
-     []()
-         -> std::shared_ptr<TestBase> { return std::make_shared<ImageBuildFromBitmap>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"image_isopaque",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<ImageIsOpaque>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"image_createfromraster",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<ImageCreateFromRaster>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"bitmap_build",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<BitmapBuild>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"bitmap_createfrompixels",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"bitmap_installpixels",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<BitmapInstallPixels>(TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888,
-                                                            ALPHA_FORMAT_OPAQUE);
-              }},
-    {"bitmap_peekpixels",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<BitmapPeekPixels>(TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888,
-                                                            ALPHA_FORMAT_OPAQUE);
-              }},
-    {"bitmap_tryallocpixels",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<BitmapTryAllocPixels>(TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888,
-                                                            ALPHA_FORMAT_OPAQUE);
-              }},
-    {"bitmap_computebytesize",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<BitmapComputeByteSize>(TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888,
-                                                            ALPHA_FORMAT_OPAQUE);
-              }},
+    { "bitmap_readpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapReadPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "image_buildfrombitmap",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageBuildFromBitmap>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_isopaque",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<ImageIsOpaque>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "image_createfromraster",
+        []() -> std::shared_ptr<TestBase> { 
+            return std::make_shared<ImageCreateFromRaster>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_build",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<BitmapBuild>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "bitmap_createfrompixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_installpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapInstallPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_peekpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapPeekPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_tryallocpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapTryAllocPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_computebytesize",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapComputeByteSize>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
 
     // textblob
-    {"textblob_builderallocrunpos",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<TextBlobBuilderAllocRunPos>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "textblob_builderallocrunpos",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<TextBlobBuilderAllocRunPos>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // pen
-    {"pen_reset",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PenReset>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"pen_setcolor4f",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PenSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "pen_reset",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PenReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "pen_setcolor4f",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PenSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // pixmap
-    {"pixmap_getwidth",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetWidth>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"pixmap_getheight",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetHeight>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "pixmap_getwidth",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetWidth>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "pixmap_getheight",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetHeight>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // sampling_option
-    {"sampling_options_create",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<SamplingOptionsCreate>(TestBase::DRAW_STYLE_COMPLEX,
-                                                                 OH_Drawing_FilterMode::FILTER_MODE_LINEAR,
-                                                                 OH_Drawing_MipmapMode::MIPMAP_MODE_NEAREST);
-              }},
+    { "sampling_options_create",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<SamplingOptionsCreate>(TestBase::DRAW_STYLE_COMPLEX,
+                OH_Drawing_FilterMode::FILTER_MODE_LINEAR, OH_Drawing_MipmapMode::MIPMAP_MODE_NEAREST);
+        } },
 
     // memory_stream
-    {"memory_stream_create",
-     []() -> std::shared_ptr<
-              TestBase> { return std::make_shared<MemoryStreamCreate>(TestBase::DRAW_STYLE_COMPLEX, true); }},
-    {"surface_create_from_gpu_context",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<SurfaceCreateFromGpuContext>(TestBase::DRAW_STYLE_COMPLEX, false);
-              }}, // 只能用gpu来画，用cpu会闪退
-    {"surface_getimagesnapshot",
-     []() -> std::
-              shared_ptr<TestBase> {
-                  return std::make_shared<SurfaceGetImageSnapshot>(TestBase::DRAW_STYLE_COMPLEX, false);
-              }}, // 只能用gpu来画，用cpu会闪退
+    { "memory_stream_create",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<MemoryStreamCreate>(TestBase::DRAW_STYLE_COMPLEX, true);
+        } },
+    { "surface_create_from_gpu_context",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<SurfaceCreateFromGpuContext>(TestBase::DRAW_STYLE_COMPLEX, false);
+        } }, // 只能用gpu来画，用cpu会闪退
+    { "surface_getimagesnapshot",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<SurfaceGetImageSnapshot>(TestBase::DRAW_STYLE_COMPLEX, false);
+        } }, // 只能用gpu来画，用cpu会闪退
 
     // font
-    {"fontcounttext",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<FontCountText>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "fontcounttext",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<FontCountText>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // brush
-    {"brushrest",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); }},
-    {"brush_setcolor4f",
-     []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); }},
+    { "brushrest",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "brush_setcolor4f",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); } },
 };
 } // namespace
 

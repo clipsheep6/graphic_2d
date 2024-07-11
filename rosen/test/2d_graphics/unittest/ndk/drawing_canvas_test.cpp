@@ -1652,6 +1652,56 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_FilterSetImageFilter04
     OH_Drawing_FilterDestroy(filter);
     OH_Drawing_ImageFilterDestroy(imagefilter);
 }
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawNestedRoundRect045
+ * @tc.desc: test for DrawNestedRoundRect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawNestedRoundRect045, TestSize.Level1)
+{
+    // 0.0f: rect's left, 0.0f: rect's top, 100.0f: rect's right, 200.0f: rect's bottom
+    OH_Drawing_Rect *rect1 = OH_Drawing_RectCreate(0.0f, 0.0f, 100.0f, 200.0f);
+    OH_Drawing_RoundRect *roundRect1 = OH_Drawing_RoundRectCreate(rect1, 10, 10); // 10.0f: xRad, 10.0f: yRad
+    // 0.0f: rect's left, 0.0f: rect's top, 50.0f: rect's right, 100.0f: rect's bottom
+    OH_Drawing_Rect *rect2 = OH_Drawing_RectCreate(0.0f, 0.0f, 50.0f, 100.0f);
+    OH_Drawing_RoundRect *roundRect2 = OH_Drawing_RoundRectCreate(rect2, 10, 10); // 10.0f: xRad, 10.0f: yRad
+    OH_Drawing_ErrorCode code = OH_Drawing_CanvasDrawNestedRoundRect(nullptr, roundRect1, roundRect2);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_CanvasDrawNestedRoundRect(canvas_, roundRect1, roundRect2);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    OH_Drawing_RectDestroy(rect1);
+    OH_Drawing_RectDestroy(rect2);
+    OH_Drawing_RoundRectDestroy(roundRect1);
+    OH_Drawing_RoundRectDestroy(roundRect2);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawImage046
+ * @tc.desc: test for DrawImage.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawImage046, TestSize.Level1)
+{
+    OH_Drawing_Image *image = OH_Drawing_ImageCreate();
+    OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    const int32_t width = 256;  // 256 width of bitmap
+    const int32_t height = 256; // 256 height of bitmap
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_ImageBuildFromBitmap(image, bitmap);
+    OH_Drawing_SamplingOptions * options =OH_Drawing_SamplingOptionsCreate(FILTER_MODE_NEAREST,
+        MIPMAP_MODE_NEAREST);
+    OH_Drawing_ErrorCode code = OH_Drawing_CanvasDrawImage(nullptr, image, width, height, options);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_CanvasDrawImage(canvas_, image, width, height, options);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    OH_Drawing_SamplingOptionsDestroy(options);
+    OH_Drawing_ImageDestroy(image);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

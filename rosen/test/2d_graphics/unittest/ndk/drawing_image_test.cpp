@@ -138,6 +138,59 @@ HWTEST_F(NativeImageTest, NativeImageTest_GetImageInfo001, TestSize.Level1)
     OH_Drawing_BitmapDestroy(bitmap);
     OH_Drawing_ImageDestroy(image);
 }
+
+/*
+ * @tc.name: NativeImageTest_IsOpaqueo001
+ * @tc.desc: test IsOpaque
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeImageTest, NativeImageTest_IsOpaque001, TestSize.Level1)
+{
+    OH_Drawing_Image *image = OH_Drawing_ImageCreate();
+    EXPECT_NE(image, nullptr);
+    OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    const int32_t width = 256;
+    const int32_t height = 256;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_ImageBuildFromBitmap(image, bitmap);
+    bool isOpaque;
+    OH_Drawing_ErrorCode code = OH_Drawing_ImageIsOpaque(nullptr, &isOpaque);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_ImageIsOpaque(image, &isOpaque);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    EXPECT_EQ(isOpaque, true);
+    OH_Drawing_ImageDestroy(image);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
+
+/*
+ * @tc.name: NativeImageTest_CreateFromRaster001
+ * @tc.desc: test CreateFromRaster
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeImageTest, NativeImageTest_CreateFromRaster001, TestSize.Level1)
+{
+    OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    const int32_t width = 256;
+    const int32_t height = 256;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_Pixmap *pixmap = OH_Drawing_PixmapCreate();
+    bool isset;
+    OH_Drawing_BitmapPeekPixels(bitmap, pixmap, &isset);
+    auto releaseProc = [](const OH_Drawing_Pixmap *pixels, void *releaseContext) -> void {};
+    OH_Drawing_Image *image = OH_Drawing_ImageCreateFromRaster(nullptr, releaseProc, nullptr);
+    EXPECT_EQ(image, nullptr);
+    image = OH_Drawing_ImageCreateFromRaster(pixmap, releaseProc, nullptr);
+    EXPECT_NE(image, nullptr);
+    OH_Drawing_PixmapDestroy(pixmap);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

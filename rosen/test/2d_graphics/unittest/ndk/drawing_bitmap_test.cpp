@@ -292,6 +292,105 @@ HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_GetAlphaFormat009, Tes
         EXPECT_EQ(alphaFormat_, alphaFormats[i]);
     }
 }
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_BitmapComputeByteSize010
+ * @tc.desc: test for OH_Drawing_BitmapComputeByteSize.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_BitmapComputeByteSize010, TestSize.Level1)
+{
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    size_t size;
+    OH_Drawing_ErrorCode code = OH_Drawing_BitmapComputeByteSize(nullptr, &size);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BitmapComputeByteSize(bitmap, &size);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_BitmapTryAllocPixels011
+ * @tc.desc: test for OH_Drawing_BitmapTryAllocPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_BitmapTryAllocPixels011, TestSize.Level1)
+{
+    OH_Drawing_Image_Info imageInfo;
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    bool isAlloced;
+    OH_Drawing_BitmapGetImageInfo(bitmap, &imageInfo);
+    OH_Drawing_ErrorCode code = OH_Drawing_BitmapTryAllocPixels(nullptr, &imageInfo, &isAlloced);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BitmapTryAllocPixels(bitmap, &imageInfo, &isAlloced);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    EXPECT_EQ(isAlloced, true);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_BitmapPeekPixels012
+ * @tc.desc: test for OH_Drawing_BitmapPeekPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_BitmapPeekPixels012, TestSize.Level1)
+{
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_Pixmap *pixmap = OH_Drawing_PixmapCreate();
+    bool isset;
+    OH_Drawing_ErrorCode code = OH_Drawing_BitmapPeekPixels(nullptr, pixmap, &isset);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BitmapPeekPixels(bitmap, pixmap, &isset);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    EXPECT_EQ(isset, true);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_BitmapInstallPixels013
+ * @tc.desc: test for OH_Drawing_BitmapInstallPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_BitmapInstallPixels013, TestSize.Level1)
+{
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    auto releaseProc = [](void *addr, void *context) -> void {};
+    OH_Drawing_Image_Info info;
+    OH_Drawing_BitmapGetImageInfo(bitmap, &info);
+    void *pixels = nullptr;
+    bool isset;
+    OH_Drawing_ErrorCode code = OH_Drawing_BitmapInstallPixels(nullptr,
+        &info, pixels, width * 2, releaseProc, nullptr, &isset);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BitmapInstallPixels(bitmap, &info, pixels, width * 2, releaseProc, nullptr, &isset);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    EXPECT_EQ(isset, false);
+    OH_Drawing_BitmapDestroy(bitmap);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

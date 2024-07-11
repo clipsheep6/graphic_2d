@@ -149,6 +149,34 @@ HWTEST_F(NativeDrawingSurfaceTest, NativeDrawingSurfaceTest_GetCanvas, TestSize.
     OH_Drawing_SurfaceDestroy(surface_);
     OH_Drawing_GpuContextDestroy(gpuContext_);
 }
+
+/*
+ * @tc.name: NativeDrawingSurfaceTest_GetImageSnapshot
+ * @tc.desc: test for GetImageSnapshot.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingSurfaceTest, NativeDrawingSurfaceTest_GetImageSnapshot, TestSize.Level1)
+{
+    OH_Drawing_GpuContextOptions options;
+    gpuContext_ = OH_Drawing_GpuContextCreateFromGL(options);
+    EXPECT_NE(gpuContext_, nullptr);
+
+    const int32_t width = 500;
+    const int32_t height = 500;
+    OH_Drawing_Image_Info imageInfo = {width, height, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    surface_ = OH_Drawing_SurfaceCreateFromGpuContext(gpuContext_, true, imageInfo);
+    EXPECT_NE(surface_, nullptr);
+
+    image_ = OH_Drawing_SurfaceGetImageSnapshot(surface_);
+    EXPECT_NE(image_, nullptr);
+
+    image_ = OH_Drawing_SurfaceGetImageSnapshot(nullptr);
+    EXPECT_EQ(image_, nullptr);
+    EXPECT_EQ(OH_Drawing_ErrorCodeGet(), OH_DRAWING_ERROR_INVALID_PARAMETER);
+    OH_Drawing_SurfaceDestroy(surface_);
+    OH_Drawing_GpuContextDestroy(gpuContext_);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -22,6 +22,7 @@
 #include "rs_base_render_util.h"
 #include "rs_main_thread.h"
 #include "params/rs_display_render_params.h"
+#include "drawable/rs_display_render_node_drawable.h"
 
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
@@ -139,6 +140,40 @@ bool RSProcessor::InitForRenderThread(RSDisplayRenderNode& node, ScreenId mirror
 
     // CalculateScreenTransformMatrix
     auto mirrorNode = params->GetMirrorSource().lock();
+    if (!mirrorNode) {
+        screenTransformMatrix_ = params->GetMatrix();
+    } else {
+        auto mirrorNodeParam = static_cast<RSDisplayRenderParams*>(mirrorNode->GetRenderParams().get());
+        screenTransformMatrix_ = mirrorNodeParam->GetMatrix();
+        if (mirroredId_ != INVALID_SCREEN_ID) {
+            auto mirroredScreenInfo = mirrorNodeParam->GetScreenInfo();
+            CalculateMirrorAdaptiveCoefficient(
+                static_cast<float>(screenInfo_.width), static_cast<float>(screenInfo_.height),
+                static_cast<float>(mirroredScreenInfo.width), static_cast<float>(mirroredScreenInfo.height)
+            );
+        }
+    }
+
+    // set default render frame config
+    renderFrameConfig_ = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_);
+    return true;
+}
+
+bool RSProcessor::InitUniProcessor(DrawableV2::RSDisplayRenderNodeDrawable& node)
+{
+    auto params = static_cast<RSDisplayRenderParams*>(node.GetRenderParams().get());
+    if (!params) {
+        RS_LOGE("RSProcessor::InitUniProcessor params is null!");
+        return false;
+    }
+    offsetX_ = params->GetDisplayOffsetX();
+    offsetY_ = params->GetDisplayOffsetY();
+
+    screenInfo_ = params->GetScreenInfo();
+    screenInfo_.rotation = params->GetNodeRotation();
+
+    // CalculateScreenTransformMatrix
+    auto mirrorNode = params->GetMirrorSourceDrawable();
     if (!mirrorNode) {
         screenTransformMatrix_ = params->GetMatrix();
     } else {

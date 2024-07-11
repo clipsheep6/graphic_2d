@@ -231,12 +231,16 @@ public:
     struct CachedEffectData {
         CachedEffectData() = default;
         CachedEffectData(std::shared_ptr<Drawing::Image>&& image, const Drawing::RectI& rect);
+        CachedEffectData(const std::shared_ptr<Drawing::Image>& image, const Drawing::RectI& rect,
+            const Drawing::Matrix& matrix);
         ~CachedEffectData() = default;
         std::shared_ptr<Drawing::Image> cachedImage_ = nullptr;
         Drawing::RectI cachedRect_ = {};
+        Drawing::Matrix cachedMatrix_ = Drawing::Matrix();
     };
     void SetEffectData(const std::shared_ptr<CachedEffectData>& effectData);
     const std::shared_ptr<CachedEffectData>& GetEffectData() const;
+    void SetEffectMatrix(const Drawing::Matrix& matrix);
 
     // for foregroundFilter to store offscreen canvas & surface
     struct OffscreenData {

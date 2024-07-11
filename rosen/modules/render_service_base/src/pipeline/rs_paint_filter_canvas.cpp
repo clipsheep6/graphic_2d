@@ -1291,6 +1291,13 @@ void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
     isHighContrastEnabled_.store(other.isHighContrastEnabled_.load());
     // copy env
     envStack_.top() = other.envStack_.top();
+    // deep copy effecData
+    auto effectData = other.envStack_.top().effectData_;
+    if (effectData != nullptr) {
+        envStack_.top().effectData_ = std::make_shared<CachedEffectData>(
+            effectData->cachedImage_, effectData->cachedRect_, Drawing::Matrix());
+    }
+
     // cache related
     if (other.isHighContrastEnabled()) {
         // explicit disable cache for high contrast mode
@@ -1364,6 +1371,21 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanva
     return envStack_.top().effectData_;
 }
 
+void RSPaintFilterCanvas::SetEffectMatrix(const Drawing::Matrix& matrix)
+{
+    auto effectData = envStack_.top().effectData_;
+    if (effectData == nullptr) {
+        ROSEN_LOGE("RSPaintFilterCanvas::SetEffectMatrix effectData null.");
+        return;
+    }
+    Drawing::Matrix inverse;
+    if (matrix.Invert(inverse)) {
+        effectData->cachedMatrix_.PostConcat(inverse);
+    } else {
+        ROSEN_LOGE("RSPaintFilterCanvas::SetEffectMatrix Get invert matrix failed!");
+    }
+}
+
 void RSPaintFilterCanvas::ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
     std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
 {
@@ -1417,6 +1439,11 @@ RSPaintFilterCanvas::CanvasStatus RSPaintFilterCanvas::GetCanvasStatus() const
 RSPaintFilterCanvas::CachedEffectData::CachedEffectData(std::shared_ptr<Drawing::Image>&& image,
     const Drawing::RectI& rect)
     : cachedImage_(image), cachedRect_(rect)
+{}
+
+RSPaintFilterCanvas::CachedEffectData::CachedEffectData(const std::shared_ptr<Drawing::Image>& image,
+    const Drawing::RectI& rect, const Drawing::Matrix& matrix)
+    : cachedImage_(image), cachedRect_(rect), cachedMatrix_(matrix)
 {}
 
 void RSPaintFilterCanvas::SetIsParallelCanvas(bool isParallel)

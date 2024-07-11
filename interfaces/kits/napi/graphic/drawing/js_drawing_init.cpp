@@ -22,6 +22,7 @@
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
 #include "lattice_napi/js_lattice.h"
+#include "gpu_napi/js_gpu_context.h"
 #include "mask_filter_napi/js_mask_filter.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "path_napi/js_path.h"
@@ -30,6 +31,7 @@
 #include "roundRect_napi/js_roundrect.h"
 #include "sampling_options_napi/js_sampling_options.h"
 #include "shadow_layer_napi/js_shadow_layer.h"
+#include "surface_napi/js_surface.h"
 #include "text_blob_napi/js_text_blob.h"
 #include "matrix_napi/js_matrix.h"
 
@@ -54,6 +56,8 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsRoundRect::Init(env, exportObj);
     JsShadowLayer::Init(env, exportObj);
     JsMatrix::Init(env, exportObj);
+    JsGpuContext::Init(env, exportObj);
+    JsSurface::Init(env, exportObj);
     return exportObj;
 }
 } // namespace Drawing

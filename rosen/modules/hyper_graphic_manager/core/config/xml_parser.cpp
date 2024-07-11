@@ -18,6 +18,17 @@
 #include "config_policy_utils.h"
 
 namespace OHOS::Rosen {
+namespace {
+    const std::unordered_map<std::string, int32_t> CONFIG_STRING_TO_SUM = {
+        {"additional_touch_rate_config", ADDITIONAL_TOUCH_RATE},
+        {"refreshRate_strategy_config", REFRESHRATE_STRATEGY},
+        {"refreshRate_virtual_display_config", VIRTUAL_DISPLAY},
+        {"safe_vote", SAFE_VOTE},
+        {"screen_strategy_config", SCREEN_STRATEGY},
+        {"screen_config", SCREEN_CONFIG},
+        {"rs_video_frame_rate_vote_config", VIDEO_FRAME_RATE_VOTE}
+    };
+}
 int32_t XMLParser::LoadConfiguration(const char* fileDir)
 {
     HGM_LOGI("XMLParser opening xml file");
@@ -123,35 +134,63 @@ int32_t XMLParser::ParseParam(xmlNode &node)
     return EXEC_SUCCESS;
 }
 
+int32_t XMLParser::StringConfigToSum(std::string &string) const
+{
+    auto &it = CONFIG_STRING_TO_SUM.find(string);
+    if (it != CONFIG_STRING_TO_SUM.end()) {
+        return it->second;
+    }
+
+    return DEFAULT_SUM;
+}
+
 int32_t XMLParser::ParseSubSequentParams(xmlNode &node, std::string &paraName)
 {
     int32_t setResult = EXEC_SUCCESS;
 
-    if (paraName == "additional_touch_rate_config") {
-        ParseAppBufferList(node);
-    } else if (paraName == "refreshRate_strategy_config") {
-        setResult = ParseStrategyConfig(node);
-    } else if (paraName == "refreshRate_virtual_display_config") {
-        if (ExtractPropertyValue("switch", node) == "1") {
-            setResult = ParseSimplex(node, mParsedData_->virtualDisplayConfigs_, "strategy");
-            mParsedData_->virtualDisplaySwitch_ = true;
-        } else {
-            mParsedData_->virtualDisplayConfigs_.clear();
-            mParsedData_->virtualDisplaySwitch_ = false;
-        }
-    } else if (paraName == "safe_vote") {
-        // "1": enable
-        mParsedData_->safeVoteEnabled = ExtractPropertyValue("switch", node) == "1";
-    } else if (paraName == "screen_strategy_config") {
-        setResult = ParseSimplex(node, mParsedData_->screenStrategyConfigs_, "type");
-    } else if (paraName == "screen_config") {
-        setResult = ParseScreenConfig(node);
-    } else if (paraName == "rs_video_frame_rate_vote_config") {
-        mParsedData_->videoFrameRateVoteSwitch_ = ExtractPropertyValue("switch", node) == "1";
-    } else {
-        setResult = EXEC_SUCCESS;
+    if (!mParsedData_) {
+        HGM_LOGE("XMLParser mParsedData_ is not initialized");
+        return HGM_ERROR;
     }
-
+    switch (StringConfigToSum(paraName)) {
+        case ADDITIONAL_TOUCH_RATE : {
+            ParseAppBufferList(node);
+            break;
+        }
+        case REFRESHRATE_STRATEGY : {
+            ParseAppBufferList(node);
+            break;
+        }
+        case VIRTUAL_DISPLAY : {
+            if (ExtractPropertyValue("switch", node) == "1") {
+                setResult = ParseSimplex(node, mParsedData_->virtualDisplayConfigs_, "strategy");
+                mParsedData_->virtualDisplaySwitch_ = true;
+            } else {
+            mParsedData_->virtualDisplayConfigs_.clear();
+                mParsedData_->virtualDisplaySwitch_ = false;
+            }
+            break;
+        }
+        case SAFE_VOTE : {
+            mParsedData_->safeVoteEnabled = ExtractPropertyValue("switch", node) == "1";
+            break;
+        }
+        case SCREEN_STRATEGY : {
+            setResult = ParseSimplex(node, mParsedData_->screenStrategyConfigs_, "type");
+            break;
+        }
+        case SCREEN_CONFIG : {
+            setResult = ParseScreenConfig(node);
+            break;
+        }
+        case VIDEO_FRAME_RATE_VOTE : {
+            ParseAppBufferList(node);mParsedData_->videoFrameRateVoteSwitch_ = ExtractPropertyValue("switch", node) == "1";
+            break;
+        }
+        default: {
+            setResult = EXEC_SUCCESS;
+        }
+    }
     return setResult;
 }
 
@@ -252,6 +291,10 @@ void XMLParser::ParseAppBufferList(xmlNode &node)
         return;
     }
 
+    if (!mParsedData_) {
+        HGM_LOGE("XMLParser mParsedData_ is not initialized");
+        return HGM_ERROR;
+    }
     mParsedData_->appBufferList_.clear();
     currNode = currNode->xmlChildrenNode;
     for (; currNode; currNode = currNode->next) {
@@ -265,6 +308,10 @@ void XMLParser::ParseAppBufferList(xmlNode &node)
 
 void XMLParser::ParseBufferStrategyList(xmlNode &node, PolicyConfigData::StrategyConfig &strategy)
 {
+    if (!mParsedData_) {
+        HGM_LOGE("XMLParser mParsedData_ is not initialized");
+        return HGM_ERROR;
+    }
     if (mParsedData_->appBufferList_.empty()) {
         return;
     }

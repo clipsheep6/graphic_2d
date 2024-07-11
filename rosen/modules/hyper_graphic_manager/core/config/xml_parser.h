@@ -27,6 +27,16 @@
 
 namespace OHOS::Rosen {
 class XMLParser {
+enum StringConfigToSum : int32_t {
+    ADDITIONAL_TOUCH_RATE = 0,
+    REFRESHRATE_STRATEGY = 1,
+    VIRTUAL_DISPLAY = 2,
+    SAFE_VOTE = 3,
+    SCREEN_STRATEGY = 4,
+    SCREEN_CONFIG = 5,
+    VIDEO_FRAME_RATE_VOTE = 6,
+    DEFAULT_SUM = 100,
+};
 public:
     int32_t LoadConfiguration(const char* fileDir);
     int32_t Parse();
@@ -65,6 +75,7 @@ private:
     void ParseBufferStrategyList(xmlNode &node, PolicyConfigData::StrategyConfig &strategy);
     int32_t ParseSubSequentParams(xmlNode &node, std::string &paraName);
     void ParseAppBufferList(xmlNode &node);
+    int32_t StringConfigToSum(std::string &string) const;
     xmlDoc *xmlDocument_;
     std::unique_ptr<PolicyConfigData> mParsedData_ = nullptr;
 };

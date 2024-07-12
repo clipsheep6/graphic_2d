@@ -222,7 +222,7 @@ void RSRenderNode::AddChild(SharedPtr child, int index)
     }
     // if child already has a parent, remove it from its previous parent
     if (auto prevParent = child->GetParent().lock()) {
-        prevParent->RemoveChild(child);
+        prevParent->RemoveChild(child, true);
     }
 
     // Set parent-child relationship

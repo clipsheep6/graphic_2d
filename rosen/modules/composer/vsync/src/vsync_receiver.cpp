@@ -239,7 +239,7 @@ void VSyncReceiver::CloseVsyncReceiverFd()
 VsyncError VSyncReceiver::Destroy()
 {
     std::lock_guard<std::mutex> locker(initMutex_);
-    if (!init_) {
+    if (connection_ == nullptr) {
         return VSYNC_ERROR_API_FAILED;
     }
     return connection_->Destroy();

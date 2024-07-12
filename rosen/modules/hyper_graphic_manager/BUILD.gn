@@ -40,6 +40,22 @@ config("libhyper_graphic_manager_config") {
     if (!use_libfuzzer) {
       cflags += [ "-flto=thin" ]
     }
+    if (graphic_2d_feature_enable_pgo && enable_enhanced_opt) {
+      cflags += [
+        "-flto=full",
+        "-march=armv8-a+sve",
+        "-g1",
+        "-fdebug-info-for-profiling",
+        "-mllvm",
+        "-cachemiss-profile-l1d=" + rebase_path(
+                "${graphic_2d_feature_pgo_path}/afdo/librender_service_l1d.afdo",
+                root_build_dir),
+        "-mllvm",
+        "-cachemiss-profile-l2d=" + rebase_path(
+                "${graphic_2d_feature_pgo_path}/afdo/librender_service_l2d.afdo",
+                root_build_dir),
+      ]
+    }
   }
 }
 

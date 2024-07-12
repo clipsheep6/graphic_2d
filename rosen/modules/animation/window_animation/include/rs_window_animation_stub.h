@@ -26,6 +26,8 @@
 namespace OHOS {
 namespace Rosen {
 class RSWindowAnimationStub;
+using WindowAnimationStubFunc = int (RSWindowAnimationStub::*)(MessageParcel& data, MessageParcel& reply);
+
 class RSWindowAnimationStub : public IRemoteStub<RSIWindowAnimationController> {
 public:
     RSWindowAnimationStub() = default;
@@ -51,6 +53,9 @@ private:
     int WindowAnimationTargetsUpdate(MessageParcel& data, MessageParcel& reply);
 
     int WallpaperUpdate(MessageParcel& data, MessageParcel& reply);
+
+    static const std::map<uint32_t, WindowAnimationStubFunc> stubFuncMap_;
+    DISALLOW_COPY_AND_MOVE(RSWindowAnimationStub);
 };
 } // namespace Rosen
 } // namespace OHOS

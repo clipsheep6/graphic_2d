@@ -1006,13 +1006,15 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         return true;
     }
     bool isNeedAssignToSubThread = false;
-    if ((RSMainThread::Instance()->GetDeviceType() == DeviceType::PC) ||
-        (node.GetFirstLevelNodeId() != node.GetId()) ||
+    if ((node.GetFirstLevelNodeId() != node.GetId()) ||
         (RSUifirstManager::Instance().NodeIsInCardWhiteList(node)) ||
         (RSUifirstManager::Instance().CheckIfAppWindowHasAnimation(node))) {
         return false;
     }
-    if (node.IsLeashWindow()) {
+    auto isPC = RSMainThread::Instance()->GetDeviceType() == DeviceType::PC;
+    if ((isPC && (node.IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
+        node.IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId())) &&
+        !node.GetHasSharedTransitionNode()) || (!isPC && node.IsLeashWindow())) {
         if (RSUifirstManager::Instance().IsRecentTaskScene()) {
             isNeedAssignToSubThread = (node.IsScale() || animation) && LeashWindowContainMainWindow(node);
         } else {
@@ -1045,9 +1047,13 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
 // NonFocusWindow, may reuse last image cache
 bool RSUifirstManager::IsNonFocusWindowCache(RSSurfaceRenderNode& node, bool animation)
 {
+    auto isPC = RSMainThread::Instance()->GetDeviceType() == DeviceType::PC;
+    if (isPC && (node.IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
+        node.IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId()))) {
+        return false;
+    }
     bool isDisplayRotation = RSUifirstManager::Instance().rotationChanged_;
-    if ((RSMainThread::Instance()->GetDeviceType() != DeviceType::PC) ||
-        (node.GetFirstLevelNodeId() != node.GetId()) ||
+    if (!isPC || (node.GetFirstLevelNodeId() != node.GetId()) ||
         (RSUifirstManager::Instance().NodeIsInCardWhiteList(node))) {
         return false;
     }

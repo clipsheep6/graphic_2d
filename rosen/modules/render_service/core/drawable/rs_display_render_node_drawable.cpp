@@ -55,6 +55,7 @@
 #include "utils/performanceCaculate.h"
 namespace OHOS::Rosen::DrawableV2 {
 namespace {
+constexpr int32_t FLUSH_CHECKPOINT = 2;
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 constexpr const char* DEFAULT_CLEAR_GPU_CACHE = "DefaultClearGpuCache";
 }
@@ -655,7 +656,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     RS_TRACE_END();
     bool frameReportEnable = RsFrameReport::GetInstance().GetEnable();
     if (frameReportEnable) {
-        RsFrameReport::GetInstance().SetCheckPoint(2);
+        RsFrameReport::GetInstance().SetCheckPoint(FLUSH_CHECKPOINT);
     }
     renderFrame->Flush();
     RS_TRACE_END();

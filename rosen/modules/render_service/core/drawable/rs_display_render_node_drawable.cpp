@@ -230,7 +230,7 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
     RS_TRACE_END();
     bool frameReportEnable = RsFrameReport::GetInstance().GetEnable();
     if (frameReportEnable) {
-        RsFrameReport::GetInstance.SetCheckPoint(1);
+        RsFrameReport::GetInstance().SetCheckPoint(1);
     }
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if (renderEngine == nullptr) {

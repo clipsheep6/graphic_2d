@@ -56,6 +56,7 @@ add_library(entry SHARED
     interface/shader_effect_test.cpp
     interface/typeface_test.cpp
     interface/pen_test.cpp
+    interface/pixmap_test.cpp
     interface/brush_test.cpp
     interface/font_test.cpp
     interface/memory_stream_test.cpp
@@ -110,6 +111,7 @@ add_library(myxnode SHARED
     interface/shader_effect_test.cpp
     interface/typeface_test.cpp
     interface/pen_test.cpp
+    interface/pixmap_test.cpp
     interface/brush_test.cpp
     interface/font_test.cpp
     interface/memory_stream_test.cpp

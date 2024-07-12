@@ -562,3 +562,40 @@ void CanvasGetHeight::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasDrawRect(canvas, rect);
     OH_Drawing_RectDestroy(rect);
 }
+
+void CanvasDrawNestedRoundRect::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    OH_Drawing_Rect *rect1 = OH_Drawing_RectCreate(0, 0, 100, 200); // 0, 0, 100, 200 创建矩形
+    OH_Drawing_RoundRect *roundRect1 = OH_Drawing_RoundRectCreate(rect1, 10, 10); // 10, 10 创建圆角矩形
+    OH_Drawing_Rect *rect2 = OH_Drawing_RectCreate(0, 0, 50, 100); // 0, 0, 50, 100 创建矩形
+    OH_Drawing_RoundRect *roundRect2 = OH_Drawing_RoundRectCreate(rect2, 10, 10); // 10, 10 创建圆角矩形
+    OH_Drawing_ErrorCode code;
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_CanvasDrawNestedRoundRect(canvas, roundRect1, roundRect2);
+    }
+    DRAWING_LOGE("CanvasDrawNestedRoundRect::OnTestPerformance OH_Drawing_ErrorCode is %{public}d", code);
+    OH_Drawing_RectDestroy(rect1);
+    OH_Drawing_RectDestroy(rect2);
+    OH_Drawing_RoundRectDestroy(roundRect1);
+    OH_Drawing_RoundRectDestroy(roundRect2);
+}
+
+void CanvasDrawImage::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    OH_Drawing_Image *image = OH_Drawing_ImageCreate();
+    OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888,
+        ALPHA_FORMAT_OPAQUE}; // COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE 绘图表面的颜色和透明度
+    const int32_t width = 256;  // 256 绘图表面的宽度
+    const int32_t height = 256; // 256 绘图表面的高度
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_ImageBuildFromBitmap(image, bitmap);
+    OH_Drawing_SamplingOptions * options =OH_Drawing_SamplingOptionsCreate(FILTER_MODE_NEAREST,
+        MIPMAP_MODE_NEAREST); // FILTER_MODE_NEAREST, MIPMAP_MODE_NEAREST 过滤采样模式和多级渐远纹理采样模式
+    OH_Drawing_ErrorCode code;
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_CanvasDrawImage(canvas, image, width, height, options);
+    }
+    DRAWING_LOGE("CanvasDrawImage::OnTestPerformance OH_Drawing_ErrorCode is %{public}d", code);
+    OH_Drawing_SamplingOptionsDestroy(options);
+    OH_Drawing_ImageDestroy(image);
+    OH_Drawing_BitmapDestroy(bitmap);
+}

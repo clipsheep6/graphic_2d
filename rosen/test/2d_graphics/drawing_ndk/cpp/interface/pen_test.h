@@ -39,4 +39,13 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class PenSetColor4f : public TestBase {
+public:
+    explicit PenSetColor4f(int type) : TestBase(type) { fileName_ = "PenSetColor4f"; };
+    ~PenSetColor4f() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
 #endif // INTERFACE_PEN_TEST_H

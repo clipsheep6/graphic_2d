@@ -216,6 +216,26 @@ HWTEST_F(NativeDrawingBrushTest, NativeDrawingBrushTest_brushCopy007, TestSize.L
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_BrushDestroy(brush_copy);
 }
+
+/*
+ @tc.name: NativeDrawingBrushTest_BrushSetColor4f008
+ * @tc.desc: test for SetColor4f.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBrushTest, NativeDrawingBrushTest_BrushSetColor4f008, TestSize.Level1)
+{
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+    EXPECT_EQ(brush == nullptr, false);
+    OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, 0x00, 0xFF, 0x00));
+    OH_Drawing_ColorSpace *colorSpace = OH_Drawing_ColorSpaceCreateSrgb();
+    OH_Drawing_Color4f color4f = {1, 0, 1, 0.5};
+    OH_Drawing_ErrorCode code = OH_Drawing_BrushSetColor4f(nullptr, &color4f, colorSpace);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BrushSetColor4f(brush, &color4f, colorSpace);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    OH_Drawing_BrushDestroy(brush);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

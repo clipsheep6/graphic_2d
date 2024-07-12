@@ -57,6 +57,7 @@
 #include "interface/memory_stream_test.h"
 #include "interface/path_test.h"
 #include "interface/pen_test.h"
+#include "interface/pixmap_test.h"
 #include "interface/sample_option_test.h"
 #include "interface/shader_effect_test.h"
 #include "interface/surface_test.h"
@@ -264,6 +265,12 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetHeight>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_getwidth",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasGetWidth>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawnestedroundrect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawNestedRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawimage",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImage>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // path
     { "path_create",
@@ -482,11 +489,37 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<ImageBuildFromBitmap>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "image_isopaque",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<ImageIsOpaque>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "image_createfromraster",
+        []() -> std::shared_ptr<TestBase> { 
+            return std::make_shared<ImageCreateFromRaster>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
     { "bitmap_build",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BitmapBuild>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "bitmap_createfrompixels",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_installpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapInstallPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_peekpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapPeekPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_tryallocpixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapTryAllocPixels>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
+        } },
+    { "bitmap_computebytesize",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapComputeByteSize>(
+                TestBase::DRAW_STYLE_COMPLEX, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE);
         } },
 
     // textblob
@@ -498,6 +531,14 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // pen
     { "pen_reset",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PenReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "pen_setcolor4f",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PenSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); } },
+
+    // pixmap
+    { "pixmap_getwidth",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetWidth>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "pixmap_getheight",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<PixmapGetHeight>(TestBase::DRAW_STYLE_COMPLEX); } },
 
     // sampling_option
     { "sampling_options_create",
@@ -515,6 +556,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<SurfaceCreateFromGpuContext>(TestBase::DRAW_STYLE_COMPLEX, false);
         } }, // 只能用gpu来画，用cpu会闪退
+    { "surface_getimagesnapshot",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<SurfaceGetImageSnapshot>(TestBase::DRAW_STYLE_COMPLEX, false);
+        } }, // 只能用gpu来画，用cpu会闪退
 
     // font
     { "fontcounttext",
@@ -523,6 +568,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // brush
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "brush_setcolor4f",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushSetColor4f>(TestBase::DRAW_STYLE_COMPLEX); } },
 };
 } // namespace
 

@@ -29,4 +29,13 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class BrushSetColor4f : public TestBase {
+public:
+    explicit BrushSetColor4f(int type) : TestBase(type) { fileName_ = "BrushSetColor4f"; };
+    ~BrushSetColor4f() override{};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
 #endif // INTERFACE_BRUSH_TEST_H

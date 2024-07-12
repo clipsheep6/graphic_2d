@@ -16,6 +16,7 @@
 #include "command/rs_base_node_command.h"
 
 #include "pipeline/rs_base_render_node.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -28,6 +29,7 @@ void BaseNodeCommandHelper::Destroy(RSContext& context, NodeId nodeId)
         return;
     }
     auto parent = node->GetParent().lock();
+    RS_TRACE_NAME_FMT("BaseNodeCommandHelper::Destroy, Node: %" PRIu64, nodeId);
     node->ClearChildren();
     node->RemoveFromTree();
     nodeMap.UnregisterRenderNode(node->GetId());
@@ -103,6 +105,7 @@ void BaseNodeCommandHelper::ClearChildren(RSContext& context, NodeId nodeId)
     auto& nodeMap = context.GetNodeMap();
     auto node = nodeMap.GetRenderNode(nodeId);
     if (node) {
+        RS_TRACE_NAME_FMT("BaseNodeCommandHelper::ClearChildren, Node: %" PRIu64, nodeId);
         node->ClearChildren();
     }
 }

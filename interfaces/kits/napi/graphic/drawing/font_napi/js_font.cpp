@@ -21,6 +21,7 @@
 
 #include "js_drawing_utils.h"
 #include "js_typeface.h"
+#include "path_napi/js_path.h"
 
 namespace OHOS::Rosen {
 namespace Drawing {
@@ -44,6 +45,7 @@ napi_value JsFont::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("setEdging", JsFont::SetEdging),
         DECLARE_NAPI_FUNCTION("setHinting", JsFont::SetHinting),
         DECLARE_NAPI_FUNCTION("countText", JsFont::CountText),
+        DECLARE_NAPI_FUNCTION("createPathForGlyph", JsFont::CreatePathForGlyph),
     };
 
     napi_value constructor = nullptr;
@@ -225,6 +227,12 @@ napi_value JsFont::CountText(napi_env env, napi_callback_info info)
 {
     JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
     return (me != nullptr) ? me->OnCountText(env, info) : nullptr;
+}
+
+napi_value JsFont::CreatePathForGlyph(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnCreatePathForGlyph(env, info) : nullptr;
 }
 
 napi_value JsFont::OnEnableSubpixel(napi_env env, napi_callback_info info)
@@ -492,6 +500,25 @@ napi_value JsFont::OnCountText(napi_env env, napi_callback_info info)
 
     double textSize = m_font->CountText(text.c_str(), text.length(), TextEncoding::UTF8);
     return GetDoubleAndConvertToJsValue(env, textSize);
+}
+
+napi_value JsFont::OnCreatePathForGlyph(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnCreatePathForGlyph font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_ONE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+
+    uint32_t id = 0;
+    GET_UINT32_PARAM(ARGC_ZERO, id);
+
+    Path *path = nullptr; 
+    napi_value result = JsPath::CreateJsPath(env, &path);
+    m_font->GetPathForGlyph(*path, static_cast<uint16_t>(id));
+    return result;
 }
 
 std::shared_ptr<Font> JsFont::GetFont()

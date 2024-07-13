@@ -22,6 +22,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "params/rs_display_render_params.h"
 #ifdef RS_ENABLE_VK
 #include "rs_vk_image_manager.h"
 #endif
@@ -201,6 +202,8 @@ public:
 
     void DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSDisplayRenderNode& node,
         BufferDrawParam& params);
+    void DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSSurfaceHandler& surfaceHandler,
+        BufferDrawParam& drawParam);
     void RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw = false);
     void RegisterDeleteBufferListener(RSSurfaceHandler& handler);
 

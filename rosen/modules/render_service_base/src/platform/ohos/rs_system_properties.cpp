@@ -649,7 +649,7 @@ bool RSSystemProperties::GetSubtreeParallelEnable()
 
 bool RSSystemProperties::GetSubtreeParallelDebugEnabled()
 {
-    static bool debugEnable = system::GetIntParameter("persist.sys.graphic.subtreeParallelDebugEnable",0) != 0;
+    static bool debugEnable = system::GetIntParameter("persist.sys.graphic.subtreeParallelDebugEnabled", 0) != 0;
     return debugEnable;
 }
 #endif

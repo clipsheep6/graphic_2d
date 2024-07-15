@@ -1299,7 +1299,7 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
         displayHasProtectedSurface_, hasCaptureWindow_);
     curDisplayNode_->UpdateOffscreenRenderParams(curDisplayNode_->IsRotationChanged());
 #ifdef  SUBTREE_PARALLEL_ENABLE
-  RSParallelManager::Singleton().OnprepareChildren(node);
+  RSParallelManager::Singleton().OnPrepareChildren(node);
 #endif
     HandleColorGamuts(node, screenManager_);
     HandlePixelFormat(node, screenManager_);
@@ -1657,12 +1657,12 @@ void RSUniRenderVisitor::QuickPrepareChildren(RSRenderNode& node)
   }else{
     std::for_each((*children).begin(), (*children).end(), [this, &childrenWeights]
         (const std::shared_ptr<RSRenderNode>& node){
-            curDirty_ = no->IsDirty();
+            curDirty_ = node->IsDirty();
             node->QuickPrepare(shared_from_this());
            childrenWeights += node->GetWeight();
         });
   }
-  node.SetWeight(childrenWeights +1);
+  node.SetWeight(childrenWeights + 1);
 #else
     if (NeedPrepareChindrenInReverseOrder(node)) {
         std::for_each((*children).rbegin(), (*children).rend(), [this](const std::shared_ptr<RSRenderNode>& node) {

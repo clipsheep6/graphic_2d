@@ -599,12 +599,12 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 #ifdef SUBTREE_PARALLEL_ENABLE
-  RS_TRACE_BEGIN("Update draw region for surface in advance");
+  RS_TRACE_BEGIN("Update draw region for surfaces in advance");
   bool isSubtreeParallelOff = false;
   auto& curAllSurfaces = params->GetAllMainAndLeashSurfaceDrawables();
-  bool isuifirsNode = curCanvas_GetIsParallelCanvas();
+  bool isuifirsNode = curCanvas_->GetIsParallelCanvas();
 
-  for(int i= curAllSurfaces.size()-1;i>=0;i--){
+  for(int i = curAllSurfaces.size() -1; i >= 0; i--) {
     auto& renderNodeDrawable  = curAllSurfaces[i];
     std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable = 
       std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
@@ -622,8 +622,8 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     {
         isSubtreeParallelOff = true;
     }
-    if(!isuifirsNode && surfaceParams->GetOccludeByFilterCache()){
-        RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusiono skip [%s] Id:%" PRIu64 "",
+    if(!isuifirstNode && surfaceParams->GetOccludedByFilterCache()){
+        RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
         surfaceNodeDrawable->GetName().c_str(),surfaceParams->GetId());
         continue;
     }
@@ -633,15 +633,15 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
-    Drawding::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(uniParam,surfaceParams,surfaceNode,isuifirsNode);
-    if(!isuifirsNode){
+    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(uniParam,surfaceParams,surfaceNode,isuifirsNode);
+    if(!isuifirstNode){
         surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(uniParam,surfaceParams,surfaceNode,curSurfaceDrawRegion);
     }
     surfaceNodeDrawable->SetCurSurfaceDrawRegion(curSurfaceDrawRegion);
   }
   RS_TRACE_END();
   RSParallelManager::Singleton().Reset(curCanvas_);
-  #endif
+#endif
 
     ScreenId screenId = curScreenInfo.id;
     curCanvas_->SetTargetColorGamut(params->GetNewColorSpace());

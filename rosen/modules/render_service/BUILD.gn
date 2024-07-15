@@ -172,7 +172,7 @@ ohos_shared_library("librender_service") {
   if(defined(graphic_2d_feature_subtree_parallel_enable) && graphic_2d_feature_subtree_parallel_enable){
     sources += [
       "$graphic_2d_ext_root/subtree/rs_parallel_manager.cpp",
-      "$graphic_2d_ext_root/subtree/container/rs_patallel_container.cpp",
+      "$graphic_2d_ext_root/subtree/container/rs_parallel_container.cpp",
       "$graphic_2d_ext_root/subtree/container/rs_parallel_data.cpp",
       "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy_manager.cpp",
       "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy.cpp",

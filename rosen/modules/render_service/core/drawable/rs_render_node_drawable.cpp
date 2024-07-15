@@ -95,7 +95,7 @@ void RSRenderNodeDrawable::OnDrawParallel(Drawing::Canvas& canvas,const Drawing:
         case ParallelDrawType::DrawAll:
            DrawAll (canvas,bounds);
            break;
-        case ParallelDrawType::DrawBackgroundAndContentAndChilden:
+        case ParallelDrawType::DrawBackgroundAndContentAndChildren:
            DrawBackground(canvas,bounds);
            DrawContent(canvas,bounds);
            DrawChildren(canvas,bounds);
@@ -107,7 +107,7 @@ void RSRenderNodeDrawable::OnDrawParallel(Drawing::Canvas& canvas,const Drawing:
            DrawChildren(canvas,bounds);
            DrawForeground(canvas,bounds);
            break;
-        case ParallelDrawType::skip:
+        case ParallelDrawType::Skip:
             break;
         default:
           DrawAll(canvas,bounds);

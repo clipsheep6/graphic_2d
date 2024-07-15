@@ -80,7 +80,7 @@ public:
     virtual void Draw(Drawing::Canvas& canvas) = 0;
     virtual void DumpDrawableTree(int32_t depth, std::string& out) const;
 #ifdef SUBTREE_PARALLEL_ENABLE
-    void DrawChildrenOnly(Drawding::Canvas& canvas);
+    void DrawChildrenOnly(Drawing::Canvas& canvas);
 #endif
     static SharedPtr OnGenerate(const std::shared_ptr<const RSRenderNode>& node);
     static SharedPtr GetDrawableById(NodeId id);

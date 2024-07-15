@@ -37,7 +37,7 @@ RSParallelDrawCanvas::RSParallelDrawCanvas(Drawing::Canvas* canvas)
 {}
 
 RSParallelDrawCanvas::RSParallelDrawCanvas(Drawing::Surface* surface)
-    : RSPaintFilterCanvas(canvas)
+    : RSPaintFilterCanvas(surface)
 {}
 
 RSParallelDrawCanvas::~RSParallelDrawCanvas() = default;
@@ -99,7 +99,7 @@ void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image,
      RSPaintFilterCanvas::DrawImageRect(image, dst, sampling);
 }
 
-RSParallelCanvas::RSPaintFilterCanvas(Drawing::Surface* surface)
+RSParallelCanvas::RSParallelCanvas(Drawing::Surface* surface)
     : RSPaintFilterCanvas(surface)
 {}
 
@@ -123,7 +123,7 @@ void RSParallelCanvas::RemoveStatusCanvas(size_t idx)
 {
     if(idx < pCanvasList_.size()) {
        pCanvasList_.erase(pCanvasList_.begin() + idx);
-       statusCanvasMap_erase(idx);
+       statusCanvasMap_.erase(idx);
     
 }
 }

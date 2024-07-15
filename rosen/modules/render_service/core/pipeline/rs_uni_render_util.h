@@ -104,7 +104,7 @@ public:
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     static bool IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation);
 #ifdef SUBTREE_PARALLEL_ENABLE
-    static bool IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode>node ,bool isDisplayRotation);
+    static bool IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation);
     static bool IsDrawableWindowScene(RSSurfaceRenderParams* surfaceParams);
     static pid_t GetThreadId(RSPaintFilterCanvas* rsCanvas);
 #endif

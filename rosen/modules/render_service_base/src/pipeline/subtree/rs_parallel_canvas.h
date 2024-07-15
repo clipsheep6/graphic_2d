@@ -20,7 +20,7 @@
 namespace OHOS::Rosen {
 class RSB_EXPORT RSParallelStatusCanvas : public RSPaintFilterCanvas {
 public:
-   RSParallelStatusCanvas(Drawing::canvas* canvas);
+   RSParallelStatusCanvas(Drawing::Canvas* canvas);
    ~RSParallelStatusCanvas() override;
 public:
     void DrawPoint(const Drawing::Point& point) override {}
@@ -47,7 +47,7 @@ public:
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override {}
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
-        Drawing::FilterMode filter) override {}
+        Drawing::FilterMode filter,const Drawing::Brush* brush = nullptr) override {}
     void DrawBitmap(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py) override {}
     void DrawImage(const Drawing::Image& image,
         const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling) override {}
@@ -64,7 +64,7 @@ class RSB_EXPORT RSParallelDrawCanvas : public RSPaintFilterCanvas {
 public:
     RSParallelDrawCanvas(Drawing::Canvas* canvas);
     RSParallelDrawCanvas(Drawing::Surface* surface);
-    ~RSParallelDrawCanvas()override;
+    ~RSParallelDrawCanvas() override;
     void InheritStatus(RSParallelStatusCanvas* statusCanvas);
     void DrawImage(const Drawing::Image& image,
         const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling) override;

@@ -55,7 +55,7 @@ class RSB_EXPORT RSParallelResourceManager final{
     void RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate,bool force = false);
     void UnRegisterMigrate(Drawing::GPUContext* gpuctx);
     void ReleaseResource();
-    ImagePtr BuildFromTextureByRef(const ImagePtr& ref,ContextPtr& newCtx);
+    ImagePtr BuildFromTextureByRef(const ImagePtr& ref,ContextPtr& newCtx, Drawing::BackendTexture& backendTexture);
     ImagePtr GenerateSharedImageForDraw(const Drawing::Image& ref, ContextPtr& newCtx,bool isOriginTop = true);
 
 private:

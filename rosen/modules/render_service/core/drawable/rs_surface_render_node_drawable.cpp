@@ -263,7 +263,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
 #ifdef SUBTREE_PARALLEL_ENABLE
    ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas,this);
-   if(RSParallelManager::Singleton().CHeckIsParallelFrame() && drawType == ParallelDrawType::Skip){
+   if(RSParallelManager::Singleton().CheckIsParallelFrame() && drawType == ParallelDrawType::Skip){
        return;
    }
 #endif
@@ -415,7 +415,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     OnGeneralProcess(*surfaceNode, *curCanvas_, *surfaceParams, isSelfDrawingSurface);
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
-   if(RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CHeckIsParallelFrame()
+   if(RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CheckIsParallelFrame()
         && RSUniRenderUtil::IsDrawableWindowScene(surfaceParams)){
         DrawSubtreeParallelDfx(*rscanvas,*surfaceParams);
         }
@@ -791,15 +791,15 @@ void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& ca
     auto threadId = canvas.GetParallelThreadIdx();
     if(threadId == 11){
         //yellow
-        rectBrush.SetColor(Drawing::Color(255,192,,128,128));
+        rectBrush.SetColor(Drawing::Color(255,192,128,128));
     }else if(threadId == 12){
         //orange
-        rectBrush.SetColor(Drawing::Color(255,128,,0,128));
+        rectBrush.SetColor(Drawing::Color(255,128,0,128));
     }else if(threadId == 13){
         //purple
-        rectBrush.SetColor(Drawing::Color(192,0,,128,128));
+        rectBrush.SetColor(Drawing::Color(192,0,128,128));
     }else{
-        rectBrush.SetColor(Drawing::Color(192,0,,0,128));
+        rectBrush.SetColor(Drawing::Color(192,0,0,128));
     }
     canvas.AttachBrush(rectBrush);
     canvas.DrawRect(Drawing::Rect(0,0,sizeDebug.x_,sizeDebug.y_));

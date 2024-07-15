@@ -670,7 +670,7 @@ public:
     }
 
 #ifdef SUBTREE_PARALLEL_ENABLE
-     uint32_t GetWeight_;
+     uint32_t GetWeight() const
      {
         return weight_;
      }

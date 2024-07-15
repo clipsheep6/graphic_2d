@@ -56,7 +56,7 @@ public:
 private:
     void UpdatePreThreadInfo();
     void UpdateCurThreadInfo(RSPaintFilterCanvas& paintFilterCanvas);
-    NativeBUfferUtils::VulkanCleanupHelper* VulkanCleanupHelper_;
+    NativeBufferUtils::VulkanCleanupHelper* vulkanCleanupHelper_;
  #endif
 private:
     explicit RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);

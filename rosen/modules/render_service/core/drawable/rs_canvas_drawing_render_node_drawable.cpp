@@ -115,7 +115,7 @@ void RSCanvasDrawingRenderNodeDrawable::UpdateCurThreadInfo(RSPaintFilterCanvas&
     auto threadId = CheckIsParallelFrame(paintFilterCanvas) ?
                     RSUniRenderThread::Instance().GetTid() :
                     (paintFilterCanvas.GetIsParallelCanvas() ?
-                       RSSubThreadManager::Instance->GetReThreadIndexMap()[threadIdx] :
+                       RSSubThreadManager::Instance()->GetReThreadIndexMap()[threadIdx] :
                        RSUniRenderThread::Instance().GetTid());
     auto clearFunc = [idx = threadIdx](std::shared_ptr<Drawing::Surface>surface){
         RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface),nullptr,idx,0);
@@ -144,7 +144,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if ((!uniParam || uniParam->IsOpDropped()) && GetOpDropped() && QuickReject(canvas, params->GetLocalDrawRect())) {
         return;
     }
-#ifdef SUBTREE_PARALLEL_ENABLE
+#ifndef SUBTREE_PARALLEL_ENABLE
     auto threadIdx = paintFilterCanvas.GetParallelThreadIdx();
     auto clearFunc = [idx = threadIdx](std::shared_ptr<Drawing::Surface> surface) {
         // The second param is null, 0 is an invalid value.
@@ -161,7 +161,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 #ifdef SUBTREE_PARALLEL_ENABLE
     UpdateCurThreadInfo(paintFilterCanvas);
     auto& bounds = params->GetBounds();
-    if (!InitSurface(bounds.GetWidth, bounds.GetHeight, paintFilterCanvas)) {
+    if (!InitSurface(bounds.GetWidth(), bounds.GetHeight(), paintFilterCanvas)) {
         RS_LOGE("Failed to init surface!");
 #else
      if (!InitSurface(surfaceParams.width, surfaceParams.height, paintFilterCanvas)) {
@@ -583,8 +583,8 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurface(int width, int height, RSPa
       if(!backendTexture_.IsValid() || !backendTexture_.GetTextureInfo().GetVKTextureInfo()){
          backendTexture_ = RSUniRenderUtil::MakeBackendTexture(width,height);
       }
-      auto vkTextureInfo = backendTexture_GetTextureInfo().GetVKTextureInfo();
-      bool cleanUpFirstCreate = false;
+      auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
+      bool cleanUpFirstCreated = false;
       if(vulkanCleanupHelper_ == nullptr){
         vulkanCleanupHelper_ = new NativeBufferUtils::VulkanCleanupHelper(
             RsVulkanContext::GetSingleton(),vkTextureInfo->vkImage,vkTextureInfo->vkAlloc.memory);
@@ -592,7 +592,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurface(int width, int height, RSPa
       }
       surface_ = Drawing::Surface::MakeFromBackendTexture(gpuContext.get(),backendTexture_.GetTextureInfo(),
                  Drawing::TextureOrigin::BOTTOM_LEFT,1,Drawing::ColorType::COLORTYPE_RGBA_8888,nullptr,
-                 NativeBufferUtils::DeleteVkImage,cleanUpFirstCreate? vulkanCleanupHelper_:vulkanCleanupHelper_->Ref());
+                 NativeBufferUtils::DeleteVkImage,cleanUpFirstCreated? vulkanCleanupHelper_ : vulkanCleanupHelper_->Ref());
                  RS_LOGE("[%{public}s] surface_: %{public}d, %{public}u,context",
                           GetThreadName(),surface_ != nullptr,GetGPUContextID(canvas));
 #else

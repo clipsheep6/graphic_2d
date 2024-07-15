@@ -22,8 +22,8 @@
 
 #include "platform/common/rs_log.h"
 #ifdef SUBTREE_PARALLEL_ENABLE
-#include "pipeline/surtree/rs_parallel_resource_manager_impl.h"
-#include "pipeline/surtree/rs_parallel_canvas_impl.h"
+#include "pipeline/subtree/rs_parallel_resource_manager_impl.h"
+#include "pipeline/subtree/rs_parallel_canvas_impl.h"
 #endif
 
 namespace OHOS {
@@ -34,7 +34,7 @@ using namespace Drawing;
 void RSPaintFilterCanvasBase::EnableParallelRecorder(bool flag)
 {
     recorder_ = flag ? std::make_unique<RSParallelRecorder>() : nullptr;
-    RS_LOGD("RSParallelRecord EnableParallelRecorder %{public}d ,%{public}d",flag,recorder_ != nullptr);
+    RS_LOGD("RSParallelRecord EnableParallelRecorder %{public}d, %{public}d", flag, recorder_ != nullptr);
 }
 #endif
 
@@ -553,7 +553,7 @@ void RSPaintFilterCanvasBase::ClipRect(const Drawing::Rect& rect, Drawing::ClipO
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipIRect,rect,op,doAntiAlias);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipRect,rect,op,doAntiAlias);
 #endif
 }
 
@@ -1364,7 +1364,7 @@ void RSPaintFilterCanvas::CopyHDRConfiguration(const RSPaintFilterCanvas& other)
 }
 #ifdef SUBTREE_PARALLEL_ENABLE
 void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& other){
-    static auto sEnvDeepCopy = [] (std::stack<Env>& s1,const std::stack<Env>& s2,ContextPtr& GPUContext){
+    static auto sEnvDeepCopy = [] (std::stack<Env>& s1,const std::stack<Env>& s2,ContextPtr& gpuContext){
         auto& e1 = s1.top();
         auto& e2 = s2.top();
         e1 = e2;
@@ -1375,14 +1375,16 @@ void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& o
         if(newData->cachedImage_ == nullptr){
             return;
         }
-        newData->cachedImage_ = RSParallelResourceManager::Singleton().BuildFromTextureByRef(newData->cachedImage_,GPUContext);
+        Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+        auto backendTexture = newData->cachedImage_->GetBackendTexture(false, &origin);
+        newData->cachedImage_ = RSParallelResourceManager::Singleton().BuildFromTextureByRef(newData->cachedImage_,gpuContext,backendTexture);
     };
     isHighContrastEnabled_.store(other.isHighContrastEnabled_.load());
-    auto GPUContext = GetGPUContext();
+    auto gpuContext = GetGPUContext();
     sEnvDeepCopy(envStack_,other.envStack_,gpuContext);
     if(other.isHighContrastEnabled()){
         SetCacheType(RSPaintFilterCanvas::CacheType::DISABLED);
-    }else{
+    } else {
         SetCacheType(other.GetCacheType());
     }
     isParallelCanvas_ = other.isParallelCanvas_;

@@ -46,7 +46,7 @@ public:
     {
 
 
-        std::for_each(recorder_.begin(), recorder_.end(),[newCanvas](auto& oop){op(newCanvas);});
+        std::for_each(recorder_.begin(), recorder_.end(),[newCanvas](auto& oop){ op(newCanvas); });
     }
   }
 
@@ -65,7 +65,7 @@ static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
                                     R (T::*MemFunc)(Args...), Args... args)
 {
     if(recorder == nullptr) {
-        return;
+        return ;
     }
     recorder->Record([MemFunc, args...] (T* canvas){
         (canvas->*MemFunc)(args...);
@@ -74,24 +74,24 @@ static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
 
 template <typename T,typename R,typename C,typename ...Args>
 static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
-                                    R (T::*MemFunc)(const C&,Args...), const C& c ,Args... args)
+                                    R (T::*MemFunc)(const C&,Args...), const C& c,Args... args)
 {
     if(recorder == nullptr) {
-        return;
+        return ;
     }
     recorder->Record([MemFunc, c,args...] (T* canvas){
         (canvas->*MemFunc)(c,args...);
     });
 }
 
-template <typename T,typename R,typename P1,typename P2,typename P3>
+template <typename T, typename R, typename P1, typename P2, typename P3>
 static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
-                                    R (T::*MemFunc)(const P1&, P2&, P3), const P1& p1 ,P2& p2, P3 p3)
+                                    R (T::*MemFunc)(const P1&, P2&, P3), const P1& p1 , P2& p2, P3 p3)
 {
     if(recorder == nullptr) {
         return;
     }
-    recorder->Record([MemFunc, p1,p2,p3] (T* canvas) mutable{
+    recorder->Record([MemFunc, p1, p2, p3] (T* canvas) mutable{
         (canvas->*MemFunc)(p1,p2,p3);
     });
 }

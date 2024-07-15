@@ -20,11 +20,11 @@
 #include "platform/common/rs_system_properties.h"
 #include "skia_adapter/skia_gpu_context.h"
 #include "image/image.h"
-#include "cassert"
-#include "memory"
-#include "list"
-#include "map"
-#include "sys/prctl.h"
+#include <cassert>
+#include <memory>
+#include <list>
+#include <map>
+#include <sys/prctl.h>
 
 
 namespace OHOS::Rosen {
@@ -168,7 +168,7 @@ RSParallelResourceManager::RSParallelResourceManager()
         };
         grctx->registerMigrateCallback(migrateCallback , force);
         RS_LOGD("[%{public}s]: Register ReleaseMigrate Done",threadName.c_str());
-#ifdef SUBTREE_PATALLEL_DEBUG
+#ifdef SUBTREE_PARALLEL_DEBUG
 
    auto debugCallback = [threadName, threadTag](const std::string& debugLog){
     RS_LOGD("Resource[%{public}s] ReleaseMigrate: [%{public}s](%{public}d)->[%{public}s](%{public}d)",debugLog.c_str(),GetThreadName(),gettid(),threadName.c_str(),threadTag);
@@ -201,8 +201,8 @@ void RSParallelResourceManager::ReleaseResource()
 }
 
 
-struct RSParallelResourceManager{
-    RSParallelResourceHolder(const std::shared_ptr<Drawing::image>& sharedImage)
+struct RSParallelResourceHolder {
+    RSParallelResourceHolder(const std::shared_ptr<Drawing::Image>& sharedImage)
         : res_(sharedImage){}
     const std::shared_ptr<Drawing::Image> res_;
 };
@@ -217,12 +217,12 @@ static void ReleaseResourceHolder(void* context)
 
 ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref,ContextPtr& newCtx)
 {
-    if(newCtx == nullptr || ref == nullptr || ref=>IsValid(newCtx.get())){
+    if(newCtx == nullptr || ref == nullptr || ref->IsValid(newCtx.get())){
         return ref;
     }
     Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
-    Drawing::BitmapFormat format = {ref->GetColorType(),ref->GetAlphaType()};
-    auto backendTexture = ref->GetBackendTexture(false,&origin);
+    Drawing::BitmapFormat format = {ref->GetColorType(), ref->GetAlphaType() };
+    // auto backendTexture = ref->GetBackendTexture(false,&origin);
     if(!backendTexture.IsValid()){
         return nullptr;
     }
@@ -259,7 +259,7 @@ ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Im
     if(!isOriginTop){
         origin = Drawing::TextureOrigin::BOTTOM_LEFT;
     }
-    Drawing::BitmapFormat format = {ref.GetColorType(),ref,GetAlphaType()};
+    Drawing::BitmapFormat format = {ref.GetColorType(),ref.GetAlphaType()};
     auto backendTexture = ref.GetBackendTexture(false,&origin);
     if(!backendTexture.IsValid()){
         return nullptr;

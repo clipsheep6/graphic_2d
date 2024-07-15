@@ -41,8 +41,8 @@ class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
 #ifdef SUBTREE_PARALLEL_ENABLE
 public:
     void EnableParallelRecorder(bool flag);
-    void PlayBack(RsParallelRecorderPtr recorder);
-    RsParallelRecorderPtr GetParallelRecorder();
+    void PlayBack(RSParallelRecorderPtr recorder);
+    RSParallelRecorderPtr GetParallelRecorder();
     void RestoreToCount(uint32_t count);
 
 private:

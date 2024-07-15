@@ -153,6 +153,14 @@ FontStyleSet* SkiaFontMgr::CreateStyleSet(int index) const
     return new FontStyleSet(fontStyleSetImpl);
 }
 
+int SkiaFontMgr::VerifyFontIsNormal(const char* fpath) const
+{
+    if (skFontMgr_ == nullptr) {
+        return -1;
+    }
+    return skFontMgr_->VerifyFontIsNormal(fpath);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -106,6 +106,13 @@ public:
 
     FontStyleSet* CreateStyleSet(int index) const;
 
+    /**
+     * @brief             Check whether a font file format is correct and whether it can be installed normally
+     * @param fpath       the full path of a font file
+     * @return            Returns whether the font file path and file format are correct.
+     *                        0 means correct, see the enum FontCheckCode for details
+     */
+    int VerifyFontIsNormal(const char* fpath) const;
 private:
     std::shared_ptr<FontMgrImpl> fontMgrImpl_;
 };

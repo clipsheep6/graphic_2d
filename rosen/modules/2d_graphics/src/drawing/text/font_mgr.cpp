@@ -102,6 +102,12 @@ FontStyleSet* FontMgr::CreateStyleSet(int index) const
     return fontMgrImpl_->CreateStyleSet(index);
 }
 
+int FontMgr::VerifyFontIsNormal(const char* fpath) const {
+    if (fontMgrImpl_ == nullptr) {
+        return -1;
+    }
+    return fontMgrImpl_->VerifyFontIsNormal(fpath);
+};
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -43,6 +43,7 @@ public:
     virtual int CountFamilies() const = 0;
     virtual void GetFamilyName(int index, std::string& str) const = 0;
     virtual FontStyleSet* CreateStyleSet(int index) const = 0;
+    virtual int VerifyFontIsNormal(const char* fpath) const = 0;
 protected:
     FontMgrImpl() noexcept = default;
 };

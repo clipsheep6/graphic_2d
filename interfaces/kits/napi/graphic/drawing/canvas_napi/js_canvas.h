@@ -61,6 +61,7 @@ public:
     static napi_value DrawImage(napi_env env, napi_callback_info info);
     static napi_value DrawLine(napi_env env, napi_callback_info info);
     static napi_value DrawRect(napi_env env, napi_callback_info info);
+    static napi_value DrawRoundRect(napi_env env, napi_callback_info info);
     static napi_value DrawOval(napi_env env, napi_callback_info info);
     static napi_value DrawPoint(napi_env env, napi_callback_info info);
     static napi_value DrawPoints(napi_env env, napi_callback_info info);
@@ -101,6 +102,7 @@ private:
     napi_value OnDrawImage(napi_env env, napi_callback_info info);
     napi_value OnDrawLine(napi_env env, napi_callback_info info);
     napi_value OnDrawRect(napi_env env, napi_callback_info info);
+    napi_value OnDrawRoundRect(napi_env env, napi_callback_info info);
     napi_value OnDrawOval(napi_env env, napi_callback_info info);
     napi_value OnDrawPoint(napi_env env, napi_callback_info info);
     napi_value OnDrawPoints(napi_env env, napi_callback_info info);

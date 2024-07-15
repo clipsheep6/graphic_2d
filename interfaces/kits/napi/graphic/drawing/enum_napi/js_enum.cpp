@@ -171,6 +171,17 @@ static const std::vector<struct JsEnumInt> g_pathFillType = {
     { "INVERSE_EVEN_ODD", static_cast<int32_t>(PathFillType::INVERSE_EVENTODD) },
 };
 
+static const std::vector<struct JsEnumInt> g_cornerPos = {
+    { "TOP_LEFT_POS", static_cast<int32_t>(
+        Drawing::RoundRect::CornerPos::TOP_LEFT_POS) },
+    { "TOP_RIGHT_POS", static_cast<int32_t>(
+        Drawing::RoundRect::CornerPos::TOP_RIGHT_POS) },
+    { "BOTTOM_RIGHT_POS", static_cast<int32_t>(
+        Drawing::RoundRect::CornerPos::BOTTOM_RIGHT_POS) },
+    { "BOTTOM_LEFT_POS", static_cast<int32_t>(
+        Drawing::RoundRect::CornerPos::BOTTOM_LEFT_POS) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
     { "TextEncoding", g_textEncoding },
@@ -187,6 +198,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "PointMode", g_pointMode },
     { "PathDirection", g_pathDirection },
     { "PathFillType", g_pathFillType },
+    { "CornerPos", g_cornerPos },
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

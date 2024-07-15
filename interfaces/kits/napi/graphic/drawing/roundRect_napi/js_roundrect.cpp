@@ -25,6 +25,9 @@ const std::string CLASS_NAME = "RoundRect";
 napi_value JsRoundRect::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("setCorner", JsRoundRect::SetCorner),
+        DECLARE_NAPI_FUNCTION("getCorner", JsRoundRect::GetCorner),
+        DECLARE_NAPI_FUNCTION("offset", JsRoundRect::Offset),
     };
 
     napi_value constructor = nullptr;
@@ -60,28 +63,28 @@ napi_value JsRoundRect::Constructor(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsRoundRect::Constructor failed to napi_get_cb_info");
         return nullptr;
     }
-
-    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
-    napi_valuetype valueType = napi_undefined;
-    if (argv[0] == nullptr || napi_typeof(env, argv[0], &valueType) != napi_ok || valueType != napi_object) {
-        ROSEN_LOGE("JsRoundRect::Constructor Argv[0] is invalid");
-        return NapiGetUndefined(env);
-    }
-
+    JsRoundRect* jsRoundRect = nullptr;
     double ltrb[ARGC_FOUR] = {0};
-    if (!ConvertFromJsRect(env, argv[ARGC_ZERO], ltrb, ARGC_FOUR)) {
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-            "Incorrect parameter0 type. The type of left, top, right and bottom must be number.");
-    }
-    Drawing::Rect drawingRect = Drawing::Rect(ltrb[ARGC_ZERO], ltrb[ARGC_ONE], ltrb[ARGC_TWO], ltrb[ARGC_THREE]);
-
     double xRad = 0.0;
-    GET_DOUBLE_PARAM(ARGC_ONE, xRad);
     double yRad = 0.0;
-    GET_DOUBLE_PARAM(ARGC_TWO, yRad);
-
-    JsRoundRect* jsRoundRect = new(std::nothrow) JsRoundRect(drawingRect, xRad, yRad);
-    if (jsRoundRect == nullptr) {
+    Drawing::Rect drawingRect;
+    if(argCount == ARGC_THREE) {
+        CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+        napi_valuetype valueType = napi_undefined;
+        if (argv[ARGC_ZERO] == nullptr || napi_typeof(env, argv[ARGC_ZERO], &valueType) != napi_ok || valueType != napi_object) {
+            ROSEN_LOGE("JsRoundRect::Constructor Argv[0] is invalid");
+            return NapiGetUndefined(env);
+        }
+        if (!ConvertFromJsRect(env, argv[ARGC_ZERO], ltrb, ARGC_FOUR)) {
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+                "JsRoundRect::Constructor Incorrect parameter0 type. The type must be number.");
+        }
+        drawingRect = Drawing::Rect(ltrb[ARGC_ZERO], ltrb[ARGC_ONE], ltrb[ARGC_TWO], ltrb[ARGC_THREE]);
+        GET_DOUBLE_PARAM(ARGC_ONE, xRad);
+        GET_DOUBLE_PARAM(ARGC_TWO, yRad);
+    }
+    jsRoundRect = new(std::nothrow) JsRoundRect(drawingRect, xRad, yRad);
+    if(jsRoundRect == nullptr) {
         ROSEN_LOGE("JsRoundRect::Constructor Failed");
         return nullptr;
     }
@@ -103,6 +106,64 @@ void JsRoundRect::Destructor(napi_env env, void* nativeObject, void* finalize)
         JsRoundRect* napi = reinterpret_cast<JsRoundRect*>(nativeObject);
         delete napi;
     }
+}
+
+napi_value JsRoundRect::SetCorner(napi_env env, napi_callback_info info)
+{
+    JsRoundRect* rect = CheckParamsAndGetThis<JsRoundRect>(env, info);
+    return (rect != nullptr) ? rect->OnSetCorner(env, info) : nullptr;
+}
+
+napi_value JsRoundRect::OnSetCorner(napi_env env, napi_callback_info info)
+{
+    napi_value argv[ARGC_THREE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_THREE);
+    RoundRect::CornerPos pos;
+    ConvertFromJsValue(env, argv[0], pos);
+    double x = 0;
+    GET_DOUBLE_PARAM(ARGC_ONE, x);
+    double y = 0;
+    GET_DOUBLE_PARAM(ARGC_TWO, y);
+
+    m_roundRect.SetCornerRadius(pos, x, y);
+
+    return nullptr;
+}
+
+napi_value JsRoundRect::GetCorner(napi_env env, napi_callback_info info)
+{
+    JsRoundRect* rect = CheckParamsAndGetThis<JsRoundRect>(env, info);
+    return (rect != nullptr) ? rect->OnGetCorner(env, info) : nullptr;
+}
+
+napi_value JsRoundRect::OnGetCorner(napi_env env, napi_callback_info info)
+{
+    napi_value argv[ARGC_ONE] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+    RoundRect::CornerPos pos;
+    ConvertFromJsValue(env, argv[0], pos);
+    auto point = std::make_shared<Point>(m_roundRect.GetCornerRadius(pos));
+    return GetPointAndConvertToJsValue(env, point);
+}
+
+napi_value JsRoundRect::Offset(napi_env env, napi_callback_info info)
+{
+    JsRoundRect* rect = CheckParamsAndGetThis<JsRoundRect>(env, info);
+    return (rect != nullptr) ? rect->OnOffset(env, info) : nullptr;
+}
+
+napi_value JsRoundRect::OnOffset(napi_env env, napi_callback_info info)
+{
+    napi_value argv[ARGC_TWO] = {nullptr};
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_TWO);
+    double dx = 0;
+    GET_DOUBLE_PARAM(ARGC_ZERO, dx);
+    double dy = 0;
+    GET_DOUBLE_PARAM(ARGC_ONE, dy);
+
+    m_roundRect.Offset(dx, dy);
+
+    return nullptr;
 }
 
 const RoundRect& JsRoundRect::GetRoundRect()

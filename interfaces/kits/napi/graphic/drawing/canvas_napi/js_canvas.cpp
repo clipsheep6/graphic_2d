@@ -336,6 +336,7 @@ bool JsCanvas::DeclareFuncAndCreateConstructor(napi_env env)
         DECLARE_NAPI_FUNCTION("clear", JsCanvas::Clear),
         DECLARE_NAPI_FUNCTION("drawArc", JsCanvas::DrawArc),
         DECLARE_NAPI_FUNCTION("drawRect", JsCanvas::DrawRect),
+        DECLARE_NAPI_FUNCTION("drawRoundRect", JsCanvas::DrawRoundRect),
         DECLARE_NAPI_FUNCTION("drawCircle", JsCanvas::DrawCircle),
         DECLARE_NAPI_FUNCTION("drawImage", JsCanvas::DrawImage),
         DECLARE_NAPI_FUNCTION("drawColor", JsCanvas::DrawColor),
@@ -562,6 +563,31 @@ napi_value JsCanvas::OnDrawRect(napi_env env, napi_callback_info info)
 
     DRAWING_PERFORMANCE_TEST_NAP_RETURN(nullptr);
     m_canvas->DrawRect(drawingRect);
+    return nullptr;
+}
+
+napi_value JsCanvas::DrawRoundRect(napi_env env, napi_callback_info info)
+{
+    DRAWING_PERFORMANCE_TEST_JS_RETURN(nullptr);
+    JsCanvas* me = CheckParamsAndGetThis<JsCanvas>(env, info);
+    return (me != nullptr) ? me->OnDrawRoundRect(env, info) : nullptr;
+}
+
+napi_value JsCanvas::OnDrawRoundRect(napi_env env, napi_callback_info info)
+{
+    if (m_canvas == nullptr) {
+        ROSEN_LOGE("JsCanvas::OnDrawRoundRect canvas is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    napi_value argv[ARGC_ONE] = { nullptr };
+    CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_ONE);
+    JsRoundRect* jsRoundRect = nullptr;
+    GET_UNWRAP_PARAM(ARGC_ZERO, jsRoundRect);
+
+    DRAWING_PERFORMANCE_TEST_NAP_RETURN(nullptr);
+    m_canvas->DrawRoundRect(jsRoundRect->GetRoundRect());
+
     return nullptr;
 }
 

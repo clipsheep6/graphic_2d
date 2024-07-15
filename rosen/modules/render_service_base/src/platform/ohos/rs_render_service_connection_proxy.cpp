@@ -730,7 +730,7 @@ void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
 }
 
 void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range,
-    bool isAnimatorStopped)
+    int32_t animatorExpectedFrameRate)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -746,7 +746,7 @@ void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, co
     data.WriteUint32(range.max_);
     data.WriteUint32(range.preferred_);
     data.WriteUint32(range.type_);
-    data.WriteBool(isAnimatorStopped);
+    data.WriteInt32(animatorExpectedFrameRate);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SYNC_FRAME_RATE_RANGE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2331,7 +2331,8 @@ void RSRenderServiceConnectionProxy::NotifyRefreshRateEvent(const EventInfo& eve
     }
 }
 
-void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
+void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid,
+    int32_t touchCnt)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -2339,10 +2340,16 @@ void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return;
     }
-    if (!data.WriteUint32(touchStatus)) {
+    if (!data.WriteInt32(touchStatus)) {
         return;
     }
-    if (!data.WriteUint32(touchCnt)) {
+    if (!data.WriteString(pkgName)) {
+        return;
+    }
+    if (!data.WriteUint32(pid)) {
+        return;
+    }
+    if (!data.WriteInt32(touchCnt)) {
         return;
     }
     option.SetFlags(MessageOption::TF_ASYNC);

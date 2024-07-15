@@ -368,7 +368,7 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, SyncFrameRateRange, TestSize.Level1
 {
     FrameRateLinkerId id = 1;
     FrameRateRange range;
-    proxy->SyncFrameRateRange(id, range, false);
+    proxy->SyncFrameRateRange(id, range, 0);
     ASSERT_EQ(proxy->transactionDataIndex_, 0);
 }
 
@@ -902,7 +902,7 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, SetCacheEnabledForRotation, TestSiz
     proxy->NotifyRefreshRateEvent(eventInfo);
     int32_t touchStatus = 1;
     int32_t touchCnt = 0;
-    proxy->NotifyTouchEvent(touchStatus, touchCnt);
+    proxy->NotifyTouchEvent(touchStatus, "", 0, touchCnt);
     proxy->SetCacheEnabledForRotation(true);
     ASSERT_EQ(proxy->transactionDataIndex_, 0);
 }

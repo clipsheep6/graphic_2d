@@ -499,7 +499,7 @@ void RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
 }
 
 void RSRenderServiceClient::SyncFrameRateRange(FrameRateLinkerId id,
-    const FrameRateRange& range, bool isAnimatorStopped)
+    const FrameRateRange& range, int32_t animatorExpectedFrameRate)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -507,7 +507,7 @@ void RSRenderServiceClient::SyncFrameRateRange(FrameRateLinkerId id,
         return;
     }
 
-    return renderService->SyncFrameRateRange(id, range, isAnimatorStopped);
+    return renderService->SyncFrameRateRange(id, range, animatorExpectedFrameRate);
 }
 
 uint32_t RSRenderServiceClient::GetScreenCurrentRefreshRate(ScreenId id)
@@ -1320,11 +1320,12 @@ void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
     }
 }
 
-void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid,
+    int32_t touchCnt)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
-        renderService->NotifyTouchEvent(touchStatus, touchCnt);
+        renderService->NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
     }
 }
 

@@ -95,7 +95,8 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode) override;
 
-    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped) override;
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range,
+        int32_t animatorExpectedFrameRate) override;
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
@@ -219,7 +220,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo) override;
 
-    void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt) override;
+    void NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid, int32_t touchCnt) override;
 
     void ReportEventResponse(DataBaseRs info) override;
 

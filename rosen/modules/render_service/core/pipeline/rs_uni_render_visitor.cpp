@@ -74,9 +74,9 @@
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/round_corner_display/rs_message_bus.h"
 
+#include "rs_profiler.h"
 #ifdef RS_PROFILER_ENABLED
 #include "rs_profiler_capture_recorder.h"
-#include "rs_profiler.h"
 #endif
 
 namespace OHOS {
@@ -86,6 +86,7 @@ constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr int32_t CACHE_MAX_UPDATE_TIME = 2;
 constexpr int32_t VISIBLEAREARATIO_FORQOS = 3;
 constexpr int MAX_ALPHA = 255;
+constexpr int TRACE_LEVEL_THREE = 3;
 constexpr float EPSILON_SCALE = 0.00001f;
 constexpr float CACHE_FILL_ALPHA = 0.2f;
 constexpr float CACHE_UPDATE_FILL_ALPHA = 0.8f;
@@ -1291,7 +1292,8 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
         // Callback for registered self drawing surfacenode
         RSMainThread::Instance()->SurfaceOcclusionCallback();
     }
-    RSUifirstManager::Instance().UpdateUIFirstLayerInfo(screenInfo_);
+    //UIFirst layer must be above displayNode, so use zorder + 1
+    RSUifirstManager::Instance().UpdateUIFirstLayerInfo(screenInfo_, globalZOrder_ + 1);
     curDisplayNode_->UpdatePartialRenderParams();
     curDisplayNode_->UpdateScreenRenderParams(screenInfo_, displayHasSecSurface_, displayHasSkipSurface_,
         displayHasProtectedSurface_, hasCaptureWindow_);
@@ -1404,7 +1406,8 @@ void RSUniRenderVisitor::UpdateNodeVisibleRegion(RSSurfaceRenderNode& node)
         Occlusion::Region subResultWithoutSkipLayer = selfDrawRegion.Sub(occlusionRegionWithoutSkipLayer_);
         node.SetVisibleRegionInVirtual(subResultWithoutSkipLayer);
     }
-    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateNodeVisibleRegion name[%s] visibleRegion[%s]",
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(TRACE_LEVEL_THREE,
+        "RSUniRenderVisitor::UpdateNodeVisibleRegion name[%s] visibleRegion[%s]",
         node.GetName().c_str(), node.GetVisibleRegion().GetRegionInfo().c_str());
 }
 
@@ -1483,7 +1486,7 @@ void RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS()
     }
     if (visibleChanged_) {
         RSMainThread::Instance()->SurfaceOcclusionChangeCallback(allDstCurVisVec_);
-        RS_LOGI("RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS %{public}s",
+        RS_LOGD("RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS %{public}s",
             VisibleDataToString(allDstCurVisVec_).c_str());
     }
 }
@@ -2111,7 +2114,7 @@ void RSUniRenderVisitor::UpdateHwcNodeDirtyRegionAndCreateLayer(std::shared_ptr<
         auto transform = RSUniRenderUtil::GetLayerTransform(*hwcNodePtr, screenInfo_);
         hwcNodePtr->UpdateHwcNodeLayerInfo(transform);
     }
-    curDisplayNode_->SetGlobalZOrder(globalZOrder_);
+    curDisplayNode_->SetDisplayGlobalZOrder(globalZOrder_);
     if (pointWindow) {
         // globalZOrder_ + 2 is displayNode layer, point window must be at the top.
         pointWindow->SetGlobalZOrder(globalZOrder_ + 2);
@@ -2583,6 +2586,10 @@ void RSUniRenderVisitor::CheckFilterNodeInSkippedSubTreeNeedClearCache(
 
 void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& rootNode)
 {
+    if (RS_PROFILER_SHOULD_BLOCK_HWCNODE()) {
+        return;
+    }
+    
     const auto& hwcNodes = curSurfaceNode_->GetChildHardwareEnabledNodes();
     if (hwcNodes.empty()) {
         return;
@@ -5057,8 +5064,7 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
     }
 
     if (!node.GetCacheSurface(threadIndex_, true)) {
-        RSRenderNode::ClearCacheSurfaceFunc func = std::bind(&RSUniRenderUtil::ClearNodeCacheSurface,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        RSRenderNode::ClearCacheSurfaceFunc func = &RSUniRenderUtil::ClearNodeCacheSurface;
         node.InitCacheSurface(canvas_ ? canvas_->GetGPUContext().get() : nullptr, func, threadIndex_);
     }
     auto surface = node.GetCacheSurface(threadIndex_, true);
@@ -5076,7 +5082,7 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
         cacheCanvas->SetHighContrast(renderEngine_->IsHighContrastEnabled());
     }
     if (canvas_) {
-        cacheCanvas->CopyConfiguration(*canvas_);
+        cacheCanvas->CopyConfigurationToOffscreenCanvas(*canvas_);
     }
     // Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures, so we explicitly
     // disable it in sub-thread.
@@ -5930,7 +5936,7 @@ void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
 
     // copy current canvas properties into offscreen canvas
-    offscreenCanvas->CopyConfiguration(*canvas_);
+    offscreenCanvas->CopyConfigurationToOffscreenCanvas(*canvas_);
 
     // backup current canvas and replace with offscreen canvas
     canvasBackup_ = std::exchange(canvas_, offscreenCanvas);
@@ -6043,6 +6049,7 @@ void RSUniRenderVisitor::SetUniRenderThreadParam(std::unique_ptr<RSRenderThreadP
     renderThreadParams->dfxTargetSurfaceNames_ = std::move(dfxTargetSurfaceNames_);
     renderThreadParams->isVirtualDirtyEnabled_ = isVirtualDirtyEnabled_;
     renderThreadParams->isVirtualDirtyDfxEnabled_ = isVirtualDirtyDfxEnabled_;
+    renderThreadParams->hasMirrorDisplay_ = hasMirrorDisplay_;
 }
 
 void RSUniRenderVisitor::SetHardwareEnabledNodes(
@@ -6388,7 +6395,12 @@ void RSUniRenderVisitor::ProcessUnpairedSharedTransitionNode()
         parent->AddDirtyType(RSModifierType::CHILDREN);
         parent->ApplyModifiers();
         // avoid changing the paired status or unpairedShareTransitions_
-        sptr->GetSharedTransitionParam()->paired_ = false;
+        auto param = sptr->GetSharedTransitionParam();
+        if (param == nullptr) {
+            ROSEN_LOGE("RSUniRenderVisitor::ProcessUnpairedSharedTransitionNode: param is null");
+            return;
+        }
+        param->paired_ = false;
         SharedTransitionParam::unpairedShareTransitions_.clear();
     };
     auto unpairedShareTransitions = std::move(SharedTransitionParam::unpairedShareTransitions_);

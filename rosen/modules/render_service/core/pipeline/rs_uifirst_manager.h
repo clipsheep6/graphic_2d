@@ -22,6 +22,7 @@
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_main_thread.h"
+#include "rs_processor.h"
 #include "transaction/rs_render_service_client.h"
 
 namespace OHOS::Rosen {
@@ -72,7 +73,8 @@ public:
     void DisableUifirstNode(RSSurfaceRenderNode& node);
     static void ProcessTreeStateChange(RSSurfaceRenderNode& node);
 
-    void UpdateUIFirstLayerInfo(const ScreenInfo& screenInfo);
+    void UpdateUIFirstLayerInfo(const ScreenInfo& screenInfo, float zOrder);
+    void CreateUIFirstLayer(std::shared_ptr<RSProcessor>& processor);
     
     void SetUiFirstSwitch(bool uiFirstSwitch)
     {

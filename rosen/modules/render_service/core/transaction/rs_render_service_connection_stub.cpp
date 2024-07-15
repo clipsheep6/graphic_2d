@@ -486,8 +486,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             uint32_t max = data.ReadUint32();
             uint32_t preferred = data.ReadUint32();
             uint32_t type = data.ReadUint32();
-            bool isAnimatorStopped = data.ReadBool();
-            SyncFrameRateRange(id, {min, max, preferred, type}, isAnimatorStopped);
+            int32_t animatorExpectedFrameRate = data.ReadInt32();
+            SyncFrameRateRange(id, {min, max, preferred, type}, animatorExpectedFrameRate);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_CURRENT_REFRESH_RATE): {
@@ -537,8 +537,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             pid_t pid = data.ReadInt32();
-            std::string ret = GetRefreshInfo(pid);
-            reply.WriteString(ret);
+            std::string refreshInfo = GetRefreshInfo(pid);
+            reply.WriteString(refreshInfo);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_RESOLUTION): {
@@ -1191,8 +1191,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT) : {
             auto touchStatus = data.ReadInt32();
+            auto pkgName =  data.ReadString();
+            auto pid = data.ReadUint32();
             auto touchCnt = data.ReadInt32();
-            NotifyTouchEvent(touchStatus, touchCnt);
+            NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {

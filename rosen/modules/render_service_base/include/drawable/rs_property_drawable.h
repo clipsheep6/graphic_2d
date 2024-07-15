@@ -159,12 +159,15 @@ protected:
     bool filterRegionChanged_ = false;
     bool filterInteractWithDirty_ = false;
     bool rotationChanged_ = false;
-    bool clearFilteredCacheAfterDrawing_ = false;
-    bool forceClearCacheWithLastFrame_ = false;
+    bool forceClearCacheForLastFrame_ = false;
     bool isAIBarInteractWithHWC_ = false;
  
     // clear one of snapshot cache and filtered cache after drawing
-    bool stagingClearFilteredCacheAfterDrawing_ = false;
+    bool renderClearFilteredCacheAfterDrawing_ = false;
+
+    bool renderFilterHashChanged_ = false;
+
+    bool renderForceClearCacheForLastFrame_ = false;
  
     // the type cache needed clear before drawing
     FilterCacheType clearType_ = FilterCacheType::NONE;

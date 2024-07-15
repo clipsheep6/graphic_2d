@@ -32,6 +32,7 @@ namespace Rosen {
 namespace Drawing {
 using pid_t = int;
 struct GPUResourceTag;
+struct HpsBlurParameter;
 class GPUContext;
 class GPUContextOptions;
 class GPUContextImpl : public BaseImpl {
@@ -80,6 +81,8 @@ public:
     virtual void DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump) = 0;
 
     virtual void SetCurrentGpuResourceTag(const GPUResourceTag &tag) = 0;
+
+    virtual std::array<int, 2> GetHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParam) = 0;
 
 #ifdef RS_ENABLE_VK
     virtual void StoreVkPipelineCacheData() = 0;

@@ -159,6 +159,11 @@ void GPUContext::SetCurrentGpuResourceTag(const GPUResourceTag &tag)
     impl_->SetCurrentGpuResourceTag(tag);
 }
 
+std::array<int, 2> GPUContext::GetHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParam)
+{
+    return impl_->GetHpsBluredImageDimension(blurParam);
+}
+
 void GPUContext::ResetContext()
 {
     impl_->ResetContext();

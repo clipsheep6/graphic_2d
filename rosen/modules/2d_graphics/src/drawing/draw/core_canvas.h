@@ -31,17 +31,6 @@ enum class SrcRectConstraint {
     FAST_SRC_RECT_CONSTRAINT,
 };
 
-struct HpsBlurParameter {
-    Rect src;
-    Rect dst;
-    scalar sigma { 1E-6 };
-    float saturation { 1.0 };
-    float brightness { 1.0 };
-    HpsBlurParameter(const Rect& s, const Rect& d, const scalar& sgm,
-        float satura, float bright)
-        : src(s), dst(d), sigma(sgm), saturation(satura), brightness(bright) {}
-};
-
 /**
  * @brief PointMode: Selects if an array of points are drawn as discrete points, as lines, or as
  * an open polygon.

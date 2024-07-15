@@ -224,7 +224,8 @@ void RSDisplayRenderNode::UpdateRenderParams()
 
 void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
     std::map<ScreenId, bool>& displayHasSecSurface, std::map<ScreenId, bool>& displayHasSkipSurface,
-    std::map<ScreenId, bool>& displayHasProtectedSurface, std::map<ScreenId, bool>& hasCaptureWindow)
+    std::map<ScreenId, bool>& displayHasProtectedSurface, std::map<ScreenId, bool>& displaySpecailSurfaceChanged,
+    std::map<ScreenId, bool>& hasCaptureWindow)
 {
     auto displayParams = static_cast<RSDisplayRenderParams*>(stagingRenderParams_.get());
     if (displayParams == nullptr) {
@@ -238,6 +239,7 @@ void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
     displayParams->displayHasSecSurface_ = std::move(displayHasSecSurface);
     displayParams->displayHasSkipSurface_ = std::move(displayHasSkipSurface);
     displayParams->displayHasProtectedSurface_ = std::move(displayHasProtectedSurface);
+    displayParams->displaySpecailSurfaceChanged_ = std::move(displaySpecailSurfaceChanged);
     displayParams->hasCaptureWindow_ = std::move(hasCaptureWindow);
 }
 

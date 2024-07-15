@@ -127,6 +127,68 @@ HWTEST_F(FontMgrTest, CreateStyleSet001, TestSize.Level1)
     FontStyleSet* fontStyleSet = FontMgr->CreateStyleSet(0);
     ASSERT_TRUE(fontStyleSet != nullptr);
 }
+/**
+ * @tc.name:CheckFontValidity001
+ * @tc.desc: Test CheckFontValidity
+ * @tc.type: FUNC
+ * @tc.require: I91F9L
+ */
+HWTEST_F(FontMgrTest, CheckFontValidity001, TestSize.Level1)
+{
+    std::shared_ptr<FontMgr> FontMgr = FontMgr::CreateDefaultFontMgr();
+    ASSERT_TRUE(FontMgr != nullptr);
+
+    std::vector<std::string> fullnameVec;
+    int ret = FontMgr->CheckFontValidity(nullptr, fullnameVec);
+    ASSERT_TRUE(ret != 0);
+
+    // case 1: Checks if the font file is valid and returns an array with a fullname
+    std::string fontPath = "/system/fonts/HarmonyOS_Sans.ttf";
+    std::ifstream testFile1(fontPath);
+    if (testFile1.is_open()) {
+        testFile1.close();
+        ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+        ASSERT_TRUE(ret == 0 && fullnameVec.size() == 1);
+    }
+    fullnameVec.clear();
+    // case 2: Checks if the font file is valid and returns an array with 5 fullnames
+    fontPath = "/system/fonts/NotoSerifCJK-Regular.ttc";
+    std::ifstream testFile2(fontPath);
+    if (testFile2.is_open()) {
+        testFile2.close();
+        ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+        ASSERT_TRUE(ret == 0 && fullnameVec.size() == 5);
+    }
+    fullnameVec.clear();
+    // case 3: Checks if the font file is invalid and returns an error code
+    fontPath = "/system/fonts/error_path.ttf";
+    std::ifstream testFile3(fontPath);
+    if (testFile3.is_open()) {
+        testFile3.close();
+    } else {
+        ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+        ASSERT_TRUE(ret == 1);
+    }
+}
+/**
+ * @tc.name:ParseInstallFont001
+ * @tc.desc: Test ParseInstallFont
+ * @tc.type: FUNC
+ * @tc.require: I91F9L
+ */
+HWTEST_F(FontMgrTest, ParseInstallFont001, TestSize.Level1)
+{
+    std::shared_ptr<FontMgr> FontMgr = FontMgr::CreateInstallFontMgr();
+    ASSERT_TRUE(FontMgr != nullptr);
+    std::string fontPath = "/system/etc/install_fontconfig.json";
+    std::ifstream configFile(fontPath);
+    if (configFile.is_open()) {
+        configFile.close();
+        std::vector<std::string> fullPathVec;
+        int ret = FontMgr->ParseInstallFontConfig(fontPath, fullPathVec);
+        ASSERT_TRUE(ret == 0);
+    }
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -435,6 +435,52 @@ int FontConfigJson::ParseFontMap(const cJSON* root, const char* key)
     return SUCCESSED;
 }
 
+int FontConfigJson::ParseInstallFont(const cJSON* root, std::vector<std::string>& fontPathList)
+{
+    const char* tag = "root";
+    cJSON* rootObj = cJSON_GetObjectItem(root, tag);
+    if (rootObj == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "parse config failed";
+        return FAILED;
+    }
+    int size = cJSON_GetArraySize(rootObj);
+    fontPathList.reserve(size);
+    int ret = SUCCESSED;
+    for (int i = 0; i < size; i++) {
+        cJSON* item = cJSON_GetArrayItem(rootObj, i);
+        if (item == nullptr) {
+            ret = FAILED;
+            break;
+        }
+        cJSON* fullPath = cJSON_GetObjectItem(item, "fontfullpath");
+        if (fullPath != nullptr && cJSON_IsString(fullPath) && fullPath->valuestring != nullptr) {
+            fontPathList.emplace_back(std::string(fullPath->valuestring));
+        } else {
+            ret = FAILED;
+            break;
+        }
+    }
+    return ret;
+}
+
+int FontConfigJson::ParseInstallConfig(const char* fontPath, std::vector<std::string>& fontPathList)
+{
+    if (fontPath == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "ParseInstallConfig fontPath is null";
+        return FAILED;
+    }
+
+    cJSON* root = CheckConfigFile(fontPath);
+    if (root == nullptr) {
+        LOGSO_FUNC_LINE(ERROR) << "check config file failed";
+        return FAILED;
+    }
+    int ret = ParseInstallFont(root, fontPathList);
+    LOGSO_FUNC_LINE(ERROR) << "ParseInstallFont, fontPath: " << fontPath << " ,ret: " << ret;
+    cJSON_Delete(root);
+    return ret;
+}
+
 void FontConfigJson::DumpAlias(const AliasSet &aliasSet) const
 {
     if (!aliasSet.empty()) {

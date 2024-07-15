@@ -86,6 +86,7 @@ public:
     FontConfigJson() = default;
     int ParseFile(const char* fname = nullptr);
     int ParseFontFileMap(const char* fname = nullptr);
+    int ParseInstallConfig(const char* fname, std::vector<std::string>& fontPathList);
     std::shared_ptr<FontConfigJsonInfo> GetFontConfigJsonInfo()
     {
         return fontPtr;
@@ -109,6 +110,7 @@ private:
     void AnalyseFontDir(const cJSON* root);
     int ParseAdjustArr(const cJSON* arr, FontGenericInfo &genericInfo);
     int ParseAliasArr(const cJSON* arr, FontGenericInfo &genericInfo);
+    int ParseInstallFont(const cJSON* root, std::vector<std::string>& fontPathList);
     void DumpFontDir() const;
     void DumpGeneric() const;
     void DumpForbak() const;

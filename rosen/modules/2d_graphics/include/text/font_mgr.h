@@ -67,6 +67,12 @@ public:
 #endif
 
     /**
+     * @brief   Create a install fontMgr.
+     * @return  A shared pointer to install fontMgr.
+     */
+    static std::shared_ptr<FontMgr> CreateInstallFontMgr();
+
+    /**
      * @brief             Use the system fallback to find a typeface for the given character.
      * @param familyName  A const char array of familyName.
      * @param fontStyle   FontStyle.
@@ -106,6 +112,20 @@ public:
 
     FontStyleSet* CreateStyleSet(int index) const;
 
+    /**
+     * @brief             Check that the font file is valid
+     * @param fontPath    The full path of a font file
+     * @param fullnameVec The dynamic array of fullname, the retrieved fullname is filled into this array
+     * @return            Returns whether the font file is valid, 0 means valid, See FontCheckCode for details
+     */
+    int CheckFontValidity(const char* fontPath, std::vector<std::string>& fullnameVec) const;
+
+    /**
+     * @brief             Parse the Installed font configuration file and get the font path list
+     * @param configPath  The path to the configuration file
+     * @return            Returns Whether the configuration file is parsed successfully, 0 means success
+     */
+    int ParseInstallFontConfig(const std::string& configPath, std::vector<std::string>& fontPathVec) const;
 private:
     std::shared_ptr<FontMgrImpl> fontMgrImpl_;
 };

@@ -96,6 +96,7 @@ public:
     static std::unique_ptr<FontImpl> CreateFontImpl(const Font& font);
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilderImpl();
     static std::shared_ptr<FontMgrImpl> CreateDefaultFontMgrImpl();
+    static std::shared_ptr<FontMgrImpl> CreateInstallFontMgrImpl();
 #ifndef USE_TEXGINE
     static std::shared_ptr<FontMgrImpl> CreateDynamicFontMgrImpl();
 #endif

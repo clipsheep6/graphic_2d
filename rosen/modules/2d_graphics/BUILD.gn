@@ -66,6 +66,9 @@ template("graphics2d_source_set") {
     } else if (use_skia_txt) {
       defines += [ "USE_SKIA_TXT" ]
     }
+    if (use_ohos_support) {
+      defines += [ "OHOS_SUPPORT" ]
+    }
 
     public_deps = []
     external_deps = [ "napi:ace_napi" ]

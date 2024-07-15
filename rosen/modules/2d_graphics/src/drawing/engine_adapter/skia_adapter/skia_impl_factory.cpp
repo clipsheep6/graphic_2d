@@ -244,6 +244,11 @@ std::shared_ptr<FontMgrImpl> SkiaImplFactory::CreateDefaultFontMgr()
     return SkiaFontMgr::CreateDefaultFontMgr();
 }
 
+std::shared_ptr<FontMgrImpl> SkiaImplFactory::CreateInstallFontMgr()
+{
+    return SkiaFontMgr::CreateInstallFontMgr();
+}
+
 #ifndef USE_TEXGINE
 std::shared_ptr<FontMgrImpl> SkiaImplFactory::CreateDynamicFontMgr()
 {

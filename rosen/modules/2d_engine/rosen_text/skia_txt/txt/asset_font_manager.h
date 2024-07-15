@@ -86,6 +86,15 @@ private:
 
     DISALLOW_COPY_AND_ASSIGN(TestFontManager);
 };
+
+class InstallFontManager : public AssetFontManager {
+public:
+    InstallFontManager() : AssetFontManager(std::make_unique<TypefaceFontAssetProvider>()) {}
+    ~InstallFontManager() override;
+
+    int ParseInstallFontConfig(const std::string& configPath, std::vector<std::string>& fontPathVec) const override;
+};
+
 } // namespace txt
 
 #endif // ROSEN_MODULES_SPTEXT_ASSET_FONT_MANAGER_H

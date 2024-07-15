@@ -78,7 +78,9 @@
 #include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/sk_resource_manager.h"
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
 #include "pipeline/rs_pointer_render_manager.h"
+#endif
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"

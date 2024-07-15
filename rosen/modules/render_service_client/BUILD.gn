@@ -187,6 +187,10 @@ template("render_service_client_source_set") {
       defines += [ "ENABLE_EXPORT_MACRO" ]
     }
 
+    if (input_ext_feature_magiccursor) {
+      defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
+    }
+
     if (defined(use_rosen_drawing) && use_rosen_drawing) {
       defines += [ "USE_ROSEN_DRAWING" ]
       deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]

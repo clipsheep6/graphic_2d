@@ -17,7 +17,9 @@
 #include "src/gpu/gl/GrGLDefines.h"
 #include "rs_uni_render_processor.h"
 #include "pipeline/rs_uni_render_util.h"
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
 #include "pipeline/rs_pointer_render_manager.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

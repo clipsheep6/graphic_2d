@@ -18,9 +18,9 @@
 
 #include "ipc_callbacks/pointer_luminance_change_callback.h"
 #include "pipeline/rs_display_render_node.h"
-#include "rs_processor.h"
+#include "pipeline/rs_processor.h"
 #ifdef RS_ENABLE_VK
-#include "rs_vk_image_manager.h"
+#include "pipeline/rs_vk_image_manager.h"
 #endif
 
 namespace OHOS::Rosen {
@@ -85,6 +85,7 @@ private:
     std::atomic<bool> taskDoing_ = false;
     bool isEnableCursorInversion_ = false;
     std::shared_ptr<Drawing::Image> cacheImgForPointer_ = nullptr;
+    std::mutex mtx_;
     std::mutex cursorInvertMutex_;
     std::map<pid_t, sptr<RSIPointerLuminanceChangeCallback>> colorChangeListeners_;
     enum class CursorBrightness {

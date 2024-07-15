@@ -102,6 +102,13 @@ FontStyleSet* FontMgr::CreateStyleSet(int index) const
     return fontMgrImpl_->CreateStyleSet(index);
 }
 
+int FontMgr::CheckFontValidity(const char *fontPath, std::vector<std::string> &fullnameVec) const
+{
+    if (fontMgrImpl_ == nullptr || fontPath == nullptr) {
+        return ERROR_TYPE_OTHER;
+    }
+    return fontMgrImpl_->CheckFontValidity(fontPath, fullnameVec);
+};
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

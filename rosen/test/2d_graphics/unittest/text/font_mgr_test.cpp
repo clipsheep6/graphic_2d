@@ -127,6 +127,32 @@ HWTEST_F(FontMgrTest, CreateStyleSet001, TestSize.Level1)
     FontStyleSet* fontStyleSet = FontMgr->CreateStyleSet(0);
     ASSERT_TRUE(fontStyleSet != nullptr);
 }
+/**
+ * @tc.name:CheckFontValidity001
+ * @tc.desc: Test CheckFontValidity
+ * @tc.type: FUNC
+ * @tc.require: I91F9L
+ */
+HWTEST_F(FontMgrTest, CheckFontValidity001, TestSize.Level1)
+{
+    std::shared_ptr<FontMgr> FontMgr = FontMgr::CreateDefaultFontMgr();
+    ASSERT_TRUE(FontMgr != nullptr);
+
+    std::vector<std::string> fullnameVec;
+    int ret = FontMgr->CheckFontValidity(nullptr, fullnameVec);
+    ASSERT_TRUE(ret != 0);
+
+    std::string fontPath = "/system/fonts/HarmonyOS_Sans.ttf";
+    ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+    ASSERT_TRUE(ret == 0 && fullnameVec.size() == 1);
+    fullnameVec.clear();
+    fontPath = "/system/fonts/NotoSerifCJK-Regular.ttc";
+    ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+    ASSERT_TRUE(ret == 0 && fullnameVec.size() == 5);
+    fontPath = "/system/fonts/error_path.ttc";
+    ret = FontMgr->CheckFontValidity(fontPath.c_str(), fullnameVec);
+    ASSERT_TRUE(ret == 1);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

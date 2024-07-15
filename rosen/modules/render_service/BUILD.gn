@@ -155,8 +155,8 @@ ohos_shared_library("librender_service") {
   ]
 
   if (input_ext_feature_magiccursor) {
-    sources += [ "core/pipeline/rs_pointer_render_manager.cpp" ]
     defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
+    sources += [ "core/pipeline/rs_pointer_render_manager.cpp" ]
   }
 
   if (rs_enable_eglimage) {

@@ -698,6 +698,7 @@ VsyncError VSyncGenerator::SetReferenceTimeOffset(int32_t offsetByPulseNum)
 
 VsyncError VSyncGenerator::StartRefresh()
 {
+    RS_TRACE_NAME("StartRefresh");
     std::lock_guard<std::mutex> lock(mutex_);
     startRefresh_ = true;
     referenceTimeOffsetPulseNum_ = defaultReferenceTimeOffsetPulseNum_;

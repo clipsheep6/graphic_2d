@@ -212,11 +212,16 @@ void RSDisplayRenderNode::UpdateRenderParams()
         RS_LOGE("RSDisplayRenderNode::UpdateRenderParams displayParams is null");
         return;
     }
+    auto mirroredNode = GetMirrorSource().lock();
+    if (mirroredNode == nullptr) {
+        RS_LOGE("RSDisplayRenderNode::UpdateRenderParams mirroredNode is null");
+        return;
+    }
     displayParams->offsetX_ = GetDisplayOffsetX();
     displayParams->offsetY_ = GetDisplayOffsetY();
     displayParams->nodeRotation_ = GetRotation();
     displayParams->mirrorSource_ = GetMirrorSource();
-    auto mirroredNode = displayParams->mirrorSource_.lock();
+    displayParams->mirrorSourceDrawable_ = mirroredNode->GetRenderDrawable();
     displayParams->mirrorSourceId_ = mirroredNode ? mirroredNode->GetId() : INVALID_NODEID;
 
     RSRenderNode::UpdateRenderParams();
@@ -234,6 +239,7 @@ void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
     displayParams->screenId_ = GetScreenId();
     displayParams->screenRotation_ = GetScreenRotation();
     displayParams->compositeType_ = GetCompositeType();
+    displayParams->isSecurityDisplay_ = GetSecurityDisplay();
     displayParams->screenInfo_ = std::move(screenInfo);
     displayParams->displayHasSecSurface_ = std::move(displayHasSecSurface);
     displayParams->displayHasSkipSurface_ = std::move(displayHasSkipSurface);

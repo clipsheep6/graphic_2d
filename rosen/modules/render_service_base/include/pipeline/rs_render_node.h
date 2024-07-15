@@ -669,6 +669,17 @@ public:
         lastFrameUifirstFlag_ = b;
     }
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+     uint32_t GetWeight_;
+     {
+        return weight_;
+     }
+     void SetWeight(uint32_t weight)
+     {
+        weight_ = weight;
+     }
+#endif
+
     void SkipSync()
     {
         lastFrameSynced_ = false;
@@ -863,6 +874,9 @@ private:
     void UpdateShouldPaint(); // update node should paint state in apply modifier stage
     bool shouldPaint_ = true;
     bool isSubTreeDirty_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+    uint32_t weight_ = 1;
+#endif
 
     bool isDirtyRegionUpdated_ = false;
     bool isContainBootAnimation_ = false;

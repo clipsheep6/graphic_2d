@@ -47,6 +47,9 @@
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "common/rs_singleton.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
+#ifdef RS_ENABLE_FFRT
+#include "ffrt_inner.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -121,7 +124,10 @@ void RSUniRenderThread::Start()
     if (!runner_) {
         RS_LOGE("RSUniRenderThread Start runner null");
     }
-    runner_->Run();
+#ifdef RS_ENABLE_FFRT
+    ffrt::qos_interval_create(8333,5);
+#endif
+        runner_->Run();
     auto PostTaskProxy = [](RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority) {
         RSUniRenderThread::Instance().PostTask(task, name, delayTime, priority);

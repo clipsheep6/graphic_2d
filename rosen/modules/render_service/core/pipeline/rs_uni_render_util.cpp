@@ -52,6 +52,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+constexpr std::pair<uint32_t,uint32_t> SUBTREE_PARALLEL_THREAD_INDEX = {10,100};
 constexpr int32_t FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN = -90;
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 }
@@ -841,6 +842,44 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
         return node->QuerySubAssignable(isDisplayRotation);
     }
 }
+#ifdef SUBTREE_PARALLEL_ENABLE
+pid_t RSUniRenderUtil::GetThreadId(RSPaintFilterCanvas* rsCanvas){
+    auto threadIndex = rsCanvas->GetParallelThreadId();
+    if(threadIndex > SUBTREE_PARALLEL_THREAD_INDEX.first && threadIndex < SUBTREE_PARALLEL_THREAD_INDEX.second){
+        return -threadIndex;
+    }else{
+        return gettid();
+    }
+}
+bool RSUniRenderUtil::IsDrawableWindowScene(RSSurfaceRenderParams* surfaceParams)
+{
+    std::string surfaceName = surfaceParams->GetName();
+    return (surfaceParams->IsLeashWindow() && (surfaceName.substr(0,11) == "WindowScene"))
+         || (surfaceName.substr(0,10) == "SCBDesktop");
+}
+bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node,bool isDisplayRotation){
+    auto deviceType = RSMainThread::Instance()->GetDeviceType();
+    std::string surfaceName = node->GetName();
+
+    if(node->IsSelfDrawingType()){
+        return false;
+    }
+    auto children = node->GetSortedChildren();
+
+    if(deviceType != DeviceType::PC){
+        return node->IsLeashWindow() && !node->GetForceUIFirst()
+               && (surfaceName.substr(0,11) == "WindowScene")&& !node->HasFilter()
+               && children->size() ==1 && ((*children)[0]->GetType() == RSRenderNodeType::SURFACE_NODE);
+    }else{
+        if((node->IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
+            node->IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId())) &&
+            node->GetHasSharedTransitionNode()){
+                return false;
+            }
+            return node->QuerySubAssignable(isDisplayRotation);
+    }
+}
+#endif
 
 void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,

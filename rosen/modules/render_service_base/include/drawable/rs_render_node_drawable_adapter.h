@@ -32,6 +32,9 @@ class RSRenderNode;
 class RSRenderParams;
 class RSDisplayRenderNode;
 class RSSurfaceRenderNode;
+#ifdef SUBTREE_PARALLEL_ENABLE
+class RSParallelManager;
+#endif
 namespace Drawing {
 class Canvas;
 }
@@ -76,7 +79,9 @@ public:
 
     virtual void Draw(Drawing::Canvas& canvas) = 0;
     virtual void DumpDrawableTree(int32_t depth, std::string& out) const;
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+    void DrawChildrenOnly(Drawding::Canvas& canvas);
+#endif
     static SharedPtr OnGenerate(const std::shared_ptr<const RSRenderNode>& node);
     static SharedPtr GetDrawableById(NodeId id);
     static SharedPtr OnGenerateShadowDrawable(
@@ -164,6 +169,11 @@ private:
     friend class OHOS::Rosen::RSDisplayRenderNode;
     friend class OHOS::Rosen::RSSurfaceRenderNode;
     friend class RSRenderNodeShadowDrawable;
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+     friend class OHOS::Rosen::RSParallelManager;
+     bool isSubTreeParallelRoot_ {false};
+#endif
 };
 
 } // namespace DrawableV2

@@ -234,6 +234,26 @@ public:
     bool PrepareOffscreenRender();
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
+#ifdef SUBTREE_PARALLEL_ENABLE
+   Drawing::Region GetCurSurfaceDrawRegion()
+   {
+    return curSurfaceDrawRegion_;
+   }
+   void SetCurSurfaceDrawRegion(Drawing::Region& region)
+   {
+    curSurfaceDrawRegion_ = region;
+   }
+   void DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas,RSSurfaceRenderParams& surfaceParams);
+   void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams* uniParam,
+         RSSurfaceRenderParams* surfaceParams,
+         std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
+         Drawing::Region& region);
+    Drawing::Region CalculateVisibleRegion(RSRenderThreadParams* uniParam,
+        RSSurfaceRenderParams* surfaceParams,std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+        bool isOffscreen)const;
+#endif
+
+
 private:
     explicit RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     void CacheImgForCapture(RSPaintFilterCanvas& canvas, std::shared_ptr<RSDisplayRenderNode> curDisplayNode);
@@ -243,7 +263,7 @@ private:
         RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams, bool isSelfDrawingSurface);
     void CaptureSurface(RSSurfaceRenderNode& surfaceNode,
         RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams);
-
+#ifndef SUBTREE_PARALLEL_ENABLE
     void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams* uniParam,
         RSSurfaceRenderParams* surfaceParams,
         std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
@@ -251,6 +271,7 @@ private:
     Drawing::Region CalculateVisibleRegion(RSRenderThreadParams* uniParam,
         RSSurfaceRenderParams* surfaceParams, std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
         bool isOffscreen) const;
+#endif
     bool HasCornerRadius(const RSSurfaceRenderParams& surfaceParams) const;
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::SURFACE_NODE, OnGenerate>;
     static Registrar instance_;
@@ -309,6 +330,10 @@ private:
     ScreenId screenId_ = INVALID_SCREEN_ID;
     uint64_t frameCount_ = 0;
     bool isSubThreadSkip_ = false;
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+   Drawing::Region curSurfaceDrawRegion_;
+#endif
 
     RSPaintFilterCanvas* curCanvas_ = nullptr;
     std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr; // temporary holds offscreen surface

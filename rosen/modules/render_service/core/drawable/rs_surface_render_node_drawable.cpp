@@ -46,6 +46,9 @@
 #include "platform/ohos/backend/native_buffer_utils.h"
 #include "platform/ohos/backend/rs_vulkan_context.h"
 #endif
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 #include "luminance/rs_luminance_control.h"
 #ifdef USE_VIDEO_PROCESSING_ENGINE
@@ -258,6 +261,12 @@ bool RSSurfaceRenderNodeDrawable::IsHardwareEnabled()
 
 void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
+#ifdef SUBTREE_PARALLEL_ENABLE
+   ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas,this);
+   if(RSParallelManager::Singleton().CHeckIsParallelFrame() && drawType == ParallelDrawType::Skip){
+       return;
+   }
+#endif
     if (!ShouldPaint()) {
         return;
     }
@@ -303,7 +312,14 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw uniParam is nullptr");
         return;
     }
+#ifdef SUBTREE_PARALLEL_ENABLE
+    Drawing::Region curSurfaceDrawRegion = GetCurSurfaceDrawRegion();
+    if(!(surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow())){
+        curSurfaceDrawRegion = CalculateVisibleRegion(uniParam,surfaceParams,surfaceNode,isUiFirstNode);
+    }
+#else
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isUiFirstNode);
+#endif
     // when surfacenode named "CapsuleWindow", cache the current canvas as SkImage for screen recording
     auto ancestorNodeTmp = surfaceParams->GetAncestorDisplayNode().lock();
     if (ancestorNodeTmp == nullptr) {
@@ -320,10 +336,11 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         NodeId nodeId = FindInstanceChildOfDisplay(surfaceNode->GetParent().lock());
         RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetRootIdOfCaptureWindow(nodeId);
     }
-
+#ifndef SUBTREE_PARALLEL_ENABLE
     if (!isUiFirstNode) {
         MergeDirtyRegionBelowCurSurface(uniParam, surfaceParams, surfaceNode, curSurfaceDrawRegion);
     }
+#endif
 
     if (!isUiFirstNode && uniParam->IsOpDropped() && surfaceParams->IsVisibleRegionEmpty(curSurfaceDrawRegion)) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s NodeId:%" PRIu64 "",
@@ -397,7 +414,12 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 
     OnGeneralProcess(*surfaceNode, *curCanvas_, *surfaceParams, isSelfDrawingSurface);
-
+#ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
+   if(RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CHeckIsParallelFrame()
+        && RSUniRenderUtil::IsDrawableWindowScene(surfaceParams)){
+        DrawSubtreeParallelDfx(*rscanvas,*surfaceParams);
+        }
+#endif
     if (needOffscreen) {
         Drawing::AutoCanvasRestore acr(*canvasBackup_, true);
         if (surfaceParams->HasSandBox()) {
@@ -761,6 +783,29 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
     }
     return true;
 }
+#ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
+void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas,RSSurfaceRenderParams& surfaceParams)
+{
+    auto sizeDebug = surfaceParams.GetCacheSize();
+    Drawing::Brush rectBrush;
+    auto threadId = canvas.GetParallelThreadIdx();
+    if(threadId == 11){
+        //yellow
+        rectBrush.SetColor(Drawing::Color(255,192,,128,128));
+    }else if(threadId == 12){
+        //orange
+        rectBrush.SetColor(Drawing::Color(255,128,,0,128));
+    }else if(threadId == 13){
+        //purple
+        rectBrush.SetColor(Drawing::Color(192,0,,128,128));
+    }else{
+        rectBrush.SetColor(Drawing::Color(192,0,,0,128));
+    }
+    canvas.AttachBrush(rectBrush);
+    canvas.DrawRect(Drawing::Rect(0,0,sizeDebug.x_,sizeDebug.y_));
+    canvas.DetachBrush();
+}
+#endif
 
 void RSSurfaceRenderNodeDrawable::DrawUIFirstDfx(RSPaintFilterCanvas& canvas, MultiThreadCacheType enableType,
     RSSurfaceRenderParams& surfaceParams, bool drawCacheSuccess)

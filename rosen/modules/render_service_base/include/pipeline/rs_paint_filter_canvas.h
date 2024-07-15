@@ -28,11 +28,27 @@
 #include "screen_manager/screen_types.h"
 #include "surface_type.h"
 #include "utils/region.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "../src/pipeline/subtree/rs_parallel_recorder.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+struct RSParallelCanvasStatus;
+#endif
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
+#ifdef SUBTREE_PARALLEL_ENABLE
+public:
+    void EnableParallelRecorder(bool flag);
+    void PlayBack(RsParallelRecorderPtr recorder);
+    RsParallelRecorderPtr GetParallelRecorder();
+    void RestoreToCount(uint32_t count);
+
+private:
+    std::shared_ptr<RSParallelRecorder> recorder_;
+#endif
+
 public:
     RSPaintFilterCanvasBase(Drawing::Canvas* canvas);
     ~RSPaintFilterCanvasBase() override = default;
@@ -294,6 +310,19 @@ public:
     template <typename T>
     void PaintFilter(T& paint);
     void CopyHDRConfiguration(const RSPaintFilterCanvas& other);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    virtual void SetIsSubtreeParallel(bool canSharedDraw) {};
+    void CopyParallelConfiguration(const RSPaintFilterCanvas& other);
+    void IncTreeDepth(){
+        curTreeDepth++;
+    }
+    void DecTreeDepth(){
+        curTreeDepth--;
+    }
+    uint32_t GetCurTreeDepth(){
+        return curTreeDepth;
+    }
+#endif
 
 protected:
     using Env = struct {
@@ -362,6 +391,9 @@ private:
     bool recordDrawable_ = false;
     bool hasHdrPresent_ = false;
     bool isCapture_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+   uint32_t curTreeDepth { 0 };
+#endif
 };
 
 // Helper class similar to SkAutoCanvasRestore, but also restores alpha and/or env

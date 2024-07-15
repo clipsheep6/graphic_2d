@@ -731,6 +731,12 @@ public:
     }
 
     virtual bool DrawBlurImage(const Image& image, const HpsBlurParameter& blurParams);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    inline std::shared_ptr<CoreCanvasImpl>GetImpl()
+    {
+       return impl_;
+    }
+#endif
 
 protected:
     CoreCanvas(int32_t width, int32_t height);

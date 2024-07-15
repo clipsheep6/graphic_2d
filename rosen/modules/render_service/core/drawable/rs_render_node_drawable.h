@@ -50,6 +50,9 @@ public:
     virtual void OnDraw(Drawing::Canvas& canvas);
     virtual void OnCapture(Drawing::Canvas& canvas);
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+  virtual void OnDrawParallel(Drawing::Canvas& canvas,const  Drawing::Rect& bounds);
+#endif
     // deprecated
     inline std::shared_ptr<const RSRenderNode> GetRenderNode()
     {
@@ -131,6 +134,18 @@ protected:
 
     static inline bool isDrawingCacheEnabled_ = false;
     static inline bool isDrawingCacheDfxEnabled_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+     static  thread_local inline std::mutex drawingCacheInfoMutex_;
+     static  thread_local inline std::unordered_map<NodeId,std::pair<RectI,int32_t>> drawingCacheInfos_;
+     static  thread_local inline std::unordered_map<NodeId,bool> cacheUpdatedNodeMap_;
+     static  thread_local inline bool autoCacheEnable_ = false;
+     static  thread_local inline bool autoCacheDrawingEnable_ = false;
+     static  thread_local inline NodeStrategyType nodeCacheType_ = NodeStrategyType::CACHE_NONE;
+     static  thread_local inline bool isDiscardSurface_ = true;
+     static  thread_local inline std::vector<std::pair<RectI,std::string>> autoCacheRenderNodeInfos_;
+     static  thread_local inline bool isOpincDropNodeExt_ = true;
+     static  thread_local inline int opincRootTotalCount_ = 0;
+#else
     static inline std::mutex drawingCacheInfoMutex_;
     static inline std::unordered_map<NodeId, std::pair<RectI, int32_t>> drawingCacheInfos_; // (id, <rect, updateTimes>)
     static inline std::unordered_map<NodeId, bool> cacheUpdatedNodeMap_;
@@ -143,6 +158,7 @@ protected:
     static inline std::vector<std::pair<RectI, std::string>> autoCacheRenderNodeInfos_;
     static inline bool isOpincDropNodeExt_ = true;
     static inline int opincRootTotalCount_ = 0;
+#endif
 
     // used for render group cache
     void SetCacheType(DrawableCacheType cacheType);
@@ -179,10 +195,13 @@ private:
 #endif
     // surface thread id, cachedImage_ will update context when image can be reused.
     std::atomic<pid_t> cacheThreadId_;
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+    static thread_local inline std::mutex drawingCacheMapMutex_;
+    static thread_local inline std::unordered_map<NodeId, int32_t> drawingCacheUpdateTimeMap_;
+#else
     static inline std::mutex drawingCacheMapMutex_;
     static inline std::unordered_map<NodeId, int32_t> drawingCacheUpdateTimeMap_;
-
+#endif
     static thread_local bool isOpDropped_;
     static inline std::atomic<int> totalProcessedNodeCount_ = 0;
     static inline std::atomic<int> processedNodeCount_ = 0;

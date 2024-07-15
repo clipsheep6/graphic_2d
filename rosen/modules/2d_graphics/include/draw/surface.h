@@ -58,7 +58,11 @@ enum class BackendAccess {
 class DRAWING_API Surface {
 public:
     Surface();
+#ifdef SUBTREE_PARALLEL_ENABLE
+    ~Surface();
+#else
     ~Surface() {}
+#endif
 
     /**
      * @brief         Bind raster Surface.

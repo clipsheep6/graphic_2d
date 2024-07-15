@@ -362,7 +362,11 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
         pographyStyle.breakStrategy = BreakStrategy(breakStrategy);
     }
 
-    SetStrutStyleFromJS(env, argValue, pographyStyle);
+    napi_value strutStyleValue = nullptr;
+    if (GetNamePropertyFromJS(env, argValue, "strutStyle", strutStyleValue)) {
+        SetStrutStyleFromJS(env, strutStyleValue, pographyStyle);
+    }
+
     SetEnumValueFromJS(env, argValue, "textHeightBehavior", pographyStyle.textHeightBehavior);
 
     return true;
@@ -465,37 +469,28 @@ bool GetRunMetricsFromJS(napi_env env, napi_value argValue, RunMetrics& runMetri
     return true;
 }
 
-void SetStrutStyleFromJS(napi_env env, napi_value argValue, TypographyStyle& pographyStyle)
+void SetStrutStyleFromJS(napi_env env, napi_value strutStyleValue, TypographyStyle& typographyStyle)
 {
-    if (!argValue) {
-        return;
-    }
-
-    napi_value strutStyleValue = nullptr;
-    if (!GetNamePropertyFromJS(env, argValue, "strutStyle", strutStyleValue)) {
-        return;
-    }
-
     napi_value tempValue = nullptr;
     if (GetNamePropertyFromJS(env, strutStyleValue, "fontFamilies", tempValue)) {
         std::vector<std::string> fontFamilies;
         if (tempValue != nullptr && OnMakeFontFamilies(env, tempValue, fontFamilies)) {
-            pographyStyle.lineStyleFontFamilies = fontFamilies;
+            typographyStyle.lineStyleFontFamilies = fontFamilies;
         }
     }
 
-    SetEnumValueFromJS(env, strutStyleValue, "fontStyle", pographyStyle.lineStyleFontStyle);
-    SetEnumValueFromJS(env, strutStyleValue, "fontWidth", pographyStyle.lineStyleFontWidth);
-    SetEnumValueFromJS(env, strutStyleValue, "fontWeight", pographyStyle.lineStyleFontWeight);
+    SetEnumValueFromJS(env, strutStyleValue, "fontStyle", typographyStyle.lineStyleFontStyle);
+    SetEnumValueFromJS(env, strutStyleValue, "fontWidth", typographyStyle.lineStyleFontWidth);
+    SetEnumValueFromJS(env, strutStyleValue, "fontWeight", typographyStyle.lineStyleFontWeight);
 
-    SetDoubleValueFromJS(env, strutStyleValue, "fontSize", pographyStyle.lineStyleFontSize);
-    SetDoubleValueFromJS(env, strutStyleValue, "height", pographyStyle.lineStyleHeightScale);
-    SetDoubleValueFromJS(env, strutStyleValue, "leading", pographyStyle.lineStyleSpacingScale);
+    SetDoubleValueFromJS(env, strutStyleValue, "fontSize", typographyStyle.lineStyleFontSize);
+    SetDoubleValueFromJS(env, strutStyleValue, "height", typographyStyle.lineStyleHeightScale);
+    SetDoubleValueFromJS(env, strutStyleValue, "leading", typographyStyle.lineStyleSpacingScale);
 
-    SetBoolValueFromJS(env, strutStyleValue, "forceHeight", pographyStyle.lineStyleOnly);
-    SetBoolValueFromJS(env, strutStyleValue, "enabled", pographyStyle.useLineStyle);
-    SetBoolValueFromJS(env, strutStyleValue, "heightOverride", pographyStyle.lineStyleHeightOnly);
-    SetBoolValueFromJS(env, strutStyleValue, "halfLeading", pographyStyle.lineStyleHalfLeading);
+    SetBoolValueFromJS(env, strutStyleValue, "forceHeight", typographyStyle.lineStyleOnly);
+    SetBoolValueFromJS(env, strutStyleValue, "enabled", typographyStyle.useLineStyle);
+    SetBoolValueFromJS(env, strutStyleValue, "heightOverride", typographyStyle.lineStyleHeightOnly);
+    SetBoolValueFromJS(env, strutStyleValue, "halfLeading", typographyStyle.lineStyleHalfLeading);
 }
 
 void SetRectStyleFromJS(napi_env env, napi_value argValue, RectStyle& rectStyle)

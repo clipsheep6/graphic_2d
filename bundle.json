@@ -366,20 +366,8 @@
             "name": "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "header": {
               "header_files": [
-                "any_span.h",
-                "dynamic_file_font_provider.h",
-                "dynamic_font_provider.h",
-                "font_providers.h",
-                "ifont_provider.h",
-                "system_font_provider.h",
-                "text_style.h",
-                "theme_font_provider.h",
-                "typography_builder.h",
-                "typography_style.h",
-                "typography_types.h",
-                "typography.h"
               ],
-              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/texgine/export/texgine"
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/texgine/"
             }
           },
           {
@@ -414,7 +402,13 @@
                 "typography_style.h",
                 "text_style.h",
                 "typography.h",
-                "typography_types.h"
+                "typography_types.h",
+                "font_config.h",
+                "font_parser.h",
+		"opentype_parser/cmap_table_parser.h",
+		"opentype_parser/post_table_parser.h",
+		"opentype_parser/name_table_parser.h",
+		"opentype_parser/ranges.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text"
             }

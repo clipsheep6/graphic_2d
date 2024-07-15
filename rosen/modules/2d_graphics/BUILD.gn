@@ -419,10 +419,6 @@ if (enable_text_gine) {
     if (platform == "mingw") {
       platform = "windows"
     }
-    deps = [ "$rosen_root/modules/texgine/texgine_drawing:libtexgine_drawing" ]
-    if (!(host_os == "linux" && host_cpu == "arm64")) {
-      deps += [ ":2d_graphics_source_$platform" ]
-    }
     external_deps = [ "hilog:libhilog" ]
     public_external_deps = [ "bounds_checking_function:libsec_static" ]
     defines += [ "USE_GRAPHIC_TEXT_GINE" ]

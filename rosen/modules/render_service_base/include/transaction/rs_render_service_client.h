@@ -29,7 +29,7 @@
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
-#include "ipc_callbacks/pointer_luminance_change_callback.h"
+#include "ipc_callbacks/pointer_render/pointer_luminance_change_callback.h"
 #endif
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"

@@ -104,6 +104,7 @@ public:
     void SetDyamicRangeMode(uint32_t dynamicRangeMode);
 
     void SetNodeId(NodeId nodeId);
+    bool IsValid() const;
     
     void ApplyImageFit();
     ImageFit GetImageFit();

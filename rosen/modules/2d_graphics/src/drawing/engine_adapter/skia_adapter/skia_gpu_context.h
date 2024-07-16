@@ -17,6 +17,7 @@
 #define SKIA_GPUCONTEXT_H
 
 #include <unordered_map>
+#include <array>
 
 #include "include/core/SkExecutor.h"
 #include "include/gpu/GrContextOptions.h"
@@ -98,6 +99,8 @@ public:
     void DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump) override;
 
     void SetCurrentGpuResourceTag(const GPUResourceTag &tag) override;
+
+    std::array<int, 2> GetHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParam) override;
 
 #ifdef RS_ENABLE_VK
     void StoreVkPipelineCacheData() override;

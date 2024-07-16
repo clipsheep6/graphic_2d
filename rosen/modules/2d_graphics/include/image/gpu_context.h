@@ -17,12 +17,14 @@
 #define GPU_CONTEXT_H
 #include <functional>
 #include <set>
+#include <array>
 
 #include "trace_memory_dump.h"
 
 #include "impl_interface/gpu_context_impl.h"
 #include "utils/data.h"
 #include "utils/drawing_macros.h"
+#include "utils/rect.h"
 
 typedef void* EGLContext;
 namespace OHOS {
@@ -52,6 +54,17 @@ struct GPUResourceTag {
     uint32_t fTid;
     uint32_t fWid;
     uint32_t fFid;
+};
+
+struct HpsBlurParameter {
+    Rect src;
+    Rect dst;
+    scalar sigma { 1E-6 };
+    float saturation { 1.0f };
+    float brightness { 1.0f };
+    HpsBlurParameter(const Rect& s, const Rect& d, const scalar& sgm,
+        float satura, float bright)
+        : src(s), dst(d), sigma(sgm), saturation(satura), brightness(bright) {}
 };
 
 /**
@@ -248,6 +261,12 @@ public:
      * @param tag               GPU resource tag used to set current GPU resource tag.
      */
     void SetCurrentGpuResourceTag(const GPUResourceTag &tag);
+
+    /**
+     * @brief                   Get the size after HPS blur downsampling.
+     * @param blurParam         HPS blur Param is used to calculate the size after downsampling.
+     */
+    std::array<int, 2> GetHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParam);
 
 #ifdef RS_ENABLE_VK
     /**

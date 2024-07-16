@@ -285,35 +285,32 @@ void RSDrawingFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_p
         ROSEN_LOGE("RSDrawingFilter::DrawImageRect visualEffectContainer is null");
         return;
     }
-
     for (const auto& filter : shaderFilters_) {
         if (filter->GetShaderFilterType() == RSShaderFilter::KAWASE) {
             continue;
         }
         filter->GenerateGEVisualEffect(visualEffectContainer);
-    };
-
+    }
     auto geRender = std::make_shared<GraphicsEffectEngine::GERender>();
     if (geRender == nullptr) {
         ROSEN_LOGE("RSDrawingFilter::DrawImageRect geRender is null");
         return;
     }
-
     auto outImage =
         geRender->ApplyImageEffect(canvas, *visualEffectContainer, image, src, src, Drawing::SamplingOptions());
     if (outImage == nullptr) {
         ROSEN_LOGE("RSDrawingFilter::DrawImageRect outImage is null");
         return;
     }
-
     auto brush = GetBrush();
     std::shared_ptr<RSShaderFilter> kawaseShaderFilter = GetShaderFilterWithType(RSShaderFilter::KAWASE);
     if (kawaseShaderFilter != nullptr) {
         auto tmpFilter = std::static_pointer_cast<RSKawaseBlurShaderFilter>(kawaseShaderFilter);
         auto radius = tmpFilter->GetRadius();
+        Drawing::HpsBlurParameter hpsParam = Drawing::HpsBlurParameter(src, dst, radius,
+            saturationForHPS_, brightnessForHPS_);
         if (RSSystemProperties::GetHpsBlurEnabled() && GetFilterType() == RSFilter::MATERIAL &&
-            canvas.DrawBlurImage(
-                *outImage, Drawing::HpsBlurParameter(src, dst, radius, saturationForHPS_, brightnessForHPS_))) {
+            HpsBlurFilter::GetHpsBlurFilter().ApplyHpsBlur(canvas, outImage, hpsParam, brush.GetColor().GetAlphaF())) {
             RS_OPTIONAL_TRACE_NAME("ApplyHPSBlur " + std::to_string(radius));
             return;
         } else {
@@ -328,7 +325,6 @@ void RSDrawingFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_p
             return;
         }
     }
-
     brush.SetForceBrightnessDisable(true);
     canvas.AttachBrush(brush);
     canvas.DrawImageRect(*outImage, src, dst, Drawing::SamplingOptions());

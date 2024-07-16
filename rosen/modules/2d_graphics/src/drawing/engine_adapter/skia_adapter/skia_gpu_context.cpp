@@ -340,6 +340,22 @@ void SkiaGPUContext::SetCurrentGpuResourceTag(const GPUResourceTag &tag)
     grContext_->setCurrentGrResourceTag(grTag);
 }
 
+std::array<int, 2> SkiaGPUContext::GetHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParams)
+{
+    if (!grContext_) {
+        LOGD("SkiaGPUContext::GetHpsBluredImageDimension, grContext_ is nullptr");
+        return {0, 0};
+    }
+
+    SkRect srcRect = SkRect::MakeLTRB(blurParams.src.GetLeft(), blurParams.src.GetTop(),
+        blurParams.src.GetRight(), blurParams.src.GetBottom());
+    SkRect dstRect = SkRect::MakeLTRB(blurParams.dst.GetLeft(), blurParams.dst.GetTop(),
+        blurParams.dst.GetRight(), blurParams.dst.GetBottom());
+
+    SkBlurArg blurArg(srcRect, dstRect, blurParams.sigma, blurParams.saturation, blurParams.brightness);
+    return grContext_->GetHpsBluredImageDimension(blurArg);
+}
+
 sk_sp<GrDirectContext> SkiaGPUContext::GetGrContext() const
 {
     return grContext_;

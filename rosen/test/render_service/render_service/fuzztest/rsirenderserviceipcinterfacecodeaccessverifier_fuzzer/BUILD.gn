@@ -36,6 +36,10 @@ ohos_fuzztest("RSIrenderServiceIpcInterfaceCodeAccessVerifierFuzzTest") {
     "../../../../../modules/render_service_client:librender_service_client",
   ]
 
+  if (input_ext_feature_magiccursor) {
+    defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
+  }
+
   cflags = [
     "-g",
     "-O0",

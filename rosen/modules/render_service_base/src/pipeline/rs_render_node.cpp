@@ -1929,6 +1929,11 @@ bool RSRenderNode::IsBackgroundInAppOrNodeSelfDirty() const
     return backgroundFilterInteractWithDirty_ || backgroundFilterRegionChanged_;
 }
 
+bool RSRenderNode::IsForegroundInAppOrNodeSelfDirty() const
+{
+    return foregroundFilterInteractWithDirty_ || foregroundFilterRegionChanged_;
+}
+
 void RSRenderNode::UpdateDirtySlotsAndPendingNodes(RSDrawableSlot slot)
 {
     dirtySlots_.emplace(slot);

@@ -493,6 +493,7 @@ public:
     virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheWithSelfDirty();
     bool IsBackgroundInAppOrNodeSelfDirty() const;
+    bool IsForegroundInAppOrNodeSelfDirty() const;
     void PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync);
     void CheckFilterCacheAndUpdateDirtySlots(
         std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDrawableSlot slot);

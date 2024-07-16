@@ -72,6 +72,7 @@ ohos_shared_library("text_napi_impl") {
     "paragraph_napi/js_paragraph.cpp",
     "run_napi/js_run.cpp",
     "text_line_napi/js_text_line.cpp",
+    "utils/napi_async_work.cpp",
     "utils/napi_common.cpp",
   ]
 

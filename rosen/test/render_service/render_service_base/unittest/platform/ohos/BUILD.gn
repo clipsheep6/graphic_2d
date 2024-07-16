@@ -89,6 +89,10 @@ ohos_unittest("RSRenderServiceBasePlatformTest") {
     public_external_deps += [ "openssl:libcrypto_shared" ]
   }
 
+  if (input_ext_feature_magiccursor) {
+    defines = [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
+  }
+
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",

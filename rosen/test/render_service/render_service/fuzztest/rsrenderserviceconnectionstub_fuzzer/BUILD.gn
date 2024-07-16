@@ -13,8 +13,8 @@
 
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
-import("//build/test.gni")
 import("//build/ohos_var.gni")
+import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 module_output_path = "graphic_2d/graphic_2d"
 
@@ -57,10 +57,6 @@ ohos_fuzztest("RSRenderServiceConnectionStubFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (input_ext_feature_magiccursor) {
-    defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
-  }
-
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
     external_deps += [ "sensor:sensor_interface_native" ]
   }
@@ -75,6 +71,10 @@ ohos_fuzztest("RSRenderServiceConnectionStubFuzzTest") {
 
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
     defines = [ "USE_ROSEN_DRAWING" ]
+  }
+
+  if (input_ext_feature_magiccursor) {
+    defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
   }
 }
 

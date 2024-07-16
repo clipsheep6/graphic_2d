@@ -13,8 +13,8 @@
 
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
-import("//build/test.gni")
 import("//build/ohos_var.gni")
+import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 module_output_path = "graphic_2d/graphic_2d"
 
@@ -46,7 +46,7 @@ ohos_fuzztest("RSRenderServiceConnectionFuzzTest") {
   ]
 
   if (input_ext_feature_magiccursor) {
-    defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
+    defines = [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
   }
 
   cflags = [

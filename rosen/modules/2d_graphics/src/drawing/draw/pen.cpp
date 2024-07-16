@@ -106,7 +106,9 @@ scalar Pen::GetWidth() const
 
 void Pen::SetWidth(scalar width)
 {
-    width_ = width;
+    if (width >= 0) {
+        width_ = width;
+    }
 }
 
 scalar Pen::GetMiterLimit() const
@@ -116,7 +118,9 @@ scalar Pen::GetMiterLimit() const
 
 void Pen::SetMiterLimit(scalar limit)
 {
-    miterLimit_ = limit;
+    if (limit >= 0) {
+        miterLimit_ = limit;
+    }
 }
 
 Pen::CapStyle Pen::GetCapStyle() const

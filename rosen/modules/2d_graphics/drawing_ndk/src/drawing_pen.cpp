@@ -196,7 +196,7 @@ float OH_Drawing_PenGetWidth(const OH_Drawing_Pen* cPen)
 void OH_Drawing_PenSetWidth(OH_Drawing_Pen* cPen, float width)
 {
     Pen* pen = CastToPen(cPen);
-    if (pen == nullptr) {
+    if (pen == nullptr || width < 0) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
@@ -215,7 +215,7 @@ float OH_Drawing_PenGetMiterLimit(const OH_Drawing_Pen* cPen)
 void OH_Drawing_PenSetMiterLimit(OH_Drawing_Pen* cPen, float miter)
 {
     Pen* pen = CastToPen(cPen);
-    if (pen == nullptr) {
+    if (pen == nullptr || miter < 0) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }

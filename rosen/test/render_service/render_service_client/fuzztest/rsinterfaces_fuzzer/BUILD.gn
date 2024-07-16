@@ -12,8 +12,8 @@
 # limitations under the License.
 
 #####################hydra-fuzz###################
+import("//build/config/components/multimodalinput/cursor_config.gni")
 import("//build/config/features.gni")
-import("//build/ohos_var.gni")
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 module_output_path = "graphic_2d/graphic_2d"

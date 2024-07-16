@@ -304,7 +304,6 @@ ohos_source_set("render_service_base_src") {
   ]
 
   if (input_ext_feature_magiccursor) {
-    defines += [ "OHOS_BUILD_ENABLE_MAGICCURSOR" ]
     sources += [
       #ipc_callbacks
       "src/ipc_callbacks/pointer_render/pointer_luminance_callback_ipc_interface_code_access_verifier.cpp",

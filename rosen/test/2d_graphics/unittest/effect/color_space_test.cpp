@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,6 +102,24 @@ HWTEST_F(ColorSpaceTest, CreatedByStaticMethod004, TestSize.Level1)
     EXPECT_FALSE(colorSpace == nullptr);
 
     colorSpace = ColorSpace::CreateRGB(CMSTransferFuncType::REC2020, CMSMatrixType::XYZ);
+    EXPECT_FALSE(colorSpace == nullptr);
+}
+
+/**
+ * @tc.name: CreatedByStaticMethod005
+ * @tc.desc: Test for Create Custom RGB ColorSpace
+ * @tc.type: FUNC
+ * @tc.require: I782P9
+ */
+HWTEST_F(ColorSpaceTest, CreatedByStaticMethod005, TestSize.Level1)
+{
+    CMSMatrix3x3 matrix = {
+        {{ 1.0f, 1.5f, 2.0f },
+        { 2.5f, 3.0f, 3.5f },
+        { 4.0f, 4.5f, 5.0f }}
+    };
+    CMSTransferFunction func = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f };
+    auto colorSpace = ColorSpace::CreateCustomRGB(func, matrix);
     EXPECT_FALSE(colorSpace == nullptr);
 }
 

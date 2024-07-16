@@ -46,6 +46,7 @@
 #include "platform/common/rs_log.h"
 #include "platform/ohos/rs_jank_stats.h"
 #include "property/rs_point_light_manager.h"
+#include "rs_frame_report.h"
 #include "screen_manager/rs_screen_manager.h"
 // dfx
 #include "drawable/dfx/rs_dirty_rects_dfx.h"
@@ -54,6 +55,7 @@
 #include "utils/performanceCaculate.h"
 namespace OHOS::Rosen::DrawableV2 {
 namespace {
+constexpr int32_t FLUSH_CHECKPOINT = 2;
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 constexpr const char* DEFAULT_CLEAR_GPU_CACHE = "DefaultClearGpuCache";
 constexpr int32_t NO_SPECIAL_LAYER = 0;
@@ -228,6 +230,12 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
     std::shared_ptr<RSProcessor> processor) const
 {
     RS_TRACE_NAME("RSDisplayRenderNodeDrawable:RequestFrame");
+    RS_TRACE_BEGIN("checkpoint1");
+    RS_TRACE_END();
+    bool frameReportEnable = RsFrameReport::GetInstance().GetEnable();
+    if (frameReportEnable) {
+        RsFrameReport::GetInstance().SetCheckPoint(1);
+    }
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if (renderEngine == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::RequestFrame RenderEngine is null!");
@@ -654,6 +662,12 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_LOGI("Drawing Performance Flush start %{public}lld", Drawing::PerformanceCaculate::GetUpTime(false));
     }
     RS_TRACE_BEGIN("RSDisplayRenderNodeDrawable Flush");
+    RS_TRACE_BEGIN("checkpoint2");
+    RS_TRACE_END();
+    bool frameReportEnable = RsFrameReport::GetInstance().GetEnable();
+    if (frameReportEnable) {
+        RsFrameReport::GetInstance().SetCheckPoint(FLUSH_CHECKPOINT);
+    }
     renderFrame->Flush();
     RS_TRACE_END();
     if (Drawing::PerformanceCaculate::GetDrawingFlushPrint()) {

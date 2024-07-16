@@ -679,5 +679,10 @@ void RSImage::ProcessImageAfterCreation(
 #endif
 }
 #endif
+
+bool RSImage::IsValid() const
+{
+    return pixelMap_ != nullptr || compressData_ != nullptr || image_ != nullptr;
+}
 } // namespace Rosen
 } // namespace OHOS

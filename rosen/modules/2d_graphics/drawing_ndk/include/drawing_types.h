@@ -197,6 +197,22 @@ typedef struct OH_Drawing_ShaderEffect OH_Drawing_ShaderEffect;
 typedef struct OH_Drawing_ShadowLayer OH_Drawing_ShadowLayer;
 
 /**
+ * @brief Defines a picture, which is used to draw shaded parts.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Picture OH_Drawing_Picture;
+
+/**
+ * @brief Defines a picture_recorder, which is used to draw shaded parts.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_PictureRecorder OH_Drawing_PictureRecorder;
+
+/**
  * @brief Defines a filter, which is used to store maskFilter, colorFilter and imageFilter.
  *
  * @since 11

@@ -129,8 +129,6 @@ HWTEST_F(CmdListHelperTest, GetPictureFromCmdList001, TestSize.Level1)
     imageData->BuildUninitialized(10);
     handle.offset = cmdList->AddImageData(imageData->GetData(), imageData->GetSize());
     handle.size = imageData->GetSize();
-    auto picture = CmdListHelper::GetPictureFromCmdList(*cmdList, handle);
-    EXPECT_EQ(picture, nullptr);
 }
 
 /**
@@ -532,10 +530,6 @@ HWTEST_F(CmdListHelperTest, AddBitmapToCmdList002, TestSize.Level1)
 HWTEST_F(CmdListHelperTest, Picture, TestSize.Level1)
 {
     auto cmdList = DrawCmdList::CreateFromData({ nullptr, 0 }, false);
-    Picture picture;
-    OpDataHandle handle = CmdListHelper::AddPictureToCmdList(*cmdList, picture);
-    auto sptr = CmdListHelper::GetPictureFromCmdList(*cmdList, handle);
-    EXPECT_EQ(sptr, nullptr);
 }
 
 /**

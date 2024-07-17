@@ -48,14 +48,6 @@ ShaderEffect::ShaderEffect(ShaderEffectType t, const Image& image, TileMode tile
     impl_->InitWithImage(image, tileX, tileY, sampling, matrix);
 }
 
-/* PictureShader */
-ShaderEffect::ShaderEffect(ShaderEffectType t, const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode,
-    const Matrix& matrix, const Rect& rect) noexcept
-    : ShaderEffect(t)
-{
-    impl_->InitWithPicture(picture, tileX, tileY, mode, matrix, rect);
-}
-
 /* LinearGradient */
 ShaderEffect::ShaderEffect(ShaderEffectType t, const Point& startPt, const Point& endPt,
     const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode, const Matrix *matrix) noexcept
@@ -131,13 +123,6 @@ std::shared_ptr<ShaderEffect> ShaderEffect::CreateImageShader(
     const Image& image, TileMode tileX, TileMode tileY, const SamplingOptions& sampling, const Matrix& matrix)
 {
     return std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::IMAGE, image, tileX, tileY, sampling, matrix);
-}
-
-std::shared_ptr<ShaderEffect> ShaderEffect::CreatePictureShader(
-    const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode, const Matrix& matrix, const Rect& rect)
-{
-    return std::make_shared<ShaderEffect>(
-        ShaderEffect::ShaderEffectType::PICTURE, picture, tileX, tileY, mode, matrix, rect);
 }
 
 std::shared_ptr<ShaderEffect> ShaderEffect::CreateLinearGradient(const Point& startPt, const Point& endPt,

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef C_INCLUDE_DRAWING_SHADOW_LAYER_H
-#define C_INCLUDE_DRAWING_SHADOW_LAYER_H
+#ifndef C_INCLUDE_DRAWING_PICTURE_RECORDER_H
+#define C_INCLUDE_DRAWING_PICTURE_RECORDER_H
 
 /**
  * @addtogroup Drawing

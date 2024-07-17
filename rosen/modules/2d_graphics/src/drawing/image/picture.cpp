@@ -14,11 +14,8 @@
  */
 
 #include "image/picture.h"
-<<<<<<< HEAD
-=======
 #include "recording/draw_cmd_list.h"
 #include "draw/canvas.h"
->>>>>>> 4d96d2d5fe... CoreCanvas的drawpicture
 
 namespace OHOS {
 namespace Rosen {

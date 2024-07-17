@@ -38,6 +38,8 @@
 #include "drawing_shader_effect.h"
 #include "drawing_text_blob.h"
 #include "drawing_typeface.h"
+#include "drawing_picture_recorder.h"
+#include "drawing_picture.h"
 #include "drawing_memory_stream.h"
 #include "effect/color_filter.h"
 #include "effect/filter.h"
@@ -168,6 +170,52 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawLine004, TestSize.
     EXPECT_EQ(OH_Drawing_ErrorCodeGet(), OH_DRAWING_ERROR_INVALID_PARAMETER);
     OH_Drawing_CanvasDrawLine(canvas_, 0, 0, 20, 20);
     OH_Drawing_CanvasDrawLine(canvas_, -15.2f, -1, 0, 20);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_drawingPicture001
+ * @tc.desc: test for canvas_draw_picture.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_drawingPicture001, TestSize.Level1)
+{
+    OH_Drawing_PictureRecorder* pictureRecorder=  OH_Drawing_PictureRecorderCreate();
+    OH_Drawing_Canvas* recorderCanvas= OH_Drawing_BeginRecording(pictureRecorder,300,300);
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    EXPECT_NE(path, nullptr);
+    constexpr int height = 300;
+    constexpr int width = 300;
+    constexpr float arc = 18.0f;
+    int len = height / 4;
+    float aX = width / 2;
+    float aY = height / 4;
+    float dX = aX - len * std::sin(arc);
+    float dY = aY + len * std::cos(arc);
+    float cX = aX + len * std::sin(arc);
+    float cY = dY;
+    float bX = aX + (len / 2.0);
+    float bY = aY + std::sqrt((cX - dX) * (cX - dX) + (len / 2.0) * (len / 2.0));
+    float eX = aX - (len / 2.0);
+    float eY = bY;
+    OH_Drawing_PathMoveTo(path, aX, aY);
+    OH_Drawing_PathLineTo(path, bX, bY);
+    OH_Drawing_PathLineTo(path, cX, cY);
+    OH_Drawing_PathLineTo(path, dX, dY);
+    OH_Drawing_PathLineTo(path, eX, eY);
+    OH_Drawing_PathClose(path);
+    OH_Drawing_CanvasDrawPath(recorderCanvas, path);
+    EXPECT_EQ(recorderCanvas == nullptr, false);
+    OH_Drawing_Picture* picture= OH_Drawing_FinishingRecording(pictureRecorder);
+    EXPECT_EQ(picture == nullptr, false);
+    OH_Drawing_Canvas* canvas=OH_Drawing_CanvasCreate();
+    OH_Drawing_CanvasDrawPicture(canvas,picture);
+    EXPECT_EQ(canvas == nullptr, false);
+    OH_Drawing_PictureRecorderDestroy(pictureRecorder);
+    OH_Drawing_CanvasDestroy(canvas);
+    OH_Drawing_PathDestroy(path);
+    OH_Drawing_PictureDestroy(picture);
+
 }
 
 /*

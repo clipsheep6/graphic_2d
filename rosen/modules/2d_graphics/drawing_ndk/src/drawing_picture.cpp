@@ -16,7 +16,7 @@
 #include "drawing_picture.h"
 
 #include "image/picture.h"
-
+#include "drawing_helper.h"
 
 using namespace OHOS;
 using namespace Rosen;
@@ -25,6 +25,6 @@ using namespace Drawing;
 
 void OH_Drawing_PictureDestroy(OH_Drawing_Picture* picture)
 {
-    delete reinterpret_cast<Picture*>(picture);
+    delete Helper::CastTo<OH_Drawing_Picture*, NativeHandle<Picture>*>(picture);;
 }
 

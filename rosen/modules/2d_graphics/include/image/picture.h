@@ -31,6 +31,10 @@ public:
 
     void Playback(Canvas* canvas);
 
+    std::shared_ptr<DrawCmdList> GetDrawCmdList() const{
+        return drawCmdList;
+    }
+
 private:
     std::shared_ptr<DrawCmdList> drawCmdList = nullptr;
     friend class PictureRecorder;

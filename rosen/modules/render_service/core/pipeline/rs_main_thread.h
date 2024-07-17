@@ -170,9 +170,6 @@ public:
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
 
-    bool WaitUntilDisplayNodeBufferReleased(RSDisplayRenderNode& node);
-    void NotifyDisplayNodeBufferReleased();
-
     bool WaitHardwareThreadTaskExecute();
     void NotifyHardwareThreadCanExecuteTask();
 

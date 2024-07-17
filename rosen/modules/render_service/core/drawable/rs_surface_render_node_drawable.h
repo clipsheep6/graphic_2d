@@ -44,7 +44,7 @@ struct UIFirstParams {
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     std::atomic<bool> isNeedSubmitSubThread_ = true;
 };
-class RSSurfaceRenderNodeDrawable : public RSRenderNodeDrawable, public RSSurfaceHandler {
+class RSSurfaceRenderNodeDrawable : public RSRenderNodeDrawable {
 public:
     ~RSSurfaceRenderNodeDrawable() override;
 
@@ -234,6 +234,16 @@ public:
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
 
+    const std::shared_ptr<RSSurfaceHandler> GetRSSurfaceHandlerUiFirstOnDraw() const
+    {
+        return surfaceHandlerUiFirst_;
+    }
+
+    std::shared_ptr<RSSurfaceHandler> GetMutableRSSurfaceHandlerUiFirstOnDraw()
+    {
+        return surfaceHandlerUiFirst_;
+    }
+
     sptr<IConsumerSurface> GetConsumerOnDraw()
     {
         return consumerOnDraw_;
@@ -325,6 +335,7 @@ private:
     int maxRenderSize_ = 0;
     std::unique_ptr<RSAutoCanvasRestore> arc_ = nullptr;
 
+    std::shared_ptr<RSSurfaceHandler> surfaceHandlerUiFirst_;
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<IConsumerSurface> consumerOnDraw_ = nullptr;
 #endif

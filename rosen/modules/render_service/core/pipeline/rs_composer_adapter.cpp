@@ -16,11 +16,17 @@
 #include "rs_composer_adapter.h"
 
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <sys/time.h>
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
+#include "drawable/rs_surface_render_node_drawable.h"
+#include "drawable/rs_display_render_node_drawable.h"
+#include "pipeline/rs_surface_handler.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "rs_divided_render_util.h"
 #include "rs_trace.h"
@@ -164,16 +170,19 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
             RS_LOGW("RSComposerAdapter::PostProcess: layer's node is nullptr.");
             continue;
         }
-
-        RSSurfaceHandler* surfaceHandler = nullptr;
+        std::shared_ptr<RSSurfaceHandler> surfaceHandler = nullptr;
         if (nodePtr->IsInstanceOf<RSSurfaceRenderNode>()) {
-            auto surfaceNode = static_cast<RSSurfaceRenderNode*>(nodePtr);
-            surfaceHandler = static_cast<RSSurfaceHandler*>(surfaceNode);
+            // TO-DO use drawable ?
+            auto surfaceNode = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>();
+            surfaceHandler = surfaceNode ? surfaceNode->GetRSSurfaceHandler() : nullptr;
         } else if (nodePtr->IsInstanceOf<RSDisplayRenderNode>()) {
-            auto displayNode = static_cast<RSDisplayRenderNode*>(nodePtr);
-            surfaceHandler = static_cast<RSSurfaceHandler*>(displayNode);
+            auto drawable = nodePtr->GetRenderDrawable();
+            if (!drawable) {
+                continue;
+            }
+            surfaceHandler = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable)->GetMutableRSSurfaceHandlerOnDraw();
         }
-        if (surfaceHandler == nullptr) {
+        if (!surfaceHandler) {
             continue;
         }
         surfaceHandler->SetReleaseFence(fence);
@@ -341,6 +350,15 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool 
     const auto& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
     ComposeInfo info {};
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return info;
+    }
+    auto surfaceDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto& params = surfaceDrawable->GetRenderParams();
+    if (!params) {
+        return info;
+    }
     info.srcRect = GraphicIRect {srcRect.left_, srcRect.top_, srcRect.width_, srcRect.height_};
     info.dstRect = GraphicIRect {
         static_cast<int32_t>(static_cast<float>(dstRect.left_) * mirrorAdaptiveCoefficient_ + offsetX),
@@ -348,10 +366,10 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool 
         static_cast<int32_t>(static_cast<float>(dstRect.width_) * mirrorAdaptiveCoefficient_),
         static_cast<int32_t>(static_cast<float>(dstRect.height_) * mirrorAdaptiveCoefficient_)
     };
-    info.zOrder = static_cast<int32_t>(node.GetGlobalZOrder());
+    info.zOrder = params->GetLayerInfo().zOrder;
     info.alpha.enGlobalAlpha = true;
     info.alpha.gAlpha = node.GetGlobalAlpha() * 255; // map gAlpha from float(0, 1) to uint8_t(0, 255).
-    info.fence = node.GetAcquireFence();
+    info.fence = params->GetAcquireFence();
     info.blendType = node.GetBlendType();
 
     info.dstRect.x -= static_cast<int32_t>(static_cast<float>(offsetX_) * mirrorAdaptiveCoefficient_);
@@ -361,7 +379,7 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool 
     dirtyRects.emplace_back(info.srcRect);
     info.dirtyRects = dirtyRects;
     if (!isTunnelCheck) {
-        const auto& buffer = node.GetBuffer();
+        const auto& buffer = params->GetBuffer();
         info.buffer = buffer;
         GetComposerInfoSrcRect(info, node);
         info.needClient = GetComposerInfoNeedClient(info, node);
@@ -375,8 +393,17 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool 
 // private func, for RSDisplayRenderNode
 ComposeInfo RSComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& node) const
 {
-    const auto& buffer = node.GetBuffer(); // we guarantee the buffer is valid.
     ComposeInfo info {};
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return info;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable);
+    auto surfaceHandler = displayDrawable->GetRSSurfaceHandlerOnDraw();
+    if (!surfaceHandler) {
+        return info;
+    }
+    const auto& buffer = surfaceHandler->GetBuffer(); // we guarantee the buffer is valid.
     info.srcRect = GraphicIRect {0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight()};
     info.dstRect = GraphicIRect {
         0,
@@ -388,10 +415,10 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& node) const
     std::vector<GraphicIRect> dirtyRects;
     dirtyRects.emplace_back(info.srcRect);
     info.dirtyRects = dirtyRects;
-    info.zOrder = static_cast<int32_t>(node.GetGlobalZOrder());
+    info.zOrder = static_cast<int32_t>(surfaceHandler->GetGlobalZOrder());
     info.alpha.enGlobalAlpha = false;
     info.buffer = buffer;
-    info.fence = node.GetAcquireFence();
+    info.fence = surfaceHandler->GetAcquireFence();
     info.blendType = GRAPHIC_BLEND_NONE;
     info.needClient = false;
     return info;
@@ -477,8 +504,16 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
         RS_LOGE("RSComposerAdapter::CheckStatusBeforeCreateLayer: output is nullptr");
         return false;
     }
-
-    const auto& buffer = node.GetBuffer();
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return false;
+    }
+    auto surfaceDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto& params = surfaceDrawable->GetRenderParams();
+    if (!params) {
+        return false;
+    }
+    const auto buffer = params->GetBuffer();
     if (isTunnelCheck == false && buffer == nullptr) {
         RS_LOGD("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer:node(%{public}" PRIu64 ") has"
             " no available buffer.", node.GetId());
@@ -513,6 +548,15 @@ LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node) con
     if (!CheckStatusBeforeCreateLayer(node)) {
         return nullptr;
     }
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return nullptr;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto& params = displayDrawable->GetRenderParams();
+    if (!params) {
+        return nullptr;
+    }
     ComposeInfo info = BuildComposeInfo(node);
     if (IsOutOfScreenRegion(info)) {
         RS_LOGD("RsDebug RSComposerAdapter::CreateBufferLayer: node(%{public}" PRIu64
@@ -527,14 +571,14 @@ LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node) con
     RS_LOGD(
         "RsDebug RSComposerAdapter::CreateBufferLayer surfaceNode id:%{public}" PRIu64 " name:[%{public}s]"
         " dst [%{public}d %{public}d %{public}d %{public}d] SrcRect [%{public}d %{public}d] rawbuffer"
-        " [%{public}d %{public}d] surfaceBuffer [%{public}d %{public}d], z:%{public}f, globalZOrder:%{public}d,"
+        " [%{public}d %{public}d] surfaceBuffer [%{public}d %{public}d], z:%{public}d, globalZOrder:%{public}d,"
         " blendType = %{public}d",
         node.GetId(), node.GetName().c_str(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
         info.srcRect.w, info.srcRect.h, info.buffer->GetWidth(), info.buffer->GetHeight(),
         info.buffer->GetSurfaceBufferWidth(), info.buffer->GetSurfaceBufferHeight(),
-        node.GetGlobalZOrder(), info.zOrder, info.blendType);
+        params->GetLayerInfo().zOrder, info.zOrder, info.blendType);
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
-    SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
+    SetComposeInfoToLayer(layer, info, displayDrawable->GetConsumerOnDraw(), &node);
     LayerRotate(layer, node);
     LayerCrop(layer);
     LayerScaleDown(layer);
@@ -544,6 +588,15 @@ LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node) con
 LayerInfoPtr RSComposerAdapter::CreateTunnelLayer(RSSurfaceRenderNode& node) const
 {
     if (!CheckStatusBeforeCreateLayer(node, true)) {
+        return nullptr;
+    }
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return nullptr;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto& params = displayDrawable->GetRenderParams();
+    if (!params) {
         return nullptr;
     }
     ComposeInfo info = BuildComposeInfo(node, true);
@@ -558,19 +611,24 @@ LayerInfoPtr RSComposerAdapter::CreateTunnelLayer(RSSurfaceRenderNode& node) con
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h);
     RS_TRACE_NAME(traceInfo.c_str());
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
-    SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
+    SetComposeInfoToLayer(layer, info, displayDrawable->GetConsumerOnDraw(), &node);
     LayerRotate(layer, node);
     RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer surfaceNode id:%{public}" PRIu64 " name:[%{public}s] dst"
         " [%{public}d %{public}d %{public}d %{public}d]"
-        "SrcRect [%{public}d %{public}d], z:%{public}f, globalZOrder:%{public}d, blendType = %{public}d",
+        "SrcRect [%{public}d %{public}d], z:%{public}d, globalZOrder:%{public}d, blendType = %{public}d",
         node.GetId(), node.GetName().c_str(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
-        info.srcRect.w, info.srcRect.h, node.GetGlobalZOrder(), info.zOrder, info.blendType);
+        info.srcRect.w, info.srcRect.h, params->GetLayerInfo().zOrder, info.zOrder, info.blendType);
     return layer;
 }
 
 LayerInfoPtr RSComposerAdapter::CreateLayer(RSSurfaceRenderNode& node) const
 {
-    auto& consumer = node.GetConsumer();
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return nullptr;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto consumer = displayDrawable->GetConsumerOnDraw();
     if (consumer == nullptr) {
         RS_LOGE("RSComposerAdapter::CreateLayer get consumer fail");
         return nullptr;
@@ -589,12 +647,21 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
         RS_LOGE("RSComposerAdapter::CreateLayer: output is nullptr");
         return nullptr;
     }
-    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(node, true)) {
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return nullptr;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable);
+    auto surfaceHandler = displayDrawable->GetMutableRSSurfaceHandlerOnDraw();
+    if (!surfaceHandler) {
+        return nullptr;
+    }
+    if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(*surfaceHandler, true)) {
         RS_LOGE("RSComposerAdapter::CreateLayer consume buffer failed.");
         return nullptr;
     }
 
-    if (node.GetBuffer() == nullptr) {
+    if (surfaceHandler->GetBuffer() == nullptr) {
         RS_LOGE("RSComposerAdapter::CreateLayer buffer is nullptr.");
         return nullptr;
     }
@@ -607,7 +674,7 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
         info.buffer->GetWidth(), info.buffer->GetHeight(), info.buffer->GetSurfaceBufferWidth(),
         info.buffer->GetSurfaceBufferHeight(), info.zOrder, info.blendType);
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
-    SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
+    SetComposeInfoToLayer(layer, info, surfaceHandler->GetConsumer(), &node);
     LayerRotate(layer, node);
     // do not crop or scale down for displayNode's layer.
     return layer;

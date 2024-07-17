@@ -97,9 +97,9 @@ public:
     }
 
 #ifndef ROSEN_CROSS_PLATFORM
-    void SetConsumer(const sptr<IConsumerSurface>& consumer);
+    void SetConsumer(sptr<IConsumerSurface> consumer);
 
-    const sptr<IConsumerSurface>& GetConsumer() const
+    sptr<IConsumerSurface> GetConsumer() const
     {
         return consumer_;
     }
@@ -188,7 +188,7 @@ public:
     }
 #endif
 
-    SurfaceBufferEntry& GetPreBuffer()
+    SurfaceBufferEntry GetPreBuffer()
     {
         return preBuffer_;
     }
@@ -235,7 +235,7 @@ public:
         return false;
 #endif
     }
-    inline bool IsCurrentFrameBufferConsumed()
+    inline bool IsCurrentFrameBufferConsumed() const
     {
         return isCurrentFrameBufferConsumed_;
     }

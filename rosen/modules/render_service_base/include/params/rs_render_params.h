@@ -22,10 +22,18 @@
 #include "screen_manager/screen_types.h"
 #include "utils/matrix.h"
 
+#ifndef ROSEN_CROSS_PLATFORM
+#include <iconsumer_surface.h>
+#include <surface.h>
+#include "sync_fence.h"
+#endif
+
 namespace OHOS::Rosen {
 #define RENDER_BASIC_PARAM_TO_STRING(basicType) (std::string(#basicType "[") + std::to_string(basicType) + "] ")
 #define RENDER_RECT_PARAM_TO_STRING(rect) (std::string(#rect "[") + (rect).ToString() + "] ")
 #define RENDER_PARAM_TO_STRING(param) (std::string(#param "[") + (param).ToString() + "] ")
+
+struct RSLayerInfo;
 
 struct DirtyRegionInfoForDFX {
     RectI oldDirty;
@@ -188,6 +196,17 @@ public:
 
     // overrided by displayNode
     virtual ScreenRotation GetScreenRotation() const;
+
+    // surface params
+#ifndef ROSEN_CROSS_PLATFORM
+    virtual void SetBuffer(const sptr<SurfaceBuffer>& buffer) {}
+    virtual sptr<SurfaceBuffer> GetBuffer() const { return nullptr; }
+    virtual void SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer) {}
+    virtual sptr<SurfaceBuffer> GetPreBuffer() { return nullptr; }
+    virtual void SetAcquireFence(const sptr<SyncFence>& acquireFence) {}
+    virtual sptr<SyncFence> GetAcquireFence() const { return nullptr; }
+#endif
+    virtual const RSLayerInfo& GetLayerInfo() const;
 
 protected:
     bool needSync_ = false;

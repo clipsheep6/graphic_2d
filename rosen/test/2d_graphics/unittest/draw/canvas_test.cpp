@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "draw/canvas.h"
+#include "image/picture.h"
 
 using namespace testing;
 using namespace testing::ext;

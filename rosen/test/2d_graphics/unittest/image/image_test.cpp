@@ -27,7 +27,6 @@
 #include "image/gpu_context.h"
 #include "image/image.h"
 #include "image/yuv_info.h"
-#include "image/picture.h"
 #include "render_context/render_context.h"
 #include "utils/matrix.h"
 #include "utils/size.h"

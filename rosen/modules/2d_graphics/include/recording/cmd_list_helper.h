@@ -51,8 +51,7 @@ public:
         CmdList& cmdList, const std::shared_ptr<ExtendImageBaseObj>& object);
     static std::shared_ptr<ExtendImageBaseObj> GetImageBaseObjFromCmdList(
         const CmdList& cmdList, const OpDataHandle& objectHandle);
-    static OpDataHandle AddPictureToCmdList(CmdList& cmdList, const Picture& picture);
-    static std::shared_ptr<Picture> GetPictureFromCmdList(const CmdList& cmdList, const OpDataHandle& pictureHandle);
+    // static OpDataHandle AddPictureToCmdList(CmdList& cmdList, const std::shared_ptr<Picture> picture);
     static OpDataHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
     static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const OpDataHandle& imageHandle);
 

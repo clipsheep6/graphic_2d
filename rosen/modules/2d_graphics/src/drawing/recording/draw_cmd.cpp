@@ -1020,7 +1020,6 @@ REGISTER_UNMARSHALLING_FUNC(DrawPicture, DrawOpItem::PICTURE_OPITEM, DrawPicture
 DrawPictureOpItem::DrawPictureOpItem(const DrawCmdList& cmdList, DrawPictureOpItem::ConstructorHandle* handle)
     : DrawOpItem(PICTURE_OPITEM)
 {
-    picture_ = CmdListHelper::GetPictureFromCmdList(cmdList, handle->picture);
 }
 
 std::shared_ptr<DrawOpItem> DrawPictureOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
@@ -1030,17 +1029,12 @@ std::shared_ptr<DrawOpItem> DrawPictureOpItem::Unmarshalling(const DrawCmdList& 
 
 void DrawPictureOpItem::Marshalling(DrawCmdList& cmdList)
 {
-    auto pictureHandle = CmdListHelper::AddPictureToCmdList(cmdList, *picture_);
-    cmdList.AddOp<ConstructorHandle>(pictureHandle);
 }
 
 void DrawPictureOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
-    if (picture_ == nullptr) {
-        LOGD("DrawPictureOpItem picture is null");
-        return;
-    }
-    canvas->DrawPicture(*picture_);
+    LOGD("DrawPictureOpItem picture is null");
+    return;
 }
 
 /* DrawTextBlobOpItem */

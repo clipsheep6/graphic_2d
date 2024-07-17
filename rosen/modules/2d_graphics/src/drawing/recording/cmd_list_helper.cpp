@@ -169,40 +169,6 @@ std::shared_ptr<ExtendImageBaseObj> CmdListHelper::GetImageBaseObjFromCmdList(
     return (const_cast<CmdList&>(cmdList)).GetImageBaseObj(objectHandle.offset);
 }
 
-OpDataHandle CmdListHelper::AddPictureToCmdList(CmdList& cmdList, const Picture& picture)
-{
-    auto data = picture.Serialize();
-    if (data == nullptr || data->GetSize() == 0) {
-        LOGD("picture is valid!");
-        return { 0 };
-    }
-
-    auto offset = cmdList.AddImageData(data->GetData(), data->GetSize());
-    return { offset, data->GetSize() };
-}
-
-std::shared_ptr<Picture> CmdListHelper::GetPictureFromCmdList(const CmdList& cmdList, const OpDataHandle& pictureHandle)
-{
-    if (pictureHandle.size == 0) {
-        return nullptr;
-    }
-
-    const void* ptr = cmdList.GetImageData(pictureHandle.offset);
-    if (ptr == nullptr) {
-        LOGD("get picture data failed!");
-        return nullptr;
-    }
-
-    auto pictureData = std::make_shared<Data>();
-    pictureData->BuildWithoutCopy(ptr, pictureHandle.size);
-    auto picture = std::make_shared<Picture>();
-    if (picture->Deserialize(pictureData) == false) {
-        LOGD("picture deserialize failed!");
-        return nullptr;
-    }
-    return picture;
-}
-
 OpDataHandle CmdListHelper::AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data)
 {
     if (data == nullptr || data->GetSize() == 0) {

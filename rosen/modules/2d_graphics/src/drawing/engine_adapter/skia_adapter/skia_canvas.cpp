@@ -792,21 +792,6 @@ void SkiaCanvas::DrawImageRect(const Image& image, const Rect& dst,
     skCanvas_->drawImageRect(img, *dstRect, *samplingOptions, &skPaint_);
 }
 
-void SkiaCanvas::DrawPicture(const Picture& picture)
-{
-    if (!skCanvas_) {
-        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
-        return;
-    }
-    sk_sp<SkPicture> p;
-
-    auto skPictureImpl = picture.GetImpl<SkiaPicture>();
-    if (skPictureImpl != nullptr) {
-        p = skPictureImpl->GetPicture();
-        skCanvas_->drawPicture(p.get());
-    }
-}
-
 void SkiaCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     if (!skCanvas_) {

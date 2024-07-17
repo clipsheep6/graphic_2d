@@ -715,6 +715,11 @@ public:
         return renderDrawable_;
     }
 
+    DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr GetRenderDrawable() const
+    {
+        return renderDrawable_;
+    }
+
 protected:
     virtual void OnApplyModifiers() {}
     void SetOldDirtyInSurface(RectI oldDirtyInSurface);

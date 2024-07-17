@@ -505,12 +505,12 @@ void RSUniRenderUtil::SrcRectScaleDown(BufferDrawParam& params, const sptr<Surfa
 
 Drawing::Matrix RSUniRenderUtil::GetMatrixOfBufferToRelRect(const RSSurfaceRenderNode& node)
 {
-    const sptr<SurfaceBuffer> buffer = node.GetBuffer();
+    const sptr<SurfaceBuffer> buffer = node.GetRSSurfaceHandler()->GetBuffer();
     if (buffer == nullptr) {
         return Drawing::Matrix();
     }
 
-    auto& consumer = node.GetConsumer();
+    auto consumer = node.GetRSSurfaceHandler()->GetConsumer();
     if (consumer == nullptr) {
         return Drawing::Matrix();
     }
@@ -531,16 +531,28 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     bool forceCPU, uint32_t threadIndex, bool useRenderParams)
 {
     BufferDrawParam params;
-    const auto nodeParams = static_cast<RSSurfaceRenderParams*>(node.GetRenderParams().get());
+
+    auto drawable = node.GetRenderDrawable();
+    if (!useRenderParams && !drawable) {
+        return params;
+    }
+    auto surfaceDrawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable);
+    auto& nodeParams = surfaceDrawable->GetRenderParams();
     if (useRenderParams && !nodeParams) {
         RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam RenderThread nodeParams is nullptr");
         return params;
     }
+    auto surfaceHandler = node.GetRSSurfaceHandler();
+    if (!useRenderParams && !surfaceHandler) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam RenderThread surfaceHandler is nullptr");
+        return params;
+    }
+    auto surfaceNodeParams = static_cast<RSSurfaceRenderParams*>(nodeParams.get());
     const RSProperties& property = node.GetRenderProperties();
 
     params.threadIndex = threadIndex;
     params.useBilinearInterpolation = useRenderParams ?
-        nodeParams->NeedBilinearInterpolation() : node.NeedBilinearInterpolation(); // TO-DO
+        surfaceNodeParams->NeedBilinearInterpolation() : node.NeedBilinearInterpolation(); // TO-DO
     params.useCPU = forceCPU;
     Drawing::Filter filter;
     filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
@@ -550,15 +562,15 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     auto boundHeight = useRenderParams ? nodeParams->GetBounds().GetHeight() : property.GetBoundsHeight();
     params.dstRect = Drawing::Rect(0, 0, boundWidth, boundHeight);
 
-    const sptr<SurfaceBuffer> buffer = useRenderParams ? nodeParams->GetBuffer() : node.GetBuffer();
+    const sptr<SurfaceBuffer> buffer = useRenderParams ? surfaceNodeParams->GetBuffer() : surfaceHandler->GetBuffer();
     if (buffer == nullptr) {
         return params;
     }
     params.buffer = buffer;
-    params.acquireFence = useRenderParams ? nodeParams->GetAcquireFence() : node.GetAcquireFence();
+    params.acquireFence = useRenderParams ? nodeParams->GetAcquireFence() : surfaceHandler->GetAcquireFence();
     params.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
 
-    auto& consumer = node.GetConsumer();
+    auto consumer = useRenderParams ? surfaceDrawable->GetConsumerOnDraw() : surfaceHandler->GetConsumer();
     if (consumer == nullptr) {
         return params;
     }
@@ -568,11 +580,11 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     }
     RectF localBounds = { 0.0f, 0.0f, boundWidth, boundHeight };
     auto gravity = useRenderParams ? nodeParams->GetFrameGravity() : property.GetFrameGravity();
-    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, gravity, localBounds, params, nodeParams);
+    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, gravity, localBounds, params, surfaceNodeParams);
     RSBaseRenderUtil::FlipMatrix(transform, params);
-    ScalingMode scalingMode = nodeParams->GetPreScalingMode();
+    ScalingMode scalingMode = surfaceNodeParams->GetPreScalingMode();
     if (consumer->GetScalingMode(buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
-        nodeParams->SetPreScalingMode(scalingMode);
+        surfaceNodeParams->SetPreScalingMode(scalingMode);
     }
     if (scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
         SrcRectScaleDown(params, buffer, consumer, localBounds);
@@ -590,9 +602,18 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
     params.paint.SetFilter(filter);
 
-    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    auto drawable = node.GetRenderDrawable();
+    if (!drawable) {
+        return params;
+    }
+    auto displayDrawable = std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(drawable);
+    auto surfaceHandler = displayDrawable->GetRSSurfaceHandlerOnDraw();
+    if (!surfaceHandler) {
+        return params;
+    }
+    const sptr<SurfaceBuffer>& buffer = surfaceHandler->GetBuffer();
     params.buffer = buffer;
-    params.acquireFence = node.GetAcquireFence();
+    params.acquireFence = surfaceHandler->GetAcquireFence();
     params.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     params.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     return params;
@@ -1265,7 +1286,7 @@ Drawing::BackendTexture RSUniRenderUtil::MakeBackendTexture(uint32_t width, uint
 
 RectI RSUniRenderUtil::SrcRectRotateTransform(RSSurfaceRenderNode& node)
 {
-    if (node.GetConsumer() == nullptr) {
+    if (node.GetRSSurfaceHandler()->GetConsumer() == nullptr) {
         return node.GetSrcRect();
     }
     RectI srcRect = node.GetSrcRect();
@@ -1273,7 +1294,7 @@ RectI RSUniRenderUtil::SrcRectRotateTransform(RSSurfaceRenderNode& node)
     int top = srcRect.GetTop();
     int width = srcRect.GetWidth();
     int height = srcRect.GetHeight();
-    GraphicTransformType transformType = RSBaseRenderUtil::GetRotateTransform(node.GetConsumer()->GetTransform());
+    GraphicTransformType transformType = RSBaseRenderUtil::GetRotateTransform(node.GetRSSurfaceHandler()->GetConsumer()->GetTransform());
     int boundsWidth = static_cast<int>(node.GetRenderProperties().GetBoundsWidth());
     int boundsHeight = static_cast<int>(node.GetRenderProperties().GetBoundsHeight());
     // Left > 0 means move xComponent to the left outside of the screen
@@ -1310,11 +1331,11 @@ void RSUniRenderUtil::UpdateRealSrcRect(RSSurfaceRenderNode& node, const RectI& 
 {
     auto srcRect = SrcRectRotateTransform(node);
     const auto& property = node.GetRenderProperties();
-    const auto bufferWidth = node.GetBuffer()->GetSurfaceBufferWidth();
-    const auto bufferHeight = node.GetBuffer()->GetSurfaceBufferHeight();
+    const auto bufferWidth = node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferWidth();
+    const auto bufferHeight = node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferHeight();
     auto boundsWidth = property.GetBoundsWidth();
     auto boundsHeight = property.GetBoundsHeight();
-    GraphicTransformType transformType = RSBaseRenderUtil::GetRotateTransform(node.GetConsumer()->GetTransform());
+    GraphicTransformType transformType = RSBaseRenderUtil::GetRotateTransform(node.GetRSSurfaceHandler()->GetConsumer()->GetTransform());
     if (transformType == GraphicTransformType::GRAPHIC_ROTATE_270 ||
         transformType == GraphicTransformType::GRAPHIC_ROTATE_90) {
         std::swap(boundsWidth, boundsHeight);
@@ -1326,7 +1347,7 @@ void RSUniRenderUtil::UpdateRealSrcRect(RSSurfaceRenderNode& node, const RectI& 
         const auto nodeParams = static_cast<RSSurfaceRenderParams*>(node.GetStagingRenderParams().get());
         // If the scaling mode is SCALING_MODE_SCALE_TO_WINDOW, the scale should use smaller one.
         ScalingMode scalingMode = nodeParams->GetPreScalingMode();
-        if (node.GetConsumer()->GetScalingMode(node.GetBuffer()->GetSeqNum(), scalingMode) == GSERROR_OK) {
+        if (node.GetRSSurfaceHandler()->GetConsumer()->GetScalingMode(node.GetRSSurfaceHandler()->GetBuffer()->GetSeqNum(), scalingMode) == GSERROR_OK) {
             nodeParams->SetPreScalingMode(scalingMode);
         }
         if (scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
@@ -1361,8 +1382,8 @@ void RSUniRenderUtil::UpdateRealSrcRect(RSSurfaceRenderNode& node, const RectI& 
 void RSUniRenderUtil::DealWithNodeGravity(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
     const auto& property = node.GetRenderProperties();
-    const float frameWidth = node.GetBuffer()->GetSurfaceBufferWidth();
-    const float frameHeight = node.GetBuffer()->GetSurfaceBufferHeight();
+    const float frameWidth = node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferWidth();
+    const float frameHeight = node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferHeight();
     const float boundsWidth = property.GetBoundsWidth();
     const float boundsHeight = property.GetBoundsHeight();
     const Gravity frameGravity = property.GetFrameGravity();
@@ -1416,7 +1437,7 @@ void RSUniRenderUtil::CheckForceHardwareAndUpdateDstRect(RSSurfaceRenderNode& no
     if (!node.GetForceHardware()) {
         return;
     }
-    RectI srcRect = { 0, 0, node.GetBuffer()->GetSurfaceBufferWidth(), node.GetBuffer()->GetSurfaceBufferHeight() };
+    RectI srcRect = { 0, 0, node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferWidth(), node.GetRSSurfaceHandler()->GetBuffer()->GetSurfaceBufferHeight() };
     node.SetSrcRect(srcRect);
     auto dstRect = node.GetDstRect();
     auto originalDstRect = node.GetOriginalDstRect();
@@ -1455,7 +1476,10 @@ void RSUniRenderUtil::LayerRotate(RSSurfaceRenderNode& node, const ScreenInfo& s
  
 GraphicTransformType RSUniRenderUtil::GetLayerTransform(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
-    auto consumer = node.GetConsumer();
+    if (!node.GetRSSurfaceHandler()) {
+        return GraphicTransformType::GRAPHIC_ROTATE_NONE;
+    }
+    auto consumer = node.GetRSSurfaceHandler()->GetConsumer();
     static int32_t rotationDegree = (system::GetParameter("const.build.product", "") == "ALT") ||
         (system::GetParameter("const.build.product", "") == "ICL") ?
         FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN : 0;
@@ -1507,8 +1531,8 @@ void RSUniRenderUtil::LayerCrop(RSSurfaceRenderNode& node, const ScreenInfo& scr
  
 void RSUniRenderUtil::LayerScaleDown(RSSurfaceRenderNode& node)
 {
-    const auto& buffer = node.GetBuffer();
-    const auto& surface = node.GetConsumer();
+    const auto& buffer = node.GetRSSurfaceHandler()->GetBuffer();
+    const auto& surface = node.GetRSSurfaceHandler()->GetConsumer();
     if (buffer == nullptr || surface == nullptr) {
         return;
     }
@@ -1563,8 +1587,8 @@ void RSUniRenderUtil::LayerScaleDown(RSSurfaceRenderNode& node)
 
 void RSUniRenderUtil::LayerScaleFit(RSSurfaceRenderNode& node)
 {
-    const auto& buffer = node.GetBuffer();
-    const auto& surface = node.GetConsumer();
+    const auto& buffer = node.GetRSSurfaceHandler()->GetBuffer();
+    const auto& surface = node.GetRSSurfaceHandler()->GetConsumer();
     if (buffer == nullptr || surface == nullptr) {
         return;
     }

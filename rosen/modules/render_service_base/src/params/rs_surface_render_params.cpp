@@ -175,7 +175,7 @@ void RSSurfaceRenderParams::SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer)
     dirtyType_.set(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
 }
 
-sptr<SurfaceBuffer>& RSSurfaceRenderParams::GetPreBuffer()
+sptr<SurfaceBuffer> RSSurfaceRenderParams::GetPreBuffer()
 {
     return preBuffer_;
 }

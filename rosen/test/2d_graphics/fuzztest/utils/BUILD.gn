@@ -25,5 +25,7 @@ group("fuzztest") {
     "resourceholder_fuzzer:fuzztest",
     "roundrect_fuzzer:fuzztest",
     "scalar_fuzzer:fuzztest",
+    "size_fuzzer:fuzztest",
+    "vertices_fuzzer:fuzztest",
   ]
 }

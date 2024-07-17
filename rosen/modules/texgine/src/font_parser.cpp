@@ -38,13 +38,6 @@ namespace TextEngine {
 
 #define HALF(a) ((a) / 2)
 
-// "weight" and "italic" will assigned value 0 and 1, -1 used to exclude unassigned
-FontParser::FontDescriptor::FontDescriptor(): path(""), postScriptName(""), fullName(""),
-    fontFamily(""), fontSubfamily(""), postScriptNameLid(0), fullNameLid(0), fontFamilyLid(0),
-    fontSubfamilyLid(0), requestedLid(0), weight(-1), width(0), italic(-1), monoSpace(0), symbolic(0)
-{
-}
-
 FontParser::FontParser()
 {
     data_ = nullptr;
@@ -372,6 +365,25 @@ private:
 
     std::shared_ptr<std::vector<std::string>> systemFontSet_;
 };
+
+bool FontParser::ParserFontDescriptorFromPath(const std::string& path,
+    std::shared_ptr<FontDescriptor>& desc,
+    const std::string locale)
+{
+    desc->requestedLid = GetLanguageId(locale);
+    desc->path = path;
+    auto typeface = Drawing::Typeface::MakeFromFile(path.c_str());
+    if (typeface == nullptr) {
+        return false;
+    }
+    auto fontStyle = typeface->GetFontStyle();
+    desc->weight = fontStyle.GetWeight();
+    desc->width = fontStyle.GetWidth();
+    if (ParseTable(typeface, *desc) !=  SUCCESSED) {
+        return false;
+    }
+    return true;
+}
 
 std::unique_ptr<FontParser::FontDescriptor> FontParser::ParseFontDescriptor(const std::string& fontName,
     const unsigned int languageId)

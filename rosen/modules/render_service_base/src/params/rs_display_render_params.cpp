@@ -149,9 +149,11 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->nodeRotation_ = nodeRotation_;
     targetDisplayParams->screenRotation_ = screenRotation_;
     targetDisplayParams->screenId_ = screenId_;
+    targetDisplayParams->isSecurityDisplay_ = isSecurityDisplay_;
     targetDisplayParams->mirroredId_ = mirroredId_;
     targetDisplayParams->compositeType_ = compositeType_;
     targetDisplayParams->mirrorSource_ = mirrorSource_;
+    targetDisplayParams->mirrorSourceDrawable_ = mirrorSourceDrawable_;
     targetDisplayParams->mirrorSourceId_ = mirrorSourceId_;
     targetDisplayParams->screenInfo_ = std::move(screenInfo_);
     targetDisplayParams->isMainAndLeashSurfaceDirty_ = isMainAndLeashSurfaceDirty_;
@@ -181,7 +183,7 @@ std::string RSDisplayRenderParams::ToString() const
     return ret;
 }
 
-bool RSDisplayRenderParams::HasSecurityLayer()
+bool RSDisplayRenderParams::HasSecurityLayer() const
 {
     bool hasSecLayerFlag = false;
     auto iter = displayHasSecSurface_.find(screenId_);
@@ -191,7 +193,7 @@ bool RSDisplayRenderParams::HasSecurityLayer()
     return hasSecLayerFlag;
 }
 
-bool RSDisplayRenderParams::HasSkipLayer()
+bool RSDisplayRenderParams::HasSkipLayer() const
 {
     bool hasSkipLayerFlag = false;
     auto iter = displayHasSkipSurface_.find(screenId_);
@@ -201,7 +203,7 @@ bool RSDisplayRenderParams::HasSkipLayer()
     return hasSkipLayerFlag;
 }
 
-bool RSDisplayRenderParams::HasProtectedLayer()
+bool RSDisplayRenderParams::HasProtectedLayer() const
 {
     bool hasProtectedLayerFlag = false;
     auto iter = displayHasProtectedSurface_.find(screenId_);
@@ -211,7 +213,7 @@ bool RSDisplayRenderParams::HasProtectedLayer()
     return hasProtectedLayerFlag;
 }
 
-bool RSDisplayRenderParams::HasCaptureWindow()
+bool RSDisplayRenderParams::HasCaptureWindow() const
 {
     bool hasCaptureWindow = false;
     auto iter = hasCaptureWindow_.find(screenId_);

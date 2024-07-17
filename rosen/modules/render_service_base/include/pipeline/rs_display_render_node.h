@@ -57,7 +57,8 @@ public:
         UNI_RENDER_MIRROR_COMPOSITE,
         UNI_RENDER_EXPAND_COMPOSITE,
         HARDWARE_COMPOSITE,
-        SOFTWARE_COMPOSITE
+        SOFTWARE_COMPOSITE,
+        UNKNOWN
     };
     using WeakPtr = std::weak_ptr<RSDisplayRenderNode>;
     using SharedPtr = std::shared_ptr<RSDisplayRenderNode>;
@@ -302,6 +303,12 @@ public:
     bool IsLastRotationChanged() const {
         return lastRotationChanged_;
     }
+    bool GetPreRotationStatus() const {
+        return preRotationStatus_;
+    }
+    bool GetCurRotationStatus() const {
+        return curRotationStatus_;
+    }
     bool IsFirstTimeToProcessor() const {
         return isFirstTimeToProcessor_;
     }
@@ -482,6 +489,8 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
+    bool preRotationStatus_ = false;
+    bool curRotationStatus_ = false;
     bool lastRotationChanged_ = false;
     Drawing::Matrix initMatrix_;
     bool isFirstTimeToProcessor_ = true;

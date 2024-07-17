@@ -21,8 +21,10 @@
 #include "enum_napi/js_enum.h"
 #include "font_napi/js_font.h"
 #include "font_napi/js_typeface.h"
+#include "image_filter_napi/js_image_filter.h"
 #include "lattice_napi/js_lattice.h"
 #include "mask_filter_napi/js_mask_filter.h"
+#include "matrix_napi/js_matrix.h"
 #include "path_effect_napi/js_path_effect.h"
 #include "path_napi/js_path.h"
 #include "pen_napi/js_pen.h"
@@ -46,6 +48,7 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsTextBlob::Init(env, exportObj);
     JsPen::Init(env, exportObj);
     JsBrush::Init(env, exportObj);
+    JsImageFilter::Init(env, exportObj);
     JsSamplingOptions::Init(env, exportObj);
     JsMaskFilter::Init(env, exportObj);
     JsLattice::Init(env, exportObj);

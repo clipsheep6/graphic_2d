@@ -121,6 +121,11 @@ enum StyleType {
     WORD_SPACING
 };
 
+enum FontTypeStyle {
+    ITALIC = 1 << 0,
+    BOLD = 1 << 1,
+};
+
 struct Boundary {
     size_t leftIndex = 0; // include leftIndex_
     size_t rightIndex = 0; // not include rightIndex_

@@ -352,9 +352,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
 
             ScreenId mirrorId = data.ReadUint64();
             int32_t flags = data.ReadInt32();
-            std::vector<NodeId> filteredAppVector;
-            data.ReadUInt64Vector(&filteredAppVector);
-            ScreenId id = CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
+            std::vector<NodeId> whiteList;
+            data.ReadUInt64Vector(&whiteList);
+            ScreenId id = CreateVirtualScreen(name, width, height, surface, mirrorId, flags, whiteList);
             reply.WriteUint64(id);
             break;
         }
@@ -1197,10 +1197,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT) : {
             auto touchStatus = data.ReadInt32();
-            auto pkgName =  data.ReadString();
-            auto pid = data.ReadUint32();
             auto touchCnt = data.ReadInt32();
-            NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
+            NotifyTouchEvent(touchStatus, touchCnt);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {

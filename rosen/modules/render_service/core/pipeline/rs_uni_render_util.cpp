@@ -590,12 +590,36 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
     params.paint.SetFilter(filter);
 
-    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    const sptr<SurfaceBuffer> buffer = node.GetBuffer();
+    if (!buffer) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam buffer is null.");
+        return params;
+    }
     params.buffer = buffer;
     params.acquireFence = node.GetAcquireFence();
     params.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     params.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     return params;
+}
+
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceHandler& surfaceHandler, bool forceCPU)
+{
+    BufferDrawParam bufferDrawParam;
+    bufferDrawParam.useCPU = forceCPU;
+    Drawing::Filter filter;
+    filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
+    bufferDrawParam.paint.SetFilter(filter);
+
+    const sptr<SurfaceBuffer> buffer = surfaceHandler.GetBuffer();
+    if (!buffer) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam buffer is null.");
+        return bufferDrawParam;
+    }
+    bufferDrawParam.buffer = buffer;
+    bufferDrawParam.acquireFence = surfaceHandler.GetAcquireFence();
+    bufferDrawParam.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    bufferDrawParam.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    return bufferDrawParam;
 }
 
 BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& layer, bool forceCPU)
@@ -1224,6 +1248,13 @@ Drawing::BackendTexture RSUniRenderUtil::MakeBackendTexture(uint32_t width, uint
     VkImage image = VK_NULL_HANDLE;
     VkDeviceMemory memory = VK_NULL_HANDLE;
 
+    if (width * height > VKIMAGE_LIMIT_SIZE) {
+        ROSEN_LOGE(
+            "RSUniRenderUtil::MakeBackendTexture failed, image is too large, width:%{public}u, height::%{public}u",
+            width, height);
+        return {};
+    }
+
     if (vkContext.vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
         return {};
     }
@@ -1667,20 +1698,20 @@ void RSUniRenderUtil::OptimizedFlushAndSubmit(std::shared_ptr<Drawing::Surface>&
 #endif
 }
 
-void RSUniRenderUtil::AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNode>& node,
+void RSUniRenderUtil::AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNode>& hwcNode,
     Drawing::Matrix& matrix, float& alpha)
 {
-    if (node == nullptr) {
+    if (hwcNode == nullptr) {
         return;
     }
-    const auto& property = node->GetRenderProperties();
+    const auto& property = hwcNode->GetRenderProperties();
     alpha = property.GetAlpha();
     matrix = property.GetBoundsGeometry()->GetMatrix();
-    auto parent = node->GetParent().lock();
+    auto parent = hwcNode->GetParent().lock();
     while (parent && parent->GetType() != RSRenderNodeType::DISPLAY_NODE) {
-        const auto& property = parent->GetRenderProperties();
-        alpha *= property.GetAlpha();
-        matrix.PostConcat(property.GetBoundsGeometry()->GetMatrix());
+        const auto& curProperty = parent->GetRenderProperties();
+        alpha *= curProperty.GetAlpha();
+        matrix.PostConcat(curProperty.GetBoundsGeometry()->GetMatrix());
         if (ROSEN_EQ(alpha, 1.f)) {
             parent->DisableDrawingCacheByHwcNode();
         }

@@ -50,6 +50,7 @@ public:
     static napi_value Close(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value GetLength(napi_env env, napi_callback_info info);
+    static napi_value CreateJsPath(napi_env env, Path **path);
     Path* GetPath();
 
 private:

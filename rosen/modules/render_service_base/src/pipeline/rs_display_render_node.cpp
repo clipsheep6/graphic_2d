@@ -216,13 +216,13 @@ void RSDisplayRenderNode::UpdateRenderParams()
     displayParams->offsetY_ = GetDisplayOffsetY();
     displayParams->nodeRotation_ = GetRotation();
     displayParams->mirrorSource_ = GetMirrorSource();
+    auto mirroredNode = displayParams->mirrorSource_.lock();
+    displayParams->mirrorSourceId_ = mirroredNode ? mirroredNode->GetId() : INVALID_NODEID;
 
     RSRenderNode::UpdateRenderParams();
 }
 
-void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
-    std::map<ScreenId, bool>& displayHasSecSurface, std::map<ScreenId, bool>& displayHasSkipSurface,
-    std::map<ScreenId, bool>& displayHasProtectedSurface, std::map<ScreenId, bool>& hasCaptureWindow)
+void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenRenderParams& screenRenderParams)
 {
     auto displayParams = static_cast<RSDisplayRenderParams*>(stagingRenderParams_.get());
     if (displayParams == nullptr) {
@@ -232,11 +232,12 @@ void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
     displayParams->screenId_ = GetScreenId();
     displayParams->screenRotation_ = GetScreenRotation();
     displayParams->compositeType_ = GetCompositeType();
-    displayParams->screenInfo_ = std::move(screenInfo);
-    displayParams->displayHasSecSurface_ = std::move(displayHasSecSurface);
-    displayParams->displayHasSkipSurface_ = std::move(displayHasSkipSurface);
-    displayParams->displayHasProtectedSurface_ = std::move(displayHasProtectedSurface);
-    displayParams->hasCaptureWindow_ = std::move(hasCaptureWindow);
+    displayParams->screenInfo_ = std::move(screenRenderParams.screenInfo);
+    displayParams->displayHasSecSurface_ = std::move(screenRenderParams.displayHasSecSurface);
+    displayParams->displayHasSkipSurface_ = std::move(screenRenderParams.displayHasSkipSurface);
+    displayParams->displayHasProtectedSurface_ = std::move(screenRenderParams.displayHasProtectedSurface);
+    displayParams->displaySpecailSurfaceChanged_ = std::move(screenRenderParams.displaySpecailSurfaceChanged);
+    displayParams->hasCaptureWindow_ = std::move(screenRenderParams.hasCaptureWindow);
 }
 
 void RSDisplayRenderNode::UpdateOffscreenRenderParams(bool needOffscreen)
@@ -300,6 +301,17 @@ bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
     }
     return true;
 }
+
+void RSDisplayRenderNode::SetDisplayGlobalZOrder(float zOrder)
+{
+    auto displayParams = static_cast<RSDisplayRenderParams*>(stagingRenderParams_.get());
+    if (displayParams == nullptr) {
+        RS_LOGE("RSDisplayRenderNode::SetDisplayGlobalZOrder displayParams is null");
+        return;
+    }
+    displayParams->SetGlobalZOrder(zOrder);
+}
+
 
 ScreenRotation RSDisplayRenderNode::GetRotation() const
 {

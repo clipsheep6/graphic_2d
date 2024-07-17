@@ -149,6 +149,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SHOW_REFRESH_RATE_ENABLED),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::MARK_POWER_OFF_NEED_PROCESS_ONE_FRAME),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::DISABLE_RENDER_CONTROL_SCREEN),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_POINTER_LUMINANCE_CALLBACK),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::UNREGISTER_POINTER_LUMINANCE_CALLBACK),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_POWER_STATUS),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_BACK_LIGHT),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_ACTIVE_MODE),
@@ -201,6 +205,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REPORT_EVENT_JANK_FRAME),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REPORT_EVENT_GAMESTATE),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_DYNAMIC_MODE_EVENT),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_HARDWARE_ENABLED),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_SURFACE_OCCLUSION_CHANGE_CALLBACK),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::UNREGISTER_SURFACE_OCCLUSION_CHANGE_CALLBACK),
@@ -217,7 +222,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_GLOBAL_DIRTY_REGION_INFO),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_COMPOSE_INFO),
-        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_CAST_SCREEN_ENABLE_SKIP_WINDOW)
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_CAST_SCREEN_ENABLE_SKIP_WINDOW),
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_UIEXTENSION_CALLBACK)
     };
     if (descriptorCheckList.find(code) != descriptorCheckList.cend()) {
         auto token = data.ReadInterfaceToken();
@@ -419,6 +425,40 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG): {
+            float darkBuffer = data.ReadFloat();
+            float brightBuffer = data.ReadFloat();
+            int64_t interval = data.ReadInt64();
+            int32_t status = SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
+            reply.WriteInt32(status);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_ENABLED): {
+            bool enable = data.ReadBool();
+            int32_t status = SetPointerColorInversionEnabled(enable);
+            reply.WriteInt32(status);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_POINTER_LUMINANCE_CALLBACK): {
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIPointerLuminanceChangeCallback> cb = iface_cast<RSIPointerLuminanceChangeCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            int32_t status = RegisterPointerLuminanceChangeCallback(cb);
+            reply.WriteInt32(status);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::UNREGISTER_POINTER_LUMINANCE_CALLBACK): {
+            int32_t status = UnRegisterPointerLuminanceChangeCallback();
+            reply.WriteInt32(status);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_ACTIVE_MODE): {
             ScreenId id = data.ReadUint64();
             uint32_t modeId = data.ReadUint32();
@@ -447,8 +487,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             uint32_t max = data.ReadUint32();
             uint32_t preferred = data.ReadUint32();
             uint32_t type = data.ReadUint32();
-            bool isAnimatorStopped = data.ReadBool();
-            SyncFrameRateRange(id, {min, max, preferred, type}, isAnimatorStopped);
+            int32_t animatorExpectedFrameRate = data.ReadInt32();
+            SyncFrameRateRange(id, {min, max, preferred, type}, animatorExpectedFrameRate);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_CURRENT_REFRESH_RATE): {
@@ -498,8 +538,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             pid_t pid = data.ReadInt32();
-            std::string ret = GetRefreshInfo(pid);
-            reply.WriteString(ret);
+            std::string refreshInfo = GetRefreshInfo(pid);
+            reply.WriteString(refreshInfo);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_RESOLUTION): {
@@ -1150,10 +1190,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             NotifyRefreshRateEvent(eventInfo);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_DYNAMIC_MODE_EVENT) : {
+            auto enableDynamicMode = data.ReadBool();
+            NotifyDynamicModeEvent(enableDynamicMode);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT) : {
             auto touchStatus = data.ReadInt32();
+            auto pkgName =  data.ReadString();
+            auto pid = data.ReadUint32();
             auto touchCnt = data.ReadInt32();
-            NotifyTouchEvent(touchStatus, touchCnt);
+            NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {
@@ -1239,6 +1286,24 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(LayerComposeInfo.redrawFrameNumber);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::
+            GET_HARDWARE_COMPOSE_DISABLED_REASON_INFO) : {
+            uint64_t tokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+            if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId)) {
+                ret = ERR_TRANSACTION_FAILED;
+                break;
+            }
+            const auto& hwcDisabledReasonInfos = GetHwcDisabledReasonInfo();
+            reply.WriteInt32(hwcDisabledReasonInfos.size());
+            for (const auto& hwcDisabledReasonInfo : hwcDisabledReasonInfos) {
+                for (const auto& disabledReasonCount : hwcDisabledReasonInfo.disabledReasonStatistics) {
+                    reply.WriteInt32(disabledReasonCount);
+                }
+                reply.WriteInt32(hwcDisabledReasonInfo.pidOfBelongsApp);
+                reply.WriteString(hwcDisabledReasonInfo.nodeName);
+            }
+            break;
+        }
 #ifdef TP_FEATURE_ENABLE
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_TP_FEATURE_CONFIG) : {
             int32_t feature = data.ReadInt32();
@@ -1256,6 +1321,26 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_CURTAIN_SCREEN_USING_STATUS) : {
             auto isCurtainScreenOn = data.ReadBool();
             SetCurtainScreenUsingStatus(isCurtainScreenOn);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_UIEXTENSION_CALLBACK): {
+            if (!securityManager_.IsInterfaceCodeAccessible(code)) {
+                RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest no permission REGISTER_UIEXTENSION_CALLBACK");
+                return ERR_INVALID_STATE;
+            }
+            uint64_t userId = data.ReadUint64();
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIUIExtensionCallback> callback = iface_cast<RSIUIExtensionCallback>(remoteObject);
+            if (callback == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            int32_t status = RegisterUIExtensionCallback(userId, callback);
+            reply.WriteInt32(status);
             break;
         }
         default: {

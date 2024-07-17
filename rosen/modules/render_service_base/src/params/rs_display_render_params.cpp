@@ -65,6 +65,17 @@ void RSDisplayRenderParams::SetRotationChanged(bool changed)
     needSync_ = true;
 }
 
+void RSDisplayRenderParams::SetGlobalZOrder(float zOrder)
+{
+    zOrder_ = zOrder;
+    needSync_ = true;
+}
+
+float RSDisplayRenderParams::GetGlobalZOrder() const
+{
+    return zOrder_;
+}
+
 bool RSDisplayRenderParams::IsRotationChanged() const
 {
     return isRotationChanged_;
@@ -131,6 +142,7 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->displayHasSecSurface_ = displayHasSecSurface_;
     targetDisplayParams->displayHasSkipSurface_ = displayHasSkipSurface_;
     targetDisplayParams->displayHasProtectedSurface_ = displayHasProtectedSurface_;
+    targetDisplayParams->displaySpecailSurfaceChanged_ = displaySpecailSurfaceChanged_;
     targetDisplayParams->hasCaptureWindow_ = hasCaptureWindow_;
     targetDisplayParams->offsetX_ = offsetX_;
     targetDisplayParams->offsetY_ = offsetY_;
@@ -140,6 +152,7 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->mirroredId_ = mirroredId_;
     targetDisplayParams->compositeType_ = compositeType_;
     targetDisplayParams->mirrorSource_ = mirrorSource_;
+    targetDisplayParams->mirrorSourceId_ = mirrorSourceId_;
     targetDisplayParams->screenInfo_ = std::move(screenInfo_);
     targetDisplayParams->isMainAndLeashSurfaceDirty_ = isMainAndLeashSurfaceDirty_;
     targetDisplayParams->needOffscreen_ = needOffscreen_;
@@ -147,6 +160,7 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->newColorSpace_ = newColorSpace_;
     targetDisplayParams->newPixelFormat_ = newPixelFormat_;
     targetDisplayParams->hasHdrPresent_ = hasHdrPresent_;
+    targetDisplayParams->zOrder_ = zOrder_;
     RSRenderParams::OnSync(target);
 }
 

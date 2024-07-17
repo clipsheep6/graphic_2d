@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <sys/types.h>
+#include <parameters.h>
 
 #include "rs_dirty_rects_dfx.h"
 #include "rs_trace.h"
@@ -137,6 +138,28 @@ void RSDirtyRectsDfx::DrawDirtyRegionInVirtual() const
     }
 }
 
+bool RSDirtyRectsDfx::RefreshRateRotationProcess(ScreenRotation rotation, uint64_t screenId)
+{
+    if (rotation != ScreenRotation::ROTATION_0) {
+        auto screenManager = CreateOrGetScreenManager();
+        auto mainScreenInfo = screenManager->QueryScreenInfo(screenId);
+        if (rotation == ScreenRotation::ROTATION_90) {
+            canvas_->Rotate(-90, 0, 0); // 90 degree for text draw
+            canvas_->Translate(-(static_cast<float>(mainScreenInfo.height)), 0);
+        } else if (rotation == ScreenRotation::ROTATION_180) {
+            // 180 degree for text draw
+            canvas_->Rotate(-180, static_cast<float>(mainScreenInfo.width) / 2, // 2 half of screen width
+                static_cast<float>(mainScreenInfo.height) / 2);                 // 2 half of screen height
+        } else if (rotation == ScreenRotation::ROTATION_270) {
+            canvas_->Rotate(-270, 0, 0); // 270 degree for text draw
+            canvas_->Translate(0, -(static_cast<float>(mainScreenInfo.width)));
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
 void RSDirtyRectsDfx::DrawCurrentRefreshRate()
 {
     RS_TRACE_NAME("RSUniRender::DrawCurrentRefreshRate");
@@ -145,6 +168,12 @@ void RSDirtyRectsDfx::DrawCurrentRefreshRate()
         return;
     }
     auto screenId = displayParams->GetScreenId();
+    static const std::string FOLD_SCREEN_TYPE = system::GetParameter("const.window.foldscreen.type", "0,0,0,0");
+    const char DUAL_DISPLAY = '2';
+    // fold device with two logic screens
+    if (FOLD_SCREEN_TYPE[0] == DUAL_DISPLAY && screenId != 0) {
+        return;
+    }
     uint32_t currentRefreshRate = OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(screenId);
     uint32_t realtimeRefreshRate = RSRealtimeRefreshRateManager::Instance().GetRealtimeRefreshRate();
     if (realtimeRefreshRate > currentRefreshRate) {
@@ -164,28 +193,16 @@ void RSDirtyRectsDfx::DrawCurrentRefreshRate()
     RSAutoCanvasRestore acr(canvas_);
     canvas_->AttachBrush(brush);
     auto rotation = displayParams->GetScreenRotation();
-    if (RSSystemProperties::IsFoldScreenFlag() && screenId == 0) {
+    // fold device with one logic screen
+    if (RSSystemProperties::IsFoldScreenFlag() && FOLD_SCREEN_TYPE[0] != DUAL_DISPLAY
+        && screenId == 0) {
         rotation =
             (rotation == ScreenRotation::ROTATION_270 ? ScreenRotation::ROTATION_0
                                                       : static_cast<ScreenRotation>(static_cast<int>(rotation) + 1));
     }
     auto saveCount = canvas_->Save();
-    if (rotation != ScreenRotation::ROTATION_0) {
-        auto screenManager = CreateOrGetScreenManager();
-        auto mainScreenInfo = screenManager->QueryScreenInfo(screenId);
-        if (rotation == ScreenRotation::ROTATION_90) {
-            canvas_->Rotate(-90, 0, 0); // 90 degree for text draw
-            canvas_->Translate(-(static_cast<float>(mainScreenInfo.height)), 0);
-        } else if (rotation == ScreenRotation::ROTATION_180) {
-            // 180 degree for text draw
-            canvas_->Rotate(-180, static_cast<float>(mainScreenInfo.width) / 2, // 2 half of screen width
-                static_cast<float>(mainScreenInfo.height) / 2);                 // 2 half of screen height
-        } else if (rotation == ScreenRotation::ROTATION_270) {
-            canvas_->Rotate(-270, 0, 0); // 270 degree for text draw
-            canvas_->Translate(0, -(static_cast<float>(mainScreenInfo.width)));
-        } else {
-            return;
-        }
+    if (!RefreshRateRotationProcess(rotation, screenId)) {
+        return;
     }
     // 100.f:Scalar x of drawing TextBlob; 200.f:Scalar y of drawing TextBlob
     canvas_->DrawTextBlob(textBlob.get(), 100.f, 200.f);
@@ -194,7 +211,7 @@ void RSDirtyRectsDfx::DrawCurrentRefreshRate()
 }
 
 void RSDirtyRectsDfx::DrawDirtyRectForDFX(
-    const RectI& dirtyRect, const Drawing::Color color, const RSPaintStyle fillType, float alpha, int edgeWidth) const
+    RectI dirtyRect, const Drawing::Color color, const RSPaintStyle fillType, float alpha, int edgeWidth) const
 {
     if (dirtyRect.width_ <= 0 || dirtyRect.height_ <= 0) {
         ROSEN_LOGD("DrawDirtyRectForDFX dirty rect is invalid.");
@@ -203,6 +220,14 @@ void RSDirtyRectsDfx::DrawDirtyRectForDFX(
     ROSEN_LOGD("DrawDirtyRectForDFX current dirtyRect = %{public}s", dirtyRect.ToString().c_str());
     auto rect = Drawing::Rect(
         dirtyRect.left_, dirtyRect.top_, dirtyRect.left_ + dirtyRect.width_, dirtyRect.top_ + dirtyRect.height_);
+    RSAutoCanvasRestore acr(canvas_);
+    Drawing::Matrix invertMatrix;
+    if (displayParams_ && displayParams_->GetMatrix().Invert(invertMatrix)) {
+        // Modifying the drawing origin does not affect the actual drawing content
+        canvas_->ConcatMatrix(displayParams_->GetMatrix());
+        invertMatrix.MapRect(rect, rect);
+        dirtyRect.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+    }
     std::string position = std::to_string(dirtyRect.left_) + ',' + std::to_string(dirtyRect.top_) + ',' +
                            std::to_string(dirtyRect.width_) + ',' + std::to_string(dirtyRect.height_);
     const int defaultTextOffsetX = edgeWidth;

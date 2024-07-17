@@ -74,6 +74,10 @@ void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfac
         layerInfo.dstRect.x, layerInfo.dstRect.y, layerInfo.dstRect.w, layerInfo.dstRect.h,
         buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(), layerInfo.alpha);
     auto& preBuffer = params.GetPreBuffer();
+    ScalingMode scalingMode = params.GetPreScalingMode();
+    if (node.GetConsumer()->GetScalingMode(buffer->GetSeqNum(), scalingMode) == GSERROR_OK) {
+        params.SetPreScalingMode(scalingMode);
+    }
     LayerInfoPtr layer = GetLayerInfo(
         params, buffer, preBuffer, node.GetConsumer(), params.GetAcquireFence());
     if (layer != nullptr) {
@@ -132,8 +136,9 @@ LayerInfoPtr RSUniRenderProcessor::GetLayerInfo(RSSurfaceRenderParams& params, s
     layer->SetAlpha(alpha);
     layer->SetLayerSize(layerInfo.dstRect);
     layer->SetBoundSize(layerInfo.boundRect);
-    layer->SetCompositionType(RSSystemProperties::IsForceClient() ?
-        GraphicCompositionType::GRAPHIC_COMPOSITION_CLIENT :
+    bool forceClient = RSSystemProperties::IsForceClient() ||
+        (params.GetIsProtectedLayer() && params.GetAnimateState());
+    layer->SetCompositionType(forceClient ? GraphicCompositionType::GRAPHIC_COMPOSITION_CLIENT :
         GraphicCompositionType::GRAPHIC_COMPOSITION_DEVICE);
 
     std::vector<GraphicIRect> visibleRegions;
@@ -153,6 +158,7 @@ LayerInfoPtr RSUniRenderProcessor::GetLayerInfo(RSSurfaceRenderParams& params, s
         layerInfo.matrix.Get(Drawing::Matrix::Index::TRANS_Y), layerInfo.matrix.Get(Drawing::Matrix::Index::PERSP_0),
         layerInfo.matrix.Get(Drawing::Matrix::Index::PERSP_1), layerInfo.matrix.Get(Drawing::Matrix::Index::PERSP_2)};
     layer->SetMatrix(matrix);
+    layer->SetScalingMode(params.GetPreScalingMode());
     return layer;
 }
 

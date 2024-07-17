@@ -254,6 +254,52 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, RemoveVirtualScreen, TestSize.Level
 }
 
 /**
+ * @tc.name: SetPointerColorInversionConfig Test
+ * @tc.desc: SetPointerColorInversionConfig Test
+ * @tc.type:FUNC
+ * @tc.require: issueI9KXXE
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, SetPointerColorInversionConfig, TestSize.Level1)
+{
+    float darkBuffer = 0.5f;
+    float brightBuffer = 0.5f;
+    int64_t interval = 50;
+    proxy->SetPointerColorInversionConfig(darkBuffer, brightBuffer, interval);
+    ASSERT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetPointerColorInversionEnabled Test
+ * @tc.desc: SetPointerColorInversionEnabled Test
+ * @tc.type:FUNC
+ * @tc.require: issueI9KXXE
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, SetPointerColorInversionEnabled, TestSize.Level1)
+{
+    proxy->SetPointerColorInversionEnabled(false);
+    ASSERT_TRUE(true);
+}
+
+/**
+ * @tc.name: RegisterPointerLuminanceChangeCallback Test
+ * @tc.desc: RegisterPointerLuminanceChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issueI9KXXE
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, RegisterPointerLuminanceChangeCallback, TestSize.Level1)
+{
+    sptr<RSIPointerLuminanceChangeCallback> callback;
+    proxy->RegisterPointerLuminanceChangeCallback(callback);
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(samgr, nullptr);
+    proxy->UnRegisterPointerLuminanceChangeCallback();
+    auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
+    callback = iface_cast<RSIPointerLuminanceChangeCallback>(remoteObject);
+    proxy->RegisterPointerLuminanceChangeCallback(callback);
+    ASSERT_NE(proxy->transactionDataIndex_, 5);
+}
+
+/**
  * @tc.name: SetScreenChangeCallback Test
  * @tc.desc: SetScreenChangeCallback Test
  * @tc.type:FUNC
@@ -322,7 +368,7 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, SyncFrameRateRange, TestSize.Level1
 {
     FrameRateLinkerId id = 1;
     FrameRateRange range;
-    proxy->SyncFrameRateRange(id, range, false);
+    proxy->SyncFrameRateRange(id, range, 0);
     ASSERT_EQ(proxy->transactionDataIndex_, 0);
 }
 
@@ -856,7 +902,8 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, SetCacheEnabledForRotation, TestSiz
     proxy->NotifyRefreshRateEvent(eventInfo);
     int32_t touchStatus = 1;
     int32_t touchCnt = 0;
-    proxy->NotifyTouchEvent(touchStatus, touchCnt);
+    proxy->NotifyTouchEvent(touchStatus, "", 0, touchCnt);
+    proxy->NotifyDynamicModeEvent(true);
     proxy->SetCacheEnabledForRotation(true);
     ASSERT_EQ(proxy->transactionDataIndex_, 0);
 }
@@ -914,6 +961,38 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, GetLayerComposeInfo, TestSize.Level
 {
     LayerComposeCollection::GetInstance().UpdateRedrawFrameNumberForDFX();
     ASSERT_EQ(proxy->GetLayerComposeInfo().redrawFrameNumber, 0);
+}
+
+/**
+ * @tc.name: GetHwcDisabledReasonInfo Test
+ * @tc.desc: GetHwcDisabledReasonInfo Test
+ * @tc.type:FUNC
+ * @tc.require: issueIACUOK
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, GetHwcDisabledReasonInfo, TestSize.Level1)
+{
+    NodeId id = 0;
+    std::string nodeName = "Test";
+    HwcDisabledReasonCollection::GetInstance().UpdateHwcDisabledReasonForDFX(id,
+        HwcDisabledReasons::DISABLED_BY_SRC_PIXEL, nodeName);
+    ASSERT_EQ(proxy->GetHwcDisabledReasonInfo().size(), 0);
+}
+
+/**
+ * @tc.name: RegisterUIExtensionCallback Test
+ * @tc.desc: RegisterUIExtensionCallback Test, with empty/non-empty callback.
+ * @tc.type:FUNC
+ * @tc.require: issueIABHAX
+ */
+HWTEST_F(RSRenderServiceConnectionProxyTest, RegisterUIExtensionCallback, TestSize.Level1)
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(samgr, nullptr);
+    auto remoteObject = samgr->GetSystemAbility(RENDER_SERVICE);
+    sptr<RSIUIExtensionCallback> callback = iface_cast<RSIUIExtensionCallback>(remoteObject);
+    uint64_t userId = 0;
+    ASSERT_EQ(proxy->RegisterUIExtensionCallback(userId, nullptr), INVALID_ARGUMENTS);
+    ASSERT_EQ(proxy->RegisterUIExtensionCallback(userId, callback), RS_CONNECTION_ERROR);
 }
 } // namespace Rosen
 } // namespace OHOS

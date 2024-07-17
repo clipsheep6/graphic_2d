@@ -249,6 +249,7 @@ bool RSMask::MarshallingPathAndBrush(Parcel& parcel) const
         maskBrush_.GetColor(),
         maskBrush_.GetBlendMode(),
         maskBrush_.IsAntiAlias(),
+        maskBrush_.GetBlenderEnabled(),
         filter.GetFilterQuality(),
         Drawing::CmdListHelper::AddColorSpaceToCmdList(*maskCmdList,
             maskBrush_.GetColorSpace()),

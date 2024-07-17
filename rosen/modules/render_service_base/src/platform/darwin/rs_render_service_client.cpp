@@ -154,6 +154,26 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
 {
 }
 
+int32_t RSRenderServiceClient::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::SetPointerColorInversionEnabled(bool enable)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::RegisterPointerLuminanceChangeCallback(const PointerLuminanceChangeCallback &callback)
+{
+    return 0;
+}
+ 
+int32_t RSRenderServiceClient::UnRegisterPointerLuminanceChangeCallback()
+{
+    return 0;
+}
+
 int32_t RSRenderServiceClient::SetScreenChangeCallback(const ScreenChangeCallback &callback)
 {
     return 0;
@@ -172,7 +192,7 @@ void RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
 }
 
 void RSRenderServiceClient::SyncFrameRateRange(FrameRateLinkerId id,
-    const FrameRateRange& range, bool isAnimatorStopped)
+    const FrameRateRange& range, int32_t animatorExpectedFrameRate)
 {
 }
 
@@ -488,7 +508,12 @@ void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
 {
 }
 
-void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid,
+    int32_t touchCnt)
+{
+}
+
+void RSRenderServiceClient::NotifyDynamicModeEvent(bool enableDynamicMode)
 {
 }
 
@@ -523,6 +548,11 @@ LayerComposeInfo RSRenderServiceClient::GetLayerComposeInfo()
     return LayerComposeInfo {};
 }
 
+HwcDisabledReasonInfos RSRenderServiceClient::GetHwcDisabledReasonInfo()
+{
+    return {};
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* config)
 {
@@ -535,6 +565,11 @@ void RSRenderServiceClient::SetVirtualScreenUsingStatus(bool isVirtualScreenUsin
 
 void RSRenderServiceClient::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 {
+}
+
+int32_t RSRenderServiceClient::RegisterUIExtensionCallback(uint64_t userId, const UIExtensionCallback& callback)
+{
+    return {};
 }
 } // namespace Rosen
 } // namespace OHOS

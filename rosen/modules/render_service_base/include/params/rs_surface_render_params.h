@@ -123,6 +123,10 @@ public:
     {
         return isProtectedLayer_;
     }
+    bool GetAnimateState() const
+    {
+        return animateState_;
+    }
     const std::set<NodeId>& GetSecurityLayerIds() const
     {
         return securityLayerIds_;
@@ -303,7 +307,11 @@ public:
 
     void SetPreScalingMode(ScalingMode scalingMode)
     {
+        if (preScalingMode_ == scalingMode) {
+            return;
+        }
         preScalingMode_ = scalingMode;
+        needSync_ = true;
     }
     ScalingMode GetPreScalingMode() const
     {
@@ -401,6 +409,7 @@ private:
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
+    bool animateState_ = false;
     bool isSubSurfaceNode_ = false;
     Gravity uiFirstFrameGravity_ = Gravity::TOP_LEFT;
     bool isNodeToBeCaptured_ = false;

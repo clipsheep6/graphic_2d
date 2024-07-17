@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,30 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef PICTURE_H
-#define PICTURE_H
-
-#include <memory>
+#ifndef DRAWING_DEMO_DRAW_PICTURE_TEST_H
+#define DRAWING_DEMO_DRAW_PICTURE_TEST_H
+#include "test_base.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class Canvas;
-class DrawCmdList;
-class Picture {
+class DrawPictrueTest : public TestBase {
 public:
-    Picture(std::shared_ptr<DrawCmdList> cmdList);
-
-    ~Picture();
-
-    void Playback(Canvas* canvas);
-
-private:
-    std::shared_ptr<DrawCmdList> drawCmdList = nullptr;
-    friend class PictureRecorder;
+    DrawPictrueTest() : TestBase() {}
+    ~DrawPictrueTest() override = default;
+protected:
+    void OnTestFunction(Drawing::Canvas* canvas) override;
+    void OnTestPerformance(Drawing::Canvas* canvas) override;
 };
-} // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-#endif
+#endif // DRAWING_DEMO_DRAW_TEXTBLOB_TEST_H

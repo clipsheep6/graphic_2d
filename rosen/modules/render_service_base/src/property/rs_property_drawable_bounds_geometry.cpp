@@ -279,14 +279,12 @@ RSPropertyDrawable::DrawablePtr RSMaskDrawable::Generate(const RSRenderContent& 
     if (mask == nullptr) {
         return nullptr;
     }
-    if (mask->IsSvgMask() && !mask->GetSvgDom() && !mask->GetSvgPicture()) {
+    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
         return nullptr;
     }
     if (mask->IsSvgMask()) {
         if (mask->GetSvgDom()) {
             return std::make_unique<RSSvgDomMaskDrawable>(mask);
-        } else if (mask->GetSvgPicture()) {
-            return std::make_unique<RSSvgPictureMaskDrawable>(mask);
         }
     } else if (mask->IsGradientMask()) {
         return std::make_unique<RSGradientMaskDrawable>(mask);
@@ -347,7 +345,6 @@ void RSSvgPictureMaskDrawable::Draw(const RSRenderContent& content, RSPaintFilte
         Drawing::AutoCanvasRestore acr(canvas, true);
         canvas.Translate(bounds.GetLeft() + mask_->GetSvgX(), bounds.GetTop() + mask_->GetSvgY());
         canvas.Scale(mask_->GetScaleX(), mask_->GetScaleY());
-        canvas.DrawPicture(*mask_->GetSvgPicture());
     }
     canvas.RestoreToCount(tmpLayer);
     Drawing::SaveLayerOps slrContent(&bounds, &maskBrush_);

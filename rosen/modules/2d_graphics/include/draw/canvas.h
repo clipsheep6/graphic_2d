@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "drawing/draw/core_canvas.h"
+#include "image/picture.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -52,6 +53,8 @@ public:
     virtual void SetOffscreen(bool isOffscreen);
 
     virtual bool GetOffscreen() const;
+
+    virtual void DrawPicture( std::shared_ptr<Picture> picture);
 protected:
     std::vector<Canvas*> pCanvasList_;
     bool recordingState_ = false;

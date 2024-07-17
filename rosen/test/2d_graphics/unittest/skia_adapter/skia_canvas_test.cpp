@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "skia_adapter/skia_canvas.h"
 #include "draw/core_canvas.h"
+#include "image/picture.h"
 #include "skia_adapter/skia_canvas_autocache.h"
 #include "skia_adapter/skia_oplist_handle.h"
 

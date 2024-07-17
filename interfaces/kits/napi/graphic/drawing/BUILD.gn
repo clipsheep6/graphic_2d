@@ -31,6 +31,7 @@ config("local_drawing_config") {
     "../drawing",
     "../../../../../rosen/modules/2d_graphics/include",
     "../../../../../rosen/modules/2d_graphics/src/drawing/engine_adapter",
+    "../../../../../rosen/modules/2d_graphics/src/",
   ]
 }
 

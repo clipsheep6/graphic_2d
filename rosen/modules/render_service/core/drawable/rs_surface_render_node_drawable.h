@@ -108,8 +108,7 @@ public:
     std::shared_ptr<Drawing::Surface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread,
         bool releaseAfterGet = false);
     bool NeedInitCacheSurface();
-    std::shared_ptr<Drawing::Image> GetCompletedImage(RSPaintFilterCanvas& canvas, uint32_t threadIndex,
-        bool isUIFirst);
+    std::shared_ptr<Drawing::Image> GetCompletedImage(RSPaintFilterCanvas& canvas, uint32_t threadIndex);
     using ClearCacheSurfaceFunc =
         std::function<void(std::shared_ptr<Drawing::Surface>&&,
         std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
@@ -142,7 +141,7 @@ public:
 #endif
 
     bool DrawCacheSurface(RSPaintFilterCanvas& canvas, const Vector2f& boundSize,
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool isUIFirst = false);
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
     void DrawableCache(std::shared_ptr<Drawing::GPUContext> grContext_);
 
     void SetLastFrameUsedThreadIndex(pid_t tid)
@@ -234,6 +233,7 @@ public:
     bool PrepareOffscreenRender();
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
+<<<<<<< HEAD
 #ifdef SUBTREE_PARALLEL_ENABLE
    Drawing::Region GetCurSurfaceDrawRegion()
    {
@@ -253,6 +253,13 @@ public:
         bool isOffscreen)const;
 #endif
 
+=======
+
+    sptr<IConsumerSurface> GetConsumerOnDraw()
+    {
+        return consumerOnDraw_;
+    }
+>>>>>>> b3ec2dcbe5535af428b4b224f4eea8ed324c4e6f
 
 private:
     explicit RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
@@ -279,6 +286,7 @@ private:
     std::string name_;
     bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas, bool canSkipWait);
     bool DrawUIFirstCacheWithStarting(RSPaintFilterCanvas& rscanvas, NodeId id);
+    // To be deleted after captureWindow being deleted
     bool CheckIfNeedResetRotate(RSPaintFilterCanvas& canvas);
     NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
 #ifdef USE_VIDEO_PROCESSING_ENGINE
@@ -343,6 +351,10 @@ private:
     std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
     int maxRenderSize_ = 0;
     std::unique_ptr<RSAutoCanvasRestore> arc_ = nullptr;
+
+#ifndef ROSEN_CROSS_PLATFORM
+    sptr<IConsumerSurface> consumerOnDraw_ = nullptr;
+#endif
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

@@ -303,8 +303,6 @@ public:
         markRenderFlag_ = false;
     }
 
-    void PerfForBlurIfNeeded();
-
     bool IsOnVsync() const
     {
         return isOnVsync_.load();
@@ -350,7 +348,7 @@ public:
     void SetHardwareTaskNum(uint32_t num);
     void RegisterUIExtensionCallback(pid_t pid, uint64_t userId, sptr<RSIUIExtensionCallback> callback);
     void UnRegisterUIExtensionCallback(pid_t pid);
-    void UIExtensionNodesTraverseAndCallback();
+
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -416,6 +414,7 @@ private:
 
     void ClearDisplayBuffer();
     void PerfAfterAnim(bool needRequestNextVsync);
+    void PerfForBlurIfNeeded();
     void PerfMultiWindow();
     void RenderFrameStart(uint64_t timestamp);
     void ResetHardwareEnabledState(bool isUniRender);
@@ -465,6 +464,8 @@ private:
     void DvsyncCheckRequestNextVsync();
 
     void PrepareUiCaptureTasks(std::shared_ptr<RSUniRenderVisitor> uniVisitor);
+    void UIExtensionNodesTraverseAndCallback();
+    bool CheckUIExtensionCallbackDataChanged() const;
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -486,6 +487,7 @@ private:
 
     uint64_t curTime_ = 0;
     uint64_t timestamp_ = 0;
+    uint64_t vsyncId_ = 0;
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;

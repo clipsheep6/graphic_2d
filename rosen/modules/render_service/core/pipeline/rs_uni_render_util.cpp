@@ -563,7 +563,10 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     if (consumer == nullptr) {
         return params;
     }
-    auto transform = consumer->GetTransform();
+    auto transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
+    if (consumer->GetSurfaceBufferTransformType(buffer, &transform) != GSERROR_OK) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam GetSurfaceBufferTransformType failed");
+    }
     RectF localBounds = { 0.0f, 0.0f, boundWidth, boundHeight };
     auto gravity = useRenderParams ? nodeParams->GetFrameGravity() : property.GetFrameGravity();
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, gravity, localBounds, params, nodeParams);
@@ -588,12 +591,36 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
     params.paint.SetFilter(filter);
 
-    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    const sptr<SurfaceBuffer> buffer = node.GetBuffer();
+    if (!buffer) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam buffer is null.");
+        return params;
+    }
     params.buffer = buffer;
     params.acquireFence = node.GetAcquireFence();
     params.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     params.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     return params;
+}
+
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceHandler& surfaceHandler, bool forceCPU)
+{
+    BufferDrawParam bufferDrawParam;
+    bufferDrawParam.useCPU = forceCPU;
+    Drawing::Filter filter;
+    filter.SetFilterQuality(Drawing::Filter::FilterQuality::LOW);
+    bufferDrawParam.paint.SetFilter(filter);
+
+    const sptr<SurfaceBuffer> buffer = surfaceHandler.GetBuffer();
+    if (!buffer) {
+        RS_LOGE("RSUniRenderUtil::CreateBufferDrawParam buffer is null.");
+        return bufferDrawParam;
+    }
+    bufferDrawParam.buffer = buffer;
+    bufferDrawParam.acquireFence = surfaceHandler.GetAcquireFence();
+    bufferDrawParam.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    bufferDrawParam.dstRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    return bufferDrawParam;
 }
 
 BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& layer, bool forceCPU)
@@ -1497,10 +1524,15 @@ GraphicTransformType RSUniRenderUtil::GetLayerTransform(RSSurfaceRenderNode& nod
         FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN : 0;
     int surfaceNodeRotation = node.GetForceHardwareByUser() ? -1 * rotationDegree :
         RSUniRenderUtil::GetRotationFromMatrix(node.GetTotalMatrix());
-    int consumerTransform = consumer ?
-        RSBaseRenderUtil::RotateEnumToInt(RSBaseRenderUtil::GetRotateTransform(consumer->GetTransform())) : 0;
-    GraphicTransformType consumerFlip = consumer ?
-        RSBaseRenderUtil::GetFlipTransform(consumer->GetTransform()) : GraphicTransformType::GRAPHIC_ROTATE_NONE;
+    auto transformType = GraphicTransformType::GRAPHIC_ROTATE_NONE;
+    auto buffer = node.GetBuffer();
+    if (consumer != nullptr && buffer != nullptr) {
+        if (consumer->GetSurfaceBufferTransformType(buffer, &transformType) != GSERROR_OK) {
+            RS_LOGE("RSUniRenderUtil::GetLayerTransform GetSurfaceBufferTransformType failed");
+        }
+    }
+    int consumerTransform = RSBaseRenderUtil::RotateEnumToInt(RSBaseRenderUtil::GetRotateTransform(transformType));
+    GraphicTransformType consumerFlip = RSBaseRenderUtil::GetFlipTransform(transformType);
     int totalRotation = (RSBaseRenderUtil::RotateEnumToInt(screenInfo.rotation) +
         surfaceNodeRotation + consumerTransform) % 360;
     GraphicTransformType rotateEnum = RSBaseRenderUtil::RotateEnumToInt(totalRotation, consumerFlip);
@@ -1785,9 +1817,8 @@ void RSUniRenderUtil::TraverseAndCollectUIExtensionInfo(std::shared_ptr<RSRender
     boundsGeo.UpdateMatrix(&parentMatrix, offset);
     auto rect = boundsGeo.MapAbsRect(node->GetSelfDrawRect().JoinRect(node->GetChildrenRect().ConvertTo<float>()));
     // if node is UIExtension type, update its own info, and skip its children.
-    if (node->IsInstanceOf<RSSurfaceRenderNode>()) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
-        if (surfaceNode && surfaceNode->IsUIExtension()) {
+    if (auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node)) {
+        if (surfaceNode->IsUIExtension()) {
             currentUIExtensionIndex_++;
             // if host node is not recorded in callbackData, insert it.
             if (callbackData.find(hostId) == callbackData.end()) {
@@ -1813,6 +1844,17 @@ void RSUniRenderUtil::TraverseAndCollectUIExtensionInfo(std::shared_ptr<RSRender
     for (const auto& child : *node->GetSortedChildren()) {
         TraverseAndCollectUIExtensionInfo(child, boundsGeo.GetAbsMatrix(), hostId, callbackData);
     }
+}
+
+void RSUniRenderUtil::ProcessCacheImage(RSPaintFilterCanvas& canvas, Drawing::Image& cacheImageProcessed)
+{
+    Drawing::Brush brush;
+    brush.SetAntiAlias(true);
+    canvas.AttachBrush(brush);
+    // Be cautious when changing FilterMode and MipmapMode that may affect clarity
+    auto sampling = Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
+    canvas.DrawImage(cacheImageProcessed, 0, 0, sampling);
+    canvas.DetachBrush();
 }
 } // namespace Rosen
 } // namespace OHOS

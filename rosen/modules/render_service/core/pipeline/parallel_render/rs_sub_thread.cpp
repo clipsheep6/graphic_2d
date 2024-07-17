@@ -246,22 +246,20 @@ void RSSubThread::DrawableCache(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeD
         return;
     }
 
-    const auto& param = nodeDrawable->GetRenderParams();
-    if (!param) {
-        return;
-    }
-
+    NodeId nodeId = nodeDrawable->GetId();
     nodeDrawable->SetSubThreadSkip(false);
+
+    RS_TRACE_NAME_FMT("RSSubThread::DrawableCache [%s]", nodeDrawable->GetName().c_str());
+    RSTagTracker tagTracker(grContext_.get(), nodeId, RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
+    nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
     if (nodeDrawable->GetTaskFrameCount() != RSUniRenderThread::Instance().GetFrameCount() &&
         nodeDrawable->HasCachedTexture()) {
-        RS_TRACE_NAME_FMT("subthread skip node id %llu", param->GetId());
+        RS_TRACE_NAME_FMT("subthread skip node id %llu", nodeId);
+        nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
         nodeDrawable->SetSubThreadSkip(true);
         doingCacheProcessNum--;
         return;
     }
-    RS_TRACE_NAME_FMT("RSSubThread::DrawableCache [%s]", nodeDrawable->GetName().c_str());
-    RSTagTracker tagTracker(grContext_.get(), param->GetId(), RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
-    nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
     if (nodeDrawable->UseDmaBuffer()) {
         DrawableCacheWithDma(nodeDrawable);
     } else {
@@ -275,11 +273,6 @@ void RSSubThread::DrawableCache(std::shared_ptr<DrawableV2::RSSurfaceRenderNodeD
     nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
     nodeDrawable->SetCacheSurfaceNeedUpdated(true);
 
-    if (!param) {
-        RS_LOGE("RSSubThread::DrawableCache param is null");
-        return;
-    }
-    NodeId nodeId = param->GetId();
     RSSubThreadManager::Instance()->NodeTaskNotify(nodeId);
 
     RSMainThread::Instance()->RequestNextVSync("subthread");
@@ -318,8 +311,12 @@ std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
         std::string vulkanVersion = RsVulkanContext::GetSingleton().GetVulkanVersion();
         auto size = vulkanVersion.size();
         handler->ConfigureContext(&options, vulkanVersion.c_str(), size);
-        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext(
-            RSMainThread::Instance()->GetDeviceType() == DeviceType::PC), options)) {
+        bool useHBackendContext = false;
+        if (RSSystemProperties::GetVkQueueDividedEnable()) {
+            useHBackendContext = RSMainThread::Instance()->GetDeviceType() == DeviceType::PC;
+        }
+        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext(useHBackendContext),
+            options)) {
             RS_LOGE("nullptr gpuContext is null");
             return nullptr;
         }

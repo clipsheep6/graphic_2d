@@ -191,8 +191,9 @@ if (enable_text_gine) {
         defines += [ "ACE_ENABLE_GPU" ]
       }
     }
-
-    deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
+    external_deps = [ "hilog:libhilog" ]
+    deps = []
+    public_deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
     if (!(host_os == "linux" && host_cpu == "arm64")) {
       deps += [
         "$skia_root_new:skia_$platform",

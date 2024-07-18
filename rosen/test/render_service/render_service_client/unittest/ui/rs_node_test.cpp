@@ -4505,6 +4505,30 @@ HWTEST_F(RSNodeTest, AnimateWithCurrentCallbackTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetLightColorTest
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, SetLightColorTest, TestSize.Level1)
+{
+    auto rootNode = RSCanvasNode::Create();
+    constexpr uint32_t colorValue = 0xffffff;
+    rootNode->SetLightColor(colorValue);
+    EXPECT_TRUE(rootNode->GetStagingProperties().GetLightColor() == Color::FromArgbInt(colorValue));
+}
+
+/**
+ * @tc.name: SetBloomTest
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, SetBloomTest, TestSize.Level1)
+{
+    auto rootNode = RSCanvasNode::Create();
+    rootNode->SetBloom(floatData[1]);
+    EXPECT_TRUE(ROSEN_EQ(rootNode->GetStagingProperties().GetBloom(), floatData[1]));
+}
+/**
  * @tc.name: SetColorBlendMode
  * @tc.desc:
  * @tc.type:FUNC

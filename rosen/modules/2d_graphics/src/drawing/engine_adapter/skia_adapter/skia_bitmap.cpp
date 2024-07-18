@@ -313,13 +313,6 @@ ImageInfo SkiaBitmap::GetImageInfo()
     return SkiaImageInfo::ConvertToRSImageInfo(skiaBitmap_.info());
 }
 
-std::shared_ptr<ColorSpace> SkiaBitmap::GetColorSpace()
-{
-    std::shared_ptr<SkiaColorSpace> skiaColorSpace = std::make_shared<SkiaColorSpace>();
-    skiaColorSpace->SetColorSpace(skiaBitmap_.refColorSpace());
-    return ColorSpace::CreateFromImpl(skiaColorSpace);
-}
-
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

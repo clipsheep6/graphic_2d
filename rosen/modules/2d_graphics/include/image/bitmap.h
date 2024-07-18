@@ -242,10 +242,18 @@ public:
 
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
-    std::shared_ptr<ColorSpace> GetColorSpace();
+    ColorSpace::ColorSpaceType GetType()
+    {
+        return type_;
+    }
+    void SetType(ColorSpace::ColorSpaceType type)
+    {
+        type_ = type;
+    }
 
 private:
     std::shared_ptr<BitmapImpl> bmpImplPtr;
+    ColorSpace::ColorSpaceType type_ = ColorSpace::ColorSpaceType::NO_TYPE;
 };
 } // namespace Drawing
 } // namespace Rosen

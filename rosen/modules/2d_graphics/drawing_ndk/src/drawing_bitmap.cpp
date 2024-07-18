@@ -314,80 +314,63 @@ OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromImageInfo(
         delete bitmap;
         return nullptr;
     }
-
+    bitmap->SetType(CastToColorSpace(cColorSpace)->GetType());
     return (OH_Drawing_Bitmap*)bitmap;
 }
 
-uint32_t OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap* cBitmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap* cBitmap, uint32_t* rowBytes)
 {
     const Bitmap* bitmap = CastToBitmap(cBitmap);
-    if (bitmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return 0;
+    if (bitmap == nullptr || rowBytes == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return bitmap->GetRowBytes();
+    *rowBytes = bitmap->GetRowBytes();
+    return OH_DRAWING_SUCCESS;
 }
 
-OH_Drawing_ColorSpaceType OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap* cBitmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap* cBitmap,
+    OH_Drawing_ColorSpaceType* colorSpaceType)
 {
     Bitmap* bitmap = CastToBitmap(cBitmap);
-    if (bitmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return NO_TYPE;
+    if (bitmap == nullptr || colorSpaceType == nullptr) {
+        *colorSpaceType = NO_TYPE;
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
-    ColorSpace* colorSpace = bitmap->GetColorSpace().get();
-    if (colorSpace == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return NO_TYPE;
-    }
-
-    return ColorSpaceTypeCastToCColorSpaceType(bitmap->GetColorSpace()->GetType());
+    *colorSpaceType = ColorSpaceTypeCastToCColorSpaceType(bitmap->GetType());
+    return OH_DRAWING_SUCCESS;
 }
 
-bool OH_Drawing_BitmapExtractSubset(
-    const OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Bitmap* cDstBitmap, const OH_Drawing_Rect* cSubset)
+OH_Drawing_ErrorCode OH_Drawing_BitmapExtractSubset(const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_Bitmap* cDstBitmap, const OH_Drawing_Rect* cSubset, bool* retrieved)
 {
     const Bitmap* bitmap = CastToBitmap(cBitmap);
-    if (bitmap == nullptr || cDstBitmap == nullptr || cSubset == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (bitmap == nullptr || cDstBitmap == nullptr || cSubset == nullptr || retrieved == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
 
     Rect rect = CastToRect(*cSubset);
     Bitmap dstBitmap = CastToBitmap(*cDstBitmap);
-    return bitmap->ExtractSubset(dstBitmap, rect);
+    *retrieved = bitmap->ExtractSubset(dstBitmap, rect);
+    return OH_DRAWING_SUCCESS;
 }
 
-void OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap* cBitmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap* cBitmap)
 {
     Bitmap* bitmap = CastToBitmap(cBitmap);
     if (bitmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return;
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
     bitmap->SetImmutable();
+    return OH_DRAWING_SUCCESS;
 }
 
-bool OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap* cBitmap)
+OH_Drawing_ErrorCode OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap* cBitmap, bool* immutable)
 {
     const Bitmap* bitmap = CastToBitmap(cBitmap);
-    if (bitmap == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (bitmap == nullptr || immutable == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return bitmap->IsImmutable();
-}
-
-bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo)
-{
-    Bitmap* bitmap = CastToBitmap(cBitmap);
-    if (bitmap == nullptr || cImageInfo == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
-    }
-
-    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height, static_cast<ColorType>(cImageInfo->colorType),
-        static_cast<AlphaType>(cImageInfo->alphaType));
-    return bitmap->TryAllocPixels(imageInfo);
+    *immutable = bitmap->IsImmutable();
+    return OH_DRAWING_SUCCESS;
 }

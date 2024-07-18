@@ -187,11 +187,6 @@ bool Bitmap::Deserialize(std::shared_ptr<Data> data)
     return bmpImplPtr->Deserialize(data);
 }
 
-std::shared_ptr<ColorSpace> Bitmap::GetColorSpace()
-{
-    return bmpImplPtr->GetColorSpace();
-}
-
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

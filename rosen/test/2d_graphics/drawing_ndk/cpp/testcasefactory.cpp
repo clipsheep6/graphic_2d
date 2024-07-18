@@ -488,6 +488,30 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "bitmap_createfromimageinfo",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapCreateFromImageInfo>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_getrowbytes",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapGetRowBytes>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_getcolorspacetype",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapGetColorSpaceType>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_extractsubset",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapExtractSubset>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_isimmutable",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapIsImmutable>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "bitmap_setimmutable",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BitmapSetImmutable>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // textblob
     { "textblob_builderallocrunpos",

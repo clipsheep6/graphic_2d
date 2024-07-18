@@ -40,12 +40,14 @@ struct RSLayerInfo {
     float alpha = 1.f;
     GraphicBlendType blendType;
     GraphicTransformType transformType = GraphicTransformType::GRAPHIC_ROTATE_NONE;
+    GraphicLayerType layerType = GraphicLayerType::GRAPHIC_LAYER_TYPE_GRAPHIC;
     bool operator==(const RSLayerInfo& layerInfo) const
     {
         return (srcRect == layerInfo.srcRect) && (dstRect == layerInfo.dstRect) &&
             (boundRect == layerInfo.boundRect) && (matrix == layerInfo.matrix) && (gravity == layerInfo.gravity) &&
             (zOrder == layerInfo.zOrder) && (blendType == layerInfo.blendType) &&
-            (transformType == layerInfo.transformType) && (ROSEN_EQ(alpha, layerInfo.alpha));
+            (transformType == layerInfo.transformType) && (ROSEN_EQ(alpha, layerInfo.alpha) &&
+            (layerType == layerInfo.layerType));
     }
 #endif
 };

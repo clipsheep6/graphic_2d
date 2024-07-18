@@ -76,6 +76,9 @@ private:
 #endif
     static Registrar instance_;
     std::recursive_mutex drawableMutex_;
+    std::recursive_mutex resourcesInitMutex_; /* resourcesInitMutex_ is used to protect surface_ and canvas_
+                                               * initialization, evade concurrent read and write operations
+                                               */
     std::shared_ptr<Drawing::Surface> surface_;
     std::shared_ptr<Drawing::Image> image_;
     std::shared_ptr<Drawing::Image> captureImage_;

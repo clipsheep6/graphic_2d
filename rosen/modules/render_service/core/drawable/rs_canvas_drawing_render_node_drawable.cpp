@@ -684,6 +684,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK(int width, int height,
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
         return false;
     }
+    recordingCanvas_ = nullptr;
     canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
@@ -741,7 +742,11 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
         return false;
     }
+<<<<<<< HEAD
 #ifdef SUBTREE_PARALLEL_ENABLE
+=======
+    recordingCanvas_ = nullptr;
+>>>>>>> e43ae9bc62577b7436138630cfc8ebf933c30c78
     canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
 #else
     canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());

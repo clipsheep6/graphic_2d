@@ -26,7 +26,7 @@ namespace OHOS::Rosen {
 namespace Drawing {
 thread_local napi_ref JsFont::constructor_ = nullptr;
 const std::string CLASS_NAME = "Font";
-napi_value JsFont::Init(napi_env env, napi_value exportObj)
+bool JsFont::CreateConstructor(napi_env env)
 {
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("enableSubpixel", JsFont::EnableSubpixel),
@@ -51,12 +51,28 @@ napi_value JsFont::Init(napi_env env, napi_value exportObj)
                                            sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
         ROSEN_LOGE("Failed to define Font class");
-        return nullptr;
+        return false;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
         ROSEN_LOGE("Failed to create reference of constructor");
+        return false;
+    }
+    return true;
+}
+
+napi_value JsFont::Init(napi_env env, napi_value exportObj)
+{
+    if (!constructor_ && !CreateConstructor(env)) {
+        ROSEN_LOGE("Failed to create constructor");
+        return nullptr;
+    }
+
+    napi_value constructor = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status != napi_ok) {
+        ROSEN_LOGE("Failed to get reference");
         return nullptr;
     }
 
@@ -116,14 +132,17 @@ void JsFont::Destructor(napi_env env, void *nativeObject, void *finalize)
 
 napi_value JsFont::CreateFont(napi_env env, napi_callback_info info)
 {
-    napi_value result = nullptr;
+    if (!constructor_ && !CreateConstructor(env)) {
+        ROSEN_LOGE("Failed to create constructor");
+        return nullptr;
+    }
     napi_value constructor = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &constructor);
     if (status != napi_ok) {
         ROSEN_LOGE("Failed to get the representation of constructor object");
         return nullptr;
     }
-
+    napi_value result = nullptr;
     status = napi_new_instance(env, constructor, 0, nullptr, &result);
     if (status != napi_ok) {
         ROSEN_LOGE("Failed to instantiate JavaScript font instance");

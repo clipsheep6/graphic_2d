@@ -43,7 +43,9 @@ public:
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
     void PostProcess() override;
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
     std::vector<LayerInfoPtr> GetLayers() const;
+#endif
 private:
     LayerInfoPtr GetLayerInfo(RSSurfaceRenderParams& params, sptr<SurfaceBuffer>& buffer,
         sptr<SurfaceBuffer>& prebuffer, const sptr<IConsumerSurface>& consumer, const sptr<SyncFence>& acquireFence);

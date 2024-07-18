@@ -66,7 +66,7 @@ void RSRenderPropertyAnimation::AttachRenderProperty(const std::shared_ptr<RSRen
     }
 }
 
-uint16_t RSRenderPropertyAnimation::GetRemainingTime(const bool isCountRepeat) const
+int64_t RSRenderPropertyAnimation::GetRemainingTime(const bool isCountRepeat) const
 {
     return animationFraction_.GetRemainingTime(isCountRepeat);
 }

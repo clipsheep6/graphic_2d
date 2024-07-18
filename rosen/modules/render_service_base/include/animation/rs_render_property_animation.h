@@ -41,7 +41,7 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
 
-    uint16_t GetRemainingTime(const bool isCountRepeat = false) const override;
+    int64_t GetRemainingTime(const bool isCountRepeat = false) const override;
 protected:
     RSRenderPropertyAnimation(AnimationId id, const PropertyId& propertyId,
         const std::shared_ptr<RSRenderPropertyBase>& originValue);

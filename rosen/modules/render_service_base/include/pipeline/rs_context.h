@@ -133,7 +133,7 @@ public:
     {
         taskRunner_ = taskRunner;
     }
-    void SetDelayTaskRunner(const std::function<void(const std::function<void()>&, uint16_t)>& delayTaskRunner)
+    void SetDelayTaskRunner(const std::function<void(const std::function<void()>&, int64_t)>& delayTaskRunner)
     {
         delayTaskRunner_ = delayTaskRunner;
     }
@@ -143,7 +143,7 @@ public:
             taskRunner_(task, isSyncTask);
         }
     }
-    void PostDelayTask(const std::function<void()>& task, uint16_t time) const
+    void PostDelayTask(const std::function<void()>& task, int64_t time) const
     {
         if (delayTaskRunner_) {
             delayTaskRunner_(task, time);
@@ -182,7 +182,7 @@ private:
     uint64_t currentTimestamp_ = 0;
     std::function<void(const std::function<void()>&, bool)> taskRunner_;
     std::function<void(const std::function<void()>&)> rttaskRunner_;
-    std::function<void(const std::function<void()>&, u_int16_t)> delayTaskRunner_;
+    std::function<void(const std::function<void()>&, int64_t)> delayTaskRunner_;
     std::function<void()> vsyncRequestFunc_;
     // Collect all active Nodes sorted by root node id in this frame.
     std::unordered_map<NodeId, std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>> activeNodesInRoot_;

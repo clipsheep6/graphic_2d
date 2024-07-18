@@ -85,11 +85,11 @@ int64_t RSAnimationFraction::GetLastFrameTime() const
     return lastFrameTime_;
 }
 
-uint16_t RSAnimationFraction::GetRemainingTime(const bool isCountRepeat) const
+int64_t RSAnimationFraction::GetRemainingTime(const bool isCountRepeat) const
 {
     int64_t durationNs = duration_ * MS_TO_NS;
     // repeatCount_ always 1 more than currentRepeatCount_
-    uint16_t repeatTime = (isCountRepeat && GetRemainingRepeatCount() != INFINITE) ?
+    int64_t repeatTime = (isCountRepeat && GetRemainingRepeatCount() != INFINITE) ?
         ((repeatCount_ - 1 - currentRepeatCount_) * duration_) : (0);
 
     return (durationNs - runningTime_ % durationNs) / MS_TO_NS + repeatTime;

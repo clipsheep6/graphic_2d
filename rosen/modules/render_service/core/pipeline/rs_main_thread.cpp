@@ -419,7 +419,7 @@ void RSMainThread::Init()
         RSMainThread::Instance()->PostTask(task);
     };
     context_->SetTaskRunner(taskDispatchFunc);
-    auto delayTaskFunc = [](const std::function<void()>& task, const uint16_t time, const std::string name = "",
+    auto delayTaskFunc = [](const std::function<void()>& task, const int64_t time, const std::string name = "",
         AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::HIGH) {
             RSMainThread::Instance()->PostTask(task, name, time, priority);
     };

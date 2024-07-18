@@ -1092,7 +1092,7 @@ void RSRenderNode::EndAnimation(const std::shared_ptr<RSRenderAnimation>& animat
     };
 
     if (auto context = context_.lock()) {
-        auto delayTime = animation->GetRemainingTime();
+        uint16_t delayTime = animation->GetRemainingTime();
         // executor has a fixed delay about 300 milliseconds
         // so animation with less than 300 milliseconds remaining will not be delayed
         constexpr uint16_t immediate = 300;

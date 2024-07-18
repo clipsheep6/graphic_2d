@@ -16,6 +16,7 @@ group("fuzztest") {
 
   deps = [
     "fontarguments_fuzzer:fuzztest",
+    "fontmgr_fuzzer:fuzztest",
     "fontstyle_fuzzer:fuzztest",
     "fontstyleset_fuzzer:fuzztest",
   ]

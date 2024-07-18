@@ -411,6 +411,16 @@ public:
     {
         return scalingMode_;
     }
+    // source crop tuning
+    int32_t GetLayerSourceTuning() const
+    {
+        return layerSource_;
+    }
+
+    void SetLayerSourceTuning(int32_t layerSouce)
+    {
+        layerSource_ = layerSouce;
+    }
 
     void CopyLayerInfo(const std::shared_ptr<HdiLayerInfo> &layerInfo)
     {
@@ -441,6 +451,7 @@ public:
         displayNit_ = layerInfo->GetDisplayNit();
         brightnessRatio_ = layerInfo->GetBrightnessRatio();
         scalingMode_ = layerInfo->GetScalingMode();
+        layerSource_ = layerInfo->GetLayerSourceTuning();
     }
 
     void Dump(std::string &result) const
@@ -555,8 +566,9 @@ private:
     mutable std::mutex mutex_;
     int32_t displayNit_ = 500; // default luminance for sdr
     float brightnessRatio_ = 1.0f; // default ratio for sdr
-    ScalingMode scalingMode_;
     uint64_t nodeId_ = 0;
+    ScalingMode scalingMode_;
+    int32_t layerSource_ = 0; // default layer source tag
 };
 } // namespace Rosen
 } // namespace OHOS

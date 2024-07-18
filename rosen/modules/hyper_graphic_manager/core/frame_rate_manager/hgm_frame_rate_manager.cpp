@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include "common/rs_common_hook.h"
 #include "common/rs_optional_trace.h"
 #include "common/rs_thread_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -93,6 +94,7 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
         }
         multiAppStrategy_.UpdateXmlConfigCache();
         UpdateEnergyConsumptionConfig();
+        RsCommonHook::Instance().SetVideoSurfaceConfig(configData->sourceTuningConfig_);
         multiAppStrategy_.CalcVote();
         HandleIdleEvent(ADD_VOTE);
     }
@@ -741,8 +743,20 @@ void HgmFrameRateManager::HandlePackageEvent(pid_t pid, uint32_t listSize, const
             std::lock_guard<std::mutex> locker(pkgSceneMutex_);
             sceneStack_.clear();
         }
+        CheckPackageInConfigList(multiAppStrategy_.GetForegroundPidApp());
         UpdateAppSupportStatus();
     });
+}
+
+void HgmFrameRateManager::CheckPackageInConfigList(std::unordered_map<pid_t,
+    std::pair<int32_t, std::string>> foregroundPidAppMap)
+{
+    std::unordered_map<std::string, std::string> videoConfigFromHgm = RsCommonHook::Instance().GetVideoSurfaceConfig();
+    for (auto pair: foregroundPidAppMap) {
+        if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end()) {
+            RsCommonHook::Instance().SetVideoSurfaceFlag(true);
+        }
+    }
 }
 
 void HgmFrameRateManager::HandleRefreshRateEvent(pid_t pid, const EventInfo& eventInfo)
@@ -768,19 +782,18 @@ void HgmFrameRateManager::HandleRefreshRateEvent(pid_t pid, const EventInfo& eve
     }
 }
 
-void HgmFrameRateManager::HandleTouchEvent(pid_t remotePid, int32_t touchStatus, const std::string& pkgName,
-    uint32_t pid, int32_t touchCnt)
+void HgmFrameRateManager::HandleTouchEvent(pid_t pid, int32_t touchStatus, int32_t touchCnt)
 {
     HGM_LOGD("HandleTouchEvent status:%{public}d", touchStatus);
-    if (remotePid != DEFAULT_PID) {
+    if (pid != DEFAULT_PID) {
         std::lock_guard<std::mutex> lock(cleanPidCallbackMutex_);
-        cleanPidCallback_[remotePid].insert(CleanPidCallbackType::TOUCH_EVENT);
+        cleanPidCallback_[pid].insert(CleanPidCallbackType::TOUCH_EVENT);
     }
 
     static std::mutex hgmTouchEventMutex;
     std::unique_lock<std::mutex> lock(hgmTouchEventMutex);
     if (touchStatus == TOUCH_DOWN || touchStatus == TOUCH_PULL_DOWN) {
-        HGM_LOGI("[touch manager] down %{public}s: %{public}d", pkgName.c_str(), pid);
+        HGM_LOGI("[touch manager] down");
         PolicyConfigData::StrategyConfig strategyRes;
         ExitEnergyConsumptionAssuranceMode();
         if (multiAppStrategy_.GetFocusAppStrategyConfig(strategyRes) == EXEC_SUCCESS &&
@@ -798,7 +811,7 @@ void HgmFrameRateManager::HandleTouchEvent(pid_t remotePid, int32_t touchStatus,
             return;
         }
         if (touchCnt == LAST_TOUCH_CNT) {
-            HGM_LOGI("[touch manager] up %{public}s: %{public}d", pkgName.c_str(), pid);
+            HGM_LOGI("[touch manager] up");
             EnterEnergyConsumptionAssuranceMode();
             touchManager_.HandleTouchEvent(TouchEvent::UP_EVENT, "");
         }
@@ -835,6 +848,10 @@ void HgmFrameRateManager::HandleRefreshRateMode(int32_t refreshRateMode)
     DeliverRefreshRateVote({"VOTER_LTPO"}, REMOVE_VOTE);
     multiAppStrategy_.UpdateXmlConfigCache();
     UpdateEnergyConsumptionConfig();
+    auto configData = HgmCore::Instance().GetPolicyConfigData();
+    if (configData != nullptr) {
+        RsCommonHook::Instance().SetVideoSurfaceConfig(configData->sourceTuningConfig_);
+    }
     multiAppStrategy_.CalcVote();
     HgmCore::Instance().SetLtpoConfig();
     schedulePreferredFpsChange_ = true;
@@ -883,6 +900,7 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
         }
         multiAppStrategy_.UpdateXmlConfigCache();
         UpdateEnergyConsumptionConfig();
+        RsCommonHook::Instance().SetVideoSurfaceConfig(configData->sourceTuningConfig_);
     }
 
     multiAppStrategy_.CalcVote();
@@ -1018,6 +1036,9 @@ void HgmFrameRateManager::DeliverRefreshRateVote(const VoteInfo& voteInfo, bool 
                 // modify
                 vec.erase(it);
                 vec.push_back(voteInfo);
+                MarkVoteChange();
+            } else if (voteInfo.voterName == "VOTE_PACKAGES") {
+                // force update cause VOTER_PACKAGES is flag of safe_voter
                 MarkVoteChange();
             }
             return;
@@ -1249,7 +1270,7 @@ void HgmFrameRateManager::CleanVote(pid_t pid)
                         HandlePackageEvent(DEFAULT_PID, 0, {}); // handle empty pkg
                         break;
                     case CleanPidCallbackType::TOUCH_EVENT:
-                        HandleTouchEvent(DEFAULT_PID, TouchStatus::TOUCH_UP, "", DEFAULT_PID, LAST_TOUCH_CNT);
+                        HandleTouchEvent(DEFAULT_PID, TouchStatus::TOUCH_UP, LAST_TOUCH_CNT);
                         break;
                     case CleanPidCallbackType::GAMES:
                         DeliverRefreshRateVote({"VOTER_GAMES"}, false);

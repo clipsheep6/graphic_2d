@@ -153,17 +153,16 @@ struct Index {
                 }
               })
           }
-          if (this.drawingType == 'gpu-xnode') {
-            Button("Clear")
-              .fontSize('16fp')
-              .id('Clear')
-              .onClick(() => {
-                console.log(TAG, "Clear click");
-                this.myNodeController.Clear();
-              })
-              .width('30%')
-              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
-          }
+          Button("Clear")
+            .fontSize('16fp')
+            .id('Clear')
+            .onClick(() => {
+              console.log(TAG, "Clear click");
+              this.myNodeController.Clear();
+              this.caseNameStr = ""
+            })
+            .width('30%')
+            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
         .width('80%')
         .height('7%')
@@ -304,7 +303,11 @@ struct Index {
     await this.sleep(100);
     this.myNodeController.TestFunctional(str);
     this.caseNameStr = str;
-    await this.sleep(500);
+    if (str == 'bigbitmaprect') {
+      await this.sleep(1500);
+    } else {
+      await this.sleep(500);
+    }
     const context: Context = getContext(this);
     componentSnapshot.get("myNodeController",
       (error:Error, pixmap: image.PixelMap) => {

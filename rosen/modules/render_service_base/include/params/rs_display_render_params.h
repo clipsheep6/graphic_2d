@@ -61,11 +61,15 @@ public:
     {
         return mirrorSource_;
     }
+    NodeId GetMirrorSourceId() const
+    {
+        return mirrorSourceId_;
+    }
     RSDisplayRenderNode::CompositeType GetCompositeType() const
     {
         return compositeType_;
     };
-    ScreenRotation GetScreenRotation() const
+    ScreenRotation GetScreenRotation() const override
     {
         return screenRotation_;
     }
@@ -97,6 +101,12 @@ public:
     {
         return hardwareEnabledTopNodes_;
     }
+    bool GetSecurityDisplay() const
+    {
+        return isSecurityDisplay_;
+    }
+    void SetGlobalZOrder(float zOrder);
+    float GetGlobalZOrder() const;
     void SetMainAndLeashSurfaceDirty(bool isDirty);
     bool GetMainAndLeashSurfaceDirty() const;
     bool HasSecurityLayer();
@@ -117,13 +127,24 @@ public:
     void SetNewPixelFormat(const GraphicPixelFormat& newPixelFormat);
     GraphicPixelFormat GetNewPixelFormat() const;
 
+    bool IsSpecialLayerChanged() const
+    {
+        auto iter = displaySpecailSurfaceChanged_.find(screenId_);
+        return iter == displaySpecailSurfaceChanged_.end() ? false : iter->second;
+    }
+
     // dfx
     std::string ToString() const override;
 
+    const std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> GetMirrorSourceDrawable()
+    {
+        return mirrorSourceDrawable_;
+    }
 private:
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::map<ScreenId, bool> displayHasSkipSurface_;
     std::map<ScreenId, bool> displayHasProtectedSurface_;
+    std::map<ScreenId, bool> displaySpecailSurfaceChanged_;
     std::map<ScreenId, bool> hasCaptureWindow_;
     std::vector<RSBaseRenderNode::SharedPtr> allMainAndLeashSurfaces_;
     std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allMainAndLeashSurfaceDrawables_;
@@ -132,7 +153,10 @@ private:
     ScreenRotation nodeRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
     uint64_t screenId_ = 0;
+    bool isSecurityDisplay_ = false;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
+    std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> mirrorSourceDrawable_ = nullptr;
+    NodeId mirrorSourceId_ = INVALID_NODEID;
     ScreenInfo screenInfo_;
     ScreenId mirroredId_ = INVALID_SCREEN_ID;
     RSDisplayRenderNode::CompositeType compositeType_ = RSDisplayRenderNode::CompositeType::HARDWARE_COMPOSITE;
@@ -140,7 +164,7 @@ private:
     bool needOffscreen_ = false;
     bool isRotationChanged_ = false;
     bool hasHdrPresent_ = false;
-
+    float zOrder_ = 0.0f;
     friend class RSUniRenderVisitor;
     friend class RSDisplayRenderNode;
     

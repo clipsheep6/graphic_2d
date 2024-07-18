@@ -258,8 +258,10 @@ void RSBorder::SetBorderEffect(Drawing::Pen& pen, int idx, float spaceBetweenDot
     if (style == BorderStyle::DASHED) {
         float dashWidth = GetDashWidth(idx);
         float dashGap = GetDashGap(idx);
+        bool bothZero = ROSEN_EQ(dashWidth, 0.f) && ROSEN_EQ(dashGap, 0.f);
         if (dashWidth >= 0.f && dashGap >= 0.f) {
-            float intervals[] = { dashWidth, dashGap };
+            // Set fake gap for the case when dashWidth and dashGap params are both zero to prevent solid border line
+            float intervals[] = { dashWidth, bothZero ? 1.f : dashGap };
             pen.SetPathEffect(
                 Drawing::PathEffect::CreateDashPathEffect(intervals, sizeof(intervals)/sizeof(float), 0.0));
             return;
@@ -348,7 +350,7 @@ bool RSBorder::ApplySimpleBorder(const RRect& rrect) const
     if (!(colors_.size() == 1 && widths_.size() == 1 && styles_.size() == 1)) {
         return false;
     }
-    constexpr uint32_t NUM_OF_CORNERS_IN_RECT = 4;
+    constexpr uint32_t NUM_OF_CORNERS_IN_RECT = 4u;
     for (uint32_t i = 1; i < NUM_OF_CORNERS_IN_RECT; i++) {
         if (rrect.radius_[0].x_ != rrect.radius_[i].x_) {
             return false;

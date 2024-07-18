@@ -716,8 +716,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     std::shared_ptr<RSShaderFilter> magnifierShaderFilter = filter->GetShaderFilterWithType(RSShaderFilter::MAGNIFIER);
     if (magnifierShaderFilter != nullptr) {
         auto tmpFilter = std::static_pointer_cast<RSMagnifierShaderFilter>(magnifierShaderFilter);
-        auto para = tmpFilter->GetMagnifierShaderFilterPara();
-        imageClipIBounds.Offset(para->offsetX_, para->offsetY_);
+        imageClipIBounds.Offset(tmpFilter->GetMagnifierOffsetX(), tmpFilter->GetMagnifierOffsetY());
     }
     auto imageSnapshot = surface->GetImageSnapshot(imageClipIBounds);
     if (imageSnapshot == nullptr) {
@@ -775,7 +774,7 @@ void RSPropertiesPainter::DrawBackgroundImageAsEffect(const RSProperties& proper
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
     // copy matrix and other properties to offscreen canvas
     offscreenCanvas->SetMatrix(canvas.GetTotalMatrix());
-    offscreenCanvas->CopyConfiguration(canvas);
+    offscreenCanvas->CopyConfigurationToOffscreenCanvas(canvas);
     // draw background onto offscreen canvas
     RSPropertiesPainter::DrawBackground(properties, *offscreenCanvas);
     // generate effect data

@@ -103,6 +103,13 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
     VkImage image = VK_NULL_HANDLE;
     VkDeviceMemory memory = VK_NULL_HANDLE;
 
+    if (width * height > VKIMAGE_LIMIT_SIZE) {
+        ROSEN_LOGE(
+            "RSUniRenderUtil::MakeBackendTexture failed, image is too large, width:%{public}u, height::%{public}u",
+            width, height);
+        return {};
+    }
+
     if (vkContext.vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
         return {};
     }
@@ -531,23 +538,17 @@ void RSSurfaceRenderNodeDrawable::SubDraw(Drawing::Canvas& canvas)
         return;
     }
     Drawing::Rect bounds = uifirstParams ? uifirstParams->GetBounds() : Drawing::Rect(0, 0, 0, 0);
-    bool useDmaBuffer = UseDmaBuffer();
-    if (useDmaBuffer) {
-        DrawBackground(canvas, bounds);
-    }
 
     auto parentSurfaceMatrix = RSRenderParams::GetParentSurfaceMatrix();
     RSRenderParams::SetParentSurfaceMatrix(rscanvas->GetTotalMatrix());
 
     RSRenderNodeDrawable::DrawUifirstContentChildren(*rscanvas, bounds);
     RSRenderParams::SetParentSurfaceMatrix(parentSurfaceMatrix);
-    if (useDmaBuffer) {
-        DrawForeground(canvas, bounds);
-    }
 }
 
 bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas, bool canSkipWait)
 {
+    RS_TRACE_NAME_FMT("DrawUIFirstCache_NOSTARTING");
     const auto& params = GetRenderParams();
     if (!params) {
         RS_LOGE("RSUniRenderUtil::HandleSubThreadNodeDrawable params is nullptr");
@@ -577,5 +578,30 @@ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas
 #endif
     }
     return DrawCacheSurface(rscanvas, params->GetCacheSize(), UNI_MAIN_THREAD_INDEX, true);
+}
+
+bool RSSurfaceRenderNodeDrawable::DrawUIFirstCacheWithStarting(RSPaintFilterCanvas& rscanvas, NodeId id)
+{
+    RS_TRACE_NAME_FMT("DrawUIFirstCacheWithStarting %d, nodeID:%lld", HasCachedTexture(), id);
+    const auto& params = GetRenderParams();
+    if (!params) {
+        RS_LOGE("RSUniRenderUtil::HandleSubThreadNodeDrawable params is nullptr");
+        return false;
+    }
+    bool ret = true;
+    // draw surface content&&childrensss
+    if (HasCachedTexture()) {
+        ret = DrawCacheSurface(rscanvas, params->GetCacheSize(), UNI_MAIN_THREAD_INDEX, true);
+    }
+    // draw starting window
+    {
+        auto drawable = RSRenderNodeDrawableAdapter::GetDrawableById(id);
+        if (!drawable) {
+            return false;
+        }
+        RS_TRACE_NAME_FMT("drawStarting");
+        drawable->Draw(rscanvas);
+    }
+    return ret;
 }
 } // namespace OHOS::Rosen

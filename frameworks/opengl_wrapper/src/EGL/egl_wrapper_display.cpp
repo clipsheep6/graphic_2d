@@ -53,7 +53,6 @@ static constexpr const char *EXTENSION_VALUE =
     "EGL_EXT_create_context_robustness "
     "EGL_EXT_image_gl_colorspace "
     "EGL_EXT_platform_base "
-    "EGL_EXT_swap_buffers_with_damage "
     "EGL_ANDROID_presentation_time "
     "EGL_ANDROID_get_native_client_buffer "
     "EGL_ANDROID_native_fence_sync "
@@ -99,7 +98,7 @@ EGLBoolean EglWrapperDisplay::Init(EGLint *major, EGLint *minor)
             *minor = table->minor;
         }
         refCnt_++;
-        UpdateQueryValue(major, minor);
+        UpdateQueryValue(&table->major, &table->minor);
         return EGL_TRUE;
     }
 
@@ -118,7 +117,7 @@ EGLBoolean EglWrapperDisplay::Init(EGLint *major, EGLint *minor)
             }
             refCnt_++;
             BlobCache::Get()->Init(this);
-            UpdateQueryValue(major, minor);
+            UpdateQueryValue(&table->major, &table->minor);
             return EGL_TRUE;
         } else {
             WLOGE("eglInitialize Error.");
@@ -498,7 +497,8 @@ EGLSurface EglWrapperDisplay::CreateEglSurface(EGLConfig config, NativeWindowTyp
     if (table->isLoad && table->egl.eglCreateWindowSurface) {
         EGLSurface surf = table->egl.eglCreateWindowSurface(disp_, config, window, attribList);
         if (surf != EGL_NO_SURFACE) {
-            return new EglWrapperSurface(this, surf, window);
+            EglWrapperSurface::Init(window);
+            return new EglWrapperSurface(this, surf);
         } else {
             WLOGE("egl.eglCreateWindowSurface error.");
         }

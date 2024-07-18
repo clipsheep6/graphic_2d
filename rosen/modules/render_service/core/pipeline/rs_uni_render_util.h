@@ -31,6 +31,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "transaction/rs_uiextension_data.h"
 #include "utils/matrix.h"
 
 namespace OHOS {
@@ -79,6 +80,7 @@ public:
     static BufferDrawParam CreateBufferDrawParam(const RSSurfaceRenderNode& node,
         bool forceCPU, uint32_t threadIndex = UNI_RENDER_THREAD_INDEX, bool useRenderParams = false);
     static BufferDrawParam CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU);
+    static BufferDrawParam CreateBufferDrawParam(const RSSurfaceHandler& surfaceHandler, bool forceCPU);
     static BufferDrawParam CreateLayerBufferDrawParam(const LayerInfoPtr& layer, bool forceCPU);
     static bool IsNeedClient(RSSurfaceRenderNode& node, const ComposeInfo& info);
     static void DrawRectForDfx(RSPaintFilterCanvas& canvas, const RectI& rect, Drawing::Color color,
@@ -121,6 +123,14 @@ public:
         Drawing::GPUContext* const grContext, bool optFenceWait = true);
     static void AccumulateMatrixAndAlpha(std::shared_ptr<RSSurfaceRenderNode>& hwcNode,
         Drawing::Matrix& matrix, float& alpha);
+    static SecRectInfo GenerateSecRectInfoFromNode(RSRenderNode& node, RectI rect);
+    static SecSurfaceInfo GenerateSecSurfaceInfoFromNode(
+        NodeId uiExtensionId, NodeId hostId, SecRectInfo uiExtensionRectInfo);
+    static void UIExtensionFindAndTraverseAncestor(
+        const RSRenderNodeMap& nodeMap, UIExtensionCallbackData& callbackData);
+    static void TraverseAndCollectUIExtensionInfo(std::shared_ptr<RSRenderNode> node,
+        Drawing::Matrix parentMatrix, NodeId hostId, UIExtensionCallbackData& callbackData);
+    static void ProcessCacheImage(RSPaintFilterCanvas& canvas, Drawing::Image& cacheImageProcessed);
 private:
     static RectI SrcRectRotateTransform(RSSurfaceRenderNode& node);
     static void AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
@@ -130,6 +140,7 @@ private:
     static void SortSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     static void HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNode>& node);
     static void PostReleaseSurfaceTask(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex);
+    static inline int currentUIExtensionIndex_ = -1;
 };
 }
 }

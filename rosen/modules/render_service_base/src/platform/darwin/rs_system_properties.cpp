@@ -52,6 +52,11 @@ std::string RSSystemProperties::GetRecordingFile()
     return "";
 }
 
+bool RSSystemProperties::GetVkQueueDividedEnable()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetUniRenderEnabled()
 {
     return isUniRenderEnabled_;
@@ -277,6 +282,11 @@ bool RSSystemProperties::GetKawaseEnabled()
     return false;
 }
 
+void RSSystemProperties::SetForceHpsBlurDisabled(bool flag)
+{
+    forceHpsBlurDisabled_ = flag;
+}
+
 bool RSSystemProperties::GetHpsBlurEnabled()
 {
     return false;
@@ -429,11 +439,6 @@ SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
 }
 
 bool RSSystemProperties::GetRenderParallelEnabled()
-{
-    return false;
-}
-
-bool RSSystemProperties::GetUIFirstForceEnabled()
 {
     return false;
 }

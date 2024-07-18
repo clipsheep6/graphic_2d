@@ -85,7 +85,7 @@ inline PixelTransformFunc GenOETF(float gamma)
         return PassThrough;
     }
 
-    return std::bind(SafePow, std::placeholders::_1, 1.0f / gamma);
+    return [gamma](float x) { return SafePow(x, 1.0f / gamma); };
 }
 
 inline PixelTransformFunc GenEOTF(float gamma)
@@ -94,7 +94,7 @@ inline PixelTransformFunc GenEOTF(float gamma)
         return PassThrough;
     }
 
-    return std::bind(SafePow, std::placeholders::_1, gamma);
+    return [gamma](float x) { return SafePow(x, gamma); };
 }
 
 struct TransferParameters {
@@ -143,27 +143,27 @@ inline constexpr float FullResponse(float x, const TransferParameters& p)
 inline PixelTransformFunc GenOETF(const TransferParameters& params)
 {
     if (params.g < 0) { // HDR
-        return std::bind(RcpResponsePq, std::placeholders::_1, params);
+        return [params](float x) { return RcpResponsePq(x, params); };
     }
 
     if (params.e == 0.0f && params.f == 0.0f) {
-        return std::bind(RcpResponse, std::placeholders::_1, params);
+        return [params](float x) { return RcpResponse(x, params); };
     }
 
-    return std::bind(RcpFullResponse, std::placeholders::_1, params);
+    return [params](float x) { return RcpFullResponse(x, params); };
 }
 
 inline PixelTransformFunc GenEOTF(const TransferParameters& params)
 {
     if (params.g < 0) {
-        return std::bind(ResponsePq, std::placeholders::_1, params);
+        return [params](float x) { return ResponsePq(x, params); };
     }
 
     if (params.e == 0.0f && params.f == 0.0f) {
-        return std::bind(Response, std::placeholders::_1, params);
+        return [params](float x) { return Response(x, params); };
     }
 
-    return std::bind(FullResponse, std::placeholders::_1, params);
+    return [params](float x) { return FullResponse(x, params); };
 }
 
 float ACESToneMapping(float color, float targetLum)
@@ -184,7 +184,7 @@ inline PixelTransformFunc GenACESToneMapping(float targetLum)
         const float defaultLum = 200.f;
         targetLum = defaultLum;
     }
-    return std::bind(ACESToneMapping, std::placeholders::_1, targetLum);
+    return [targetLum](float color) { return ACESToneMapping(color, targetLum); };
 }
 
 Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vector2f& whitePoint)
@@ -991,7 +991,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     }
     surfaceHandler.ReduceAvailableBuffer();
     DelayedSingleton<RSFrameRateVote>::GetInstance()->VideoFrameRateVote(surfaceHandler.GetNodeId(),
-        consumer->GetSurfaceSourceType(), surfaceBuffer->timestamp);
+        consumer->GetSurfaceSourceType(), surfaceBuffer->buffer);
     surfaceBuffer = nullptr;
     return true;
 }
@@ -1155,7 +1155,8 @@ void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType tr
     // the surface can rotate itself.
     auto rotationTransform = GetRotateTransform(transform);
     int extraRotation = 0;
-    static int32_t rotationDegree = (system::GetParameter("const.build.product", "") == "ALT") ?
+    static int32_t rotationDegree = (system::GetParameter("const.build.product", "") == "ALT") ||
+        (system::GetParameter("const.build.product", "") == "ICL") ?
         FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN : 0;
     if (nodeParams != nullptr && nodeParams->GetForceHardwareByUser()) {
         int degree = RSUniRenderUtil::GetRotationDegreeFromMatrix(nodeParams->GetLayerInfo().matrix);
@@ -1172,10 +1173,13 @@ void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType tr
     }
 
     // deal with buffer's gravity effect in node's inner space.
-    params.matrix.PreConcat(RSBaseRenderUtil::GetGravityMatrix(gravity, params.buffer, localBounds));
+    auto matrix = RSBaseRenderUtil::GetGravityMatrix(gravity, params.buffer, localBounds);
+    params.matrix.PreConcat(matrix);
     // because we use the gravity matrix above(which will implicitly includes scale effect),
     // we must disable the scale effect that from srcRect to dstRect.
-    params.dstRect = params.srcRect;
+    if (!matrix.IsIdentity()) {
+        params.dstRect = params.srcRect;
+    }
 }
 
 void RSBaseRenderUtil::FlipMatrix(GraphicTransformType transform, BufferDrawParam& params)

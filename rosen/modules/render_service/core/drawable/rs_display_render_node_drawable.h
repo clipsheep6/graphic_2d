@@ -40,8 +40,64 @@ public:
     void DrawHardwareEnabledNodes(Drawing::Canvas& canvas,
         std::shared_ptr<RSDisplayRenderNode> displayNodeSp, RSDisplayRenderParams* params);
     void DrawHardwareEnabledNodes(Drawing::Canvas& canvas);
+    void DrawHardwareEnabledNodesMissedInCacheImage(Drawing::Canvas& canvas);
     void SwitchColorFilter(RSPaintFilterCanvas& canvas) const;
     void SetHighContrastIfEnabled(RSPaintFilterCanvas& canvas) const;
+
+    std::shared_ptr<Drawing::Image> GetCacheImgForCapture() const
+    {
+        return cacheImgForCapture_;
+    }
+
+    void SetCacheImgForCapture(std::shared_ptr<Drawing::Image> cacheImgForCapture)
+    {
+        cacheImgForCapture_ = cacheImgForCapture;
+    }
+
+    bool IsFirstTimeToProcessor() const
+    {
+        return isFirstTimeToProcessor_;
+    }
+
+    void SetOriginScreenRotation(const ScreenRotation& rotate)
+    {
+        originScreenRotation_ = rotate;
+        isFirstTimeToProcessor_ = false;
+    }
+
+    ScreenRotation GetOriginScreenRotation() const
+    {
+        return originScreenRotation_;
+    }
+
+#ifdef NEW_RENDER_CONTEXT
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#else
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
+    {
+        virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
+    }
+
+    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
+    {
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
+    }
+#endif
+
+    const std::shared_ptr<RSSurfaceHandler> GetRSSurfaceHandlerOnDraw() const
+    {
+        return surfaceHandler_;
+    }
 
 private:
     explicit RSDisplayRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
@@ -56,55 +112,63 @@ private:
     void WiredScreenProjection(std::shared_ptr<RSDisplayRenderNode> displayNodeSp, RSDisplayRenderParams& params,
         std::shared_ptr<RSProcessor> processor);
     void ScaleAndRotateMirrorForWiredScreen(RSDisplayRenderNode& node, RSDisplayRenderNode& mirroredNode);
+    std::vector<RectI> CalculateVirtualDirtyForWiredScreen(RSDisplayRenderNode& displayNode,
+        std::unique_ptr<RSRenderFrame>& renderFrame, RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
     void DrawWatermarkIfNeed(RSDisplayRenderParams& params, RSPaintFilterCanvas& canvas) const;
     void RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight);
-    void RotateMirrorCanvasOnExFoldScreen(RSDisplayRenderParams& params, ScreenRotation& rotation, float mainWidth,
-        float mainHeight);
+
     void DrawMirrorScreen(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
         std::shared_ptr<RSProcessor> processor);
     std::vector<RectI> CalculateVirtualDirty(RSDisplayRenderNode& displayNode,
-        std::shared_ptr<RSProcessor> processor, RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
+        std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser,
+        RSDisplayRenderParams& params, Drawing::Matrix canvasMatrix);
     using DrawFuncPtr = void(RSDisplayRenderNodeDrawable::*)(Drawing::Canvas&);
     void DrawMirror(std::shared_ptr<RSDisplayRenderNode>& displayNode, RSDisplayRenderParams& params,
-        std::shared_ptr<RSProcessor> processor, DrawFuncPtr drawFunc, RSRenderThreadParams& uniParam);
+        std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser, DrawFuncPtr drawFunc,
+        RSRenderThreadParams& uniParam);
+    void DrawMirrorCopy(std::shared_ptr<RSDisplayRenderNode>& displayNodeSp,
+        std::shared_ptr<RSDisplayRenderNode>& mirroredNode, RSDisplayRenderParams& params,
+        std::shared_ptr<RSUniRenderVirtualProcessor> virtualProcesser, RSRenderThreadParams& uniParam);
     void DrawExpandScreen(RSUniRenderVirtualProcessor& processor);
-    void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
-    void ScaleMirrorIfNeed(RSDisplayRenderNode& node, std::shared_ptr<RSProcessor> processor);
-    void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node);
     void DrawCurtainScreen() const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
-    std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(
-        std::shared_ptr<RSDisplayRenderNode> mirrorNode);
     void ResetRotateIfNeed(RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor,
         Drawing::Region& clipRegion);
-    void ProcessCacheImage(Drawing::Image& cacheImageProcessed);
     void SetCanvasBlack(RSProcessor& processor);
     // Prepare for off-screen render
     void ClearTransparentBeforeSaveLayer();
     void PrepareOffscreenRender(const RSRenderNode& node);
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool SkipDisplayIfScreenOff() const;
-    bool CheckIfHasSpecialLayer(RSDisplayRenderParams& params);
+    int32_t GetSpecialLayerType(RSDisplayRenderParams& params);
     void SetDisplayNodeSkipFlag(RSRenderThreadParams& uniParam, bool flag);
-    void CreateUIFirstLayer(std::shared_ptr<RSProcessor>& processor);
 
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::DISPLAY_NODE, OnGenerate>;
     static Registrar instance_;
     mutable std::shared_ptr<RSPaintFilterCanvas> curCanvas_;
     std::shared_ptr<Drawing::Surface> offscreenSurface_; // temporary holds offscreen surface
     std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen rende
-    bool canvasRotation_ = false;
-    std::unordered_set<NodeId> virtualScreenBlackList_ = {};
-    std::unordered_set<NodeId> castScreenBlackList_ = {};
+    std::unordered_set<NodeId> currentBlackList_;
+    std::unordered_set<NodeId> lastBlackList_;
+    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
+    int32_t specialLayerType_ = 0;
     bool castScreenEnableSkipWindow_ = false;
-    bool hasSpecialLayer_ = false;
-    bool exFoldScreen_ = false; // Expanded state of folding screen
-    bool isLastFrameHasSecSurface_ = false;
     bool isDisplayNodeSkip_ = false;
     bool isDisplayNodeSkipStatusChanged_ = false;
     Drawing::Matrix lastMatrix_;
+    Drawing::Matrix lastMirrorMatrix_;
     bool useFixedOffscreenSurfaceSize_ = false;
+    std::shared_ptr<RSDisplayRenderNodeDrawable> mirrorSourceDrawable_ = nullptr;
+    bool isFirstTimeToProcessor_ = false;
+    ScreenRotation originScreenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
+    uint64_t virtualSurfaceUniqueId_ = 0;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSRenderSurface> virtualSurface_ = nullptr;
+#else
+    std::shared_ptr<RSSurface> virtualSurface_ = nullptr;
+#endif
+    std::shared_ptr<RSSurfaceHandler> surfaceHandler_;
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

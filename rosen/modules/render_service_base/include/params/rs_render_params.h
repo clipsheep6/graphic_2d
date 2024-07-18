@@ -19,6 +19,7 @@
 #include "common/rs_common_def.h"
 #include "common/rs_rect.h"
 #include "property/rs_properties.h"
+#include "screen_manager/screen_types.h"
 #include "utils/matrix.h"
 
 namespace OHOS::Rosen {
@@ -44,6 +45,7 @@ public:
         int width = 0;
         int height = 0;
     };
+    void SetDirtyType(RSRenderParamsDirtyType dirtyType);
 
     void SetAlpha(float alpha);
     float GetAlpha() const;
@@ -92,6 +94,13 @@ public:
 
     void SetFrameGravity(Gravity gravity);
 
+    void SetNeedFilter(bool needFilter);
+
+    inline bool NeedFilter() const
+    {
+        return needFilter_;
+    }
+
     inline bool IsSecurityLayer() const
     {
         return isSecurityLayer_;
@@ -105,6 +114,11 @@ public:
     inline bool IsLayerDirty() const
     {
         return dirtyType_.test(RSRenderParamsDirtyType::LAYER_INFO_DIRTY);
+    }
+
+    inline bool IsBufferDirty() const
+    {
+        return dirtyType_.test(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
     }
 
     void SetChildHasVisibleFilter(bool val);
@@ -126,10 +140,8 @@ public:
 
     void OpincUpdateRootFlag(bool suggestFlag);
     bool OpincGetRootFlag() const;
-    void OpincSetCacheChangeFlag(bool state);
+    void OpincSetCacheChangeFlag(bool state, bool lastFrameSynced);
     bool OpincGetCacheChangeState();
-    bool OpincGetCachedMark();
-    void OpincSetCachedMark(bool mark);
 
     void SetDrawingCacheIncludeProperty(bool includeProperty);
     bool GetDrawingCacheIncludeProperty() const;
@@ -139,15 +151,26 @@ public:
     void SetShadowRect(Drawing::Rect rect);
     Drawing::Rect GetShadowRect() const;
 
-    void SetDirtyRegionInfoForDFX(DirtyRegionInfoForDFX dirtyRegionInfo);
-    DirtyRegionInfoForDFX GetDirtyRegionInfoForDFX() const;
-
     // One-time trigger, needs to be manually reset false in main/RT thread after each sync operation
     void OnCanvasDrawingSurfaceChange(const std::unique_ptr<RSRenderParams>& target);
     bool GetCanvasDrawingSurfaceChanged() const;
     void SetCanvasDrawingSurfaceChanged(bool changeFlag);
     SurfaceParam GetCanvasDrawingSurfaceParams();
     void SetCanvasDrawingSurfaceParams(int width, int height);
+
+    void SetStartingWindowFlag(bool b)
+    {
+        if (startingWindowFlag_ == b) {
+            return;
+        }
+        startingWindowFlag_ = b;
+        needSync_ = true;
+    }
+
+    bool GetStartingWindowFlag() const
+    {
+        return startingWindowFlag_;
+    }
 
     // disable copy and move
     RSRenderParams(const RSRenderParams&) = delete;
@@ -162,6 +185,9 @@ public:
 
     static void SetParentSurfaceMatrix(const Drawing::Matrix& parentSurfaceMatrix);
     static const Drawing::Matrix& GetParentSurfaceMatrix();
+
+    // overrided by displayNode
+    virtual ScreenRotation GetScreenRotation() const;
 
 protected:
     bool needSync_ = false;
@@ -195,7 +221,8 @@ private:
     std::shared_ptr<RSFilter> foregroundFilterCache_ = nullptr;
     bool isOpincRootFlag_ = false;
     bool isOpincStateChanged_ = false;
-    bool isOpincMarkCached_ = false;
+    bool startingWindowFlag_ = false;
+    bool needFilter_ = false;
     SurfaceParam surfaceParams_;
     bool freezeFlag_ = false;
 };

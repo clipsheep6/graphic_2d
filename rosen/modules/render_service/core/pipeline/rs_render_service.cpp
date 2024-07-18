@@ -17,13 +17,16 @@
 
 #include <iservice_registry.h>
 #include <malloc.h>
+#include <parameters.h>
 #include <platform/common/rs_log.h>
+#include "platform/common/rs_system_properties.h"
 #include <string>
 #include <system_ability_definition.h>
 #include <unistd.h>
 
 #include "hgm_core.h"
 #include "parameter.h"
+#include <parameters.h>
 #include "rs_main_thread.h"
 #include "rs_profiler.h"
 #include "rs_render_service_connection.h"
@@ -44,6 +47,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 5000000;
+const std::string BOOTEVENT_RENDER_SERVICE_READY = "bootevent.renderservice.ready";
 }
 RSRenderService::RSRenderService() {}
 
@@ -121,6 +125,12 @@ bool RSRenderService::Init()
     samgr->AddSystemAbility(RENDER_SERVICE, this);
 
     RS_PROFILER_INIT(this);
+
+    if (!system::GetBoolParameter(BOOTEVENT_RENDER_SERVICE_READY.c_str(), false)) {
+        system::SetParameter(BOOTEVENT_RENDER_SERVICE_READY.c_str(), "true");
+        RS_LOGI("set boot render service started true");
+    }
+
     return true;
 }
 
@@ -275,7 +285,9 @@ void RSRenderService::DumpHelpInfo(std::string& dumpString) const
         .append("fpsCount                       ")
         .append("|dump the refresh rate counts info\n")
         .append("clearFpsCount                  ")
-        .append("|clear the refresh rate counts info\n");
+        .append("|clear the refresh rate counts info\n")
+        .append("flushJankStatsRs")
+        .append("|flush rs jank stats hisysevent\n");
 }
 
 void RSRenderService::FPSDUMPProcess(std::unordered_set<std::u16string>& argSets,
@@ -483,6 +495,13 @@ void RSRenderService::DumpNode(std::unordered_set<std::u16string>& argSets, std:
     
 }
 
+void RSRenderService::DumpJankStatsRs(std::string& dumpString) const
+{
+    dumpString.append("\n");
+    RSJankStats::GetInstance().ReportJankStats();
+    dumpString.append("flush done\n");
+}
+
 void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::string& dumpString) const
 {
     std::u16string arg1(u"screen");
@@ -503,6 +522,8 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     std::u16string arg15(u"fpsCount");
     std::u16string arg16(u"clearFpsCount");
     std::u16string arg17(u"hitchs");
+    std::u16string arg18(u"rsLogFlag");
+    std::u16string arg19(u"flushJankStatsRs");
     if (argSets.count(arg9) || argSets.count(arg1) != 0) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
         if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
@@ -559,6 +580,18 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     FPSDUMPProcess(argSets, dumpString, arg3);
     FPSDUMPClearProcess(argSets, dumpString, arg13);
     WindowHitchsDump(argSets, dumpString, arg17);
+    if (auto iter = argSets.find(arg18) != argSets.end()) {
+        argSets.erase(arg18);
+        if (!argSets.empty()) {
+            std::string logFlag = std::wstring_convert<
+                std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(*argSets.begin());
+            if (RSLogManager::GetInstance().SetRSLogFlag(logFlag)) {
+                dumpString.append("Successed to set flag: " + logFlag + "\n");
+            } else {
+                dumpString.append("Failed to set flag: " + logFlag + "\n");
+            }
+        }
+    }
     if (argSets.size() == 0 || argSets.count(arg8) != 0 || dumpString.empty()) {
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpHelpInfo(dumpString); }).wait();
@@ -570,6 +603,10 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     if (argSets.count(arg16) != 0) {
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpClearRefreshRateCounts(dumpString); }).wait();
+    }
+    if (argSets.count(arg19) != 0) {
+        mainThread_->ScheduleTask(
+            [this, &dumpString]() { DumpJankStatsRs(dumpString); }).wait();
     }
 }
 } // namespace Rosen

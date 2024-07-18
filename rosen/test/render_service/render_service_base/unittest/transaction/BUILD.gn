@@ -23,10 +23,12 @@ ohos_unittest("RSRenderServiceBaseTransactionTest") {
 
   sources = [
     "rs_ashmem_test.cpp",
+    "rs_hgm_config_data_test.cpp",
     "rs_marshalling_test.cpp",
     "rs_occlusion_data_test.cpp",
     "rs_transaction_data_test.cpp",
     "rs_transaction_proxy_test.cpp",
+    "rs_uiextension_data_test.cpp",
   ]
 
   cflags = [
@@ -47,6 +49,7 @@ ohos_unittest("RSRenderServiceBaseTransactionTest") {
   ]
 
   deps = [
+    "../../../../../modules/render_service_base:librender_service_base",
     "../../../../../modules/render_service_base:render_service_base_src",
     "//third_party/googletest:gtest_main",
   ]
@@ -54,6 +57,7 @@ ohos_unittest("RSRenderServiceBaseTransactionTest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
     "skia:skia_canvaskit",

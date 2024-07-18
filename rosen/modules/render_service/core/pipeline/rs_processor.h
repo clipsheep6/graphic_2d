@@ -23,7 +23,6 @@
 
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "rs_base_render_engine.h"
-#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 
 namespace OHOS {
@@ -31,8 +30,17 @@ namespace Rosen {
 class RSRcdSurfaceRenderNode;
 class RSDisplayRenderParams;
 class RSSurfaceRenderParams;
-class RSProcessor {
+namespace DrawableV2 {
+class RSDisplayRenderNodeDrawable;
+}
+class RSProcessor : public std::enable_shared_from_this<RSProcessor> {
 public:
+    static inline constexpr RSProcessorType Type = RSProcessorType::RS_PROCESSOR;
+    virtual RSProcessorType GetType() const
+    {
+        return Type;
+    }
+
     RSProcessor() = default;
     virtual ~RSProcessor() noexcept = default;
 
@@ -40,6 +48,7 @@ public:
     void operator=(const RSProcessor&) = delete;
     virtual bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
         std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread = false);
+    virtual bool InitUniProcessor(DrawableV2::RSDisplayRenderNodeDrawable& displayDrawable);
     virtual void CreateLayer(const RSSurfaceRenderNode& node, RSSurfaceRenderParams& params) {}
     virtual void CreateUIFirstLayer(DrawableV2::RSSurfaceRenderNodeDrawable& drawable,
         RSSurfaceRenderParams& params) {}
@@ -54,6 +63,29 @@ public:
     const Drawing::Matrix& GetScreenTransformMatrix() const
     {
         return screenTransformMatrix_;
+    }
+
+    // type-safe reinterpret_cast
+    template<typename T>
+    bool IsInstanceOf() const
+    {
+        constexpr auto targetType = static_cast<uint32_t>(T::Type);
+        return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    }
+    template<typename T>
+    static std::shared_ptr<T> ReinterpretCast(std::shared_ptr<RSProcessor> processer)
+    {
+        return processer ? processer->ReinterpretCastTo<T>() : nullptr;
+    }
+    template<typename T>
+    std::shared_ptr<T> ReinterpretCastTo()
+    {
+        return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
+    }
+    template<typename T>
+    std::shared_ptr<const T> ReinterpretCastTo() const
+    {
+        return (IsInstanceOf<T>()) ? std::static_pointer_cast<const T>(shared_from_this()) : nullptr;
     }
 
 protected:

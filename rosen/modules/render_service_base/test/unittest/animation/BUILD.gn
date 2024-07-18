@@ -26,8 +26,11 @@ ohos_unittest("RSRenderAnimationTest") {
     "rs_interpolator_test.cpp",
     "rs_node_showing_command_test.cpp",
     "rs_property_trace_test.cpp",
+    "rs_render_animation_debug_trace_test.cpp",
     "rs_render_animation_test.cpp",
     "rs_render_curve_animation_test.cpp",
+    "rs_render_interactive_implict_animator_map_test.cpp",
+    "rs_render_interactive_implict_animator_test.cpp",
     "rs_render_interpolating_spring_animation_test.cpp",
     "rs_render_keyframe_animation_test.cpp",
     "rs_render_particle_animation_test.cpp",
@@ -45,6 +48,7 @@ ohos_unittest("RSRenderAnimationTest") {
   configs = [ ":rs_render_animation_test_config" ]
 
   deps = [
+    "../../../../render_service_base:librender_service_base",
     "../../../../render_service_base:render_service_base_src",
     "//foundation/window/window_manager/wm:libwm",
     "//third_party/googletest:gtest_main",
@@ -52,7 +56,9 @@ ohos_unittest("RSRenderAnimationTest") {
 
   external_deps = [
     "eventhandler:libeventhandler",
+    "graphic_surface:surface",
     "hilog:libhilog",
+    "image_framework:image_native",
   ]
 
   subsystem_name = "graphic"

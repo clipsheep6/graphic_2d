@@ -24,6 +24,7 @@
 #include "rs_frame_report_ext.h"
 #include "vsync_log.h"
 #include "sandbox_utils.h"
+#include <rs_trace.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -59,27 +60,24 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
 
     VSyncCallback cb = nullptr;
     VSyncCallbackWithId cbWithId = nullptr;
+    int64_t expectedEnd = 0;
     {
         std::lock_guard<std::mutex> locker(mtx_);
         cb = vsyncCallbacks_;
         cbWithId = vsyncCallbacksWithId_;
         RNVFlag_ = false;
-    }
-    now = data[0];
-    period_ = data[1];
-    periodShared_ = data[1];
-    timeStamp_ = data[0];
-    timeStampShared_ = data[0];
-
-    int64_t expectedEnd = now + period_;
-    if (name_ == "rs") {
-        expectedEnd += period_ - 5000000; // rs vsync offset is 5000000ns
+        now = data[0];
+        period_ = data[1];
+        periodShared_ = data[1];
+        timeStamp_ = data[0];
+        timeStampShared_ = data[0];
+        expectedEnd = CalculateExpectedEndLocked(now);
     }
 
     VLOGD("dataCount:%{public}d, cb == nullptr:%{public}d", dataCount, (cb == nullptr));
     // 1, 2: index of array data.
-    ScopedBytrace func("ReceiveVsync dataCount:" + std::to_string(dataCount) + "bytes now:" + std::to_string(now) +
-        " expectedEnd:" + std::to_string(expectedEnd) + " vsyncId:" + std::to_string(data[2])); // data[2] is vsyncId
+    RS_TRACE_NAME_FMT("ReceiveVsync dataCount: %ldbytes now: %ld expectedEnd: %ld vsyncId: %ld",
+        dataCount, now, expectedEnd, data[2]); // data[2] is vsyncId
     if (dataCount > 0 && (cbWithId != nullptr || cb != nullptr)) {
         // data[2] is frameCount
         cbWithId != nullptr ? cbWithId(now, data[2], userData_) : cb(now, userData_);
@@ -87,6 +85,21 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
     if (OHOS::Rosen::RsFrameReportExt::GetInstance().GetEnable()) {
         OHOS::Rosen::RsFrameReportExt::GetInstance().ReceiveVSync();
     }
+}
+
+int64_t VSyncCallBackListener::CalculateExpectedEndLocked(int64_t now)
+{
+    int64_t expectedEnd = 0;
+    if (now < period_ || now > INT64_MAX - period_) {
+        RS_TRACE_NAME_FMT("invalid timestamps, now:%ld, period_:%ld", now, period_);
+        VLOGE("invalid timestamps, now:" VPUBI64 ", period_:" VPUBI64, now, period_);
+        period_ = 0;
+        return 0;
+    }
+    expectedEnd = now + period_;
+    // rs vsync offset is 5000000ns
+    expectedEnd = (name_ == "rs") ? (expectedEnd + period_ - 5000000) : expectedEnd;
+    return expectedEnd;
 }
 
 VSyncReceiver::VSyncReceiver(const sptr<IVSyncConnection>& conn,
@@ -200,22 +213,25 @@ VsyncError VSyncReceiver::GetVSyncPeriodAndLastTimeStamp(int64_t &period, int64_
         return VSYNC_ERROR_NOT_INIT;
     }
     if (isThreadShared == false) {
-        if (listener_->period_ == 0 || listener_->timeStamp_ == 0) {
+        int64_t periodNotShared = listener_->GetPeriod();
+        int64_t timeStampNotShared = listener_->GetTimeStamp();
+        if (periodNotShared == 0 || timeStampNotShared == 0) {
             VLOGD("%{public}s Hardware vsync is not available. please try again later!", __func__);
             return VSYNC_ERROR_UNKOWN;
         }
-        period = listener_->period_;
-        timeStamp = listener_->timeStamp_;
+        period = periodNotShared;
+        timeStamp = timeStampNotShared;
     } else {
-        if (listener_->periodShared_ == 0 || listener_->timeStampShared_ == 0) {
+        int64_t periodShared = listener_->GetPeriodShared();
+        int64_t timeStampShared = listener_->GetTimeStampShared();
+        if (periodShared == 0 || timeStampShared == 0) {
             VLOGD("%{public}s Hardware vsync is not available. please try again later!", __func__);
             return VSYNC_ERROR_UNKOWN;
         }
-        period = listener_->periodShared_;
-        timeStamp = listener_->timeStampShared_;
+        period = periodShared;
+        timeStamp = timeStampShared;
     }
-    ScopedBytrace func("VSyncReceiver:period:" + std::to_string(period) + " timeStamp:" + std::to_string(timeStamp) +
-        " isThreadShared:" + std::to_string(isThreadShared));
+    RS_TRACE_NAME_FMT("VSyncReceiver:period:%ld timeStamp:%ld isThreadShared:%d", period, timeStamp, isThreadShared);
     return VSYNC_ERROR_OK;
 }
 
@@ -236,7 +252,7 @@ void VSyncReceiver::CloseVsyncReceiverFd()
 VsyncError VSyncReceiver::Destroy()
 {
     std::lock_guard<std::mutex> locker(initMutex_);
-    if (!init_) {
+    if (connection_ == nullptr) {
         return VSYNC_ERROR_API_FAILED;
     }
     return connection_->Destroy();

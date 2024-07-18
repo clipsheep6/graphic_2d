@@ -37,6 +37,8 @@ public:
     static napi_value SetAntiAlias(napi_env env, napi_callback_info info);
     static napi_value SetAlpha(napi_env env, napi_callback_info info);
     static napi_value SetColorFilter(napi_env env, napi_callback_info info);
+    static napi_value GetColorFilter(napi_env env, napi_callback_info info);
+    static napi_value SetImageFilter(napi_env env, napi_callback_info info);
     static napi_value SetMaskFilter(napi_env env, napi_callback_info info);
     static napi_value SetBlendMode(napi_env env, napi_callback_info info);
     static napi_value SetDither(napi_env env, napi_callback_info info);
@@ -46,7 +48,8 @@ public:
     static napi_value GetCapStyle(napi_env env, napi_callback_info info);
     static napi_value SetPathEffect(napi_env env, napi_callback_info info);
     static napi_value SetShadowLayer(napi_env env, napi_callback_info info);
-
+    static napi_value GetFillPath(napi_env env, napi_callback_info info);
+    
     Pen* GetPen();
 
 private:

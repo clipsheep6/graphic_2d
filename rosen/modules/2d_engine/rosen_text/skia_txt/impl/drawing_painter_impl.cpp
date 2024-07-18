@@ -157,6 +157,9 @@ void RSCanvasParagraphPainter::drawTextBlob(const std::shared_ptr<RSTextBlob>& b
         canvas_->DetachBrush();
     } else {
         Drawing::Brush brush;
+        if (blob != nullptr && blob->IsEmoji()) {
+            brush.SetBlenderEnabled(false);
+        }
         brush.SetColor(pr.color);
         canvas_->AttachBrush(brush);
         canvas_->DrawTextBlob(blob.get(), x, y);
@@ -170,8 +173,7 @@ void RSCanvasParagraphPainter::SymbolAnimation(const PaintRecord &pr)
     if (painterSymbolAnimationConfig == nullptr) {
         return;
     }
-    painterSymbolAnimationConfig->effectStrategy = TextEngine::SymbolAnimationEffectStrategy(
-        pr.symbol.GetEffectStrategy());
+    painterSymbolAnimationConfig->effectStrategy = pr.symbol.GetEffectStrategy();
     if (animationFunc_ != nullptr) {
         animationFunc_(painterSymbolAnimationConfig);
     }

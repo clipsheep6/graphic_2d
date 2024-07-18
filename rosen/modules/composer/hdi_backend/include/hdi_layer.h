@@ -59,6 +59,7 @@ public:
     void DumpMergedResult(std::string &result);  // used for uni render layer
     void ClearDump();
 
+    void SetReleaseFence(const sptr<SyncFence> &layerReleaseFence);
     sptr<SyncFence> GetReleaseFence() const;
     void SavePrevLayerInfo();
     void DumpByName(std::string windowName, std::string &result);
@@ -74,7 +75,6 @@ private:
         virtual ~LayerBufferInfo() = default;
 
         sptr<SurfaceBuffer> sbuffer_ = nullptr;
-        sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence_ = SyncFence::INVALID_FENCE;
     };
 
@@ -85,15 +85,15 @@ private:
     uint32_t screenId_ = INT_MAX;
     uint32_t layerId_ = INT_MAX;
     bool isInUsing_ = false;
-    sptr<LayerBufferInfo> currSbuffer_ = nullptr;
-    sptr<LayerBufferInfo> prevSbuffer_ = nullptr;
+    sptr<LayerBufferInfo> currBufferInfo_ = nullptr;
+    sptr<SurfaceBuffer> prevSbuffer_ = nullptr;
     LayerInfoPtr layerInfo_ = nullptr;
     LayerInfoPtr prevLayerInfo_ = nullptr;
     GraphicPresentTimestampType supportedPresentTimestamptype_ = GRAPHIC_DISPLAY_PTS_UNSUPPORTED;
     HdiDevice *device_ = nullptr;
     bool doLayerInfoCompare_ = false;
 
-    std::vector<sptr<SurfaceBuffer> > bufferCache_;
+    std::vector<uint32_t> bufferCache_;
     uint32_t bufferCacheCountMax_ = 0;
 
     int32_t CreateLayer(const LayerInfoPtr &layerInfo);
@@ -122,7 +122,7 @@ private:
     bool IsSameLayerMetaDataSet();
     inline void CheckRet(int32_t ret, const char* func);
     int32_t SetLayerMaskInfo();
-    bool CheckAndUpdateLayerBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index,
+    bool CheckAndUpdateLayerBufferCahce(uint32_t sequence, uint32_t& index,
                                         std::vector<uint32_t>& deletingList);
 
     int32_t SetPerFrameParameters();

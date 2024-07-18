@@ -31,6 +31,7 @@ public:
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Layout(napi_env env, napi_callback_info info);
     static napi_value Paint(napi_env env, napi_callback_info info);
+    static napi_value PaintOnPath(napi_env env, napi_callback_info info);
     static napi_value GetMaxWidth(napi_env env, napi_callback_info info);
     static napi_value GetHeight(napi_env env, napi_callback_info info);
     static napi_value GetLongestLine(napi_env env, napi_callback_info info);
@@ -49,6 +50,8 @@ public:
     static napi_value DidExceedMaxLines(napi_env env, napi_callback_info info);
     static napi_value GetActualTextRange(napi_env env, napi_callback_info info);
     static napi_value GetLineMetrics(napi_env env, napi_callback_info info);
+    static napi_value GetFontMetricsByTextStyle(napi_env env, napi_callback_info info);
+    static napi_value GetLineFontMetrics(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value CreateJsTypography(napi_env env, std::unique_ptr<Typography> typography);
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -58,6 +61,7 @@ private:
     static thread_local napi_ref constructor_;
     napi_value OnLayout(napi_env env, napi_callback_info info);
     napi_value OnPaint(napi_env env, napi_callback_info info);
+    napi_value OnPaintOnPath(napi_env env, napi_callback_info info);
     napi_value OnGetMaxWidth(napi_env env, napi_callback_info info);
     napi_value OnGetHeight(napi_env env, napi_callback_info info);
     napi_value OnGetLongestLine(napi_env env, napi_callback_info info);
@@ -77,6 +81,8 @@ private:
     napi_value OnGetActualTextRange(napi_env env, napi_callback_info info);
     napi_value OnGetLineMetrics(napi_env env, napi_callback_info info);
     napi_value OnGetLineMetricsAt(napi_env env, napi_callback_info info);
+    napi_value OnGetFontMetricsByTextStyle(napi_env env, napi_callback_info info);
+    napi_value OnGetLineFontMetrics(napi_env env, napi_callback_info info);
     std::shared_ptr<Typography> paragraph_ = nullptr;
 };
 } // namespace OHOS::Rosen

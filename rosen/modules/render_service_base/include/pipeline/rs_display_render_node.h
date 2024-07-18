@@ -42,12 +42,23 @@ namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
+    struct ScreenRenderParams
+    {
+        ScreenInfo screenInfo;
+        std::map<ScreenId, bool> displayHasSecSurface;
+        std::map<ScreenId, bool> displayHasSkipSurface;
+        std::map<ScreenId, bool> displayHasProtectedSurface;
+        std::map<ScreenId, bool> displaySpecailSurfaceChanged;
+        std::map<ScreenId, bool> hasCaptureWindow;
+    };
+
     enum CompositeType {
         UNI_RENDER_COMPOSITE = 0,
         UNI_RENDER_MIRROR_COMPOSITE,
         UNI_RENDER_EXPAND_COMPOSITE,
         HARDWARE_COMPOSITE,
-        SOFTWARE_COMPOSITE
+        SOFTWARE_COMPOSITE,
+        UNKNOWN
     };
     using WeakPtr = std::weak_ptr<RSDisplayRenderNode>;
     using SharedPtr = std::shared_ptr<RSDisplayRenderNode>;
@@ -153,6 +164,7 @@ public:
     void SetIsMirrorDisplay(bool isMirror);
     void SetSecurityDisplay(bool isSecurityDisplay);
     bool GetSecurityDisplay() const;
+    void SetDisplayGlobalZOrder(float zOrder);
     bool SkipFrame(uint32_t skipFrameInterval) override;
     void SetBootAnimation(bool isBootAnimation) override;
     bool GetBootAnimation() const override;
@@ -170,26 +182,28 @@ public:
     {
         return surface_;
     }
-    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface)
+    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
     {
         virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
     }
-    std::shared_ptr<RSRenderSurface> GetVirtualSurface()
+    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
     {
-        return virtualSurface_;
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
     }
 #else
     std::shared_ptr<RSSurface> GetRSSurface() const
     {
         return surface_;
     }
-    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface)
+    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
     {
         virtualSurface_ = virtualSurface;
+        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
     }
-    std::shared_ptr<RSSurface> GetVirtualSurface()
+    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
     {
-        return virtualSurface_;
+        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
     }
 #endif
     // Use in vulkan parallel rendering
@@ -279,9 +293,7 @@ public:
 
     void UpdateRenderParams() override;
     void UpdatePartialRenderParams();
-    void UpdateScreenRenderParams(ScreenInfo& screenInfo, std::map<ScreenId, bool>& displayHasSecSurface,
-        std::map<ScreenId, bool>& displayHasSkipSurface, std::map<ScreenId, bool>& displayHasProtectedSurface,
-        std::map<ScreenId, bool>& hasCaptureWindow);
+    void UpdateScreenRenderParams(ScreenRenderParams& screenRenderParams);
     void UpdateOffscreenRenderParams(bool needOffscreen);
     void RecordMainAndLeashSurfaces(RSBaseRenderNode::SharedPtr surface);
     std::vector<RSBaseRenderNode::SharedPtr>& GetAllMainAndLeashSurfaces() { return curMainAndLeashSurfaceNodes_;}
@@ -290,6 +302,12 @@ public:
     bool IsRotationChanged() const;
     bool IsLastRotationChanged() const {
         return lastRotationChanged_;
+    }
+    bool GetPreRotationStatus() const {
+        return preRotationStatus_;
+    }
+    bool GetCurRotationStatus() const {
+        return curRotationStatus_;
     }
     bool IsFirstTimeToProcessor() const {
         return isFirstTimeToProcessor_;
@@ -406,6 +424,12 @@ public:
         return iter->second;
     }
 
+    // Use in MultiLayersPerf
+    int GetSurfaceCountForMultiLayersPerf() const
+    {
+        return surfaceCountForMultiLayersPerf_;
+    }
+
     const std::vector<NodeId>& GetLastSurfaceIds() const {
         return lastSurfaceIds_;
     }
@@ -449,6 +473,7 @@ private:
     explicit RSDisplayRenderNode(
         NodeId id, const RSDisplayNodeConfig& config, const std::weak_ptr<RSContext>& context = {});
     void InitRenderParams() override;
+    void HandleCurMainAndLeashSurfaceNodes();
     // vector of sufacenodes will records dirtyregions by itself
     std::vector<RSBaseRenderNode::SharedPtr> curMainAndLeashSurfaceNodes_;
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
@@ -464,6 +489,8 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
+    bool preRotationStatus_ = false;
+    bool curRotationStatus_ = false;
     bool lastRotationChanged_ = false;
     Drawing::Matrix initMatrix_;
     bool isFirstTimeToProcessor_ = true;
@@ -474,6 +501,7 @@ private:
     std::shared_ptr<RSSurface> surface_;
     std::shared_ptr<RSSurface> virtualSurface_;
 #endif
+    uint64_t virtualSurfaceUniqueId_ = 0;
     bool surfaceCreated_ { false };
     bool hasFingerprint_ = false;
 #ifndef ROSEN_CROSS_PLATFORM
@@ -499,6 +527,9 @@ private:
 
     // Use in vulkan parallel rendering
     bool isParallelDisplayNode_ = false;
+
+    // Use in MultiLayersPerf
+    int surfaceCountForMultiLayersPerf_ = 0;
 
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
 

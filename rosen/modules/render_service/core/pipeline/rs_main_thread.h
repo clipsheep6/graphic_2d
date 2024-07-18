@@ -37,6 +37,7 @@
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
+#include "ipc_callbacks/rs_iuiextension_callback.h"
 #include "memory/rs_app_state_listener.h"
 #include "memory/rs_memory_graphic.h"
 #include "params/rs_render_thread_params.h"
@@ -46,6 +47,7 @@
 #include "platform/common/rs_event_manager.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "transaction/rs_transaction_data.h"
+#include "transaction/rs_uiextension_data.h"
 
 #ifdef RES_SCHED_ENABLE
 #include "vsync_system_ability_listener.h"
@@ -56,6 +58,7 @@ namespace OHOS::Rosen {
 class AccessibilityObserver;
 #endif
 class HgmFrameRateManager;
+class RSUniRenderVisitor;
 struct FrameRateRangeData;
 namespace Detail {
 template<typename Task>
@@ -188,6 +191,9 @@ public:
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
 
+    void AddUiCaptureTask(NodeId id, std::function<void()> task);
+    void ProcessUiCaptureTasks();
+
     void SetDirtyFlag(bool isDirty = true);
     bool GetDirtyFlag();
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
@@ -223,6 +229,12 @@ public:
     }
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
     bool GetWatermarkFlag();
+
+    bool IsFirstOrLastFrameOfWatermark() const
+    {
+        return lastWatermarkFlag_ != watermarkFlag_;
+    }
+
     uint64_t GetFrameCount() const
     {
         return frameCount_;
@@ -291,8 +303,6 @@ public:
         markRenderFlag_ = false;
     }
 
-    void PerfForBlurIfNeeded();
-
     bool IsOnVsync() const
     {
         return isOnVsync_.load();
@@ -335,6 +345,9 @@ public:
     }
 
     void CallbackDrawContextStatusToWMS(bool isUniRender = false);
+    void SetHardwareTaskNum(uint32_t num);
+    void RegisterUIExtensionCallback(pid_t pid, uint64_t userId, sptr<RSIUIExtensionCallback> callback);
+    void UnRegisterUIExtensionCallback(pid_t pid);
 
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
@@ -384,6 +397,7 @@ private:
     uint32_t GetRefreshRate() const;
     uint32_t GetDynamicRefreshRate() const;
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
+    static void OnHideNotchStatusCallback(const char *key, const char *value, void *context);
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
 
@@ -400,6 +414,7 @@ private:
 
     void ClearDisplayBuffer();
     void PerfAfterAnim(bool needRequestNextVsync);
+    void PerfForBlurIfNeeded();
     void PerfMultiWindow();
     void RenderFrameStart(uint64_t timestamp);
     void ResetHardwareEnabledState(bool isUniRender);
@@ -448,6 +463,10 @@ private:
     void UpdateLuminance();
     void DvsyncCheckRequestNextVsync();
 
+    void PrepareUiCaptureTasks(std::shared_ptr<RSUniRenderVisitor> uniVisitor);
+    void UIExtensionNodesTraverseAndCallback();
+    bool CheckUIExtensionCallbackDataChanged() const;
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSTaskMessage::RSTask mainLoop_;
@@ -460,7 +479,6 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     std::unordered_map<int32_t, int32_t> subSyncTransactionCounts_;
-    int32_t syncTransactionCount_ { 0 };
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -469,6 +487,7 @@ private:
 
     uint64_t curTime_ = 0;
     uint64_t timestamp_ = 0;
+    uint64_t vsyncId_ = 0;
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
@@ -573,6 +592,7 @@ private:
     std::mutex watermarkMutex_;
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
     bool watermarkFlag_ = false;
+    bool lastWatermarkFlag_ = false;
     bool doParallelComposition_ = false;
     bool hasProtectedLayer_ = false;
 
@@ -619,6 +639,10 @@ private:
     SystemAnimatedScenes systemAnimatedScenes_ = SystemAnimatedScenes::OTHERS;
     uint32_t leashWindowCount_ = 0;
 
+    // for ui captures
+    std::vector<std::tuple<NodeId, std::function<void()>>> pendingUiCaptureTasks_;
+    std::vector<std::tuple<NodeId, std::function<void()>>> uiCaptureTasks_;
+
     // for dvsync (animate requestNextVSync after mark rsnotrendering)
     bool needRequestNextVsyncAnimate_ = false;
     bool markRenderFlag_ = false;
@@ -650,6 +674,13 @@ private:
     bool isFirstFrameOfPartialRender_ = false;
     bool isPartialRenderEnabledOfLastFrame_ = false;
     bool isRegionDebugEnabledOfLastFrame_ = false;
+
+    // uiextension
+    std::mutex uiExtensionMutex_;
+    UIExtensionCallbackData uiExtensionCallbackData_;
+    bool lastFrameUIExtensionDataEmpty_ = false;
+    // <pid, <uid, callback>>
+    std::map<pid_t, std::pair<uint64_t, sptr<RSIUIExtensionCallback>>> uiExtensionListenners_ = {};
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

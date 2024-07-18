@@ -91,7 +91,11 @@ RSExtendImageObject::RSExtendImageObject(const std::shared_ptr<Media::PixelMap>&
         rsImage_->SetRadius(radiusValue);
         rsImage_->SetScale(imageInfo.scale);
         rsImage_->SetDyamicRangeMode(imageInfo.dynamicRangeMode);
-        imageInfo_ = imageInfo;
+        RectF frameRect(imageInfo.frameRect.GetLeft(),
+                        imageInfo.frameRect.GetTop(),
+                        imageInfo.frameRect.GetRight(),
+                        imageInfo.frameRect.GetBottom());
+        rsImage_->SetFrameRect(frameRect);
     }
 }
 
@@ -116,13 +120,8 @@ void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect&
     std::shared_ptr<Media::PixelMap> pixelmap = rsImage_->GetPixelMap();
     if (pixelmap && pixelmap->IsAstc()) {
         if (auto recordingCanvas = static_cast<ExtendRecordingCanvas*>(canvas.GetRecordingCanvas())) {
-            Drawing::AutoCanvasRestore acr(*recordingCanvas, true);
-            Drawing::Matrix mat;
-            Drawing::Rect tmpRect(rsImage_->GetDstRect().GetLeft(), rsImage_->GetDstRect().GetTop(),
-                rsImage_->GetDstRect().GetRight(), rsImage_->GetDstRect().GetBottom());
-            mat.SetRectToRect(rect, tmpRect, Drawing::ScaleToFit::FILL_SCALETOFIT);
-            recordingCanvas->ConcatMatrix(mat);
-            recordingCanvas->DrawPixelMapWithParm(pixelmap, imageInfo_, sampling);
+            Drawing::AdaptiveImageInfo imageInfo = rsImage_->GetAdaptiveImageInfoWithCustomizedFrameRect(rect);
+            recordingCanvas->DrawPixelMapWithParm(pixelmap, imageInfo, sampling);
             return;
         }
     }
@@ -300,8 +299,8 @@ bool RSExtendImageObject::MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceB
     if (!RSSystemProperties::IsUseVukan()) {
         return false;
     }
-    if (surfaceBuffer == nullptr) {
-        RS_LOGE("MakeFromTextureForVK surfaceBuffer is nullptr");
+    if (surfaceBuffer == nullptr || surfaceBuffer->GetBufferHandle() == nullptr) {
+        RS_LOGE("MakeFromTextureForVK surfaceBuffer is nullptr or buffer handle is nullptr");
         return false;
     }
     if (nativeWindowBuffer_ == nullptr) {

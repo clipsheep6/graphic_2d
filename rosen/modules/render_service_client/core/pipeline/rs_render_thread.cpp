@@ -26,6 +26,7 @@
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
+#include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -119,6 +120,8 @@ RSRenderThread::RSRenderThread()
             std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
             context_->activeNodesInRoot_.clear();
         }
+        RSRenderNodeGC::Instance().ReleaseNodeMemory();
+        context_->pendingSyncNodes_.clear();
 #ifdef ROSEN_OHOS
         FRAME_TRACE::RenderFrameTrace::GetInstance().RenderEndFrameTrace(RT_INTERVAL_NAME);
 #endif
@@ -160,7 +163,7 @@ void RSRenderThread::Start()
     running_.store(true);
     std::unique_lock<std::mutex> cmdLock(rtMutex_);
     if (thread_ == nullptr) {
-        thread_ = std::make_unique<std::thread>(&RSRenderThread::RenderLoop, this);
+        thread_ = std::make_unique<std::thread>([this] { this->RSRenderThread::RenderLoop(); });
     }
 }
 
@@ -206,7 +209,8 @@ void RSRenderThread::RequestNextVSync()
         SendFrameEvent(true);
         VSyncReceiver::FrameCallback fcb = {
             .userData_ = this,
-            .callbackWithId_ = std::bind(&RSRenderThread::OnVsync, this, std::placeholders::_1, std::placeholders::_2),
+            .callbackWithId_ = [this](uint64_t timestamp, int64_t frameCount,
+                                   void* arg) { this->OnVsync(timestamp, frameCount); },
         };
         if (receiver_ != nullptr) {
             receiver_->RequestNextVSync(fcb);

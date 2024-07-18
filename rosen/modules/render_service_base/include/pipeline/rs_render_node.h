@@ -484,7 +484,8 @@ public:
     virtual void OnFilterCacheStateChanged() {};
 
     // for blur filter cache
-    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false);
+    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false,
+        bool rotationStatusChanged = false);
     void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const RectI& clipRect);
@@ -573,6 +574,7 @@ public:
 
     void MarkNonGeometryChanged();
 
+    void ApplyModifier(RSModifierContext& context, std::shared_ptr<RSRenderModifier> modifier);
     void ApplyModifiers();
     void ApplyPositionZModifier();
     virtual void UpdateRenderParams();
@@ -697,6 +699,22 @@ public:
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
     void RemoveChildFromFulllist(NodeId nodeId);
+    void SetStartingWindowFlag(bool startingFlag);
+    bool GetStartingWindowFlag() const
+    {
+        return startingWindowFlag_;
+    }
+    void SetChildrenHasUIExtension(bool SetChildrenHasUIExtension);
+    bool ChildrenHasUIExtension() const
+    {
+        return childrenHasUIExtension_;
+    }
+
+    // Used to collect renderDrawable for UniRenderThread.
+    DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr GetRenderDrawable()
+    {
+        return renderDrawable_;
+    }
 
 protected:
     virtual void OnApplyModifiers() {}
@@ -766,7 +784,10 @@ protected:
     bool childHasSharedTransition_ = false;
     bool lastFrameSynced_ = true;
     bool clipAbsDrawRectChange_ = false;
+    bool startingWindowFlag_ = false;
     bool isUifirstNode_ = true;
+    int isUifirstDelay_ = 0;
+    bool lastFrameHasAnimation_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     virtual void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
@@ -776,7 +797,6 @@ protected:
     bool lastFrameHasVisibleEffect_ = false;
     RectI filterRegion_;
     void UpdateDirtySlotsAndPendingNodes(RSDrawableSlot slot);
-
 private:
     NodeId id_;
     NodeId instanceRootNodeId_ = INVALID_NODEID;
@@ -1007,6 +1027,9 @@ private:
     bool foregroundFilterInteractWithDirty_ = false;
     bool isOccluded_ = false;
 
+    // for UIExtension info collection
+    bool childrenHasUIExtension_ = false;
+
     friend class DrawFuncOpItem;
     friend class RSAliasDrawable;
     friend class RSContext;
@@ -1021,7 +1044,6 @@ private:
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
-    friend class RSRenderNodeGC;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

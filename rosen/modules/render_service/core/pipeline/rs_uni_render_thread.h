@@ -70,6 +70,9 @@ public:
     void ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid = -1);
     void DefaultClearMemoryCache();
     void PostClearMemoryTask(ClearMemoryMoment moment, bool deeply, bool isDefaultClean);
+    void MemoryManagementBetweenFrames();
+    void PreAllocateTextureBetweenFrames();
+    void ResetClearMemoryTask();
     bool GetClearMemoryFinished() const;
     bool GetClearMemDeeply() const;
     void SetClearMoment(ClearMemoryMoment moment);
@@ -93,6 +96,7 @@ public:
     static void SetCaptureParam(const CaptureParam& param);
     static CaptureParam& GetCaptureParam();
     static void ResetCaptureParam();
+    static bool IsInCaptureProcess();
     std::vector<NodeId>& GetDrawStatusVec()
     {
         return curDrawStatusVec_;
@@ -146,6 +150,7 @@ private:
     ~RSUniRenderThread() noexcept;
     void Inittcache();
     void ReleaseSkipSyncBuffer(std::vector<std::function<void()>>& tasks);
+    void PerfForBlurIfNeeded();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

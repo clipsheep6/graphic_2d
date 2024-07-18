@@ -37,9 +37,13 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/time.h>
+#include <sys/timerfd.h>
 #include <unistd.h>
 #include <unordered_map>
 #include "common/log_common.h"
+
+const int SECOND_TO_NANO = 1000000000;
 
 void TestBase::SetFileName(std::string fileName)
 {
@@ -85,18 +89,26 @@ void TestBase::TestFunctionGpu(napi_env env)
 
 void TestBase::TestFunctionGpu(OH_Drawing_Canvas *canvas) { OnTestFunction(canvas); }
 
-std::chrono::high_resolution_clock::time_point TestBase::LogStart()
+unsigned long long TestBase::LogStart()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    unsigned long long start = 0;
+    struct timespec tv {};
+    if (clock_gettime(CLOCK_BOOTTIME, &tv) >= 0) {
+        start = tv.tv_sec * SECOND_TO_NANO + tv.tv_nsec;
+    }
     return start;
 }
 
-void TestBase::LogEnd(std::chrono::high_resolution_clock::time_point start)
+void TestBase::LogEnd(unsigned long long start)
 {
-    auto end = std::chrono::high_resolution_clock::now();
+    unsigned long long end = 0;
+    struct timespec tv {};
+    if (clock_gettime(CLOCK_BOOTTIME, &tv) >= 0) {
+        end = tv.tv_sec * SECOND_TO_NANO + tv.tv_nsec;
+    }
     // LOGE is to avoid log loss
     DRAWING_LOGE("DrawingApiTest TotalApiCallCount: [%{public}u]", testCount_);
-    usedTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    usedTime_ = end - start;
     DRAWING_LOGE("DrawingApiTest TotalApiCallTime: [%{public}u]", usedTime_);
 }
 
@@ -351,39 +363,7 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
     StyleSettingsDestroy(canvas);
     if (type == DRAW_STYLE_COMPLEX) {
         styleBrush_ = OH_Drawing_BrushCreate();
-        stylePen_ = OH_Drawing_PenCreate();
-
-        OH_Drawing_BrushSetAntiAlias(styleBrush_, true);
         OH_Drawing_BrushSetColor(styleBrush_, 0xFFFF0000);
-        OH_Drawing_BrushSetAlpha(styleBrush_, 0xF0);
-        OH_Drawing_BrushSetBlendMode(styleBrush_, BLEND_MODE_SRC);
-
-        OH_Drawing_PenSetAntiAlias(stylePen_, true);
-        OH_Drawing_PenSetColor(stylePen_, 0xFFFF0000);
-        OH_Drawing_PenSetAlpha(stylePen_, 0xF0);
-        OH_Drawing_PenSetBlendMode(stylePen_, BLEND_MODE_SRC);
-        OH_Drawing_PenSetWidth(stylePen_, 5); // width 5
-
-        styleMask_ = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true); // 10.0 PARAM
-        styleFilter_ = OH_Drawing_FilterCreate();
-        OH_Drawing_FilterSetMaskFilter(styleFilter_, styleMask_);
-        OH_Drawing_BrushSetFilter(styleBrush_, styleFilter_);
-        OH_Drawing_PenSetFilter(stylePen_, styleFilter_);
-        
-        styleCenter_ = OH_Drawing_PointCreate(100, 100); // point 100,100
-        uint32_t colors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF};
-        float pos[] = {0, 0.5, 1.0};
-        OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateRadialGradient(styleCenter_, 100, colors,
-            pos, 3, OH_Drawing_TileMode::CLAMP); OH_Drawing_BrushSetShaderEffect(styleBrush_, effect);
-        OH_Drawing_PenSetShaderEffect(stylePen_, effect);
-
-        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0); // 10.0: size
-        OH_Drawing_PenSetJoin(stylePen_, LINE_ROUND_JOIN);
-        OH_Drawing_PenSetCap(stylePen_, LINE_ROUND_CAP);
-        float vals[2] = {1, 1};
-        OH_Drawing_PathEffect *pathEffect = OH_Drawing_CreateDashPathEffect(vals, 2, 0);
-        OH_Drawing_PenSetPathEffect(stylePen_, pathEffect);
-        OH_Drawing_CanvasAttachPen(canvas, stylePen_);
         OH_Drawing_CanvasAttachBrush(canvas, styleBrush_);
     }
 }

@@ -115,6 +115,33 @@ bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t si
     return true;
 }
 
+bool ConvertFromJsIRect(napi_env env, napi_value jsValue, int32_t* ltrb, size_t size)
+{
+    napi_value tempValue = nullptr;
+    for (size_t idx = 0; idx < size; idx++) {
+        int32_t* curEdge = ltrb + idx;
+        napi_get_named_property(env, jsValue, g_ltrbString[idx], &tempValue);
+        if (napi_get_value_int32(env, tempValue, curEdge) != napi_ok) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++)  {
+        napi_value tempPoint = nullptr;
+        if (napi_get_element(env, array, i, &tempPoint) != napi_ok) {
+            return false;
+        }
+        if (!GetPointFromJsValue(env, tempPoint, points[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 napi_value GetFontMetricsAndConvertToJsValue(napi_env env, FontMetrics* metrics)
 {
     napi_value objValue = nullptr;

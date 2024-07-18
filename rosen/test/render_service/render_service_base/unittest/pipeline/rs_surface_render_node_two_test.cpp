@@ -876,7 +876,7 @@ HWTEST_F(RSSurfaceRenderNodeTwoTest, HasOnlyOneRootNode, TestSize.Level1)
  * @tc.name: GetNodeIsSingleFrameComposer
  * @tc.desc: test results of GetNodeIsSingleFrameComposer
  * @tc.type: FUNC
- * @tc.require: issueIA4VTS
+ * @tc.require: issueIA61E9
  */
 HWTEST_F(RSSurfaceRenderNodeTwoTest, GetNodeIsSingleFrameComposer, TestSize.Level1)
 {
@@ -886,6 +886,7 @@ HWTEST_F(RSSurfaceRenderNodeTwoTest, GetNodeIsSingleFrameComposer, TestSize.Leve
     system::SetParameter("persist.sys.graphic.singleFrame", "1");
     EXPECT_FALSE(node->GetNodeIsSingleFrameComposer());
     node->name_ = "hwstylusfeature";
+    node->isNodeSingleFrameComposer_ = true;
     EXPECT_TRUE(node->GetNodeIsSingleFrameComposer());
 }
 
@@ -958,5 +959,19 @@ HWTEST_F(RSSurfaceRenderNodeTwoTest, UpdatePartialRenderParams, TestSize.Level1)
     node->UpdatePartialRenderParams();
     EXPECT_NE(node->stagingRenderParams_.get(), nullptr);
 }
+
+/**
+ * @tc.name: IsSpecialLayerChanged001
+ * @tc.desc: test result of IsSpecialLayerChanged
+ * @tc.type: FUNC
+ * @tc.require: issuesIACYVJ
+ */
+HWTEST_F(RSSurfaceRenderNodeTwoTest, IsSpecialLayerChanged001, TestSize.Level1)
+{
+    std::shared_ptr<RSSurfaceRenderNode> node = std::make_shared<RSSurfaceRenderNode>(id);
+    node->ResetSpecialLayerChangedFlag();
+    EXPECT_FALSE(node->IsSpecialLayerChanged());
+}
+
 } // namespace Rosen
 } // namespace OHOS

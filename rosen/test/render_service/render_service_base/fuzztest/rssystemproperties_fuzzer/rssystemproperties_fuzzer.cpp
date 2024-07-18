@@ -116,6 +116,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSSystemProperties::GetMaskLinearBlurEnabled();
     RSSystemProperties::GetMotionBlurEnabled();
     RSSystemProperties::GetKawaseEnabled();
+    RSSystemProperties::SetForceHpsBlurDisabled(GetData<bool>());
     RSSystemProperties::GetHpsBlurEnabled();
     RSSystemProperties::GetKawaseRandomColorFactor();
     RSSystemProperties::GetRandomColorEnabled();
@@ -134,7 +135,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSSystemProperties::GetBoolSystemProperty(nullptr, true);
     RSSystemProperties::GetUIFirstEnabled();
     RSSystemProperties::GetUIFirstDebugEnabled();
-    RSSystemProperties::GetUIFirstForceEnabled();
     RSSystemProperties::GetDebugTraceEnabled();
     RSSystemProperties::GetDebugTraceLevel();
     RSSystemProperties::FindNodeInTargetList(node);

@@ -175,7 +175,7 @@ void RSRenderNodeDrawableAdapter::DrawRangeImpl(
 
     if (UNLIKELY(skipType_ != SkipType::NONE)) {
         auto skipIndex_ = GetSkipIndex();
-        if (start <= skipIndex_ || end > skipIndex_) {
+        if (start <= skipIndex_ && end > skipIndex_) {
             // skip index is in the range
             for (auto i = start; i < skipIndex_; i++) {
                 drawCmdList_[i](&canvas, &rect);
@@ -249,10 +249,10 @@ void RSRenderNodeDrawableAdapter::DrawUifirstContentChildren(Drawing::Canvas& ca
     const auto& drawCmdList = uifirstDrawCmdList_;
     auto contentIdx = uifirstDrawCmdIndex_.contentIndex_;
     auto childrenIdx = uifirstDrawCmdIndex_.childrenIndex_;
-    if (contentIdx != -1) {
+    if (0 <= contentIdx && contentIdx < drawCmdList.size()) {
         drawCmdList[contentIdx](&canvas, &rect);
     }
-    if (childrenIdx != -1) {
+    if (0 <= childrenIdx && childrenIdx < drawCmdList.size()) {
         drawCmdList[childrenIdx](&canvas, &rect);
     }
 }

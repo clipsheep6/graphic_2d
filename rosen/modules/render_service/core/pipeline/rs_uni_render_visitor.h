@@ -178,6 +178,8 @@ public:
 
     void SurfaceOcclusionCallbackToWMS();
 
+    std::unordered_set<NodeId> GetCurrentBlackList() const;
+
     static void ClearRenderGroupCache();
 
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
@@ -235,6 +237,7 @@ private:
     bool CheckColorFilterChange() const;
     bool CheckCurtainScreenUsingStatusChange() const;
     bool IsFirstFrameOfPartialRender() const;
+    bool IsFirstOrLastFrameOfWatermark() const;
     void CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
         RSDirtyRegionManager& dirtyManager, const RectI& globalFilterRect);
     RectI GetVisibleEffectDirty(RSRenderNode& node) const;
@@ -242,8 +245,10 @@ private:
     void UpdateHwcNodeEnableByGlobalFilter(std::shared_ptr<RSSurfaceRenderNode>& node);
     void UpdateHwcNodeEnableByGlobalCleanFilter(const std::vector<std::pair<NodeId, RectI>>& cleanFilter,
         RSSurfaceRenderNode& hwcNodePtr);
-    void UpdateHwcNodeEnableByFilterRect(std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect);
-    void CalcHwcNodeEnableByFilterRect(std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect);
+    void UpdateHwcNodeEnableByFilterRect(
+        std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect, bool isReverseOrder = false);
+    void CalcHwcNodeEnableByFilterRect(
+        std::shared_ptr<RSSurfaceRenderNode>& node, const RectI& filterRect, bool isReverseOrder = false);
     void UpdateHwcNodeEnableByBackgroundAlpha(RSSurfaceRenderNode& node);
     void UpdateHwcNodeEnableBySrcRect(RSSurfaceRenderNode& node);
     void UpdateHwcNodeInfoForAppNode(RSSurfaceRenderNode& node);
@@ -273,7 +278,7 @@ private:
     // If reusable filter cache covers whole screen, mark lower layer to skip process
     void CheckAndUpdateFilterCacheOcclusion(std::vector<RSBaseRenderNode::SharedPtr>& curMainAndLeashSurfaces) const;
     void CheckMergeGlobalFilterForDisplay(Occlusion::Region& accumulatedDirtyRegion);
-    void CheckMergeDebugRectforRefreshRate();
+    void CheckMergeDebugRectforRefreshRate(std::vector<RSBaseRenderNode::SharedPtr>& surfaces);
 
     bool IsNotDirtyHardwareEnabledTopSurface(std::shared_ptr<RSSurfaceRenderNode>& node) const;
     void ClipRegion(std::shared_ptr<Drawing::Canvas> canvas, const Drawing::Region& region) const;
@@ -414,7 +419,7 @@ private:
     }
     bool IsValidInVirtualScreen(RSSurfaceRenderNode& node) const
     {
-        return !node.GetSkipLayer() && (screenInfo_.filteredAppSet.empty() ||
+        return !node.GetSkipLayer() && !node.GetSecurityLayer() && (screenInfo_.filteredAppSet.empty() ||
             screenInfo_.filteredAppSet.find(node.GetId()) != screenInfo_.filteredAppSet.end());
     }
     void UpdateRotationStatusForEffectNode(RSEffectRenderNode& node);
@@ -469,6 +474,7 @@ private:
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::map<ScreenId, bool> displayHasSkipSurface_;
     std::map<ScreenId, bool> displayHasProtectedSurface_;
+    std::map<ScreenId, bool> displaySpecailSurfaceChanged_;
     std::map<ScreenId, bool> hasCaptureWindow_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
@@ -653,6 +659,9 @@ private:
     // use for curtain screen
     void DrawCurtainScreen();
     bool isCurtainScreenOn_ = false;
+
+    // use for hardware compose disabled reason collection
+    HwcDisabledReasonCollection& hwcDisabledReasonCollection_ = HwcDisabledReasonCollection::GetInstance();
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -21,6 +21,7 @@
 #include "recording/draw_cmd.h"
 #include "recording/recording_canvas.h"
 #include "utils/log.h"
+#include "utils/performanceCaculate.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -130,18 +131,28 @@ bool DrawCmdList::AddDrawOp(std::shared_ptr<DrawOpItem>&& drawOpItem)
 
 void DrawCmdList::ClearOp()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    opAllocator_.ClearData();
-    opAllocator_.Add(&width_, sizeof(int32_t));
-    opAllocator_.Add(&height_, sizeof(int32_t));
-    imageAllocator_.ClearData();
-    bitmapAllocator_.ClearData();
-    imageMap_.clear();
-    imageHandleVec_.clear();
-    drawOpItems_.clear();
-    lastOpGenSize_ = 0;
-    lastOpItemOffset_ = std::nullopt;
-    opCnt_ = 0;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        opAllocator_.ClearData();
+        opAllocator_.Add(&width_, sizeof(int32_t));
+        opAllocator_.Add(&height_, sizeof(int32_t));
+        imageAllocator_.ClearData();
+        bitmapAllocator_.ClearData();
+        imageMap_.clear();
+        imageHandleVec_.clear();
+        drawOpItems_.clear();
+        lastOpGenSize_ = 0;
+        lastOpItemOffset_ = std::nullopt;
+        opCnt_ = 0;
+    }
+    {
+        std::lock_guard<std::mutex> lock(imageObjectMutex_);
+        imageObjectVec_.clear();
+    }
+    {
+        std::lock_guard<std::mutex> lock(imageBaseObjMutex_);
+        imageBaseObjVec_.clear();
+    }
 }
 
 int32_t DrawCmdList::GetWidth() const
@@ -225,8 +236,40 @@ void DrawCmdList::MarshallingDrawOps()
     }
 }
 
+void DrawCmdList::CaculatePerformanceOpType()
+{
+    uint32_t offset = offset_;
+    const int caculatePerformaceCount = 500;    // 被测单接口用例至少出现500次以上
+    std::map<uint32_t, uint32_t> opTypeCountMap;
+    do {
+        void* itemPtr = opAllocator_.OffsetToAddr(offset);
+        auto* curOpItemPtr = static_cast<OpItem*>(itemPtr);
+        if (curOpItemPtr == nullptr) {
+            break;
+        }
+        uint32_t type = curOpItemPtr->GetType();
+        if (opTypeCountMap.find(type) != opTypeCountMap.end()) {
+            if (++opTypeCountMap[type] > caculatePerformaceCount) {
+                performanceCaculateOpType_ = type;
+                DRAWING_PERFORMANCE_START_CACULATE;
+                return;
+            }
+        } else {
+            opTypeCountMap[type] = 1;   // 记录出现的第1次
+        }
+        offset = curOpItemPtr->GetNextOpItemOffset();
+    } while (offset != 0);
+}
+
 void DrawCmdList::UnmarshallingDrawOps()
 {
+    if (PerformanceCaculate::GetDrawingTestRecordingEnabled()) {
+        CaculatePerformanceOpType();
+    }
+    if (performanceCaculateOpType_ != 0) {
+        LOGI("Drawing Performance UnmarshallingDrawOps begin %{public}lld", PerformanceCaculate::GetUpTime());
+    }
+
     if (opAllocator_.GetSize() <= offset_) {
         return;
     }
@@ -279,12 +322,19 @@ void DrawCmdList::UnmarshallingDrawOps()
     if ((int)imageAllocator_.GetSize() > 0) {
         imageAllocator_.ClearData();
     }
+
+    if (performanceCaculateOpType_ != 0) {
+        LOGI("Drawing Performance UnmarshallingDrawOps end %{public}lld", PerformanceCaculate::GetUpTime());
+    }
 }
 
 void DrawCmdList::Playback(Canvas& canvas, const Rect* rect)
 {
     if (width_ <= 0 || height_ <= 0) {
         return;
+    }
+    if (performanceCaculateOpType_ != 0) {
+        LOGI("Drawing Performance Playback begin %{public}lld", PerformanceCaculate::GetUpTime());
     }
     if (canvas.GetDrawingType() == DrawingType::RECORDING) {
         PlaybackToDrawCmdList(static_cast<RecordingCanvas&>(canvas).GetDrawCmdList());
@@ -311,6 +361,11 @@ void DrawCmdList::Playback(Canvas& canvas, const Rect* rect)
         PlaybackByBuffer(canvas, &tmpRect);
     } else if (mode_ == DrawCmdList::UnmarshalMode::DEFERRED) {
         PlaybackByVector(canvas, &tmpRect);
+    }
+    if (performanceCaculateOpType_ != 0) {
+        DRAWING_PERFORMANCE_STOP_CACULATE;
+        performanceCaculateOpType_ = 0;
+        LOGI("Drawing Performance Playback end %{public}lld", PerformanceCaculate::GetUpTime());
     }
 }
 

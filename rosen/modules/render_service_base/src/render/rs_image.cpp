@@ -35,6 +35,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr int32_t CORNER_SIZE = 4;
+constexpr float CENTER_ALIGNED_FACTOR = 2.f;
 }
 
 RSImage::~RSImage()
@@ -58,15 +59,17 @@ bool RSImage::HDRConvert(const Drawing::SamplingOptions& sampling, Drawing::Canv
     if (!RSSystemProperties::GetHDRImageEnable()) {
         return false;
     }
-    if (canvas.GetDrawingType() != Drawing::DrawingType::PAINT_FILTER) {
-        RS_LOGE("bhdr GetDrawingType() != Drawing::DrawingType::PAINT_FILTER");
-        return false;
-    }
+
     if (pixelMap_ == nullptr || image_ == nullptr) {
         RS_LOGE("bhdr pixelMap_ || image_ is nullptr");
         return false;
     }
     if (!pixelMap_->IsHdr()) {
+        return false;
+    }
+
+    if (canvas.GetDrawingType() != Drawing::DrawingType::PAINT_FILTER) {
+        RS_LOGE("bhdr GetDrawingType() != Drawing::DrawingType::PAINT_FILTER");
         return false;
     }
 
@@ -113,7 +116,9 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
     if (!isDrawn_ || rect != lastRect_) {
         UpdateNodeIdToPicture(nodeId_);
         Drawing::AutoCanvasRestore acr(canvas, HasRadius());
-        frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+        if (!canvas.GetOffscreen()) {
+            frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
+        }
         if (!isBackground) {
             ApplyImageFit();
             ApplyCanvasClip(canvas);
@@ -160,6 +165,38 @@ RectF ApplyImageFitSwitch(ImageParameter &imageParameter, ImageFit imageFit_, Re
     switch (imageFit_) {
         case ImageFit::TOP_LEFT:
             tempRectF.SetAll(0.f, 0.f, imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::TOP:
+            tempRectF.SetAll((imageParameter.dstW - imageParameter.srcW) / CENTER_ALIGNED_FACTOR, 0.f,
+                imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::TOP_RIGHT:
+            tempRectF.SetAll(imageParameter.dstW - imageParameter.srcW, 0.f, imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::LEFT:
+            tempRectF.SetAll(0.f, (imageParameter.dstH - imageParameter.srcH) / CENTER_ALIGNED_FACTOR,
+                imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::CENTER:
+            tempRectF.SetAll((imageParameter.dstW - imageParameter.srcW) / CENTER_ALIGNED_FACTOR,
+                (imageParameter.dstH - imageParameter.srcH) / CENTER_ALIGNED_FACTOR,
+                imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::RIGHT:
+            tempRectF.SetAll(imageParameter.dstW - imageParameter.srcW,
+                (imageParameter.dstH - imageParameter.srcH) / CENTER_ALIGNED_FACTOR,
+                imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::BOTTOM_LEFT:
+            tempRectF.SetAll(0.f, imageParameter.dstH - imageParameter.srcH, imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::BOTTOM:
+            tempRectF.SetAll((imageParameter.dstW - imageParameter.srcW) / CENTER_ALIGNED_FACTOR,
+                imageParameter.dstH - imageParameter.srcH, imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::BOTTOM_RIGHT:
+            tempRectF.SetAll(imageParameter.dstW - imageParameter.srcW, imageParameter.dstH - imageParameter.srcH,
+                imageParameter.srcW, imageParameter.srcH);
             return tempRectF;
         case ImageFit::FILL:
             break;
@@ -242,6 +279,22 @@ void RSImage::ApplyImageFit()
 ImageFit RSImage::GetImageFit()
 {
     return imageFit_;
+}
+
+Drawing::AdaptiveImageInfo RSImage::GetAdaptiveImageInfoWithCustomizedFrameRect(const Drawing::Rect& frameRect) const
+{
+    Drawing::AdaptiveImageInfo imageInfo = {
+        .fitNum = static_cast<int32_t>(imageFit_),
+        .repeatNum = static_cast<int32_t>(imageRepeat_),
+        .radius = { radius_[0], radius_[1], radius_[2], radius_[3] },
+        .scale = scale_,
+        .uniqueId = 0,
+        .width = 0,
+        .height = 0,
+        .dynamicRangeMode = dynamicRangeMode_,
+        .frameRect = frameRect
+    };
+    return imageInfo;
 }
 
 RectF RSImage::GetDstRect()

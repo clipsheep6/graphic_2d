@@ -87,7 +87,18 @@ public:
     {
         return;
     };
-
+    void SetTranslate(float dx, float dy) override
+    {
+        return;
+    };
+    float GetTranslateX() const override
+    {
+        return 0.0f;
+    };
+    float GetTranslateY() const override
+    {
+        return 0.0f;
+    };
     int GetParaNum() const override
     {
         return 0;
@@ -1152,12 +1163,12 @@ HWTEST_F(RSPaintFilterCanvasTest, SaveAllStatusTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: CopyConfigurationTest
- * @tc.desc: CopyConfiguration Test
+ * @tc.name: CopyConfigurationToOffscreenCanvas
+ * @tc.desc: CopyConfigurationToOffscreenCanvas Test
  * @tc.type:FUNC
  * @tc.require:issueI9L0ZK
  */
-HWTEST_F(RSPaintFilterCanvasTest, CopyConfigurationTest, TestSize.Level1)
+HWTEST_F(RSPaintFilterCanvasTest, CopyConfigurationToOffscreenCanvasTest, TestSize.Level1)
 {
     // building a new RSPaintFilterCanvas object
     auto drawingCanvas = std::make_unique<Drawing::Canvas>();
@@ -1169,10 +1180,10 @@ HWTEST_F(RSPaintFilterCanvasTest, CopyConfigurationTest, TestSize.Level1)
     rsPaintFilterCanvas.envStack_.push(envOther);
 
     rsPaintFilterCanvas.SetHighContrast(false);
-    paintFilterCanvas_->CopyConfiguration(rsPaintFilterCanvas);
+    paintFilterCanvas_->CopyConfigurationToOffscreenCanvas(rsPaintFilterCanvas);
 
     rsPaintFilterCanvas.SetHighContrast(true);
-    paintFilterCanvas_->CopyConfiguration(rsPaintFilterCanvas);
+    paintFilterCanvas_->CopyConfigurationToOffscreenCanvas(rsPaintFilterCanvas);
     EXPECT_TRUE(EnvStackClear());
 }
 
@@ -1258,26 +1269,17 @@ HWTEST_F(RSPaintFilterCanvasTest, PaintFilter001, TestSize.Level1)
  * @tc.name: PaintFilter002
  * @tc.desc: Test has filter before PaintFilter
  * @tc.type:FUNC
- * @tc.require: issueI9NLRF
+ * @tc.require: issueIA61E9
  */
 HWTEST_F(RSPaintFilterCanvasTest, PaintFilter002, TestSize.Level1)
 {
+    Drawing::Canvas canvas;
     Drawing::Paint paint;
-
-    Drawing::Filter filter = paint.GetFilter();
-    Drawing::ColorMatrix luminanceMatrix;
-    // 0.5 means half discount
-    luminanceMatrix.SetScale(0.5f, 0.5f, 0.5f, 1.0f);
-    auto luminanceColorFilter =
-        std::make_shared<Drawing::ColorFilter>(Drawing::ColorFilter::FilterType::MATRIX, luminanceMatrix);
-    EXPECT_TRUE(luminanceColorFilter != nullptr);
-
-    auto colorFilter = filter.GetColorFilter();
-    filter.SetColorFilter(luminanceColorFilter);
-    paint.SetFilter(filter);
-
-    paintFilterCanvas_->PaintFilter(paint);
-    EXPECT_TRUE(paint.GetFilter() == filter);
+    paint.filter_.colorFilter_ = std::make_shared<Drawing::ColorFilter>();
+    EXPECT_NE(paint.filter_.colorFilter_, nullptr);
+    std::shared_ptr<RSPaintFilterCanvas> paintFilterCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
+    EXPECT_NE(paintFilterCanvas, nullptr);
+    paintFilterCanvas->PaintFilter(paint);
 }
 
 /**

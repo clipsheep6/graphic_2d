@@ -62,6 +62,7 @@
           "hisysevent",
           "hitrace",
           "ability_runtime",
+          "bundle_framework",
           "drivers_interface_display",
           "c_utils",
           "access_token",
@@ -102,25 +103,13 @@
         ],
         "third_party": [
           "flutter",
-          "libuv",
-          "libxml2",
-          "icu",
-          "libpng",
-          "zlib",
-          "skia",
-          "cJSON",
-          "jsoncpp",
-          "egl",
-          "opengles",
-          "vulkan-headers",
-          "vulkan-loader"
+          "skia"
         ]
       },
       "build": {
         "group_type": {
           "base_group": [
             "//third_party/libpng:libpng",
-            "//third_party/vulkan-loader:vulkan_loader",
             "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
             "//foundation/graphic/graphic_2d/interfaces/kits/cj:ffi_packages",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
@@ -215,6 +204,15 @@
           },
           {
             "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer/export"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
             "header": {
               "header_files": [
@@ -237,16 +235,6 @@
                 "rs_window_animation_target.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation/include"
-            }
-          },
-          {
-            "type": "so",
-            "name": "//foundation/graphic/graphic_2d/utils/sync_fence:sync_fence",
-            "header": {
-              "header_files": [
-                "sync_fence.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/utils/sync_fence/export"
             }
           },
           {
@@ -433,17 +421,6 @@
           },
           {
             "type": "so",
-            "name": "//foundation/graphic/graphic_2d/utils/buffer_handle:buffer_handle",
-            "header": {
-              "header_files": [
-                "buffer_handle_parcel.h",
-                "buffer_handle_utils.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/utils/buffer_handle/export"
-            }
-          },
-          {
-            "type": "so",
             "name": "//foundation/graphic/graphic_2d/interfaces/kits/cj/color_manager:cj_color_manager_ffi",
             "header": {
               "header_files": [
@@ -457,7 +434,7 @@
         ],
         "test": [
           "//foundation/graphic/graphic_2d:graphic_common_test",
-          "//foundation/graphic/graphic_2d/frameworks/surfaceimage/test/unittest/:unittest",
+          "//foundation/graphic/graphic_2d/frameworks/surfaceimage/test/unittest:unittest",
           "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
           "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test",
           "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation/test:test",

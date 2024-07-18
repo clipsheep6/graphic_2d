@@ -26,6 +26,7 @@
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
 #include "text/font_types.h"
+#include "utils/point.h"
 #include "utils/rect.h"
 
 namespace OHOS::Rosen {
@@ -147,6 +148,15 @@ private:
         }                                                                                                              \
     } while (0)
 
+#define GET_ENUM_PARAM(argc, value, lo, hi)                                                                            \
+    do {                                                                                                               \
+        GET_INT32_PARAM(argc, value);                                                                                  \
+        if (value < lo || value > hi) {                                                                                \
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,                                          \
+                std::string("Incorrect ") + __FUNCTION__ + " parameter" + std::to_string(argc) + " range.");           \
+        }                                                                                                              \
+    } while (0)
+
 namespace Drawing {
 constexpr size_t ARGC_ZERO = 0;
 constexpr size_t ARGC_ONE = 1;
@@ -156,6 +166,8 @@ constexpr size_t ARGC_FOUR = 4;
 constexpr size_t ARGC_FIVE = 5;
 constexpr size_t ARGC_SIX = 6;
 constexpr size_t ARGC_SEVEN = 7;
+constexpr size_t ARGC_EIGHT = 8;
+constexpr size_t ARGC_NINE = 9;
 constexpr int NUMBER_TWO = 2;
 
 enum class DrawingErrorCode : int32_t {
@@ -321,10 +333,44 @@ bool ConvertFromJsColor(napi_env env, napi_value jsValue, int32_t* argb, size_t 
 
 bool ConvertFromJsRect(napi_env env, napi_value jsValue, double* ltrb, size_t size);
 
+bool ConvertFromJsIRect(napi_env env, napi_value jsValue, int32_t* ltrb, size_t size);
+
 inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value, int32_t lo, int32_t hi)
 {
     return napi_get_value_int32(env, jsValue, &value) == napi_ok && value >= lo && value <= hi;
 }
+
+inline bool GetPointXFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetX = 0;
+    if (napi_get_named_property(env, argValue, "x", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetX) != napi_ok) {
+        return false;
+    }
+    point.SetX(targetX);
+    return true;
+}
+
+inline bool GetPointYFromJsNumber(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    double targetY = 0;
+    if (napi_get_named_property(env, argValue, "y", &objValue) != napi_ok ||
+        napi_get_value_double(env, objValue, &targetY) != napi_ok) {
+        return false;
+    }
+    point.SetY(targetY);
+    return true;
+}
+
+inline bool GetPointFromJsValue(napi_env env, napi_value argValue, Drawing::Point& point)
+{
+    return GetPointXFromJsNumber(env, argValue, point) &&
+           GetPointYFromJsNumber(env, argValue, point);
+}
+
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, uint32_t count);
 
 inline napi_value GetDoubleAndConvertToJsValue(napi_env env, double d)
 {
@@ -351,6 +397,19 @@ inline napi_value GetRectAndConvertToJsValue(napi_env env, std::shared_ptr<Rect>
         napi_set_named_property(env, objValue, "top", CreateJsNumber(env, rect->GetTop()));
         napi_set_named_property(env, objValue, "right", CreateJsNumber(env, rect->GetRight()));
         napi_set_named_property(env, objValue, "bottom", CreateJsNumber(env, rect->GetBottom()));
+    }
+    return objValue;
+}
+
+inline napi_value ConvertPointToJsValue(napi_env env, Drawing::Point& point)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        if (napi_set_named_property(env, objValue, "x", CreateJsNumber(env, point.GetX())) != napi_ok ||
+            napi_set_named_property(env, objValue, "y", CreateJsNumber(env, point.GetY())) != napi_ok) {
+            return nullptr;
+        }
     }
     return objValue;
 }

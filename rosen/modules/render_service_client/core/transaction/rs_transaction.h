@@ -54,27 +54,17 @@ public:
         parentPid_ = parentPid;
     }
 
-    int32_t GetParentPid()
+    int32_t GetParentPid() const
     {
         return parentPid_;
     }
 
-    void SetChildPid(int32_t childPid)
-    {
-        childPid_ = childPid;
-    }
-
-    int32_t GetChildPid()
-    {
-        return childPid_;
-    }
-
-    bool IsOpenSyncTransaction()
+    bool IsOpenSyncTransaction() const
     {
         return isOpenSyncTransaction_;
     }
 
-    uint64_t GetSyncId()
+    uint64_t GetSyncId() const
     {
         return syncId_;
     }
@@ -89,7 +79,6 @@ private:
     mutable int32_t transactionCount_ { 0 };
     int32_t duration_ = 0;
     int32_t parentPid_ { -1 };
-    int32_t childPid_ { -1 };
     bool isOpenSyncTransaction_ = false;
 
     friend class RSSyncTransactionController;

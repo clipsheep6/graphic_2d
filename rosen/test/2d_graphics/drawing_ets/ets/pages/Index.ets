@@ -141,18 +141,17 @@ struct Index {
                 }
               })
           }
-          if (this.drawingType == 'gpu') {
-            Button("Clear")
-              .fontSize('16fp')
-              .id('Clear')
-              .fontWeight(500)
-              .onClick(() => {
-                console.log(TAG, "Clear click");
-                this.myNodeController.Clear();
-              })
-              .width('30%')
-              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
-          }
+          Button("Clear")
+            .fontSize('16fp')
+            .id('Clear')
+            .fontWeight(500)
+            .onClick(() => {
+              console.log(TAG, "Clear click");
+              this.myNodeController.Clear();
+              this.caseNameStr = ""
+            })
+            .width('30%')
+            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
         .width('80%')
         .height('7%')
@@ -262,7 +261,11 @@ struct Index {
     if (str == 'All') {
       for (let key of CaseFactory.getFunctonCpuAllCase().keys()) {
         this.TestSingleFunctionGpu(key);
-        await this.sleep(500);
+        if (key == 'canvasdrawimage') {
+          await this.sleep(1500);
+        } else {
+          await this.sleep(500);
+        }
       }
       this.LogMsg('TestFunctionalGpu All end');
     } else {
@@ -272,7 +275,11 @@ struct Index {
 
   async TestSingleFunctionGpu(str: string) {
     this.myNodeController.TestFunctionalGpuUpScreen(str);
-    await this.sleep(50);
+    if (str == 'canvasdrawimage') {
+      await this.sleep(1000);
+    } else {
+      await this.sleep(50);
+    }
     const context : Context = getContext(this);
     componentSnapshot.get("myNodeController", (error:Error, pixmap: image.PixelMap) => {
       if (error) {
@@ -325,7 +332,7 @@ struct Index {
     test.TestPerformanceCpu().then(()=>{
       this.context.clearRect(0, 0, test.width_, test.height_);
       this.context.drawImage(test.pixelMap_, 0, 0);
-      this.LogMsg('Count: ' + testCount + ', used: ' + test.time_.toString() + 'ms');
+      this.LogMsg('Count: ' + testCount + ', used: ' + test.time_.toString() + 'ns');
     });
     console.log(TAG, 'TestPerformanceCpu end');
   }

@@ -2325,42 +2325,24 @@ void RSUniRenderVisitor::CheckMergeTransparentDirtysForDisplay(std::shared_ptr<R
 {
     RS_OPTIONAL_TRACE_FUNC();
     const auto& dirtyRect = surfaceNode->GetDirtyManager()->GetCurrentFrameDirtyRegion();
-    if (surfaceNode->HasContainerWindow()) {
-        // If a surface's dirty is intersect with container region (which can be considered transparent)
-        // should be added to display dirty region.
-        // Note: we use containerRegion rather transparentRegion to bypass inner corner dirty problem.
-        auto containerRegion = surfaceNode->GetContainerRegion();
-        auto surfaceDirtyRegion = Occlusion::Region{ Occlusion::Rect{ dirtyRect } };
-        auto containerDirtyRegion = containerRegion.And(surfaceDirtyRegion);
-        if (!containerDirtyRegion.IsEmpty()) {
-            RS_LOGD("CheckMergeContainerDirtysForDisplay global merge containerDirtyRegion "
-                "%{public}s region %{public}s", surfaceNode->GetName().c_str(),
-                containerDirtyRegion.GetRegionInfo().c_str());
-            // plan: we can use surfacenode's absrect as containerRegion's bound
-            const auto& rect = containerRegion.GetBoundRef();
+    // warning: if a surfacenode has transparent region and opaque region, and its dirty pattern appears in
+    // transparent region and opaque region in adjacent frame, may cause displaydirty region incomplete after
+    // merge history (as surfacenode's dirty region merging opaque region will enlarge surface dirty region
+    // which include transparent region but not counted in display dirtyregion)
+    if (!surfaceNode->IsNodeDirty()) {
+        return;
+    }
+    auto transparentRegion = surfaceNode->GetTransparentRegion();
+    auto surfaceDirtyRegion = Occlusion::Region{ Occlusion::Rect{ dirtyRect } };
+    Occlusion::Region transparentDirtyRegion = transparentRegion.And(surfaceDirtyRegion);
+    if (!transparentDirtyRegion.IsEmpty()) {
+        RS_LOGD("CheckMergeContainerDirtysForDisplay global merge TransparentDirtyRegion "
+            "%{public}s region %{public}s", surfaceNode->GetName().c_str(),
+            transparentDirtyRegion.GetRegionInfo().c_str());
+        const std::vector<Occlusion::Rect>& rects = transparentDirtyRegion.GetRegionRects();
+        for (const auto& rect : rects) {
             curDisplayNode_->GetDirtyManager()->MergeDirtyRect(
                 RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
-        }
-    } else {
-        // warning: if a surfacenode has transparent region and opaque region, and its dirty pattern appears in
-        // transparent region and opaque region in adjacent frame, may cause displaydirty region incomplete after
-        // merge history (as surfacenode's dirty region merging opaque region will enlarge surface dirty region
-        // which include transparent region but not counted in display dirtyregion)
-        if (!surfaceNode->IsNodeDirty()) {
-            return;
-        }
-        auto transparentRegion = surfaceNode->GetTransparentRegion();
-        auto surfaceDirtyRegion = Occlusion::Region{ Occlusion::Rect{ dirtyRect } };
-        Occlusion::Region transparentDirtyRegion = transparentRegion.And(surfaceDirtyRegion);
-        if (!transparentDirtyRegion.IsEmpty()) {
-            RS_LOGD("CheckMergeContainerDirtysForDisplay global merge TransparentDirtyRegion "
-                "%{public}s region %{public}s", surfaceNode->GetName().c_str(),
-                transparentDirtyRegion.GetRegionInfo().c_str());
-            const std::vector<Occlusion::Rect>& rects = transparentDirtyRegion.GetRegionRects();
-            for (const auto& rect : rects) {
-                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(
-                    RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
-            }
         }
     }
 }
@@ -2633,7 +2615,9 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
     if (RS_PROFILER_SHOULD_BLOCK_HWCNODE()) {
         return;
     }
-    
+    if (!curSurfaceNode_) {
+        return;
+    }
     const auto& hwcNodes = curSurfaceNode_->GetChildHardwareEnabledNodes();
     if (hwcNodes.empty()) {
         return;
@@ -2882,7 +2866,10 @@ void RSUniRenderVisitor::CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
             }
         } else {
             // record surface nodes and nodes in surface which has clean filter
-            globalFilter_.insert({node.GetId(), globalFilterRect});
+            bool needInsert = !isPc_ || node.IsForegroundInAppOrNodeSelfDirty() || node.IsBackgroundInAppOrNodeSelfDirty();
+            if (needInsert) {
+                globalFilter_.insert({node.GetId(), globalFilterRect});
+            }
         }
     } else {
         globalFilterRects_.emplace_back(globalFilterRect);

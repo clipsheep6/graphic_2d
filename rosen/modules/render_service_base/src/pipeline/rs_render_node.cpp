@@ -1814,7 +1814,7 @@ void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged
     if (properties.GetFilter()) {
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
-            if (!(filterDrawable->IsForceClearFilterCache()) && !dirtySlots_.empty()) {
+            if (!(filterDrawable->IsForceClearFilterCache()) && (rotationClear || !dirtySlots_.empty())) {
                 RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu] foreground is dirty", GetId());
                 filterDrawable->MarkFilterForceClearCache();
             }

@@ -37,9 +37,10 @@ struct HpsBlurParameter {
     scalar sigma { 1E-6 };
     float saturation { 1.0 };
     float brightness { 1.0 };
+    bool onScreenDraw;
     HpsBlurParameter(const Rect& s, const Rect& d, const scalar& sgm,
-        float satura, float bright)
-        : src(s), dst(d), sigma(sgm), saturation(satura), brightness(bright) {}
+        float satura, float bright, bool onScreen)
+        : src(s), dst(d), sigma(sgm), saturation(satura), brightness(bright), onScreenDraw(onScreen) {}
 };
 
 /**

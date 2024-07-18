@@ -1512,6 +1512,14 @@ void RSPaintFilterCanvas::SetCapture(bool isCapture)
     isCapture_ = isCapture;
 }
 
+bool RSPaintFilterCanvasBase::IsClipRect()
+{
+    if (canvas_ != nullptr) {
+        return canvas_->IsClipRect();
+    }
+    return false;
+}
+
 ScreenId RSPaintFilterCanvas::GetScreenId() const
 {
     return screenId_;

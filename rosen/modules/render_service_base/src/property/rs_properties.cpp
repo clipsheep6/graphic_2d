@@ -2714,7 +2714,7 @@ void RSProperties::GenerateBackgroundBlurFilter()
 
     if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
-            std::make_shared<RSHpsBlurShaderFilter>(backgroundBlurRadiusX_, 1.f, 1.f);
+            std::make_shared<RSHpsBlurShaderFilter>(backgroundBlurRadiusX_, 1.f, 1.f, false);
         originalFilter =
             originalFilter ? originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(hpsBlurFilter))
                            : std::make_shared<RSDrawingFilter>(hpsBlurFilter);
@@ -2799,7 +2799,8 @@ void RSProperties::GenerateForegroundBlurFilter()
 
     if (RSSystemProperties::GetHpsBlurEnabled() && false) {
         std::shared_ptr<RSHpsBlurShaderFilter> hpsBlurFilter =
-            std::make_shared<RSHpsBlurShaderFilter>(foregroundBlurRadiusX_, 1.f, 1.f);
+            std::make_shared<RSHpsBlurShaderFilter>(foregroundBlurRadiusX_, 1.f, 1.f,
+            RSSystemProperties::GetDrawFilterOnScreenEnabled());
         originalFilter =
             originalFilter ? originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(hpsBlurFilter))
                            : std::make_shared<RSDrawingFilter>(hpsBlurFilter);

@@ -1190,7 +1190,8 @@ bool SkiaCanvas::DrawBlurImage(const Image& image, const Drawing::HpsBlurParamet
     SkRect dstRect = SkRect::MakeLTRB(blurParams.dst.GetLeft(), blurParams.dst.GetTop(),
         blurParams.dst.GetRight(), blurParams.dst.GetBottom());
 
-    SkBlurArg blurArg(srcRect, dstRect, blurParams.sigma, blurParams.saturation, blurParams.brightness);
+    SkBlurArg blurArg(srcRect, dstRect, blurParams.sigma, blurParams.saturation, blurParams.brightness,
+        blurParams.onScreenDraw);
     return skCanvas_->drawBlurImage(img.get(), blurArg);
 }
 } // namespace Drawing

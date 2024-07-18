@@ -24,8 +24,8 @@
 
 namespace OHOS {
 namespace Rosen {
-RSHpsBlurShaderFilter::RSHpsBlurShaderFilter(float radius, float saturation, float brightness)
-    : radius_(radius), saturation_(saturation), brightness_(brightness)
+RSHpsBlurShaderFilter::RSHpsBlurShaderFilter(float radius, float saturation, float brightness, bool onScreenDraw)
+    : radius_(radius), saturation_(saturation), brightness_(brightness), onScreenDraw_(onScreenDraw)
 {
     type_ = ShaderFilterType::HPS;
 
@@ -48,6 +48,7 @@ void RSHpsBlurShaderFilter::GenerateGEVisualEffect(
     hpsFilter->SetParam("HPS_BLUR_RADIUS", radius_); // blur radius
     hpsFilter->SetParam("HPS_BLUR_SATURATION", saturation_);
     hpsFilter->SetParam("HPS_BLUR_BRIGHTNESS", brightness_);
+    hpsFilter->SetParam("HPS_BLUR_ONSCREENDRAW", onScreenDraw_);
 
     visualEffectContainer->AddToChainedFilter(hpsFilter);
 }

@@ -394,6 +394,11 @@ bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetDrawFilterOnScreenEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetBlurExtraFilterEnabled()
 {
     return false;

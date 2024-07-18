@@ -224,7 +224,7 @@ bool RSMaskDrawable::OnUpdate(const RSRenderNode& node)
         ROSEN_LOGE("RSMaskDrawable::OnUpdate null mask");
         return false;
     }
-    if (mask->IsSvgMask() && !mask->GetSvgDom() && !mask->GetSvgPicture()) {
+    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
         ROSEN_LOGE("RSMaskDrawable::OnUpdate not has Svg Mask property");
         return false;
     }
@@ -250,8 +250,6 @@ bool RSMaskDrawable::OnUpdate(const RSRenderNode& node)
         canvas.Scale(mask->GetScaleX(), mask->GetScaleY());
         if (mask->GetSvgDom()) {
             canvas.DrawSVGDOM(mask->GetSvgDom());
-        } else if (mask->GetSvgPicture()) {
-            canvas.DrawPicture(*mask->GetSvgPicture());
         }
     } else if (mask->IsGradientMask()) {
         Drawing::AutoCanvasRestore maskSave(canvas, true);

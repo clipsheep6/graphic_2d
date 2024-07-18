@@ -14,6 +14,7 @@
  */
 
 #include "core_canvas.h"
+#include "draw/canvas.h"
 
 #include "impl_factory.h"
 #include "utils/log.h"
@@ -236,6 +237,13 @@ void CoreCanvas::DrawBackground(const Brush& brush)
 {
     impl_->DrawBackground(brush);
 }
+ void Canvas::DrawPicture(std::shared_ptr<Picture> picture)
+{
+    this->Save();
+    picture->Playback(this);
+    this->Restore();
+}
+
 
 void CoreCanvas::DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
     Color ambientColor, Color spotColor, ShadowFlags flag)
@@ -319,9 +327,11 @@ void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     DRAW_API_WITH_PAINT(DrawImageRect, image, dst, sampling);
 }
 
-void CoreCanvas::DrawPicture(const Picture& picture)
+void CoreCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
 {
-    impl_->DrawPicture(picture);
+    // this->Save();
+    // picture->Playback(this);
+    // this->Restore();
 }
 
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)

@@ -94,7 +94,6 @@ public:
         const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint) override;
     void DrawImageRect(const Drawing::Image& image,
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling) override;
-    void DrawPicture(const Drawing::Picture& picture) override;
     void DrawTextBlob(const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y) override;
 
     void ClipRect(const Drawing::Rect& rect, Drawing::ClipOp op = Drawing::ClipOp::INTERSECT,

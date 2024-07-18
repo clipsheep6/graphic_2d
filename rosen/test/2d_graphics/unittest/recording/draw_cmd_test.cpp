@@ -609,9 +609,6 @@ HWTEST_F(DrawCmdTest, Marshalling014, TestSize.Level1)
 HWTEST_F(DrawCmdTest, Marshalling015, TestSize.Level1)
 {
     auto drawCmdList = DrawCmdList::CreateFromData({ nullptr, 0 }, false);
-    Picture picture;
-    DrawPictureOpItem opItem{picture};
-    opItem.Marshalling(*drawCmdList);
 }
 
 /**

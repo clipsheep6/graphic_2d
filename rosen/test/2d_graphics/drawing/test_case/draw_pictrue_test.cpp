@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef PICTURE_H
-#define PICTURE_H
-
-#include <memory>
+#include "draw_pictrue_test.h"
+#include "image/picture.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class Canvas;
-class DrawCmdList;
-class Picture {
-public:
-    Picture(std::shared_ptr<DrawCmdList> cmdList);
+using namespace Drawing;
+void DrawPictrueTest::OnTestFunction(Drawing::Canvas* canvas)
+{
 
-    ~Picture();
+std::shared_ptr<Drawing::DrawCmdList> drawCmdList = std::make_shared<Drawing::DrawCmdList>();
+std::shared_ptr<Drawing::Picture> pic= std::make_shared<Drawing::Picture>(drawCmdList);
+canvas->DrawBackground(0xFFFF0000);
+canvas->Save();
+canvas->DrawPicture(pic);
+canvas->Restore();
 
-    void Playback(Canvas* canvas);
+}
 
-private:
-    std::shared_ptr<DrawCmdList> drawCmdList = nullptr;
-    friend class PictureRecorder;
-};
-} // namespace Drawing
+void DrawPictrueTest::OnTestPerformance(Drawing::Canvas* canvas)
+{
+   
+}
 } // namespace Rosen
 } // namespace OHOS
-#endif

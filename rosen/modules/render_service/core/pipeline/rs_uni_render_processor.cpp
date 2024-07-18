@@ -95,6 +95,7 @@ void RSUniRenderProcessor::CreateLayer(const RSSurfaceRenderNode& node, RSSurfac
     LayerInfoPtr layer = GetLayerInfo(
         params, buffer, preBuffer, node.GetConsumer(), params.GetAcquireFence());
     if (layer != nullptr) {
+        layer->SetNodeId(node.GetNodeId());
         layer->SetDisplayNit(node.GetDisplayNit());
         layer->SetBrightnessRatio(node.GetBrightnessRatio());
     }

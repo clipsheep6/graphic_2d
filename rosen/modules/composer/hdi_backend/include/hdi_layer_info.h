@@ -508,6 +508,16 @@ public:
     {
         return layerMask_;
     }
+
+    inline uint64_t GetNodeId()
+    {
+        return nodeId_;
+    }
+
+    void SetNodeId(uint64_t nodeId)
+    {
+        nodeId_ = nodeId;
+    }
     /* hdiLayer get layer info end */
 
 private:
@@ -546,6 +556,7 @@ private:
     int32_t displayNit_ = 500; // default luminance for sdr
     float brightnessRatio_ = 1.0f; // default ratio for sdr
     ScalingMode scalingMode_;
+    uint64_t nodeId_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -62,6 +62,7 @@
 #include "interface/surface_test.h"
 #include "interface/text_blob_test.h"
 #include "interface/typeface_test.h"
+#include "interface/draw_picture_recorder_test.h"
 
 #include "common/log_common.h"
 
@@ -523,6 +524,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // brush
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    // picturerecoder
+    { "drawpicturerecoder",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPictureRecorderTest>(TestBase::DRAW_STYLE_COMPLEX); } },
+
 };
 } // namespace
 

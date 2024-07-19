@@ -348,8 +348,8 @@ void RecordingCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
     // }
     // auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
     // cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
-    // std::shared_ptr<DrawCmdList> drawCmdList=picture->GetDrawCmdList();
-    // drawCmdList->PlaybackToDrawCmdList(cmdList_);
+    std::shared_ptr<DrawCmdList> drawCmdList=picture->GetDrawCmdList();
+    drawCmdList->PlaybackToDrawCmdList(cmdList_);
 
 }
 

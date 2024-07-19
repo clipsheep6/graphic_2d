@@ -49,17 +49,17 @@ OH_Drawing_Picture* OH_Drawing_FinishingRecording(OH_Drawing_PictureRecorder* re
         return nullptr;
     }
     PictureRecorder* pictureRecorder= reinterpret_cast<PictureRecorder*>(recorder);
-    NativeHandle<Picture>* blurDrawLooperHandle = new NativeHandle<Picture>;
-    if (blurDrawLooperHandle == nullptr) {
+    NativeHandle<Picture>* pictureHandle = new NativeHandle<Picture>;
+    if (pictureHandle == nullptr) {
         return nullptr;
     }
   
-    blurDrawLooperHandle->value = pictureRecorder->FinishingRecording();
-    if (blurDrawLooperHandle->value == nullptr) {
-        delete blurDrawLooperHandle;
+    pictureHandle->value = pictureRecorder->FinishingRecording();
+    if (pictureHandle->value == nullptr) {
+        delete pictureHandle;
         return nullptr;
     }
-    return Helper::CastTo<NativeHandle<Picture>*, OH_Drawing_Picture*>(blurDrawLooperHandle);
+    return Helper::CastTo<NativeHandle<Picture>*, OH_Drawing_Picture*>(pictureHandle);
 
 }
 

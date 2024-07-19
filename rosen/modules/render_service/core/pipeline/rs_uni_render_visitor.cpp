@@ -2218,6 +2218,8 @@ void RSUniRenderVisitor::UpdateSurfaceDirtyAndGlobalDirty()
         CheckMergeTransparentDirtysForDisplay(surfaceNode);
         // 4. check filter node need merge into displayDirtyManager
         CheckMergeTransparentFilterForDisplay(surfaceNode, accumulatedDirtyRegion);
+        // 5. check whether the composition path of the frame before and after the mouse is consistent
+        CheckMergeTopSurfaceForDisplay(surfaceNode);
     });
     curDisplayNode_->SetMainAndLeashSurfaceDirty(hasMainAndLeashSurfaceDirty);
     CheckAndUpdateFilterCacheOcclusion(curMainAndLeashSurfaces);
@@ -2291,6 +2293,26 @@ void RSUniRenderVisitor::UpdateSurfaceOcclusionInfo()
     std::swap(lastVisVec_, dstCurVisVec_);
 }
 
+void RSUniRenderVisitor::MergeDirtySurfaceToDssOrDirty(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
+    const RectI& dirtyRect) const
+{
+    if (surfaceNode->IsHardwareEnabledTopSurface() && !surfaceNode->IsHardwareForcedDisabled()) {
+        curDisplayNode_->GetDirtyManager()->MergeHwcDirtyRect(dirtyRect);
+    } else {
+        curDisplayNode_->GetDirtyManager()->MergeDirtyRect(dirtyRect);
+    }
+}
+
+void RSUniRenderVisitor::CheckMergeTopSurfaceForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
+{
+    if (surfaceNode->IsHardwareEnabledTopSurface() && (surfaceNode->GetIsLastFrameHwcEnabled() !=
+        !surfaceNode->IsHardwareForcedDisabled())) {
+        auto oldDirtyInSurface = surfaceNode->GetOldDirtyInSurface();
+        RS_LOGD("Mouse dirty %{public}s", oldDirtyInSurface.ToString().c_str());
+        curDisplayNode_->GetDirtyManager()->MergeDirtyRect(oldDirtyInSurface);
+    }
+}
+
 void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
 {
     RS_OPTIONAL_TRACE_FUNC();
@@ -2303,7 +2325,7 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
             RS_LOGD("CheckMergeSurfaceDirtysForDisplay global merge transparent dirty "
                 "%{public}s rect %{public}s", surfaceNode->GetName().c_str(),
                 transparentDirtyRect.ToString().c_str());
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(transparentDirtyRect);
+            MergeDirtySurfaceToDssOrDirty(surfaceNode, transparentDirtyRect);
         }
     }
     if (surfaceNode->GetZorderChanged()) {
@@ -2321,10 +2343,10 @@ void RSUniRenderVisitor::CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSur
             surfaceNode->GetName().c_str(), lastFrameSurfacePos.ToString().c_str(),
             currentFrameSurfacePos.ToString().c_str());
         if (!lastFrameSurfacePos.IsEmpty()) {
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(lastFrameSurfacePos);
+            MergeDirtySurfaceToDssOrDirty(surfaceNode, lastFrameSurfacePos);
         }
         if (!currentFrameSurfacePos.IsEmpty()) {
-            curDisplayNode_->GetDirtyManager()->MergeDirtyRect(currentFrameSurfacePos);
+            MergeDirtySurfaceToDssOrDirty(surfaceNode, currentFrameSurfacePos);
         }
     }
     // 4 shadow disappear and appear case.
@@ -2400,8 +2422,8 @@ void RSUniRenderVisitor::CheckMergeTransparentDirtysForDisplay(std::shared_ptr<R
                 transparentDirtyRegion.GetRegionInfo().c_str());
             const std::vector<Occlusion::Rect>& rects = transparentDirtyRegion.GetRegionRects();
             for (const auto& rect : rects) {
-                curDisplayNode_->GetDirtyManager()->MergeDirtyRect(
-                    RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                MergeDirtySurfaceToDssOrDirty(surfaceNode, RectI{ rect.left_, rect.top_,
+                    rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
             }
         }
     }

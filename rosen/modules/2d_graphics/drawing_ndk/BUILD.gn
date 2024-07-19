@@ -51,6 +51,7 @@ template("drawing_ndk_source_set") {
 
     public_deps = [
       "$drawing_root:2d_graphics",
+      "$graphic_2d_root/interfaces/kits/napi/graphic/text/fontdescriptor_napi:font_descriptor_source",
       "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
     ]
     public_external_deps = [ "jsoncpp:jsoncpp" ]

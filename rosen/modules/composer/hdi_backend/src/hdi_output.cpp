@@ -51,6 +51,9 @@ HdiOutput::HdiOutput(uint32_t screenId) : screenId_(screenId)
 
 HdiOutput::~HdiOutput()
 {
+    if (device_ != nullptr) {
+        device_->ClearClientBuffer(screenId_);
+    }
 }
 
 GSError HdiOutput::ClearFrameBuffer()
@@ -62,6 +65,7 @@ GSError HdiOutput::ClearFrameBuffer()
     currFrameBuffer_ = nullptr;
     lastFrameBuffer_ = nullptr;
     bufferCache_.clear();
+    device_->ClearClientBuffer(screenId_);
     fbSurface_->ClearFrameBuffer();
     sptr<Surface> pFrameSurface = GetFrameBufferSurface();
     if (pFrameSurface != nullptr) {
@@ -96,6 +100,7 @@ RosenError HdiOutput::Init()
         return ROSEN_ERROR_INVALID_OPERATING;
     }
     bufferCache_.clear();
+    device_->ClearClientBuffer(screenId_);
     bufferCache_.reserve(bufferCacheCountMax_);
     historicalPresentfences_.clear();
 
@@ -404,6 +409,7 @@ bool HdiOutput::CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint
     if (bufferCahceSize >= bufferCacheCountMax_) {
         HLOGI("the length of buffer cache exceeds the limit, and not find the aim buffer!");
         bufferCache_.clear();
+        device_->ClearClientBuffer(screenId_);
     }
 
     index = (uint32_t)bufferCache_.size();
@@ -508,6 +514,7 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
     bool bufferCached = false;
     if (bufferCacheCountMax_ == 0) {
         bufferCache_.clear();
+        device_->ClearClientBuffer(screenId_);
         HLOGE("The count of this client buffer cache is 0.");
     } else {
         bufferCached = CheckAndUpdateClientBufferCahce(currFrameBuffer_, index);

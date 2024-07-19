@@ -102,6 +102,8 @@ public:
                         uint32_t &layerId) override;
     int32_t CloseLayer(uint32_t screenId, uint32_t layerId) override;
     void Destroy() override;
+    int32_t ClearClientBuffer(uint32_t screenId) override;
+    int32_t ClearLayerBuffer(uint32_t screenId, uint32_t layerId) override;
 
 private:
     HdiDeviceImpl(const HdiDeviceImpl& rhs) = delete;

@@ -102,11 +102,12 @@ FontStyleSet* FontMgr::CreateStyleSet(int index) const
     return fontMgrImpl_->CreateStyleSet(index);
 }
 
-int FontMgr::VerifyFontIsNormal(const char* fpath) const {
-    if (fontMgrImpl_ == nullptr) {
-        return -1;
+int FontMgr::CheckFontValidity(const char* fontPath, std::vector<std::string> &fullnameVec) const 
+{
+    if (fontMgrImpl_ == nullptr || fontPath == nullptr) {
+        return ERROR_TYPE_OTHER;
     }
-    return fontMgrImpl_->VerifyFontIsNormal(fpath);
+    return fontMgrImpl_->CheckFontValidity(fontPath, fullnameVec);
 };
 } // namespace Drawing
 } // namespace Rosen

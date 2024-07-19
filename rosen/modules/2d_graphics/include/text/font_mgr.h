@@ -107,12 +107,12 @@ public:
     FontStyleSet* CreateStyleSet(int index) const;
 
     /**
-     * @brief             Check whether a font file format is correct and whether it can be installed normally
+     * @brief             Check that the font file is valid
      * @param fpath       the full path of a font file
-     * @return            Returns whether the font file path and file format are correct.
-     *                        0 means correct, see the enum FontCheckCode for details
+     * @param fullnameVec The dynamic array of fullname, the retrieved fullname is filled into this array
+     * @return            Returns whether the font file is valid, 0 means valid, See FontCheckCode for details
      */
-    int VerifyFontIsNormal(const char* fpath) const;
+    int CheckFontValidity(const char* fpath, std::vector<std::string> &fullnameVec) const;
 private:
     std::shared_ptr<FontMgrImpl> fontMgrImpl_;
 };

@@ -153,12 +153,12 @@ FontStyleSet* SkiaFontMgr::CreateStyleSet(int index) const
     return new FontStyleSet(fontStyleSetImpl);
 }
 
-int SkiaFontMgr::VerifyFontIsNormal(const char* fpath) const
+int SkiaFontMgr::CheckFontValidity(const char* fontPath, std::vector<std::string> &fullnameVec) const
 {
-    if (skFontMgr_ == nullptr) {
-        return -1;
+    if (skFontMgr_ == nullptr || fontPath == nullptr) {
+        return ERROR_TYPE_OTHER;
     }
-    return skFontMgr_->VerifyFontIsNormal(fpath);
+    return skFontMgr_->CheckFontValidity(fontPath, fullnameVec);
 }
 
 } // namespace Drawing

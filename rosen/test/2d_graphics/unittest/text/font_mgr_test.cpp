@@ -128,23 +128,25 @@ HWTEST_F(FontMgrTest, CreateStyleSet001, TestSize.Level1)
     ASSERT_TRUE(fontStyleSet != nullptr);
 }
 /**
- * @tc.name:VerifyFontIsNormal001
- * @tc.desc: Test VerifyFontIsNormal
+ * @tc.name:CheckFontValidity001
+ * @tc.desc: Test CheckFontValidity
  * @tc.type: FUNC
  * @tc.require: I91F9L
  */
-HWTEST_F(FontMgrTest, VerifyFontIsNormal001, TestSize.Level1)
+HWTEST_F(FontMgrTest, CheckFontValidity001, TestSize.Level1)
 {
     std::shared_ptr<FontMgr> FontMgr = FontMgr::CreateDefaultFontMgr();
     ASSERT_TRUE(FontMgr != nullptr);
 
-    int ret = FontMgr->VerifyFontIsNormal(NULL);
+    std::vector<std::string> fullnameVec;
+    int ret = FontMgr->CheckFontValidity(nullptr, fullnameVec);
     ASSERT_TRUE(ret != 0);
-    ret = FontMgr->VerifyFontIsNormal("/system/fonts/HarmonyOS_Sans.ttf");
-    ASSERT_TRUE(ret == 0);
-    ret = FontMgr->VerifyFontIsNormal("/system/fonts/NotoSerifCJK-Regular.ttc");
-    ASSERT_TRUE(ret == 0);
-    ret = FontMgr->VerifyFontIsNormal("/system/fonts/error_path.ttf");
+    ret = FontMgr->CheckFontValidity("/system/fonts/HarmonyOS_Sans.ttf", fullnameVec);
+    ASSERT_TRUE(ret == 0 && fullnameVec.size() == 1);
+    fullnameVec.clear();
+    ret = FontMgr->CheckFontValidity("/system/fonts/NotoSerifCJK-Regular.ttc", fullnameVec);
+    ASSERT_TRUE(ret == 0 && fullnameVec.size() == 5);
+    ret = FontMgr->CheckFontValidity("/system/fonts/error_path.ttf", fullnameVec);
     ASSERT_TRUE(ret == 1);
 }
 } // namespace Drawing

@@ -204,8 +204,8 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, CreateVirtualScreen, TestSize.Level
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
     ScreenId mirrorId = 1;
     int32_t flags = 1;
-    std::vector<NodeId> filteredAppVector;
-    EXPECT_EQ(proxy->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector),
+    std::vector<NodeId> whiteList;
+    EXPECT_EQ(proxy->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, whiteList),
         INVALID_SCREEN_ID);
 }
 
@@ -902,7 +902,7 @@ HWTEST_F(RSRenderServiceConnectionProxyTest, SetCacheEnabledForRotation, TestSiz
     proxy->NotifyRefreshRateEvent(eventInfo);
     int32_t touchStatus = 1;
     int32_t touchCnt = 0;
-    proxy->NotifyTouchEvent(touchStatus, "", 0, touchCnt);
+    proxy->NotifyTouchEvent(touchStatus, touchCnt);
     proxy->NotifyDynamicModeEvent(true);
     proxy->SetCacheEnabledForRotation(true);
     ASSERT_EQ(proxy->transactionDataIndex_, 0);

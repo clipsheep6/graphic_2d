@@ -147,7 +147,7 @@ public:
     std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
 #endif
     ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
-        ScreenId mirrorId, int32_t flags, std::vector<NodeId> filteredAppVector = {});
+        ScreenId mirrorId, int32_t flags, std::vector<NodeId> whiteList = {});
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
 
@@ -307,7 +307,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo);
 
-    void NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid, int32_t touchCnt);
+    void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt);
 
     void NotifyDynamicModeEvent(bool enableDynamicMode);
 

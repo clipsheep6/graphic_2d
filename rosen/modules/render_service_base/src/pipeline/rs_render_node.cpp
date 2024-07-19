@@ -117,6 +117,12 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
     VkImage image = VK_NULL_HANDLE;
     VkDeviceMemory memory = VK_NULL_HANDLE;
 
+    if (width * height > VKIMAGE_LIMIT_SIZE) {
+        ROSEN_LOGE("NativeBufferUtils: vkCreateImag failed, image is too large, width:%{public}u, height::%{public}u",
+            width, height);
+        return {};
+    }
+
     if (vkContext.vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
         return {};
     }
@@ -1794,7 +1800,7 @@ void RSRenderNode::UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirt
     isDirtyRegionUpdated_ = true;
 }
 
-void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged)
+void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged, bool rotationStatusChanged)
 {
     bool rotationClear = false;
     if (!IsInstanceOf<RSEffectRenderNode>() && rotationChanged) {
@@ -1813,10 +1819,13 @@ void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged
             }
         }
     }
+    if (IsInstanceOf<RSEffectRenderNode>()) {
+        rotationStatusChanged = false;
+    }
     if (properties.GetFilter()) {
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
-            if (!(filterDrawable->IsForceClearFilterCache()) && !dirtySlots_.empty()) {
+            if (!(filterDrawable->IsForceClearFilterCache()) && (rotationStatusChanged || !dirtySlots_.empty())) {
                 RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu] foreground is dirty", GetId());
                 filterDrawable->MarkFilterForceClearCache();
             }
@@ -1987,8 +1996,6 @@ void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDraw
     // force update if no next vsync when skip-frame enabled
     if (!needRequestNextVsync && filterDrawable->IsSkippingFrame()) {
         filterDrawable->ForceClearCacheWithLastFrame();
-        dirtyManager.MergeDirtyRect(filterRegion_);
-        isDirtyRegionUpdated_ = true;
         return;
     }
 
@@ -2320,7 +2327,7 @@ void RSRenderNode::ApplyModifiers()
     }
 
     // Temporary code, copy matrix into render params
-    if (LIKELY(RSUniRenderJudgement::IsUniRender())) {
+    if (LIKELY(RSUniRenderJudgement::IsUniRender() && !isTextureExportNode_)) {
         UpdateDrawableVecV2();
     } else {
         UpdateDrawableVec();

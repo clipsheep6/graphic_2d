@@ -401,7 +401,7 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
     sptr<Surface> surface,
     ScreenId mirrorId,
     int32_t flags,
-    std::vector<NodeId> filteredAppVector)
+    std::vector<NodeId> whiteList)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -425,7 +425,7 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
 
     data.WriteUint64(mirrorId);
     data.WriteInt32(flags);
-    data.WriteUInt64Vector(filteredAppVector);
+    data.WriteUInt64Vector(whiteList);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_VIRTUAL_SCREEN);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2331,8 +2331,7 @@ void RSRenderServiceConnectionProxy::NotifyRefreshRateEvent(const EventInfo& eve
     }
 }
 
-void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid,
-    int32_t touchCnt)
+void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -2341,12 +2340,6 @@ void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, const
         return;
     }
     if (!data.WriteInt32(touchStatus)) {
-        return;
-    }
-    if (!data.WriteString(pkgName)) {
-        return;
-    }
-    if (!data.WriteUint32(pid)) {
         return;
     }
     if (!data.WriteInt32(touchCnt)) {

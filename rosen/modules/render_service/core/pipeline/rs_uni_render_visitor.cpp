@@ -1326,7 +1326,9 @@ void RSUniRenderVisitor::CheckFilterCacheNeedForceClearOrSave(RSRenderNode& node
         curDisplayNode_->IsRotationChanged() || curDisplayNode_->IsLastRotationChanged() : false;
     bool hdrChanged = curDisplayNode_ ?
         RSLuminanceControl::Get().IsDimmingOn(curDisplayNode_->GetScreenId()) : false;
-    node.CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged);
+    bool rotationStatusChanged = curDisplayNode_ ?
+        curDisplayNode_->GetPreRotationStatus() != curDisplayNode_->GetCurRotationStatus() : false;
+    node.CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged, rotationStatusChanged);
 }
 
 void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
@@ -2602,6 +2604,8 @@ void RSUniRenderVisitor::CheckFilterNodeInSkippedSubTreeNeedClearCache(
         curDisplayNode_->IsRotationChanged() || curDisplayNode_->IsLastRotationChanged() : false;
     bool hdrChanged = curDisplayNode_ ?
         RSLuminanceControl::Get().IsDimmingOn(curDisplayNode_->GetScreenId()) : false;
+    bool rotationStatusChanged = curDisplayNode_ ?
+        curDisplayNode_->GetPreRotationStatus() != curDisplayNode_->GetCurRotationStatus() : false;
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto& child : rootNode.GetVisibleFilterChild()) {
         auto& filterNode = nodeMap.GetRenderNode<RSRenderNode>(child);
@@ -2612,7 +2616,7 @@ void RSUniRenderVisitor::CheckFilterNodeInSkippedSubTreeNeedClearCache(
         if (auto effectNode = RSRenderNode::ReinterpretCast<RSEffectRenderNode>(filterNode)) {
             UpdateRotationStatusForEffectNode(*effectNode);
         }
-        filterNode->CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged);
+        filterNode->CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged, rotationStatusChanged);
         filterNode->MarkClearFilterCacheIfEffectChildrenChanged();
         if (filterNode->GetRenderProperties().GetBackgroundFilter()) {
             filterNode->UpdateFilterCacheWithBelowDirty(dirtyManager, false);
@@ -2630,6 +2634,9 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
         return;
     }
     
+    if (!curSurfaceNode_) {
+        return;
+    }
     const auto& hwcNodes = curSurfaceNode_->GetChildHardwareEnabledNodes();
     if (hwcNodes.empty()) {
         return;
@@ -2771,12 +2778,12 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByGlobalCleanFilter(
 {
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto filter = cleanFilter.begin(); filter != cleanFilter.end(); ++filter) {
-        auto& rendernode = nodeMap.GetRenderNode<RSRenderNode>(filter->first);
-        if (rendernode->IsAIBarFilterCacheValid()) {
-            ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: skip intersection for using cache");
-            continue;
-        }
         if (hwcNodePtr.GetDstRect().Intersect(filter->second)) {
+            auto& rendernode = nodeMap.GetRenderNode<RSRenderNode>(filter->first);
+            if (rendernode->IsAIBarFilterCacheValid()) {
+                ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: skip intersection for using cache");
+                continue;
+            }
             RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by transparentCleanFilter",
                 hwcNodePtr.GetName().c_str(), hwcNodePtr.GetId());
             hwcNodePtr.SetHardwareForcedDisabledState(true);
@@ -3766,22 +3773,22 @@ void RSUniRenderVisitor::ProcessChildInner(RSRenderNode& node, const RSRenderNod
         child->SetDrawingCacheRootId(node.GetDrawingCacheRootId());
     }
     SaveCurSurface();
-    UpdateVirtualScreenFilterAppRootId(child);
+    UpdateVirtualScreenWhiteListRootId(child);
     child->Process(shared_from_this());
-    UpdateVirtualScreenFilterAppRootId(child);
+    UpdateVirtualScreenWhiteListRootId(child);
     RestoreCurSurface();
 }
 
-void RSUniRenderVisitor::UpdateVirtualScreenFilterAppRootId(const RSRenderNode::SharedPtr& node)
+void RSUniRenderVisitor::UpdateVirtualScreenWhiteListRootId(const RSRenderNode::SharedPtr& node)
 {
-    if (node->GetType() == RSRenderNodeType::SURFACE_NODE && virtualScreenFilterAppRootId_ == INVALID_NODEID &&
-        screenInfo_.filteredAppSet.find(node->GetId()) != screenInfo_.filteredAppSet.end()) {
-        // limit surface node is to reduce filteredAppSet set times
-        // don't update if node's parent is in filteredAppSet
-        virtualScreenFilterAppRootId_ = node->GetId();
-    } else if (virtualScreenFilterAppRootId_ == node->GetId()) {
-        // restore virtualScreenFilterAppRootId_ only by itself
-        virtualScreenFilterAppRootId_ = INVALID_NODEID;
+    if (node->GetType() == RSRenderNodeType::SURFACE_NODE && virtualScreenWhiteListRootId_ == INVALID_NODEID &&
+        screenInfo_.whiteList.find(node->GetId()) != screenInfo_.whiteList.end()) {
+        // limit surface node is to reduce whiteList set times
+        // don't update if node's parent is in whiteList
+        virtualScreenWhiteListRootId_ = node->GetId();
+    } else if (virtualScreenWhiteListRootId_ == node->GetId()) {
+        // restore virtualScreenWhiteListRootId_ only by itself
+        virtualScreenWhiteListRootId_ = INVALID_NODEID;
     }
 }
 
@@ -3959,7 +3966,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             (hasCaptureWindow_[mirrorNode->GetScreenId()] || displayHasSecSurface_[mirrorNode->GetScreenId()] ||
             displayHasSkipSurface_[mirrorNode->GetScreenId()] ||
             displayHasProtectedSurface_[mirrorNode->GetScreenId()] ||
-            !screenInfo_.filteredAppSet.empty() || isCurtainScreenOn_)) {
+            !screenInfo_.whiteList.empty() || isCurtainScreenOn_)) {
             if (isPc_&& hasCaptureWindow_[mirrorNode->GetScreenId()]) {
                 processor->MirrorScenePerf();
             }
@@ -3980,7 +3987,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             bool canvasRotation = screenManager->GetCanvasRotation(node.GetScreenId());
             if (cacheImageProcessed && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
                 !displayHasSecSurface_[mirrorNode->GetScreenId()] &&
-                !displayHasProtectedSurface_[mirrorNode->GetScreenId()] && screenInfo_.filteredAppSet.empty()) {
+                !displayHasProtectedSurface_[mirrorNode->GetScreenId()] && screenInfo_.whiteList.empty()) {
                 RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode screen recording optimization is enable");
                 ScaleMirrorIfNeed(node, canvasRotation);
                 RotateMirrorCanvasIfNeed(node, canvasRotation);
@@ -5351,7 +5358,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
         RS_PROCESS_TRACE(isPhone_, node.GetName() + " App Occluded Leashwindow Skip");
         return false;
     }
-    if (!screenInfo_.filteredAppSet.empty() && virtualScreenFilterAppRootId_ == INVALID_NODEID) {
+    if (!screenInfo_.whiteList.empty() && virtualScreenWhiteListRootId_ == INVALID_NODEID) {
         RS_PROCESS_TRACE(isPhone_, node.GetName() + " skip because it isn't filtered App");
         RS_LOGD("RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess:\
             %{public}s skip because it isn't filtered App", node.GetName().c_str());

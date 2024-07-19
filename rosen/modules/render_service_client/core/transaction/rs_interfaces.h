@@ -60,7 +60,7 @@ public:
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
         int flags = 0,
-        std::vector<NodeId> filteredAppVector = {});
+        std::vector<NodeId> whiteList = {});
 
     int32_t SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector);
 
@@ -242,7 +242,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo);
 
-    void NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid, int32_t touchCnt);
+    void NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt);
 
     void NotifyDynamicModeEvent(bool enableDynamicMode);
 

@@ -16,7 +16,7 @@
 #ifndef CORECANVASIMPL_H
 #define CORECANVASIMPL_H
 #include "base_impl.h"
-#include "securec.h"
+#include <securec.h>
 
 #include "include/core/SkRefCnt.h"
 

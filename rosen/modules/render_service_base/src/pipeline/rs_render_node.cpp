@@ -759,8 +759,10 @@ void RSRenderNode::DumpSubClassNode(std::string& out) const
             std::to_string(rootNode->GetRenderProperties().GetFrameHeight()) + "]";
         out += ", EnableRender: " + std::to_string(rootNode->GetEnableRender());
     } else if (GetType() == RSRenderNodeType::DISPLAY_NODE) {
-        auto displayNode = static_cast<const RSDisplayRenderNode*>(this);
-        out += ", skipLayer: " + std::to_string(displayNode->GetSecurityDisplay());
+        #ifdef CROSS_PLATFORM
+            auto displayNode = static_cast<const RSDisplayRenderNode*>(this);
+            out += ", skipLayer: " + std::to_string(displayNode->GetSecurityDisplay());
+        #endif
     }
 }
 

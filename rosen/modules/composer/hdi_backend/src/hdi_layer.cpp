@@ -139,6 +139,7 @@ int32_t HdiLayer::CreateLayer(const LayerInfoPtr &layerInfo)
         return ret;
     }
     bufferCache_.clear();
+    device_->ClearLayerBuffer(screenId_, layerId_);
     bufferCache_.reserve(bufferCacheCountMax_);
     layerId_ = layerId;
 
@@ -261,6 +262,7 @@ bool HdiLayer::CheckAndUpdateLayerBufferCahce(uint32_t sequence, uint32_t& index
             deletingList.push_back(i);
         }
         bufferCache_.clear();
+        device_->ClearLayerBuffer(screenId_, layerId_);
     }
     index = (uint32_t)bufferCache_.size();
     bufferCache_.push_back(sequence);
@@ -287,6 +289,7 @@ int32_t HdiLayer::SetLayerBuffer()
     bool bufferCached = false;
     if (bufferCacheCountMax_ == 0) {
         bufferCache_.clear();
+        device_->ClearLayerBuffer(screenId_, layerId_);
         HLOGE("The count of this layer buffer cache is 0.");
     } else {
         bufferCached = CheckAndUpdateLayerBufferCahce(currBuffer->GetSeqNum(), index, deletingList);

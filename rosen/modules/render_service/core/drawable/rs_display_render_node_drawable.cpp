@@ -599,36 +599,36 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
   for(int i = curAllSurfaces.size() -1; i >= 0; i--) {
     auto& renderNodeDrawable  = curAllSurfaces[i];
-    std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable = 
+    std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable =
       std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
-    if(!surfaceNodeDrawable->ShouldPaint()){
+    if (!surfaceNodeDrawable->ShouldPaint()) {
         continue;
     }
     auto  surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNodeDrawable->GetRenderParams().get());
-    if(!surfaceParams){
+    if (!surfaceParams) {
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
         continue;
     }
     auto enableType = surfaceParams->GetUifirstNodeEnableParam();
     std::string surfaceName = surfaceNodeDrawable->GetName();
-    if(enableType != MultiThreadCacheType::NONE || surfaceName.substr(0,17) == "ARK_APP_SUBWINDOW")
+    if (enableType != MultiThreadCacheType::NONE || surfaceName.substr(0, 17) == "ARK_APP_SUBWINDOW")
     {
         isSubtreeParallelOff = true;
     }
-    if(!isuifirstNode && surfaceParams->GetOccludedByFilterCache()){
+    if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
         RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
-        surfaceNodeDrawable->GetName().c_str(),surfaceParams->GetId());
+        surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
         continue;
     }
     auto renderNode = surfaceNodeDrawable->GetRenderNode();
-    if(renderNode == nullptr){
+    if (renderNode == nullptr) {
         continue;
     }
     auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
-    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(uniParam,surfaceParams,surfaceNode,isuifirsNode);
-    if(!isuifirstNode){
-        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(uniParam,surfaceParams,surfaceNode,curSurfaceDrawRegion);
+    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isuifirsNode);
+    if (!isuifirstNode) {
+        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(uniParam, surfaceParams, surfaceNode, curSurfaceDrawRegion);
     }
     surfaceNodeDrawable->SetCurSurfaceDrawRegion(curSurfaceDrawRegion);
   }
@@ -678,7 +678,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 #ifdef SUBTREE_PARALLEL_ENABLE
             isOpincDropNodeExt_ = true;
             curCanvas_->SetIsSubtreeParallel(true);
-            if(isSubtreeParallelOff || needOffscreen || RSParallelManager::Singleton().OnProcessChildren(this)!=0){
+            if (isSubtreeParallelOff || needOffscreen || RSParallelManager::Singleton().OnProcessChildren(this)!=0) {
                 curCanvas_->SetIsSubtreeParallel(false);
                 RSRenderNodeDrawable::OnDraw(*curCanvas_);
             }
@@ -1574,7 +1574,7 @@ void RSDisplayRenderNodeDrawable::PrepareOffscreenRender(const RSRenderNode& nod
     } else {
         offscreenSurface_ = curCanvas_->GetSurface()->MakeSurface(offscreenWidth, offscreenHeight);
     }
-    
+
     if (offscreenSurface_ == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::PrepareOffscreenRender, offscreenSurface is nullptr");
         curCanvas_->ClipRect(Drawing::Rect(0, 0, offscreenWidth, offscreenHeight), Drawing::ClipOp::INTERSECT, false);

@@ -34,20 +34,20 @@ static inline void onMigrateCallback(std::shared_ptr<Canvas>& canvas, std::share
         return ;
     }
     auto ctx = canvas->GetGPUContext();
-      if(ctx ==nullptr){
+    if(ctx ==nullptr){
         return ;
-      }
+    }
     auto skctx = ctx->GetImpl<SkiaGPUContext>();
-      if (skctx ==nullptr){
+    if (skctx ==nullptr){
         return ;
-      }
+    }
     auto grctx = skctx->GetGrContext();
-     if(grctx == nullptr){
+    if(grctx == nullptr){
         return ;
-     }
-     if(!grctx->canMigrate()){
+    }
+    if(!grctx->canMigrate()){
         return ;
-     }
+    }
      grctx->onMigrateCallback([s = surface, c = canvas](){});
 }
 #endif

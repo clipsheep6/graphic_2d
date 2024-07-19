@@ -234,7 +234,6 @@ public:
     bool PrepareOffscreenRender();
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
-<<<<<<< HEAD
 #ifdef SUBTREE_PARALLEL_ENABLE
    Drawing::Region GetCurSurfaceDrawRegion()
    {
@@ -254,13 +253,11 @@ public:
         bool isOffscreen)const;
 #endif
 
-=======
 
     sptr<IConsumerSurface> GetConsumerOnDraw()
     {
         return consumerOnDraw_;
     }
->>>>>>> b3ec2dcbe5535af428b4b224f4eea8ed324c4e6f
 
 private:
     explicit RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);

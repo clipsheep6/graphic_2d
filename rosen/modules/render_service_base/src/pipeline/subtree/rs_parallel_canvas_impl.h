@@ -44,54 +44,54 @@ RSParallelDrawCanvas::~RSParallelDrawCanvas() = default;
 
 void RSParallelDrawCanvas::InheritStatus(RSParallelStatusCanvas* statusCanvas)
 {
-    if(statusCanvas != nullptr){
+    if (statusCanvas != nullptr) {
         auto recorder = statusCanvas->GetParallelRecorder();
-        RSParallelPlayback(recorder,this);
+        RSParallelPlayback(recorder, this);
     }
 }
 
-void RSParallelDrawCanvas::SetIsSubtreeParallel(bool canSharedDraw){
+void RSParallelDrawCanvas::SetIsSubtreeParallel(bool canSharedDraw) {
     canSharedDraw_ = canSharedDraw;
 }
 
-void RSParallelDrawCanvas::DrawImage(const Drawing::Image& image,const Drawing::scalar px,
+void RSParallelDrawCanvas::DrawImage(const Drawing::Image& image, const Drawing::scalar px,
                                      const Drawing::scalar py,
                                      const Drawing::SamplingOptions& sampling)
 {
-     if(canSharedDraw_){
+     if (canSharedDraw_) {
         auto gpuContext = GetGPUContext();
-        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image,gpuContext,false);
-        if(draw != nullptr){
-            RSPaintFilterCanvas::DrawImage(*draw,px ,py, sampling);
+        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image, gpuContext, false);
+        if (draw != nullptr) {
+            RSPaintFilterCanvas::DrawImage(*draw, px , py, sampling);
             return ;
         }
      }
      RSPaintFilterCanvas::DrawImage(image, px, py, sampling);
 }
 
-void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image,const Drawing::Rect& src,
+void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src,
                                      const Drawing::Rect& dst,
-                                     const Drawing::SamplingOptions& sampling,Drawing::SrcRectConstraint constraint)
+                                     const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
 {
-     if(canSharedDraw_){
+     if (canSharedDraw_) {
         auto gpuContext = GetGPUContext();
-        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image,gpuContext);
-        if(draw != nullptr){
-            RSPaintFilterCanvas::DrawImageRect(*draw,src ,dst, sampling, constraint);
+        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image, gpuContext);
+        if (draw != nullptr) {
+            RSPaintFilterCanvas::DrawImageRect(*draw, src , dst, sampling, constraint);
             return ;
         }
      }
-     RSPaintFilterCanvas::DrawImageRect(image, src, dst, sampling,constraint);
+     RSPaintFilterCanvas::DrawImageRect(image, src, dst, sampling, constraint);
 }
 
 void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image,
                                          const Drawing::Rect& dst,
                                          const Drawing::SamplingOptions& sampling)
 {
-     if(canSharedDraw_){
+     if (canSharedDraw_) {
         auto gpuContext = GetGPUContext();
-        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image,gpuContext);
-        if(draw != nullptr){
+        auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image, gpuContext);
+        if (draw != nullptr) {
             RSPaintFilterCanvas::DrawImageRect(*draw, dst, sampling);
             return ;
         }
@@ -121,10 +121,10 @@ void RSParallelCanvas::RemoveAllStatusCanvas()
 
 void RSParallelCanvas::RemoveStatusCanvas(size_t idx)
 {
-    if(idx < pCanvasList_.size()) {
-       pCanvasList_.erase(pCanvasList_.begin() + idx);
-       statusCanvasMap_.erase(idx);
-    
+    if (idx < pCanvasList_.size()) {
+        pCanvasList_.erase(pCanvasList_.begin() + idx);
+        statusCanvasMap_.erase(idx);
+
 }
 }
 

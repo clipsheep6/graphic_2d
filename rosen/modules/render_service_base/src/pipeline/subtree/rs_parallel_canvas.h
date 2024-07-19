@@ -85,7 +85,7 @@ public:
    void RemoveStatusCanvas(size_t idx);
 
 private:
-    std::unordered_map<size_t,std::shared_ptr<RSParallelStatusCanvas>> statusCanvasMap_{};
+    std::unordered_map<size_t, std::shared_ptr<RSParallelStatusCanvas>> statusCanvasMap_{};
 };
 
 }

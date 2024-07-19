@@ -553,7 +553,7 @@ void RSPaintFilterCanvasBase::ClipRect(const Drawing::Rect& rect, Drawing::ClipO
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipRect,rect,op,doAntiAlias);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipRect, rect, op, doAntiAlias);
 #endif
 }
 
@@ -571,7 +571,7 @@ void RSPaintFilterCanvasBase::ClipIRect(const Drawing::RectI& rect, Drawing::Cli
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipIRect,rect,op);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipIRect, rect, op);
 #endif
 }
 
@@ -589,8 +589,8 @@ void RSPaintFilterCanvasBase::ClipRoundRect(const RoundRect& roundRect, ClipOp o
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord<RSPaintFilterCanvasBase,void,RoundRect,ClipOp,bool>
-   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect,roundRect,op,doAntiAlias);
+   RSParallelRecord<RSPaintFilterCanvasBase, void, RoundRect, ClipOp, bool>
+   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, roundRect, op, doAntiAlias);
 #endif
 }
 
@@ -609,10 +609,10 @@ void RSPaintFilterCanvasBase::ClipRoundRect(const Drawing::Rect& rect,
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord<RSPaintFilterCanvasBase,void,Drawing::Rect,std::vector<Drawing::Point>,bool>
-   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect,rect,pts,doAntiAlias);
+   RSParallelRecord<RSPaintFilterCanvasBase, void, Drawing::Rect, std::vector<Drawing::Point>, bool>
+   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, rect, pts, doAntiAlias);
 #endif
-  
+
 }
 
 void RSPaintFilterCanvasBase::ClipPath(const Path& path, ClipOp op, bool doAntiAlias)
@@ -629,7 +629,7 @@ void RSPaintFilterCanvasBase::ClipPath(const Path& path, ClipOp op, bool doAntiA
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipPath,path,op,doAntiAlias);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipPath, path, op, doAntiAlias);
 #endif
 }
 
@@ -647,7 +647,7 @@ void RSPaintFilterCanvasBase::ClipRegion(const Region& region, ClipOp op)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipRegion,region,op);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ClipRegion, region, op);
 #endif
 }
 
@@ -665,7 +665,7 @@ void RSPaintFilterCanvasBase::SetMatrix(const Matrix& matrix)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::SetMatrix,matrix);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::SetMatrix, matrix);
 #endif
 }
 
@@ -701,7 +701,7 @@ void RSPaintFilterCanvasBase::ConcatMatrix(const Matrix& matrix)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ConcatMatrix,matrix);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::ConcatMatrix, matrix);
 #endif
 }
 
@@ -737,7 +737,7 @@ void RSPaintFilterCanvasBase::Scale(scalar sx, scalar sy)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Scale,sx,sy);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Scale, sx, sy);
 #endif
 }
 
@@ -755,7 +755,7 @@ void RSPaintFilterCanvasBase::Rotate(scalar deg, scalar sx, scalar sy)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Rotate,deg,sx,sy);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Rotate, deg, sx, sy);
 #endif
 }
 
@@ -773,7 +773,7 @@ void RSPaintFilterCanvasBase::Shear(scalar sx, scalar sy)
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Shear,sx,sy);
+   RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Shear, sx, sy);
 #endif
 }
 
@@ -811,7 +811,7 @@ uint32_t RSPaintFilterCanvasBase::Save()
 {
 #ifdef SUBTREE_PARALLEL_ENABLE
    RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::Save);
-#endif 
+#endif
 #ifdef ENABLE_RECORDING_DCL
     uint32_t count = 0U;
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
@@ -874,10 +874,10 @@ void RSPaintFilterCanvasBase::Restore()
 #ifdef SUBTREE_PARALLEL_ENABLE
 void RSPaintFilterCanvasBase::RestoreToCount(uint32_t count)
 {
-    if(canvas_ != nullptr){
+    if (canvas_ != nullptr) {
         canvas_->RestoreToCount(count);
     }
-    RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::RestoreToCount,count);
+    RSParallelRecord(recorder_, &RSPaintFilterCanvasBase::RestoreToCount, count);
 }
 #endif
 
@@ -999,7 +999,7 @@ RSParallelRecorderPtr RSPaintFilterCanvasBase::GetParallelRecorder()
 
 void RSPaintFilterCanvasBase::PlayBack(RSParallelRecorderPtr recorder)
 {
-    RSParallelPlayback(recorder,this);
+    RSParallelPlayback(recorder, this);
 }
 #endif
 
@@ -1369,26 +1369,27 @@ void RSPaintFilterCanvas::CopyHDRConfiguration(const RSPaintFilterCanvas& other)
     targetColorGamut_ = other.targetColorGamut_;
 }
 #ifdef SUBTREE_PARALLEL_ENABLE
-void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& other){
-    static auto sEnvDeepCopy = [] (std::stack<Env>& s1,const std::stack<Env>& s2,ContextPtr& gpuContext){
+void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& other) {
+    static auto sEnvDeepCopy = [] (std::stack<Env>& s1, const std::stack<Env>& s2, ContextPtr& gpuContext) {
         auto& e1 = s1.top();
         auto& e2 = s2.top();
         e1 = e2;
-        if(e1.effectData_ == nullptr){
+        if (e1.effectData_ == nullptr) {
             return;
         }
         auto& newData = e1.effectData_ = std::make_shared<RSPaintFilterCanvas::CachedEffectData>(*e1.effectData_);
-        if(newData->cachedImage_ == nullptr){
+        if (newData->cachedImage_ == nullptr) {
             return;
         }
         Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
         auto backendTexture = newData->cachedImage_->GetBackendTexture(false, &origin);
-        newData->cachedImage_ = RSParallelResourceManager::Singleton().BuildFromTextureByRef(newData->cachedImage_,gpuContext,backendTexture);
+        newData->cachedImage_ = RSParallelResourceManager::Singleton().BuildFromTextureByRef(newData->cachedImage_,
+                                    gpuContext, backendTexture);
     };
     isHighContrastEnabled_.store(other.isHighContrastEnabled_.load());
     auto gpuContext = GetGPUContext();
-    sEnvDeepCopy(envStack_,other.envStack_,gpuContext);
-    if(other.isHighContrastEnabled()){
+    sEnvDeepCopy(envStack_, other.envStack_, gpuContext);
+    if (other.isHighContrastEnabled()) {
         SetCacheType(RSPaintFilterCanvas::CacheType::DISABLED);
     } else {
         SetCacheType(other.GetCacheType());

@@ -13,37 +13,37 @@
  * limitations under the License.
  */
 
- #pragma once
+#pragma once
 
- #define DEFAULT_CONSTURCT_(T) \
-     T()
+#define DEFAULT_CONSTURCT_(T) \
+    T()
 
- #define DEFAULT_DECONSTURCT_(T) \
+#define DEFAULT_DECONSTURCT_(T) \
     virtual ~T()
 
- #define DISALLOW_COPY_AND_ASSIGN(T) \
-   T(const T&) = delete;       \
-   T& operator = (const T&) = delete\
- 
- #define DISALLOW_MOVE_AND_ASSIGN(T) \
-   T(const T&&) = delete;       \
-   T& operator = (const T&&) = delete\
+#define DISALLOW_COPY_AND_ASSIGN(T) \
+    T(const T&) = delete;       \
+    T& operator = (const T&) = delete\
 
- #define SINGLETON_DECLARE(T) \
-     DEFAULT_CONSTURCT_(T); \
-     DEFAULT_DECONSTURCT_(T); \
-     DISALLOW_COPY_AND_ASSIGN(T); \
-     DISALLOW_MOVE_AND_ASSIGN(T)
+#define DISALLOW_MOVE_AND_ASSIGN(T) \
+    T(const T&&) = delete;       \
+    T& operator = (const T&&) = delete\
 
- #define NO_COPY_DECLARE_DEFAULT(T) \
-     DEFAULT_CONSTURCT_(T) = default; \
-     DEFAULT_DECONSTURCT_(T) = default; \
-     DISALLOW_COPY_AND_ASSIGN(T)
+#define SINGLETON_DECLARE(T) \
+    DEFAULT_CONSTURCT_(T); \
+    DEFAULT_DECONSTURCT_(T); \
+    DISALLOW_COPY_AND_ASSIGN(T); \
+    DISALLOW_MOVE_AND_ASSIGN(T)
 
- #define SUBTREE_LOG(format, ...) \
+#define NO_COPY_DECLARE_DEFAULT(T) \
+    DEFAULT_CONSTURCT_(T) = default; \
+    DEFAULT_DECONSTURCT_(T) = default; \
+    DISALLOW_COPY_AND_ASSIGN(T)
 
- #define SUBTREE_TRACE_NAME(name) \
-     HITRACE_METER_NAME(HITRACE_TAG_GRAPHIC_AGP,name)
+#define SUBTREE_LOG(format, ...) \
 
- #define SUBTREE_TRACE_NAME_FMT(fmt, ...) \
-     HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt,##__VA_ARGS__)
+#define SUBTREE_TRACE_NAME(name) \
+    HITRACE_METER_NAME(HITRACE_TAG_GRAPHIC_AGP, name)
+
+#define SUBTREE_TRACE_NAME_FMT(fmt, ...) \
+    HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__)

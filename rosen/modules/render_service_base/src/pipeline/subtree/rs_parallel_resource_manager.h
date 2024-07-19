@@ -22,7 +22,7 @@
  #include <unistd.h>
 
  using OnMigrateFunc = std::function<void()>;
- using MigrateFunc = std::function<void(void*,const OnMigrateFunc& func)>;
+ using MigrateFunc = std::function<void(void*, const OnMigrateFunc& func)>;
  using OnFailedFunc = std::function<std::string()>;
  using FailedFunc = std::function<void(const OnFailedFunc& func)>;
  using DebugCallback = std::function<void(const std::string&)>;
@@ -39,24 +39,24 @@ namespace Drawing {
 }
 
 
-using ThreadTag = int;
-using Resource = OnMigrateFunc;
-using Container = std::list<Resource>;
-using ContainerPtr = std::unique_ptr<Container>;
-using BucketMapping = std::map<ThreadTag,RecycleBucket>;
-using MigrateMapping = std::map<ThreadTag,MigrateFunc>;
-using ImagePtr = std::shared_ptr<Drawing::Image>;
-using ContextPtr = std::shared_ptr<Drawing::GPUContext>;
+    using ThreadTag = int;
+    using Resource = OnMigrateFunc;
+    using Container = std::list<Resource>;
+    using ContainerPtr = std::unique_ptr<Container>;
+    using BucketMapping = std::map<ThreadTag, RecycleBucket>;
+    using MigrateMapping = std::map<ThreadTag, MigrateFunc>;
+    using ImagePtr = std::shared_ptr<Drawing::Image>;
+    using ContextPtr = std::shared_ptr<Drawing::GPUContext>;
 
 
 class RSB_EXPORT RSParallelResourceManager final{
     public:
     static RSParallelResourceManager& Singleton();
-    void RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate,bool force = false);
+    void RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate, bool force = false);
     void UnRegisterMigrate(Drawing::GPUContext* gpuctx);
     void ReleaseResource();
-    ImagePtr BuildFromTextureByRef(const ImagePtr& ref,ContextPtr& newCtx, Drawing::BackendTexture& backendTexture);
-    ImagePtr GenerateSharedImageForDraw(const Drawing::Image& ref, ContextPtr& newCtx,bool isOriginTop = true);
+    ImagePtr BuildFromTextureByRef(const ImagePtr& ref, ContextPtr& newCtx, Drawing::BackendTexture& backendTexture);
+    ImagePtr GenerateSharedImageForDraw(const Drawing::Image& ref, ContextPtr& newCtx, bool isOriginTop = true);
 
 private:
     RSParallelResourceManager();

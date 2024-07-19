@@ -33,7 +33,7 @@ static inline const char* GetThreadName()
 {
     static constexpr int NAME_LEN = 16;
     static thread_local char threadName[NAME_LEN + 1] = "";
-    if(threadName[0] == 0){
+    if (threadName[0] == 0) {
         prctl(PR_GET_NAME, threadName);
         threadName[NAME_LEN] = 0;
     }
@@ -47,18 +47,17 @@ static inline ThreadTag GetThreadTag()
 
 static thread_local bool isRegistered;
 
-
 struct RecycleBucket {
     void Collect(const Resource& res);
     bool Exchange(ContainerPtr&& empty);
 
-    ContainerPtr container_ {std::make_unique<Container>() };
+    ContainerPtr container_ { std::make_unique<Container>() };
 };
 
 class RSGPUResourceManager {
 public:
     void RegisterMigrate(const MigrateFunc& migrate);
-    void Collect(ThreadTag dst,const Resource& res);
+    void Collect(ThreadTag dst, const Resource& res);
     void Dispatch();
 private:
     void DoRelease();
@@ -68,9 +67,6 @@ private:
     MigrateMapping migrateMapping_ {};
 };
 
-
-
-
 inline void RecycleBucket::Collect(const Resource& res)
 {
     container_->push_back(res);
@@ -78,24 +74,23 @@ inline void RecycleBucket::Collect(const Resource& res)
 
 inline bool RecycleBucket::Exchange(ContainerPtr&& empty)
 {
-    iff(container_->empty()){
+    if (container_->empty()) {
         return false;
     }
     container_.swap(empty);
     return true;
 }
 
-
 void RSGPUResourceManager::RegisterMigrate(const MigrateFunc& migrate)
 {
     ThreadTag dst = GetThreadTag();
-    if(migrate != nullptr){
-        migrateMapping_.insert({dst,migrate});
+    if (migrate != nullptr) {
+        migrateMapping_.insert({dst, migrate});
         isRegistered = true;
     }
 }
 
-void RSGPUResourceManager::Collect(ThreadTag  dst,const Resource& res)
+void RSGPUResourceManager::Collect(ThreadTag  dst, const Resource& res)
 {
 
     std::unique_lock<std::mutex> lock(bucketMutex_);
@@ -104,9 +99,9 @@ void RSGPUResourceManager::Collect(ThreadTag  dst,const Resource& res)
 
 void RSGPUResourceManager::Dispatch()
 {
-    static const auto s_migrateFunc = [this] () {DoRelease();};
-    for(const auto& item :migrateMapping_){
-        item.second(nullptr,s_migrateFunc);
+    static const auto s_migrateFunc = [this] () {DoRelease(); };
+    for(const auto& item :migrateMapping_) {
+        item.second(nullptr, s_migrateFunc);
     }
 }
 
@@ -121,15 +116,14 @@ inline void RSGPUResourceManager::DoRelease()
         needClear = found != bucketMapping_.end()
                     && found->second.Exchange(std::move(empty));
     }
-    if(needClear){
-        SUBTREE_TRACE_NAME_FMT("Release: %d",empty->size());
-        for(auto& callback : *empty){
+    if (needClear) {
+        SUBTREE_TRACE_NAME_FMT("Release: %d",  empty->size());
+        for(auto& callback : *empty) {
             callback();
         }
         empty->clear();
     }
 }
-
 
 RSParallelResourceManager& RSParallelResourceManager::Singleton()
 {
@@ -139,21 +133,20 @@ RSParallelResourceManager& RSParallelResourceManager::Singleton()
 
 RSParallelResourceManager::RSParallelResourceManager()
     : resManager_(std::make_unique<RSGPUResourceManager>())
-    {
-    }
-
-    void RSParallelResourceManager::RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate,bool force)
+{
+}
+    void RSParallelResourceManager::RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate, bool force)
     {
         auto ctx = gpuctx;
-        if(ctx == nullptr){
+        if (ctx == nullptr) {
             return;
         }
         auto skctx = ctx->GetImpl<Drawing::SkiaGPUContext>();
-        if(skctx == nullptr){
+        if (skctx == nullptr) {
             return ;
         }
         auto grctx = skctx->GetGrContext();
-        if(grctx ==nullptr){
+        if (grctx ==nullptr) {
             return;
         }
 
@@ -162,33 +155,33 @@ RSParallelResourceManager::RSParallelResourceManager()
 
         resManager_->RegisterMigrate(migrate);
 
-        auto migrateCallback = [this,threadTag](void* ctx,const Resource& res){
-            RS_LOGD("[%{public}s]: Migrate Collect Tid: [%{public}d]",GetThreadName(),threadTag);
-            this->resManager_->Collect(threadTag,res);
+        auto migrateCallback = [this, threadTag](void* ctx, const Resource& res) {
+            RS_LOGD("[%{public}s]: Migrate Collect Tid: [%{public}d]", GetThreadName(), threadTag);
+            this->resManager_->Collect(threadTag, res);
         };
         grctx->registerMigrateCallback(migrateCallback , force);
-        RS_LOGD("[%{public}s]: Register ReleaseMigrate Done",threadName.c_str());
+        RS_LOGD("[%{public}s]: Register ReleaseMigrate Done", threadName.c_str());
 #ifdef SUBTREE_PARALLEL_DEBUG
 
-   auto debugCallback = [threadName, threadTag](const std::string& debugLog){
-    RS_LOGD("Resource[%{public}s] ReleaseMigrate: [%{public}s](%{public}d)->[%{public}s](%{public}d)",debugLog.c_str(),GetThreadName(),gettid(),threadName.c_str(),threadTag);
-   };
-   grctx->registerDebugCallback(debugCallback);
+    auto debugCallback = [threadName, threadTag](const std::string& debugLog) {
+    RS_LOGD("Resource[%{public}s] ReleaseMigrate: [%{public}s](%{public}d)->[%{public}s](%{public}d)", debugLog.c_str(), GetThreadName(), gettid(), threadName.c_str(), threadTag);
+    };
+    grctx->registerDebugCallback(debugCallback);
 #endif
 }
 
 void RSParallelResourceManager::UnRegisterMigrate(Drawing::GPUContext* gpuctx)
 {
     auto ctx = gpuctx;
-    if(ctx ==nullptr){
+    if (ctx == nullptr) {
         return;
     }
     auto skctx = ctx->GetImpl<Drawing::SkiaGPUContext>();
-    if(skctx ==nullptr){
+    if (skctx == nullptr) {
         return;
     }
     auto grctx = skctx->GetGrContext();
-    if(grctx == nullptr){
+    if (grctx == nullptr) {
         return;
     }
     grctx->registerMigrateCallback(nullptr);
@@ -200,78 +193,75 @@ void RSParallelResourceManager::ReleaseResource()
 
 }
 
-
 struct RSParallelResourceHolder {
     RSParallelResourceHolder(const std::shared_ptr<Drawing::Image>& sharedImage)
-        : res_(sharedImage){}
+        : res_(sharedImage) {}
     const std::shared_ptr<Drawing::Image> res_;
 };
 
 static void ReleaseResourceHolder(void* context)
 {
     RSParallelResourceHolder* cleanupHelper = static_cast<RSParallelResourceHolder*>(context);
-    if(cleanupHelper != nullptr){
+    if (cleanupHelper != nullptr) {
         delete cleanupHelper;
     }
 }
 
-ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref,ContextPtr& newCtx)
+ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref, ContextPtr& newCtx)
 {
-    if(newCtx == nullptr || ref == nullptr || ref->IsValid(newCtx.get())){
+    if (newCtx == nullptr || ref == nullptr || ref->IsValid(newCtx.get())) {
         return ref;
     }
     Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
     Drawing::BitmapFormat format = {ref->GetColorType(), ref->GetAlphaType() };
-    // auto backendTexture = ref->GetBackendTexture(false,&origin);
-    if(!backendTexture.IsValid()){
+    // auto backendTexture = ref->GetBackendTexture(false, &origin);
+    if (!backendTexture.IsValid()) {
         return nullptr;
     }
     auto image = std::make_shared<Drawing::Image>();
     auto holder = new RSParallelResourceHolder(ref);
-    if(!image->BuildFromTexture(*newCtx,backendTexture.GetTextureInfo(),
-         origin,format,nullptr,ReleaseResourceHolder,holder)){
+    if (!image->BuildFromTexture(*newCtx, backendTexture.GetTextureInfo(),
+         origin, format, nullptr, ReleaseResourceHolder, holder)) {
             return nullptr;
          }
          return image;
 }
 
-
 struct RSParallelResourceHolder2{
     RSParallelResourceHolder2(const Drawing::Image& sharedImage)
-        : res_(sharedImage){}
+        : res_(sharedImage) {}
     const Drawing::Image res_;
 };
 
 static void ReleaseResourceHolder2(void* context)
 {
     RSParallelResourceHolder2* cleanupHelper = static_cast<RSParallelResourceHolder2*>(context);
-    if(cleanupHelper != nullptr){
+    if (cleanupHelper != nullptr) {
         delete cleanupHelper;
     }
 }
 
-ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Image& ref,ContextPtr& newCtx,bool isOriginTop)
+ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Image& ref, ContextPtr& newCtx, bool isOriginTop)
 {
-    if(newCtx == nullptr || ref.IsValid(newCtx.get())){
+    if (newCtx == nullptr || ref.IsValid(newCtx.get())) {
         return nullptr;
     }
     Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
-    if(!isOriginTop){
+    if (!isOriginTop) {
         origin = Drawing::TextureOrigin::BOTTOM_LEFT;
     }
-    Drawing::BitmapFormat format = {ref.GetColorType(),ref.GetAlphaType()};
-    auto backendTexture = ref.GetBackendTexture(false,&origin);
-    if(!backendTexture.IsValid()){
+    Drawing::BitmapFormat format = {ref.GetColorType(), ref.GetAlphaType()};
+    auto backendTexture = ref.GetBackendTexture(false, &origin);
+    if (!backendTexture.IsValid()) {
         return nullptr;
     }
     auto image = std::make_shared<Drawing::Image>();
     auto holder = new RSParallelResourceHolder2(ref);
-    if(!image->BuildFromTexture(*newCtx,backendTexture.GetTextureInfo(),
-        origin,format,nullptr,ReleaseResourceHolder2,holder)){
+    if (!image->BuildFromTexture(*newCtx, backendTexture.GetTextureInfo(),
+        origin, format, nullptr, ReleaseResourceHolder2, holder)) {
             return nullptr;
         }
         return image;
-
 }
 
 }

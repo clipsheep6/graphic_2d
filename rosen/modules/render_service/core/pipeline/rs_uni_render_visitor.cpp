@@ -73,14 +73,11 @@
 
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/round_corner_display/rs_message_bus.h"
-<<<<<<< HEAD
 #ifdef SUBTREE_PARALLEL_ENABLE
 #include "rs_parallel_manager.h"
 #endif
-=======
 
 #include "rs_profiler.h"
->>>>>>> b3ec2dcbe5535af428b4b224f4eea8ed324c4e6f
 #ifdef RS_PROFILER_ENABLED
 #include "rs_profiler_capture_recorder.h"
 #endif
@@ -1649,7 +1646,7 @@ bool RSUniRenderVisitor::IsLeashAndHasMainSubNode(RSRenderNode& node) const
     }
     // check leashWindow surface has first level mainwindow node
     auto children = node.GetSortedChildren();
-    auto iter = std::find_if((*children).begin(), (*children).end(),
+    auto iter = std::find_if ((*children).begin(), (*children).end(),
         [](const std::shared_ptr<RSRenderNode>& node) {
         if (node->GetType() == RSRenderNodeType::SURFACE_NODE) {
             const auto& surfaceNode = static_cast<RSSurfaceRenderNode&>(*node);
@@ -1680,23 +1677,23 @@ void RSUniRenderVisitor::QuickPrepareChildren(RSRenderNode& node)
     node.ResetChildUifirstSupportFlag();
     auto children = node.GetSortedChildren();
 #ifdef SUBTREE_PARALLEL_ENABLE
-  uint32_t childrenWeights = 0;
-  if(NeedPrepareChindrenInReverseOrder(node)){
-    std::for_each((*children).rbegin(),(*children).rend(),[this,&childrenWeights]
-      (const std::shared_ptr<RSRenderNode>& node){
-        curDirty_ = node->IsDirty();
-        node->QuickPrepare(shared_from_this());
-        childrenWeights += node->GetWeight();
-      });
-  }else{
-    std::for_each((*children).begin(), (*children).end(), [this, &childrenWeights]
-        (const std::shared_ptr<RSRenderNode>& node){
+    uint32_t childrenWeights = 0;
+    if (NeedPrepareChindrenInReverseOrder(node)) {
+        std::for_each((*children).rbegin(), (*children).rend(), [this, &childrenWeights]
+        (const std::shared_ptr<RSRenderNode>& node) {
             curDirty_ = node->IsDirty();
             node->QuickPrepare(shared_from_this());
-           childrenWeights += node->GetWeight();
+            childrenWeights += node->GetWeight();
         });
-  }
-  node.SetWeight(childrenWeights + 1);
+    } else {
+        std::for_each((*children).begin(), (*children).end(), [this, &childrenWeights]
+            (const std::shared_ptr<RSRenderNode>& node) {
+                curDirty_ = node->IsDirty();
+                node->QuickPrepare(shared_from_this());
+            childrenWeights += node->GetWeight();
+            });
+    }
+    node.SetWeight(childrenWeights + 1);
 #else
     if (NeedPrepareChindrenInReverseOrder(node)) {
         std::for_each((*children).rbegin(), (*children).rend(), [this](const std::shared_ptr<RSRenderNode>& node) {
@@ -2662,7 +2659,7 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
     if (RS_PROFILER_SHOULD_BLOCK_HWCNODE()) {
         return;
     }
-    
+
     const auto& hwcNodes = curSurfaceNode_->GetChildHardwareEnabledNodes();
     if (hwcNodes.empty()) {
         return;

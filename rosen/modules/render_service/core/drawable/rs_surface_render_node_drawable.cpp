@@ -204,7 +204,7 @@ bool RSSurfaceRenderNodeDrawable::PrepareOffscreenRender()
     int maxRenderSize = std::max(offscreenWidth, offscreenHeight);
     // create offscreen surface and canvas
     if (offscreenSurface_ == nullptr || maxRenderSize_ != maxRenderSize) {
-        RS_LOGD("PrepareOffscreenRender create offscreen surface offscreenSurface_,\
+        RS_LOGD("PrepareOffscreenRender create offscreen surface offscreenSurface_, \
             new [%{public}d, %{public}d %{public}d]", offscreenWidth, offscreenHeight, maxRenderSize);
         RS_TRACE_NAME_FMT("PrepareOffscreenRender surface size: [%d, %d]", maxRenderSize, maxRenderSize);
         maxRenderSize_ = maxRenderSize;
@@ -268,8 +268,8 @@ bool RSSurfaceRenderNodeDrawable::IsHardwareEnabled()
 void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
 #ifdef SUBTREE_PARALLEL_ENABLE
-   ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas,this);
-   if(RSParallelManager::Singleton().CheckIsParallelFrame() && drawType == ParallelDrawType::Skip){
+   ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this);
+   if (RSParallelManager::Singleton().CheckIsParallelFrame() && drawType == ParallelDrawType::Skip) {
        return;
    }
 #endif
@@ -320,8 +320,8 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 #ifdef SUBTREE_PARALLEL_ENABLE
     Drawing::Region curSurfaceDrawRegion = GetCurSurfaceDrawRegion();
-    if(!(surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow())){
-        curSurfaceDrawRegion = CalculateVisibleRegion(uniParam,surfaceParams,surfaceNode,isUiFirstNode);
+    if (!(surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow())) {
+        curSurfaceDrawRegion = CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isUiFirstNode);
     }
 #else
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isUiFirstNode);
@@ -360,7 +360,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw:[%s] (%d, %d, %d, %d)Alpha: %f", name_.c_str(),
         absDrawRect.left_, absDrawRect.top_, absDrawRect.width_, absDrawRect.height_, surfaceNode->GetGlobalAlpha());
 
-    RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw node:%{public}" PRIu64 ",child size:%{public}u, name:%{public}s,"
+    RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw node:%{public}" PRIu64 ", child size:%{public}u, name:%{public}s, "
             "OcclusionVisible:%{public}d Bound:%{public}s",
         surfaceParams->GetId(), surfaceNode->GetChildrenCount(), name_.c_str(), surfaceParams->GetOcclusionVisible(),
         surfaceParams->GetBounds().ToString().c_str());
@@ -424,9 +424,9 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     OnGeneralProcess(*surfaceNode, *curCanvas_, *surfaceParams, isSelfDrawingSurface);
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
-   if(RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CheckIsParallelFrame()
-        && RSUniRenderUtil::IsDrawableWindowScene(surfaceParams)){
-        DrawSubtreeParallelDfx(*rscanvas,*surfaceParams);
+   if (RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CheckIsParallelFrame()
+        && RSUniRenderUtil::IsDrawableWindowScene(surfaceParams)) {
+        DrawSubtreeParallelDfx(*rscanvas, *surfaceParams);
         }
 #endif
     if (needOffscreen) {
@@ -802,25 +802,25 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
     return true;
 }
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
-void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas,RSSurfaceRenderParams& surfaceParams)
+void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams)
 {
     auto sizeDebug = surfaceParams.GetCacheSize();
     Drawing::Brush rectBrush;
     auto threadId = canvas.GetParallelThreadIdx();
-    if(threadId == 11){
+    if (threadId == 11) {
         //yellow
-        rectBrush.SetColor(Drawing::Color(255,192,128,128));
-    }else if(threadId == 12){
+        rectBrush.SetColor(Drawing::Color(255, 192, 128, 128));
+    } else if (threadId == 12) {
         //orange
-        rectBrush.SetColor(Drawing::Color(255,128,0,128));
-    }else if(threadId == 13){
+        rectBrush.SetColor(Drawing::Color(255, 128, 0, 128));
+    } else if (threadId == 13) {
         //purple
-        rectBrush.SetColor(Drawing::Color(192,0,128,128));
-    }else{
-        rectBrush.SetColor(Drawing::Color(192,0,0,128));
+        rectBrush.SetColor(Drawing::Color(192, 0, 128, 128));
+    } else {
+        rectBrush.SetColor(Drawing::Color(192, 0, 0, 128));
     }
     canvas.AttachBrush(rectBrush);
-    canvas.DrawRect(Drawing::Rect(0,0,sizeDebug.x_,sizeDebug.y_));
+    canvas.DrawRect(Drawing::Rect(0, 0, sizeDebug.x_, sizeDebug.y_));
     canvas.DetachBrush();
 }
 #endif

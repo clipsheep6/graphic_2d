@@ -50,15 +50,15 @@
 #include "common/rs_singleton.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
-<<<<<<< HEAD
+
 #ifdef RS_ENABLE_FFRT
 #include "ffrt_inner.h"
-=======
+#endif
+
 #include "pipeline/rs_uifirst_manager.h"
 
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
->>>>>>> b3ec2dcbe5535af428b4b224f4eea8ed324c4e6f
 #endif
 
 namespace OHOS {

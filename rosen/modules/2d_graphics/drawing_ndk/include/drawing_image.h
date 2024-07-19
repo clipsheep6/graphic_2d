@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -123,12 +124,15 @@ OH_Drawing_ColorSpace* OH_Drawing_ImageGetColorSpace(const OH_Drawing_Image*);
  * @brief Gets the unique id of image.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
- * @return Returns the unique id of image.
+ * @param cImage Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @param cUnique Indicates the unique id of image.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cImage or cUnique is nullptr.
  * @since 12
  * @version 1.0
  */
-uint32_t OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image*);
+OH_Drawing_ErrorCode OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image* cImage, uint32_t* cUnique);
 
 /**
  * @brief Gets whether the image is opaque.
@@ -149,12 +153,16 @@ bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image*);
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
  * @param OH_Drawing_SamplingOptions Indicates the pointer to an <b>OH_Drawing_SamplingOptions</b> object.
  * @param isAllowCachingHint Indicates whether the image will be cached locally.
- * @return Returns <b>true</b> if the image is scaled to fit the bitmap; returns <b>false</b> otherwise.
+ * @param isScaled Indicates whether the image is scaled to fit the bitmap.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if any of cImage, cBitmap,
+ *                 cSampling or isScaled is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_ImageScalePixels(const OH_Drawing_Image*, const OH_Drawing_Bitmap*, const OH_Drawing_SamplingOptions*,
-    bool isAllowCachingHint);
+OH_Drawing_ErrorCode OH_Drawing_ImageScalePixels(const OH_Drawing_Image* cImage, const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_SamplingOptions* cSampling, bool isAllowCachingHint, bool* isScaled);
 
 #ifdef __cplusplus
 }

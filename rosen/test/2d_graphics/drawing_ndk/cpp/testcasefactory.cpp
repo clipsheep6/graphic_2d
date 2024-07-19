@@ -488,6 +488,22 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "image_filtercreatecomposeimagefilter",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageFilterCreateComposeImageFilter>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_getcolorspace",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageGetColorSpace>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_getuniqueid",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageGetUniqueID>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_scalepixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageScalePixels>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // textblob
     { "textblob_builderallocrunpos",

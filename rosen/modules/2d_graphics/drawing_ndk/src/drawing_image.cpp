@@ -118,14 +118,14 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image* cImage, OH_Drawing_Image_Inf
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
 }
 
-uint32_t OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image* cImage)
+OH_Drawing_ErrorCode OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image* cImage, uint32_t* cUnique)
 {
     const Image* image = CastToImage(cImage);
-    if (image == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return 0;
+    if (image == nullptr || cUnique == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return image->GetUniqueID();
+    *cUnique = image->GetUniqueID();
+    return OH_DRAWING_SUCCESS;
 }
 
 bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image* cImage)
@@ -138,15 +138,15 @@ bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image* cImage)
     return image->IsOpaque();
 }
 
-bool OH_Drawing_ImageScalePixels(const OH_Drawing_Image* cImage, const OH_Drawing_Bitmap* cBitmap,
-    const OH_Drawing_SamplingOptions* cSampling, bool isAllowCachingHint)
+OH_Drawing_ErrorCode OH_Drawing_ImageScalePixels(const OH_Drawing_Image* cImage, const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_SamplingOptions* cSampling, bool isAllowCachingHint, bool* isScaled)
 {
     const Image* image = CastToImage(cImage);
     const Bitmap* bitmap = CastToBitmap(cBitmap);
     const SamplingOptions* sampling = CastToSamplingOptions(cSampling);
-    if (image == nullptr || bitmap == nullptr || sampling == nullptr) {
-        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
-        return false;
+    if (image == nullptr || bitmap == nullptr || sampling == nullptr || isScaled == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
     }
-    return image->ScalePixels(*bitmap, *sampling, isAllowCachingHint);
+    *isScaled = image->ScalePixels(*bitmap, *sampling, isAllowCachingHint);
+    return OH_DRAWING_SUCCESS;
 }

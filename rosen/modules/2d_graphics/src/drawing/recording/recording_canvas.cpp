@@ -342,12 +342,8 @@ void RecordingCanvas::DrawImageRect(
 
 void RecordingCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
 {
-    // if (!addDrawOpImmediate_) {
-    //     cmdList_->AddDrawOp(std::make_shared<DrawPictureOpItem>(picture));
-    //     return;
-    // }
-    // auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
-    // cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
+    std::shared_ptr<DrawCmdList> drawCmdList = picture->GetDrawCmdList();
+    drawCmdList->PlaybackToDrawCmdList(cmdList_);
 }
 
 void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)

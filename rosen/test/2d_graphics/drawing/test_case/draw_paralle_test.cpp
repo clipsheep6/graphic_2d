@@ -21,23 +21,40 @@ namespace OHOS {
 namespace Rosen {
 std::shared_ptr<Drawing::Picture> threadFunction() {
     Drawing::PictureRecorder picture;
-    int32_t width = 300;
-    int32_t height = 300;
-    std::shared_ptr<Drawing::RecordingCanvas> recording = picture.BeginRecording(width, height);
+    std::shared_ptr<Drawing::RecordingCanvas> recording = picture.BeginRecording(50, 50);
+    Drawing::Font font = Drawing::Font();
+    font.SetSize(50);
+    std::shared_ptr<Drawing::TextBlob> textblob = Drawing::TextBlob::MakeFromString("thread",
+        font, Drawing::TextEncoding::UTF8);
     // Drawing::Path path;
     // path.MoveTo(0, 0); // from (0, 0)
-    // path.LineTo(300, 300); // to (300, 300)
+    // path.LineTo(200, 200); // to (300, 300)
     // recording->DrawPath(path);
+    Drawing::Bitmap bitmap;
+    Drawing::BitmapFormat bitmapFormat { Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_OPAQUE };
+    bitmap.Build(50, 50, bitmapFormat);
+    bitmap.ClearWithColor(Drawing::Color::COLOR_BLUE);
+
+    Drawing::Image image;
+    image.BuildFromBitmap(bitmap);
+    Drawing::Matrix matrix;
+    // Set matrix to rotate by degrees 45 about a pivot point at (0, 0).
+    matrix.Rotate(45, 0, 0);
+    auto e = Drawing::ShaderEffect::CreateImageShader(image, Drawing::TileMode::REPEAT, Drawing::TileMode::MIRROR, Drawing::SamplingOptions(), matrix);
+    auto c = Drawing::ColorSpace::CreateRefImage(image);
+    auto rect = Drawing::Rect(0, 0, 500, 960);
 
     Drawing::Pen pen;
-    pen.SetColor(0xFFFF0000); // color:red
-    pen.SetWidth(10.0f); // width:10
+    pen.SetAntiAlias(true);
+    pen.SetColor(Drawing::Color::COLOR_BLUE);
+    pen.SetColor(pen.GetColor4f(), c);
+    pen.SetWidth(10); // The thickness of the pen is 10
+    pen.SetShaderEffect(e);
     recording->AttachPen(pen);
-    Drawing::Path path;
-    path.MoveTo(0, 0); // from (0, 0)
-    path.LineTo(300, 300); // to (300, 300)
-    recording->DrawPath(path);
-    recording->DetachPen();
+    recording->DrawImage(image, 500, 60, Drawing::SamplingOptions());
+    recording->DrawBitmap(bitmap, 500, 360);
+    recording->DrawTextBlob(textblob.get(), 500, 660);
+    recording->DrawRect(rect);
     std::shared_ptr<Drawing::Picture> finishedPicture = picture.FinishingRecording();
     return finishedPicture;
 }
@@ -54,9 +71,65 @@ void DrawParalleTest::OnTestFunctionCpu(Drawing::Canvas* canvas)
     // 等待子线程执行完毕
     thread.join();
 
+    Drawing::Bitmap bitmap;
+    Drawing::BitmapFormat format { Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_OPAQUE };
+    bitmap.Build(500, 500, format);
+    auto bitmapCanvas = std::make_shared<Drawing::Canvas>();
+
+    bitmapCanvas->Bind(bitmap);
+    bitmapCanvas->Clear(0xFFFF0000);
+    bitmapCanvas->DrawPicture(finishedPicture);
+    canvas->DrawBitmap(bitmap, 0, 0);
+}
+
+void DrawParalleTest::OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas)
+{
+    std::shared_ptr<Drawing::Picture> finishedPicture;
+
+    // 创建子线程并执行绘制操作
+    std::thread thread([&finishedPicture]() {
+        finishedPicture = threadFunction();
+    });
+    Drawing::Font font = Drawing::Font();
+    font.SetSize(100);
+    std::shared_ptr<Drawing::TextBlob> textblob = Drawing::TextBlob::MakeFromString("gpu",
+        font, Drawing::TextEncoding::UTF8);
+    // Drawing::Path path;
+    // path.MoveTo(0, 0); // from (0, 0)
+    // path.LineTo(200, 200); // to (300, 300)
+    // recording->DrawPath(path);
+    Drawing::Bitmap bitmap;
+    Drawing::BitmapFormat bitmapFormat { Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_OPAQUE };
+    bitmap.Build(100, 100, bitmapFormat);
+    bitmap.ClearWithColor(Drawing::Color::COLOR_YELLOW);
+
+    Drawing::Image image;
+    image.BuildFromBitmap(bitmap);
+    Drawing::Matrix matrix;
+    // Set matrix to rotate by degrees 45 about a pivot point at (0, 0).
+    matrix.Rotate(45, 0, 0);
+    auto e = Drawing::ShaderEffect::CreateImageShader(image, Drawing::TileMode::REPEAT, Drawing::TileMode::MIRROR, Drawing::SamplingOptions(), matrix);
+    auto c = Drawing::ColorSpace::CreateRefImage(image);
+    auto rect = Drawing::Rect(100, 100, 100, 100);
+
+    Drawing::Pen pen;
+    pen.SetAntiAlias(true);
+    pen.SetColor(Drawing::Color::COLOR_BLUE);
+    pen.SetColor(pen.GetColor4f(), c);
+    pen.SetWidth(10); // The thickness of the pen is 10
+    pen.SetShaderEffect(e);
+    canvas->AttachPen(pen);
+    canvas->DrawImage(image, 100, 60, Drawing::SamplingOptions());
+    canvas->DrawBitmap(bitmap, 100, 360);
+    canvas->DrawTextBlob(textblob.get(), 100, 660);
+    canvas->DrawRect(rect);
+    // 等待子线程执行完毕
+    thread.join();
+
     // 使用绘制结果进行进一步处理
     if (finishedPicture != nullptr) {
-        finishedPicture->Playback(canvas);
+        std::cout<<"finishedPicture is not nullptr"<<std::endl;
+        canvas->DrawPicture(finishedPicture);
     }
 }
 } // namespace Rosen

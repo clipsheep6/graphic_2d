@@ -14,6 +14,7 @@
  */
 
 #include "core_canvas.h"
+#include "draw/canvas.h"
 
 #include "impl_factory.h"
 #include "utils/log.h"
@@ -558,6 +559,13 @@ void CoreCanvas::GetLooperPaint(const Paint& paint, Paint& looperPaint)
     Filter filter = looperPaint.GetFilter();
     filter.SetMaskFilter(looper->GetMaskFilter());
     looperPaint.SetFilter(filter);
+}
+
+void Canvas::DrawPicture(const std::shared_ptr<Picture> picture)
+{
+    this->Save();
+    picture->Playback(this);
+    this->Restore();
 }
 } // namespace Drawing
 } // namespace Rosen

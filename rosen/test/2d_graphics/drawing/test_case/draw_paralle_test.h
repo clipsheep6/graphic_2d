@@ -24,7 +24,7 @@ public:
     ~DrawParalleTest() override = default;
 protected:
     void OnTestFunctionCpu(Drawing::Canvas* canvas) override;
-    // void OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas) override;
+    void OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas) override;
     // void OnTestPerformance(Drawing::Canvas* canvas) override;
 };
 } // namespace Rosen

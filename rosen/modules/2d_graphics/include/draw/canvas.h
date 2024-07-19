@@ -84,12 +84,7 @@ public:
         return isOffscreen_;
     }
 
-    virtual void DrawPicture(const std::shared_ptr<Picture> picture)
-    {
-        this->Save();
-        picture->Playback(this);
-        this->Restore();
-    }
+    virtual void DrawPicture(const std::shared_ptr<Picture> picture);
 protected:
     std::vector<Canvas*> pCanvasList_;
     bool recordingState_ = false;

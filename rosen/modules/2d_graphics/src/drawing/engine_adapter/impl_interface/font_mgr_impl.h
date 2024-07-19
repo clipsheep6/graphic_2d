@@ -21,6 +21,16 @@
 #include "text/typeface.h"
 #include "utils/scalar.h"
 
+enum FontCheckCode {
+    SUCCESSED              = 0,  // no error
+    ERROR_FILE_NOT_EXISTS  = 1,  // the file does not exist
+    ERROR_OPEN_FILE_FAILED = 2,  // the file failed to open
+    ERROR_READ_FILE_FAILED = 3,  // file read failed
+    ERROR_SEEK_FAILED      = 4,  // seek failed
+    ERROR_GET_SIZE_FAILED  = 5,  // get size failed
+    ERROR_TYPE_OTHER       = 10, // other reasons, such as empty input parameters or other internal reasons
+};
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

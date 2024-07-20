@@ -169,7 +169,7 @@ constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
 const std::string PERF_FOR_BLUR_IF_NEEDED_TASK_NAME = "PerfForBlurIfNeeded";
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* HIDE_NOTCH_STATUS = "persist.sys.graphic.hideNotch.status";
-constexpr const char* BUFFER_FROM_TEXTURE = "oh_fluttr";
+constexpr const char* BUFFER_FROM_TEXTURE = "oh_flutter";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);

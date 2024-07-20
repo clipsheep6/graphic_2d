@@ -526,7 +526,11 @@ void RSSurfaceRenderNode::QuickPrepare(const std::shared_ptr<RSNodeVisitor>& vis
     ApplyModifiers();
     visitor->QuickPrepareSurfaceRenderNode(*this);
 
-    if ((IsAppWindow() || IsScbScreen()) && !IsNotifyUIBufferAvailable() && IsFirstFrameReadyToDraw(*this)) {
+    bool isRsFrameReadyToDraw = IsFirstFrameReadyToDraw(*this);
+    RS_TRACE_NAME_FMT("nid:%llu rsFrame:[%d], layoutNotify:[%d], uifirstFrmae:%d",
+        GetId(), isRsFrameReadyToDraw, IsNotifyUIBufferAvailable(), IsWaitUifrstFirstFrame());
+    if ((IsAppWindow() || IsScbScreen()) && !IsNotifyUIBufferAvailable() && isRsFrameReadyToDraw &&
+        !IsWaitUifrstFirstFrame()) {
         NotifyUIBufferAvailable();
     }
 }
@@ -1150,14 +1154,13 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable(bool isTextureExportNode)
 
 void RSSurfaceRenderNode::NotifyUIBufferAvailable()
 {
-    if (isNotifyUIBufferAvailable_) {
-        return;
-    }
     isNotifyUIBufferAvailable_ = true;
+    isWaitUifrstFirstFrame_ = false;
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
+            RS_TRACE_NAME_FMT("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId %llu", GetId());
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
 #ifdef OHOS_PLATFORM
             if (IsAppWindow()) {

@@ -175,7 +175,8 @@ private:
 
     void UifirstStateChange(RSSurfaceRenderNode& node, MultiThreadCacheType currentFrameCacheType);
     NodeId LeashWindowContainMainWindowAndStarting(RSSurfaceRenderNode& node);
-    void NotifyUIStartingWindow(NodeId id, bool hasCachedTexture);
+    void NotifyUIStartingWindow(NodeId id);
+    void UifirstSetWaitUifrstFirstFrame(RSSurfaceRenderNode& node, bool state);
     void UpdateChildrenDirtyRect(RSSurfaceRenderNode& node);
     bool EventsCanSkipFirstWait(std::vector<EventInfo>& events);
     bool IsCardSkipFirstWaitScene(std::string& scene, int32_t appPid);

@@ -32,6 +32,8 @@ namespace {
 const uint8_t* g_data = nullptr;
 size_t g_size = 0;
 size_t g_pos;
+int g_width = 1350;
+int g_height = 2810;
 } // namespace
 
 template<class T>
@@ -71,10 +73,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSSystemProperties::GetRecordingEnabled();
     RSSystemProperties::GetProfilerEnabled();
     RSSystemProperties::GetInstantRecording();
-    RSSystemProperties::SetInstantRecording(true);
-    RSSystemProperties::GetSaveRDC();
-    RSSystemProperties::SetSaveRDC(true);
-    RSSystemProperties::GetUniRenderEnabled();
     RSSystemProperties::GetRenderNodeTraceEnabled();
     RSSystemProperties::GetDrawOpTraceEnabled();
     RSSystemProperties::GetAnimationTraceEnabled();
@@ -132,17 +130,17 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled();
     RSSystemProperties::GetBlurExtraFilterEnabled();
     RSSystemProperties::GetAnimationCacheEnabled();
-    RSSystemProperties::GetBoolSystemProperty(nullptr, true);
+    RSSystemProperties::GetBoolSystemProperty(std::string("noName").c_str(), true);
     RSSystemProperties::GetUIFirstEnabled();
     RSSystemProperties::GetUIFirstDebugEnabled();
     RSSystemProperties::GetDebugTraceEnabled();
     RSSystemProperties::GetDebugTraceLevel();
-    RSSystemProperties::FindNodeInTargetList(node);
     RSSystemProperties::IsFoldScreenFlag();
     RSSystemProperties::GetCacheCmdEnabled();
     RSSystemProperties::GetASTCEnabled();
     RSSystemProperties::GetCachedBlurPartialRenderEnabled();
     RSSystemProperties::GetImageGpuResourceCacheEnable(width, height);
+    RSSystemProperties::GetImageGpuResourceCacheEnable(g_width, g_height);
     RSSystemProperties::GetSnapshotWithDMAEnabled();
     RSSystemProperties::GetDrmEnabled();
     RSSystemProperties::IsPhoneType();
@@ -175,6 +173,40 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     RSSystemProperties::GetRSNodeLimit();
     return true;
 }
+bool DoGetUniRenderEnabled(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    RSSystemProperties::GetUniRenderEnabled();
+    RSSystemProperties::isUniRenderEnabled_ = true;
+    RSSystemProperties::GetUniRenderEnabled();
+
+    bool flag = true;
+    RSSystemProperties::SetInstantRecording(flag);
+    flag = false;
+    RSSystemProperties::SetInstantRecording(flag);
+
+    RSSystemProperties::SetSaveRDC(true);
+    RSSystemProperties::GetSaveRDC();
+    RSSystemProperties::SetSaveRDC(false);
+    RSSystemProperties::GetSaveRDC();
+    std::vector<std::string> dfxTargetSurfaceNames;
+    RSSystemProperties::GetTargetDirtyRegionDfxEnabled(dfxTargetSurfaceNames);
+    RSSystemProperties::GetTargetDirtyRegionDfxEnabled(dfxTargetSurfaceNames);
+    std::string nodeStr("A");
+    RSSystemProperties::FindNodeInTargetList(nodeStr);
+    OnSystemPropertyChanged func = [](const char*, const char*, void*) {};
+    int context = GetData<int>();
+    RSSystemProperties::WatchSystemProperty(std::string("noName").c_str(), func, &context);
+    return true;
+}
 } // namespace Rosen
 } // namespace OHOS
 
@@ -183,5 +215,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     OHOS::Rosen::DoSomethingInterestingWithMyAPI(data, size);
+    OHOS::Rosen::DoGetUniRenderEnabled(data, size);
     return 0;
 }

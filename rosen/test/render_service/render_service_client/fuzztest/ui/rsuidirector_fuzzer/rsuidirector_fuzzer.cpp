@@ -20,12 +20,12 @@
 #include <securec.h>
 
 #include "animation/rs_render_animation.h"
-#include "pipeline/rs_render_result.h"
 #include "modifier/rs_modifier_manager.h"
+#include "pipeline/rs_render_result.h"
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_node.h"
-#include "ui/rs_surface_node.h"
 #include "ui/rs_root_node.h"
+#include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
 
 namespace OHOS {
@@ -139,6 +139,7 @@ bool DoStartTextureExport(const uint8_t* data, size_t size)
 
     // test
     std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    director->isUniRenderEnabled_ = true;
     director->StartTextureExport();
     return true;
 }
@@ -177,6 +178,7 @@ bool DoSetRSSurfaceNode(const uint8_t* data, size_t size)
     RSSurfaceNodeConfig config;
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
     director->SetRSSurfaceNode(surfaceNode);
+    director->SetRSSurfaceNode(nullptr);
     return true;
 }
 
@@ -444,9 +446,7 @@ bool DoSetRequestVsyncCallback(const uint8_t* data, size_t size)
 
     // test
     std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
-    const std::function<void()>& callback = []() {
-        std::cout << "for test" << std::endl;
-    };
+    const std::function<void()>& callback = []() { std::cout << "for test" << std::endl; };
     director->SetRequestVsyncCallback(callback);
     return true;
 }
@@ -464,9 +464,7 @@ bool DoPostFrameRateTask(const uint8_t* data, size_t size)
 
     // test
     std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
-    const std::function<void()>& task = []() {
-        std::cout << "for test" << std::endl;
-    };
+    const std::function<void()>& task = []() { std::cout << "for test" << std::endl; };
     director->PostFrameRateTask(task);
     return true;
 }
@@ -608,9 +606,7 @@ bool DoPostTask(const uint8_t* data, size_t size)
 
     // test
     std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
-    const std::function<void()>& task = []() {
-        std::cout << "for test" << std::endl;
-    };
+    const std::function<void()>& task = []() { std::cout << "for test" << std::endl; };
     director->PostTask(task);
     return true;
 }
@@ -654,4 +650,3 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::DoPostTask(data, size);
     return 0;
 }
-

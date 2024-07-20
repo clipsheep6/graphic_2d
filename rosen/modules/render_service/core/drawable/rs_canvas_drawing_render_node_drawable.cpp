@@ -167,14 +167,17 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
 void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
 {
-    auto canvasDrawingPtr = std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(shared_from_this());
     {
-        // check params, if params is invalid, do not post the task
-        std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
+        /*
+         * Note that only read operations can be performed on surface_ and canvas_ here, and any other operations are prohibited
+         * check params, if params is invalid, do not post the task
+         */ 
         if (!surface_ || !canvas_) {
             return;
         }
     }
+
+    auto canvasDrawingPtr = std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(shared_from_this());
     auto task = [this, canvasDrawingPtr]() {
         std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
         if (!surface_ || !canvas_) {

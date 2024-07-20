@@ -27,6 +27,9 @@
 #include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen::DrawableV2 {
+namespace {
+    constexpr int EDGE_WIDTH_LIMIT = 1000;
+}
 RSCanvasDrawingRenderNodeDrawable::Registrar RSCanvasDrawingRenderNodeDrawable::instance_;
 
 RSCanvasDrawingRenderNodeDrawable::RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
@@ -331,23 +334,14 @@ void RSCanvasDrawingRenderNodeDrawable::ProcessCPURenderInBackgroundThread(std::
         }
         std::unique_lock<std::recursive_mutex> lock(canvasDrawingDrawable->drawableMutex_);
         canvasDrawingDrawable->image_ = image;
-        auto task = [ctx, nodeId] () {
-            if (UNLIKELY(!ctx)) {
-                return;
-            }
-            ctx->PostTask([ctx, nodeId]() {
-                if (auto node = ctx->GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(nodeId)) {
-                    ROSEN_LOGD("Node id %{public}" PRIu64 " set dirty, process in background", node->GetId());
-                    node->SetDirty();
-                    ctx->RequestVsync();
-                }
-            });
-        };
     });
 }
 
 void RSCanvasDrawingRenderNodeDrawable::ResetSurface()
 {
+    if (surface_ && surface_->GetImageInfo().GetWidth() > EDGE_WIDTH_LIMIT) {
+        RS_LOGI("RSCanvasDrawingRenderNodeDrawable::ResetSurface id:%{public}" PRIu64 "", nodeId_);
+    }
     if (preThreadInfo_.second && surface_) {
         preThreadInfo_.second(std::move(surface_));
     }
@@ -562,6 +556,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK(int width, int height,
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
         return false;
     }
+    recordingCanvas_ = nullptr;
     canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
@@ -599,6 +594,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
         return false;
     }
+    recordingCanvas_ = nullptr;
     canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
@@ -667,6 +663,10 @@ bool RSCanvasDrawingRenderNodeDrawable::GetCurrentContextAndImage(std::shared_pt
 
 bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceWithTexture(int width, int height, RSPaintFilterCanvas& canvas)
 {
+    if (width > EDGE_WIDTH_LIMIT) {
+        RS_LOGI("RSCanvasDrawingRenderNodeDrawable::ResetSurfaceWithTexture id:%{public}" PRIu64 " "
+             "width:%{public}d height:%{public}d ", nodeId_, width, height);
+    }
     auto preMatrix = canvas_->GetTotalMatrix();
     auto preDeviceClipBounds = canvas_->GetDeviceClipBounds();
     auto preSaveCount = canvas_->GetSaveCount();

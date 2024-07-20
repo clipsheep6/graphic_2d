@@ -119,14 +119,14 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
     }
 
     {
-        std::scoped_lock<std::recursive_mutex> lock(cacheMutex_);
+        std::scoped_lock<std::recursive_mutex> cacheLock(cacheMutex_);
         if (cachedSurface_ == nullptr) {
             // Remove node id in update time map to avoid update time exceeds DRAWING_CACHE_MAX_UPDATE_TIME
             // (If cache disabled for node not on the tree, we clear cache in OnSync func, but we can't clear node
             // id in drawingCacheUpdateTimeMap_ [drawable will not be visited in RT].
             // If this node is marked node group by arkui again, we should first clear update time here, otherwise
             // update time will accumulate.)
-            std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+            std::lock_guard<std::mutex> mapLock(drawingCacheMapMutex_);
             drawingCacheUpdateTimeMap_.erase(nodeId_);
         }
     }
@@ -214,10 +214,9 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const 
     }
 
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
-    if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect()) {
+    if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect() &&
+        !HasFilterOrEffect()) {
         RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", nodeId_);
-        Drawing::AutoCanvasRestore arc(canvas, true);
-        DrawBackground(canvas, params.GetBounds());
         return;
     }
 

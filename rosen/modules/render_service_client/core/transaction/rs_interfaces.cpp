@@ -76,9 +76,9 @@ ScreenId RSInterfaces::CreateVirtualScreen(
     sptr<Surface> surface,
     ScreenId mirrorId,
     int flags,
-    std::vector<NodeId> filteredAppVector)
+    std::vector<NodeId> whiteList)
 {
-    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
+    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, whiteList);
 }
 
 int32_t RSInterfaces::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
@@ -631,9 +631,9 @@ void RSInterfaces::NotifyRefreshRateEvent(const EventInfo& eventInfo)
     renderServiceClient_->NotifyRefreshRateEvent(eventInfo);
 }
 
-void RSInterfaces::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid, int32_t touchCnt)
+void RSInterfaces::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
-    renderServiceClient_->NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
+    renderServiceClient_->NotifyTouchEvent(touchStatus, touchCnt);
 }
 
 void RSInterfaces::NotifyDynamicModeEvent(bool enableDynamicMode)

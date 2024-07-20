@@ -110,6 +110,11 @@ public:
     virtual bool IsSubTreeNeedPrepare(bool filterInGlobal, bool isOccluded = false);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
+    bool SetAccumulatedClipFlag(bool clipChange);
+    bool GetAccumulatedClipFlagChange() const
+    {
+        return isAccumulatedClipFlagChanged_;
+    }
     bool IsDirty() const;
     bool IsSubTreeDirty() const;
     void SetSubTreeDirty(bool val);
@@ -328,6 +333,7 @@ public:
 
     // update parent's children rect including childRect and itself
     void MapAndUpdateChildrenRect();
+    void UpdateSubTreeInfo(const RectI& clipRect);
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
 
     void SetStaticCached(bool isStaticCached);
@@ -484,7 +490,8 @@ public:
     virtual void OnFilterCacheStateChanged() {};
 
     // for blur filter cache
-    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false);
+    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false,
+        bool rotationStatusChanged = false);
     void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const RectI& clipRect);
@@ -710,7 +717,7 @@ public:
     }
 
     // Used to collect renderDrawable for UniRenderThread.
-    DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr GetRenderDrawable()
+    DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr GetRenderDrawable() const
     {
         return renderDrawable_;
     }
@@ -838,7 +845,12 @@ private:
     bool lastFrameSubTreeSkipped_ = false;
     bool hasChildrenOutOfRect_ = false;
     bool lastFrameHasChildrenOutOfRect_ = false;
+    bool isAccumulatedClipFlagChanged_ = false;
+    bool hasAccumulatedClipFlag_ = false;
     RectI childrenRect_;
+    RectI oldChildrenRect_;
+    RectI oldClipRect_;
+    Drawing::Matrix oldAbsMatrix_;
     
     // aim to record children rect in abs coords, without considering clip
     RectI absChildrenRect_;

@@ -44,14 +44,17 @@ struct UIFirstParams {
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     std::atomic<bool> isNeedSubmitSubThread_ = true;
 };
-class RSSurfaceRenderNodeDrawable : public RSRenderNodeDrawable, public RSSurfaceHandler {
+class RSSurfaceRenderNodeDrawable : public RSRenderNodeDrawable {
 public:
     ~RSSurfaceRenderNodeDrawable() override;
 
     static RSRenderNodeDrawable::Ptr OnGenerate(std::shared_ptr<const RSRenderNode> node);
     void OnDraw(Drawing::Canvas& canvas) override;
     void OnCapture(Drawing::Canvas& canvas) override;
-    bool EnableRecordingOptimization(RSRenderParams& params);
+    bool CheckIfSurfaceSkipInMirror(const RSRenderThreadParams& uniParam, const RSSurfaceRenderParams& surfaceParams);
+    void SetVirtualScreenWhiteListRootId(const std::unordered_set<NodeId>& whiteList, NodeId id);
+    void ResetVirtualScreenWhiteListRootId(NodeId id);
+    bool EnableRecordingOptimization(const RSSurfaceRenderParams& surfaceParams);
 
     void SubDraw(Drawing::Canvas& canvas);
     void ClipRoundRect(Drawing::Canvas& canvas);
@@ -235,7 +238,17 @@ public:
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
 
-    sptr<IConsumerSurface> GetConsumerOnDraw()
+    const std::shared_ptr<RSSurfaceHandler> GetRSSurfaceHandlerUiFirstOnDraw() const
+    {
+        return surfaceHandlerUiFirst_;
+    }
+
+    std::shared_ptr<RSSurfaceHandler> GetMutableRSSurfaceHandlerUiFirstOnDraw()
+    {
+        return surfaceHandlerUiFirst_;
+    }
+
+    sptr<IConsumerSurface> GetConsumerOnDraw() const
     {
         return consumerOnDraw_;
     }
@@ -291,6 +304,7 @@ private:
     bool surfaceCreated_ = false;
 
     // UIFIRST
+    std::shared_ptr<RSSurfaceHandler> surfaceHandlerUiFirst_ = nullptr;
     UIFirstParams uiFirstParams;
     ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
     uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;

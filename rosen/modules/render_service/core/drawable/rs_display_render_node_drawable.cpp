@@ -16,17 +16,18 @@
 #include "drawable/rs_display_render_node_drawable.h"
 
 #include <memory>
-#include <string>
 #include <parameters.h>
+#include <string>
 
 #include "benchmarks/rs_recording_thread.h"
+#include "luminance/rs_luminance_control.h"
 #include "rs_trace.h"
 #include "system/rs_system_parameters.h"
 
+#include "common/rs_common_def.h"
 #include "common/rs_optional_trace.h"
 #include "common/rs_singleton.h"
 #include "drawable/rs_surface_render_node_drawable.h"
-#include "luminance/rs_luminance_control.h"
 #include "memory/rs_tag_tracker.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
@@ -36,13 +37,15 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_pointer_render_manager.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_listener.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_uni_render_virtual_processor.h"
 #include "pipeline/sk_resource_manager.h"
-#include "pipeline/rs_pointer_render_manager.h"
 #include "platform/common/rs_log.h"
 #include "platform/ohos/rs_jank_stats.h"
 #include "property/rs_point_light_manager.h"
@@ -59,6 +62,39 @@ constexpr const char* DEFAULT_CLEAR_GPU_CACHE = "DefaultClearGpuCache";
 constexpr int32_t NO_SPECIAL_LAYER = 0;
 constexpr int32_t HAS_SPECIAL_LAYER = 1;
 constexpr int32_t CAPTURE_WINDOW = 2; // To be deleted after captureWindow being deleted
+
+std::string RectVectorToString(std::vector<RectI>& regionRects)
+{
+    std::string results = "";
+    for (auto& rect : regionRects) {
+        results += rect.ToString();
+    }
+    return results;
+}
+
+Drawing::Region GetFlippedRegion(std::vector<RectI>& rects, ScreenInfo& screenInfo)
+{
+    Drawing::Region region;
+
+    for (const auto& r : rects) {
+        int32_t topAfterFilp = 0;
+#ifdef RS_ENABLE_VK
+        topAfterFilp = (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+                           RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR)
+                           ? r.top_
+                           : static_cast<int32_t>(screenInfo.GetRotatedHeight()) - r.GetBottom();
+#else
+        topAfterFilp = static_cast<int32_t>(screenInfo.GetRotatedHeight()) - r.GetBottom();
+#endif
+        Drawing::Region tmpRegion;
+        tmpRegion.SetRect(Drawing::RectI(r.left_, topAfterFilp, r.left_ + r.width_, topAfterFilp + r.height_));
+        RS_OPTIONAL_TRACE_NAME_FMT("GetFlippedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]",
+            r.left_, r.top_, r.left_ + r.width_, r.top_ + r.height_, r.left_, topAfterFilp, r.left_ + r.width_,
+            topAfterFilp + r.height_);
+        region.Op(tmpRegion, Drawing::RegionOp::UNION);
+    }
+    return region;
+}
 }
 class RSOverDrawDfx {
 public:
@@ -149,7 +185,7 @@ void DoScreenRcdTask(std::shared_ptr<RSProcessor>& processor, std::unique_ptr<Rc
 RSDisplayRenderNodeDrawable::Registrar RSDisplayRenderNodeDrawable::instance_;
 
 RSDisplayRenderNodeDrawable::RSDisplayRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
-    : RSRenderNodeDrawable(std::move(node))
+    : RSRenderNodeDrawable(std::move(node)), surfaceHandler_(std::make_shared<RSSurfaceHandler>(nodeId_))
 {}
 
 RSRenderNodeDrawable::Ptr RSDisplayRenderNodeDrawable::OnGenerate(std::shared_ptr<const RSRenderNode> node)
@@ -225,7 +261,7 @@ static std::vector<RectI> MergeDirtyHistoryInVirtual(RSDisplayRenderNode& displa
 
 std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
     std::shared_ptr<RSDisplayRenderNode> displayNodeSp, RSDisplayRenderParams& params,
-    std::shared_ptr<RSProcessor> processor) const
+    std::shared_ptr<RSProcessor> processor)
 {
     RS_TRACE_NAME("RSDisplayRenderNodeDrawable:RequestFrame");
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
@@ -240,15 +276,15 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
         return nullptr;
     }
 
-    if (!displayNodeSp->IsSurfaceCreated()) {
-        sptr<IBufferConsumerListener> listener = new RSUniRenderListener(displayNodeSp);
-        if (!displayNodeSp->CreateSurface(listener)) {
+    if (!IsSurfaceCreated()) {
+        sptr<IBufferConsumerListener> listener = new RSUniRenderListener(surfaceHandler_);
+        if (!CreateSurface(listener)) {
             RS_LOGE("RSDisplayRenderNodeDrawable::RequestFrame CreateSurface failed");
             return nullptr;
         }
     }
 
-    auto rsSurface = displayNodeSp->GetRSSurface();
+    auto rsSurface = GetRSSurface();
     if (!rsSurface) {
         RS_LOGE("RSDisplayRenderNodeDrawable::RequestFrame No RSSurface found");
         return nullptr;
@@ -264,30 +300,6 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
     }
 
     return renderFrame;
-}
-
-static inline Drawing::Region GetFilpedRegion(std::vector<RectI>& rects, ScreenInfo& screenInfo)
-{
-    Drawing::Region region;
-
-    for (auto& r : rects) {
-        int32_t topAfterFilp = 0;
-#ifdef RS_ENABLE_VK
-        topAfterFilp = (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
-                           RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR)
-                           ? r.top_
-                           : static_cast<int32_t>(screenInfo.GetRotatedHeight()) - r.GetBottom();
-#else
-        topAfterFilp = static_cast<int32_t>(screenInfo.GetRotatedHeight()) - r.GetBottom();
-#endif
-        Drawing::Region tmpRegion;
-        tmpRegion.SetRect(Drawing::RectI(r.left_, topAfterFilp, r.left_ + r.width_, topAfterFilp + r.height_));
-        RS_OPTIONAL_TRACE_NAME_FMT("GetFilpedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]",
-            r.left_, r.top_, r.left_ + r.width_, r.top_ + r.height_, r.left_, topAfterFilp, r.left_ + r.width_,
-            topAfterFilp + r.height_);
-        region.Op(tmpRegion, Drawing::RegionOp::UNION);
-    }
-    return region;
 }
 
 static void ClipRegion(Drawing::Canvas& canvas, Drawing::Region& region, bool clear = true)
@@ -494,6 +506,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
                 currentBlackList_ = screenManager->GetVirtualScreenBlackList(paramScreenId);
             }
             uniParam->SetBlackList(currentBlackList_);
+            uniParam->SetWhiteList(screenInfo.whiteList);
             RS_LOGD("RSDisplayRenderNodeDrawable::OnDraw Mirror screen.");
             DrawMirrorScreen(displayNodeSp, *params, processor);
             lastBlackList_ = currentBlackList_;
@@ -541,7 +554,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (isHdrOn) {
         params->SetNewPixelFormat(GRAPHIC_PIXEL_FMT_RGBA_1010102);
     }
-    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(displayNodeSp);
+    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(*this);
     auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
     for (const auto& surfaceNode : hardwareNodes) {
         auto params = surfaceNode == nullptr ? nullptr :
@@ -563,7 +576,9 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (uniParam->IsPartialRenderEnabled()) {
         damageRegionrects = MergeDirtyHistory(displayNodeSp, renderFrame->GetBufferAge(), screenInfo, rsDirtyRectsDfx);
         uniParam->Reset();
-        clipRegion = GetFilpedRegion(damageRegionrects, screenInfo);
+        clipRegion = GetFlippedRegion(damageRegionrects, screenInfo);
+        RS_OPTIONAL_TRACE_NAME_FMT("SetDamageRegion damageRegionrects num: %lu, info: %s",
+            damageRegionrects.size(), RectVectorToString(damageRegionrects).c_str());
         if (!uniParam->IsRegionDebugEnabled()) {
             renderFrame->SetDamageRegion(damageRegionrects);
         }
@@ -741,7 +756,9 @@ int32_t RSDisplayRenderNodeDrawable::GetSpecialLayerType(RSDisplayRenderParams& 
         return hasGeneralSpecialLayer ? HAS_SPECIAL_LAYER :
             (params.HasCaptureWindow() ? CAPTURE_WINDOW : NO_SPECIAL_LAYER);
     }
-    if (hasGeneralSpecialLayer || !params.GetScreenInfo().filteredAppSet.empty() || !currentBlackList_.empty()) {
+    auto uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams() ?
+       RSUniRenderThread::Instance().GetRSRenderThreadParams().get() : nullptr;
+    if (hasGeneralSpecialLayer || (uniParam && !uniParam->GetWhiteList().empty()) || !currentBlackList_.empty()) {
         return HAS_SPECIAL_LAYER;
     } else if (params.HasCaptureWindow()) {
         return CAPTURE_WINDOW;
@@ -896,9 +913,10 @@ void RSDisplayRenderNodeDrawable::DrawMirror(std::shared_ptr<RSDisplayRenderNode
     curCanvas_->Restore();
     curCanvas_->ResetMatrix();
     rsDirtyRectsDfx.OnDrawVirtual(curCanvas_);
-    RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetHasCaptureImg(false);
-    RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetStartVisit(false);
-    RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetBlackList({});
+    uniParam.SetHasCaptureImg(false);
+    uniParam.SetStartVisit(false);
+    uniParam.SetBlackList({});
+    uniParam.SetWhiteList({});
 }
 
 void RSDisplayRenderNodeDrawable::DrawMirrorCopy(std::shared_ptr<RSDisplayRenderNode>& displayNodeSp,
@@ -965,7 +983,7 @@ void RSDisplayRenderNodeDrawable::WiredScreenProjection(std::shared_ptr<RSDispla
         RS_LOGE("RSDisplayRenderNodeDrawable::WiredScreenProjection displayNodeSp is null");
         return;
     }
-    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(displayNodeSp);
+    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(*this);
     auto renderFrame = RequestFrame(displayNodeSp, params, processor);
     if (!renderFrame) {
         RS_LOGE("RSDisplayRenderNodeDrawable::WiredScreenProjection failed to request frame");
@@ -1063,14 +1081,16 @@ void RSDisplayRenderNodeDrawable::ScaleAndRotateMirrorForWiredScreen(RSDisplayRe
     auto mirroredParams = static_cast<RSDisplayRenderParams*>(mirroredNode.GetRenderParams().get());
     if (!mirroredParams) {
         RS_LOGE("RSDisplayRenderNodeDrawable::ScaleAndRotateMirrorForWiredScreen mirroredParams is null");
+        return;
+    }
+    auto nodeParams = static_cast<RSDisplayRenderParams*>(node.GetRenderParams().get());
+    if (!nodeParams) {
+        RS_LOGE("RSDisplayRenderNodeDrawable::ScaleAndRotateMirrorForWiredScreen nodeParams is null");
+        return;
     }
     auto mainScreenInfo = mirroredParams->GetScreenInfo();
     auto mainWidth = static_cast<float>(mainScreenInfo.width);
     auto mainHeight = static_cast<float>(mainScreenInfo.height);
-    auto nodeParams = static_cast<RSDisplayRenderParams*>(node.GetRenderParams().get());
-    if (!nodeParams) {
-        RS_LOGE("RSDisplayRenderNodeDrawable::ScaleAndRotateMirrorForWiredScreen nodeParams is null");
-    }
     auto mirrorScreenInfo = nodeParams->GetScreenInfo();
     auto mirrorWidth = static_cast<float>(mirrorScreenInfo.width);
     auto mirrorHeight = static_cast<float>(mirrorScreenInfo.height);
@@ -1214,7 +1234,7 @@ void RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes(Drawing::Canvas& canv
 
     FindHardwareEnabledNodes();
 
-    if (displayNodeSp->GetBuffer() == nullptr) {
+    if (GetRSSurfaceHandlerOnDraw()->GetBuffer() == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::DrawHardwareEnabledNodes: buffer is null!");
         return;
     }
@@ -1378,10 +1398,16 @@ void RSDisplayRenderNodeDrawable::AdjustZOrderAndDrawSurfaceNode(
     }
 
     // sort the surfaceNodes by ZOrder
-    std::stable_sort(
-        nodes.begin(), nodes.end(), [](const auto& first, const auto& second) -> bool {
-            return first->GetGlobalZOrder() < second->GetGlobalZOrder();
-        });
+    std::stable_sort(nodes.begin(), nodes.end(), [](const auto& first, const auto& second) -> bool {
+        auto firstDrawable = std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(first->GetRenderDrawable());
+        auto secondDrawable = std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(second->GetRenderDrawable());
+        if (!firstDrawable || !secondDrawable || !firstDrawable->GetRenderParams() ||
+            !secondDrawable->GetRenderParams()) {
+            return false;
+        }
+        return firstDrawable->GetRenderParams()->GetLayerInfo().zOrder <
+               secondDrawable->GetRenderParams()->GetLayerInfo().zOrder;
+    });
 
     Drawing::AutoCanvasRestore acr(canvas, true);
     canvas.ConcatMatrix(params.GetMatrix());
@@ -1480,8 +1506,8 @@ void RSDisplayRenderNodeDrawable::PrepareOffscreenRender(const RSRenderNode& nod
     // check offscreen size and hardware renderer
     useFixedOffscreenSurfaceSize_ = false;
     const auto& property = node.GetRenderProperties();
-    uint32_t offscreenWidth = property.GetFrameWidth();
-    uint32_t offscreenHeight = property.GetFrameHeight();
+    int32_t offscreenWidth = static_cast<int32_t>(property.GetFrameWidth());
+    int32_t offscreenHeight = static_cast<int32_t>(property.GetFrameHeight());
     auto params = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
     // use fixed surface size in order to reduce create texture
     if (RSSystemProperties::IsFoldScreenFlag() && params && params->IsRotationChanged()) {
@@ -1580,4 +1606,40 @@ bool RSDisplayRenderNodeDrawable::SkipDisplayIfScreenOff() const
     }
     return true;
 }
+
+#ifndef ROSEN_CROSS_PLATFORM
+bool RSDisplayRenderNodeDrawable::CreateSurface(sptr<IBufferConsumerListener> listener)
+{
+    auto consumer = surfaceHandler_->GetConsumer();
+    if (consumer != nullptr && surface_ != nullptr) {
+        RS_LOGI("RSDisplayRenderNode::CreateSurface already created, return");
+        return true;
+    }
+    consumer = IConsumerSurface::Create("DisplayNode");
+    if (consumer == nullptr) {
+        RS_LOGE("RSDisplayRenderNode::CreateSurface get consumer surface fail");
+        return false;
+    }
+    SurfaceError ret = consumer->RegisterConsumerListener(listener);
+    if (ret != SURFACE_ERROR_OK) {
+        RS_LOGE("RSDisplayRenderNode::CreateSurface RegisterConsumerListener fail");
+        return false;
+    }
+    consumerListener_ = listener;
+    auto producer = consumer->GetProducer();
+    sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
+    if (!surface) {
+        RS_LOGE("RSDisplayRenderNode::CreateSurface CreateSurfaceAsProducer fail");
+        return false;
+    }
+    surface->SetQueueSize(BUFFER_SIZE);
+    auto client = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    surface_ = client->CreateRSSurface(surface);
+    RS_LOGI("RSDisplayRenderNode::CreateSurface end");
+    surfaceCreated_ = true;
+    surfaceHandler_->SetConsumer(consumer);
+    return true;
+}
+#endif
+
 } // namespace OHOS::Rosen::DrawableV2

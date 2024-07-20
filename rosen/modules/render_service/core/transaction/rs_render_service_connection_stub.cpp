@@ -352,9 +352,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
 
             ScreenId mirrorId = data.ReadUint64();
             int32_t flags = data.ReadInt32();
-            std::vector<NodeId> filteredAppVector;
-            data.ReadUInt64Vector(&filteredAppVector);
-            ScreenId id = CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
+            std::vector<NodeId> whiteList;
+            data.ReadUInt64Vector(&whiteList);
+            ScreenId id = CreateVirtualScreen(name, width, height, surface, mirrorId, flags, whiteList);
             reply.WriteUint64(id);
             break;
         }
@@ -591,13 +591,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             captureConfig.captureType = static_cast<SurfaceCaptureType>(data.ReadUint8());
             captureConfig.isSync = data.ReadBool();
 
-            auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
-            if (node && node->GetType() == RSRenderNodeType::DISPLAY_NODE &&
-                !securityManager_.IsInterfaceCodeAccessible(code)) {
-                RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest no permission to access TAKE_SURFACE_CAPTURE");
-                return ERR_INVALID_STATE;
-            }
-            TakeSurfaceCapture(id, cb, captureConfig);
+            TakeSurfaceCapture(id, cb, captureConfig, securityManager_.IsInterfaceCodeAccessible(code));
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_APPLICATION_AGENT): {
@@ -1197,10 +1191,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT) : {
             auto touchStatus = data.ReadInt32();
-            auto pkgName =  data.ReadString();
-            auto pid = data.ReadUint32();
             auto touchCnt = data.ReadInt32();
-            NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
+            NotifyTouchEvent(touchStatus, touchCnt);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {

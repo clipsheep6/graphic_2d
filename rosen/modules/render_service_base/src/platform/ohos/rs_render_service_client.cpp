@@ -319,14 +319,14 @@ ScreenId RSRenderServiceClient::CreateVirtualScreen(
     sptr<Surface> surface,
     ScreenId mirrorId,
     int32_t flags,
-    std::vector<NodeId> filteredAppVector)
+    std::vector<NodeId> whiteList)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return INVALID_SCREEN_ID;
     }
 
-    return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
+    return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, whiteList);
 }
 
 int32_t RSRenderServiceClient::SetVirtualScreenBlackList(ScreenId id, std::vector<NodeId>& blackListVector)
@@ -1320,12 +1320,11 @@ void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
     }
 }
 
-void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, const std::string& pkgName, uint32_t pid,
-    int32_t touchCnt)
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
-        renderService->NotifyTouchEvent(touchStatus, pkgName, pid, touchCnt);
+        renderService->NotifyTouchEvent(touchStatus, touchCnt);
     }
 }
 

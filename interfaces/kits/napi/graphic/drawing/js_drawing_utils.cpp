@@ -30,6 +30,7 @@ bool JsDrawingTestUtils::closeDrawingTest_ =
 bool JsDrawingTestUtils::closeDrawingTest_ = true;
 #endif
 namespace Drawing {
+const char* const JSPROPERTY[4] = {"alpha", "red", "green", "blue"};
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func)
 {
     std::string fullName;
@@ -122,6 +123,20 @@ bool ConvertFromJsIRect(napi_env env, napi_value jsValue, int32_t* ltrb, size_t 
         int32_t* curEdge = ltrb + idx;
         napi_get_named_property(env, jsValue, g_ltrbString[idx], &tempValue);
         if (napi_get_value_int32(env, tempValue, curEdge) != napi_ok) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ConvertFromJsPointsArray(napi_env env, napi_value array, Drawing::Point* points, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++)  {
+        napi_value tempPoint = nullptr;
+        if (napi_get_element(env, array, i, &tempPoint) != napi_ok) {
+            return false;
+        }
+        if (!GetPointFromJsValue(env, tempPoint, points[i])) {
             return false;
         }
     }

@@ -632,7 +632,7 @@ Drawing::RecordingCanvas::DrawFunc RSBackgroundEffectDrawable::CreateDrawFunc() 
         paintFilterCanvas->ClipRect(*rect);
         RS_TRACE_NAME_FMT("RSBackgroundEffectDrawable::DrawBackgroundEffect nodeId[%lld]", ptr->nodeId_);
         RSPropertyDrawableUtils::DrawBackgroundEffect(
-            paintFilterCanvas, ptr->filter_, ptr->cacheManager_, ptr->clearFilteredCacheAfterDrawing_);
+            paintFilterCanvas, ptr->filter_, ptr->cacheManager_, ptr->renderClearFilteredCacheAfterDrawing_);
     };
 }
 
@@ -700,6 +700,9 @@ Drawing::RecordingCanvas::DrawFunc RSDynamicLightUpDrawable::CreateDrawFunc() co
 {
     auto ptr = std::static_pointer_cast<const RSDynamicLightUpDrawable>(shared_from_this());
     return [ptr](Drawing::Canvas* canvas, const Drawing::Rect* rect) {
+        if (canvas->GetUICapture()) {
+            return;
+        }
         auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
         auto alpha = paintFilterCanvas->GetAlpha();
         auto blender = RSDynamicLightUpDrawable::MakeDynamicLightUpBlender(

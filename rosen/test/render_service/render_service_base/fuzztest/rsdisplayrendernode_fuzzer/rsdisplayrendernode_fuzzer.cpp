@@ -119,10 +119,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     rsDisplayRenderNode.SetBootAnimation(true);
     rsDisplayRenderNode.GetBootAnimation();
     rsDisplayRenderNode.GetMirrorSource();
-    rsDisplayRenderNode.GetRSSurface();
     rsDisplayRenderNode.SetIsParallelDisplayNode(true);
     rsDisplayRenderNode.IsParallelDisplayNode();
-    rsDisplayRenderNode.IsSurfaceCreated();
     rsDisplayRenderNode.GetRotation();
     rsDisplayRenderNode.GetDirtyManager();
     rsDisplayRenderNode.GetSyncDirtyManager();
@@ -138,6 +136,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     rsDisplayRenderNode.UpdatePartialRenderParams();
     rsDisplayRenderNode.IsRotationChanged();
     rsDisplayRenderNode.IsLastRotationChanged();
+    rsDisplayRenderNode.GetPreRotationStatus();
+    rsDisplayRenderNode.GetCurRotationStatus();
     rsDisplayRenderNode.IsFirstTimeToProcessor();
     rsDisplayRenderNode.SetOriginScreenRotation(screenRotation);
     rsDisplayRenderNode.GetOriginScreenRotation();
@@ -166,7 +166,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::vector<NodeId> lastSurfaceIds;
     lastSurfaceIds.push_back(id);
     rsDisplayRenderNode.SetLastSurfaceIds(lastSurfaceIds);
-    rsDisplayRenderNode.GetDamageRegion();
     rsDisplayRenderNode.OnSync();
     return true;
 }

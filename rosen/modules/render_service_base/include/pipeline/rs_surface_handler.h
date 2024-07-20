@@ -97,9 +97,9 @@ public:
     }
 
 #ifndef ROSEN_CROSS_PLATFORM
-    void SetConsumer(const sptr<IConsumerSurface>& consumer);
+    void SetConsumer(sptr<IConsumerSurface> consumer);
 
-    const sptr<IConsumerSurface>& GetConsumer() const
+    sptr<IConsumerSurface> GetConsumer() const
     {
         return consumer_;
     }
@@ -137,7 +137,6 @@ public:
     {
         std::lock_guard<std::mutex> lock(bufMutex_);
         if (!buffer_.buffer) {
-            ROSEN_LOGE("RSSurfaceHandler GetBufferUsage buffer is nullptr");
             return 0;
         }
         return buffer_.buffer->GetUsage();
@@ -235,7 +234,7 @@ public:
         return false;
 #endif
     }
-    inline bool IsCurrentFrameBufferConsumed()
+    inline bool IsCurrentFrameBufferConsumed() const
     {
         return isCurrentFrameBufferConsumed_;
     }

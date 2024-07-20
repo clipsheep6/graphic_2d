@@ -135,6 +135,19 @@ void RSSurfaceRenderParams::SetLastFrameHardwareEnabled(bool enabled)
     isLastFrameHardwareEnabled_ = enabled;
     needSync_ = true;
 }
+void RSSurfaceRenderParams::SetLayerSourceTuning(int32_t needSourceTuning)
+{
+    if (layerSource_ == needSourceTuning) {
+        return;
+    }
+    layerSource_ = needSourceTuning;
+    needSync_ = true;
+}
+
+int32_t RSSurfaceRenderParams::GetLayerSourceTuning() const
+{
+    return layerSource_;
+}
 
 bool RSSurfaceRenderParams::GetLastFrameHardwareEnabled() const
 {
@@ -175,7 +188,7 @@ void RSSurfaceRenderParams::SetPreBuffer(const sptr<SurfaceBuffer>& preBuffer)
     dirtyType_.set(RSRenderParamsDirtyType::BUFFER_INFO_DIRTY);
 }
 
-sptr<SurfaceBuffer>& RSSurfaceRenderParams::GetPreBuffer()
+sptr<SurfaceBuffer> RSSurfaceRenderParams::GetPreBuffer()
 {
     return preBuffer_;
 }
@@ -366,6 +379,7 @@ void RSSurfaceRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetSurfaceParams->opaqueRegion_ = opaqueRegion_;
     targetSurfaceParams->preScalingMode_ = preScalingMode_;
     targetSurfaceParams->needOffscreen_ = needOffscreen_;
+    targetSurfaceParams->layerSource_ = layerSource_;
     RSRenderParams::OnSync(target);
 }
 

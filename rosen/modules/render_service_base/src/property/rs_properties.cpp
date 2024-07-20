@@ -2199,9 +2199,9 @@ void RSProperties::ResetDirty()
 
 void RSProperties::RecordCurDirtyStatus()
 {
-    curIsDirty_ = false;
-    curGeoDirty_ = false;
-    curContentDirty_ = false;
+    curIsDirty_ = isDirty_;
+    curGeoDirty_ = geoDirty_;
+    curContentDirty_ = contentDirty_;
 }
 
 void RSProperties::AccmulateDirtyStatus()
@@ -2219,6 +2219,11 @@ bool RSProperties::IsDirty() const
 bool RSProperties::IsGeoDirty() const
 {
     return geoDirty_;
+}
+
+bool RSProperties::IsCurGeoDirty() const
+{
+    return curGeoDirty_;
 }
 
 bool RSProperties::IsContentDirty() const
@@ -4123,7 +4128,7 @@ void RSProperties::UpdateFilter()
     needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
                   IsDynamicLightUpValid() || greyCoef_.has_value() || linearGradientBlurPara_ != nullptr ||
                   IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
-                  foregroundFilter_ != nullptr || motionBlurPara_ != nullptr || IsFgBrightnessValid() ||
+                  foregroundFilter_ != nullptr || IsFgBrightnessValid() ||
                   IsBgBrightnessValid() || foregroundFilterCache_ != nullptr || IsWaterRippleValid() ||
                   magnifierPara_.has_value();
 }

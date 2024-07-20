@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <mutex>
+#include "common/rs_common_def.h"
 
 #ifndef ROSEN_CROSS_PLATFORM
 #include <ibuffer_consumer_listener.h>
@@ -40,7 +41,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSB_EXPORT RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
+class RSB_EXPORT RSDisplayRenderNode : public RSRenderNode {
 public:
     struct ScreenRenderParams
     {
@@ -177,35 +178,6 @@ public:
     {
         return false;
     }
-#ifdef NEW_RENDER_CONTEXT
-    std::shared_ptr<RSRenderSurface> GetRSSurface() const
-    {
-        return surface_;
-    }
-    void SetVirtualSurface(std::shared_ptr<RSRenderSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
-    {
-        virtualSurface_ = virtualSurface;
-        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
-    }
-    std::shared_ptr<RSRenderSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
-    {
-        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
-    }
-#else
-    std::shared_ptr<RSSurface> GetRSSurface() const
-    {
-        return surface_;
-    }
-    void SetVirtualSurface(std::shared_ptr<RSSurface>& virtualSurface, uint64_t pSurfaceUniqueId)
-    {
-        virtualSurface_ = virtualSurface;
-        virtualSurfaceUniqueId_ = pSurfaceUniqueId;
-    }
-    std::shared_ptr<RSSurface> GetVirtualSurface(uint64_t pSurfaceUniqueId)
-    {
-        return virtualSurfaceUniqueId_ != pSurfaceUniqueId ? nullptr : virtualSurface_;
-    }
-#endif
     // Use in vulkan parallel rendering
     void SetIsParallelDisplayNode(bool isParallelDisplayNode)
     {
@@ -215,19 +187,6 @@ public:
     bool IsParallelDisplayNode() const
     {
         return isParallelDisplayNode_;
-    }
-
-#ifndef ROSEN_CROSS_PLATFORM
-    bool CreateSurface(sptr<IBufferConsumerListener> listener);
-    sptr<IBufferConsumerListener> GetConsumerListener() const
-    {
-        return consumerListener_;
-    }
-#endif
-
-    bool IsSurfaceCreated() const
-    {
-        return surfaceCreated_;
     }
 
     ScreenRotation GetRotation() const;
@@ -302,6 +261,12 @@ public:
     bool IsRotationChanged() const;
     bool IsLastRotationChanged() const {
         return lastRotationChanged_;
+    }
+    bool GetPreRotationStatus() const {
+        return preRotationStatus_;
+    }
+    bool GetCurRotationStatus() const {
+        return curRotationStatus_;
     }
     bool IsFirstTimeToProcessor() const {
         return isFirstTimeToProcessor_;
@@ -483,22 +448,12 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
+    bool preRotationStatus_ = false;
+    bool curRotationStatus_ = false;
     bool lastRotationChanged_ = false;
     Drawing::Matrix initMatrix_;
     bool isFirstTimeToProcessor_ = true;
-#ifdef NEW_RENDER_CONTEXT
-    std::shared_ptr<RSRenderSurface> surface_;
-    std::shared_ptr<RSRenderSurface> virtualSurface_;
-#else
-    std::shared_ptr<RSSurface> surface_;
-    std::shared_ptr<RSSurface> virtualSurface_;
-#endif
-    uint64_t virtualSurfaceUniqueId_ = 0;
-    bool surfaceCreated_ { false };
     bool hasFingerprint_ = false;
-#ifndef ROSEN_CROSS_PLATFORM
-    sptr<IBufferConsumerListener> consumerListener_;
-#endif
     uint64_t frameCount_ = 0;
 
     std::map<NodeId, RectI> lastFrameSurfacePos_;

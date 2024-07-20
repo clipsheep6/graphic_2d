@@ -167,14 +167,15 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
 void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
 {
-    auto canvasDrawingPtr = std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(shared_from_this());
     {
         // check params, if params is invalid, do not post the task
-        std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
         if (!surface_ || !canvas_) {
             return;
         }
     }
+
+    auto canvasDrawingPtr = std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(shared_from_this());
     auto task = [this, canvasDrawingPtr]() {
         std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
         if (!surface_ || !canvas_) {
@@ -279,7 +280,10 @@ void RSCanvasDrawingRenderNodeDrawable::FlushForGL(float width, float height, st
         auto cmds = recordingCanvas_->GetDrawCmdList();
         if (cmds && !cmds->IsEmpty()) {
             recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
-            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            {
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            }
             ProcessCPURenderInBackgroundThread(cmds, context, nodeId);
         }
     }
@@ -294,7 +298,10 @@ void RSCanvasDrawingRenderNodeDrawable::FlushForVK(float width, float height, st
         auto cmds = recordingCanvas_->GetDrawCmdList();
         if (cmds && !cmds->IsEmpty()) {
             recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
-            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            {
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            }
             ProcessCPURenderInBackgroundThread(cmds, context, nodeId);
         }
     }
@@ -345,10 +352,13 @@ void RSCanvasDrawingRenderNodeDrawable::ResetSurface()
     if (preThreadInfo_.second && surface_) {
         preThreadInfo_.second(std::move(surface_));
     }
-    surface_ = nullptr;
     recordingCanvas_ = nullptr;
     image_ = nullptr;
-    canvas_ = nullptr;
+    {
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+        surface_ = nullptr;
+        canvas_ = nullptr;
+    }
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     backendTexture_ = {};
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
@@ -515,14 +525,14 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK(int width, int height,
 {
     Drawing::ImageInfo info =
         Drawing::ImageInfo { width, height, Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-
+    std::shared_ptr<Drawing::Surface> surfaceTmp = nullptr;
 #ifdef RS_ENABLE_VK
     auto gpuContext = canvas.GetRecordingState() ? nullptr : canvas.GetGPUContext();
     isGpuSurface_ = true;
     if (gpuContext == nullptr) {
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
         isGpuSurface_ = false;
-        surface_ = Drawing::Surface::MakeRaster(info);
+        surfaceTmp = Drawing::Surface::MakeRaster(info);
     } else {
         if (!backendTexture_.IsValid() || !backendTexture_.GetTextureInfo().GetVKTextureInfo()) {
             backendTexture_ = RSUniRenderUtil::MakeBackendTexture(width, height);
@@ -534,30 +544,42 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK(int width, int height,
             RsVulkanContext::GetSingleton(), vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory);
             isNewCreate = true;
         }
-        surface_ = Drawing::Surface::MakeFromBackendTexture(gpuContext.get(), backendTexture_.GetTextureInfo(),
+        surfaceTmp = Drawing::Surface::MakeFromBackendTexture(gpuContext.get(), backendTexture_.GetTextureInfo(),
             Drawing::TextureOrigin::BOTTOM_LEFT, 1, Drawing::ColorType::COLORTYPE_RGBA_8888, nullptr,
             NativeBufferUtils::DeleteVkImage, isNewCreate ? vulkanCleanupHelper_ : vulkanCleanupHelper_->Ref());
-        if (!surface_) {
+        if (!surfaceTmp) {
             isGpuSurface_ = false;
-            surface_ = Drawing::Surface::MakeRaster(info);
-            if (!surface_) {
+            surfaceTmp = Drawing::Surface::MakeRaster(info);
+            if (!surfaceTmp) {
                 RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                surface_ = nullptr;
                 return false;
             }
             recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
-            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            {
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                surface_ = surfaceTmp;
+                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            }
             return true;
         }
     }
 #else
-    surface_ = Drawing::Surface::MakeRaster(info);
+    surfaceTmp = Drawing::Surface::MakeRaster(info);
 #endif
-    if (!surface_) {
+    if (!surfaceTmp) {
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+        surface_ = nullptr;
         return false;
     }
     recordingCanvas_ = nullptr;
-    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
+    {
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+        surface_ = surfaceTmp;
+        canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
+    }
     return true;
 }
 
@@ -565,37 +587,49 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
 {
     Drawing::ImageInfo info =
         Drawing::ImageInfo { width, height, Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-
+    std::shared_ptr<Drawing::Surface> surfaceTmp = nullptr;
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     auto gpuContext = canvas.GetRecordingState() ? nullptr : canvas.GetGPUContext();
     isGpuSurface_ = true;
     if (gpuContext == nullptr) {
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
         isGpuSurface_ = false;
-        surface_ = Drawing::Surface::MakeRaster(info);
+        surfaceTmp = Drawing::Surface::MakeRaster(info);
     } else {
-        surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
-        if (!surface_) {
+        surfaceTmp = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
+        if (!surfaceTmp) {
             isGpuSurface_ = false;
-            surface_ = Drawing::Surface::MakeRaster(info);
-            if (!surface_) {
+            surfaceTmp = Drawing::Surface::MakeRaster(info);
+            if (!surfaceTmp) {
                 RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                surface_ = nullptr;
                 return false;
             }
             recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
-            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            {
+                std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+                surface_ = surfaceTmp;
+                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            }
             return true;
         }
     }
 #else
-    surface_ = Drawing::Surface::MakeRaster(info);
+    surfaceTmp = Drawing::Surface::MakeRaster(info);
 #endif
-    if (!surface_) {
+    if (!surfaceTmp) {
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface surface is nullptr");
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+        surface_ = nullptr;
         return false;
     }
     recordingCanvas_ = nullptr;
-    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
+    {
+        std::unique_lock<std::recursive_mutex> lock(surfaceAndCanvasInitMutex);
+        surface_ = surfaceTmp;
+        canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
+    }
     return true;
 }
 

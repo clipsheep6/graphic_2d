@@ -333,9 +333,10 @@ static void ClipRegion(Drawing::Canvas& canvas, Drawing::Region& region, bool cl
 bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplayRenderNode> displayNode,
     RSDisplayRenderParams* params, std::shared_ptr<RSProcessor> processor)
 {
+    auto uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams().get();
     if (displayNode->GetSyncDirtyManager()->IsCurrentFrameDirty() || params == nullptr ||
         (params->GetMainAndLeashSurfaceDirty() || RSUifirstManager::Instance().HasDoneNode()) ||
-        RSMainThread::Instance()->GetDirtyFlag()) {
+        (uniParam == nullptr || uniParam->GetDirtyFlag())) {
         return false;
     }
 

@@ -1322,6 +1322,7 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
     if (UNLIKELY(!SharedTransitionParam::unpairedShareTransitions_.empty())) {
         ProcessUnpairedSharedTransitionNode();
     }
+    CheckFilterNodesAfterPrepareDisplayNode();
     node.RenderTraceDebug();
 }
 
@@ -1720,6 +1721,7 @@ bool RSUniRenderVisitor::InitDisplayInfo(RSDisplayRenderNode& node)
     curDisplayDirtyManager_->Clear();
     transparentCleanFilter_.clear();
     transparentDirtyFilter_.clear();
+    filterNodes_.clear();
 
     // 2 init screenManager info
     screenManager_ = CreateOrGetScreenManager();
@@ -2515,7 +2517,8 @@ void RSUniRenderVisitor::CheckMergeDisplayDirtyByTransparentFilter(
             } else {
                 globalFilter_.insert(*it);
             }
-            filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()), needRequestNextVsync_);
+            filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()),
+                needRequestNextVsync_, filterNodes_);
         }
     }
     CheckFilterCacheFullyCovered(surfaceNode);
@@ -2618,7 +2621,8 @@ void RSUniRenderVisitor::CheckMergeGlobalFilterForDisplay(Occlusion::Region& acc
             globalFilter_.insert(*it);
         }
         filterNode->UpdateFilterCacheWithSelfDirty();
-        filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()), needRequestNextVsync_);
+        filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()),
+            needRequestNextVsync_, filterNodes_);
     }
 
     // Recursively traverses until the globalDirty do not change
@@ -3009,8 +3013,28 @@ void RSUniRenderVisitor::CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
         containerFilter_.insert({node.GetId(), globalFilterRect});
     }
     if (curSurfaceNode_ && !isNodeAddedToTransparentCleanFilters) {
-        node.PostPrepareForBlurFilterNode(dirtyManager, needRequestNextVsync_);
+        node.PostPrepareForBlurFilterNode(dirtyManager, needRequestNextVsync_, filterNodes_);
     }
+}
+
+void RSUniRenderVisitor::CheckFilterNodesAfterPrepareDisplayNode()
+{
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    auto stagingDisplayParams = static_cast<RSDisplayRenderParams*>(curDisplayNode_->GetStagingRenderParams().get());
+    bool isDisplayNodeSkipped = false;
+    if (isOpDropped_ && curDisplayNode_ != nullptr && stagingDisplayParams != nullptr) {
+        isDisplayNodeSkipped = !(curDisplayNode_->GetDirtyManager()->IsCurrentFrameDirty() ||
+            stagingDisplayParams->GetMainAndLeashSurfaceDirty() ||
+            RSMainThread::Instance()->GetDirtyFlag());
+    }
+
+    for (auto it = filterNodes_.begin(); it != filterNodes_.end(); ++it) {
+        auto filterNode = nodeMap.GetRenderNode(*it);
+        if (filterNode != nullptr) {
+            filterNode->UpdateFilterNodeStatus(isDisplayNodeSkipped);
+        }
+    }
+    filterNodes_.clear();
 }
 
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)

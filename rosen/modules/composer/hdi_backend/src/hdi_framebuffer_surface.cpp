@@ -68,6 +68,9 @@ sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface()
 SurfaceError HdiFramebufferSurface::CreateSurface()
 {
     consumerSurface_ = IConsumerSurface::Create("FrameBuffer");
+    if (consumerSurface_ == nullptr) {
+        return SURFACE_ERROR_NO_CONSUMER;
+    }
 
     sptr<IBufferProducer> producer = consumerSurface_->GetProducer();
     producerSurface_ = Surface::CreateSurfaceAsProducer(producer);
@@ -83,6 +86,9 @@ SurfaceError HdiFramebufferSurface::CreateSurface()
 
 SurfaceError HdiFramebufferSurface::SetBufferQueueSize(uint32_t bufferSize)
 {
+    if (consumerSurface_ == nullptr) {
+        return SURFACE_ERROR_NO_CONSUMER;
+    }
     SurfaceError ret = consumerSurface_->SetQueueSize(bufferSize);
     if (ret != SURFACE_ERROR_OK) {
         HLOGE("fb SetQueueSize failed, ret is %{public}d", ret);
@@ -103,6 +109,9 @@ uint32_t HdiFramebufferSurface::GetBufferQueueSize()
 
 void HdiFramebufferSurface::OnBufferAvailable()
 {
+    if (consumerSurface_ == nullptr) {
+        return;
+    }
     sptr<SurfaceBuffer> buffer;
     int64_t timestamp = 0;
     Rect damage = {0};
@@ -146,7 +155,10 @@ int32_t HdiFramebufferSurface::ReleaseFramebuffer(
         HLOGI("HdiFramebufferSurface::ReleaseFramebuffer: buffer is null, no need to release.");
         return 0;
     }
-
+    if (consumerSurface_ == nullptr) {
+        HLOGI("HdiFramebufferSurface::ReleaseFramebuffer: surface is null, no need to release.");
+        return 0;
+    }
     SurfaceError ret = consumerSurface_->ReleaseBuffer(buffer, releaseFence);
     if (ret != SURFACE_ERROR_OK) {
         HLOGE("ReleaseBuffer failed ret is %{public}d", ret);

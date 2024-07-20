@@ -278,29 +278,6 @@ int32_t HdiDeviceImpl::SetScreenClientDamage(uint32_t screenId, const std::vecto
     return g_composer->SetDisplayClientDamage(screenId, hdiDamageRect);
 }
 
-int32_t HdiDeviceImpl::GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t> &layers,
-                                             std::vector<sptr<SyncFence>> &fences)
-{
-    CHECK_FUNC(g_composer);
-    std::vector<int32_t> fenceFds;
-    int32_t ret = g_composer->GetDisplayReleaseFence(screenId, layers, fenceFds);
-    if (ret != GRAPHIC_DISPLAY_SUCCESS || fenceFds.size() == 0) {
-        return ret;
-    }
-
-    size_t fencesNum = fenceFds.size();
-    fences.resize(fencesNum);
-    for (size_t i = 0; i < fencesNum; i++) {
-        if (fenceFds[i] >= 0) {
-            fences[i] = new SyncFence(fenceFds[i]);
-        } else {
-            fences[i] = new SyncFence(-1);
-        }
-    }
-
-    return ret;
-}
-
 int32_t HdiDeviceImpl::GetScreenSupportedColorGamuts(uint32_t screenId, std::vector<GraphicColorGamut> &gamuts)
 {
     CHECK_FUNC(g_composer);
@@ -419,7 +396,7 @@ int32_t HdiDeviceImpl::CommitAndGetReleaseFence(uint32_t screenId, sptr<SyncFenc
     ScopedBytrace bytrace(__func__);
     CHECK_FUNC(g_composer);
     int32_t fenceFd = -1;
-    std::vector<int32_t>fenceFds;
+    std::vector<int32_t> fenceFds;
     
     int32_t ret = g_composer->CommitAndGetReleaseFence(
         screenId, fenceFd, skipState, needFlush, layers, fenceFds, isValidated);
@@ -427,7 +404,7 @@ int32_t HdiDeviceImpl::CommitAndGetReleaseFence(uint32_t screenId, sptr<SyncFenc
     if (skipState == 0 || fenceFd >= 0) {
         fence = new SyncFence(fenceFd);
     } else {
-        fence =new SyncFence(-1);
+        fence = new SyncFence(-1);
     }
 
     size_t fencesNum = fenceFds.size();

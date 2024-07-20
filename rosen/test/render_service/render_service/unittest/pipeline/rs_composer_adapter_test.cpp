@@ -58,7 +58,6 @@ void RSComposerAdapterTest::SetUpTestCase()
     screenManager_->MockHdiScreenConnected(rsScreen_);
     hdiDeviceMock_ = Mock::HdiDeviceMock::GetInstance();
     std::vector<uint32_t> layersId = {0};
-    EXPECT_CALL(*hdiDeviceMock_, GetScreenReleaseFence(_, layersId, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*hdiDeviceMock_, RegHotPlugCallback(_, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*hdiDeviceMock_, RegHwcDeadCallback(_, _)).WillRepeatedly(testing::Return(false));
 }

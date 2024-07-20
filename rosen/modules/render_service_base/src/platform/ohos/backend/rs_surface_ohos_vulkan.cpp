@@ -28,6 +28,7 @@
 #include "platform/common/rs_system_properties.h"
 #include "drawing/engine_adapter/skia_adapter/skia_gpu_context.h"
 #include "engine_adapter/skia_adapter/skia_surface.h"
+#include "rs_frame_report_ext.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -231,6 +232,7 @@ bool RSSurfaceOhosVulkan::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uin
     };
     drawingFlushInfo.finishedContext = callbackInfo;
     surface.drawingSurface->Flush(&drawingFlushInfo);
+    RsFrameReportExt::GetInstance().SubmitGpuCommands();
     mSkContext->Submit();
     int fenceFd = -1;
 

@@ -154,5 +154,27 @@ void RsFrameReportExt::ReceiveVSync()
         HILOG_ERROR(LOG_CORE, "RsFrameReportExt:[]load ReceiveVSync function failed!");
     }
 }
+
+void RsFrameReportExt::SubmitGpuCommands()
+{
+    if (submitGpuCommandsFunc_ != nullptr) {
+        submitGpuCommandsFunc_ = LoadSymbol("SubmitGpuCommands");
+    }
+    if (submitGpuCommandsFunc_ != nullptr) {
+        auto submitGpuCommandsFunc = reinterpret_cast<void (*)()>(submitGpuCommandsFunc_);
+        submitGpuCommandsFunc();
+    }
+}
+
+void RsFrameReportExt::SkipGpuCommit()
+{
+    if (skipGpuCommitFunc_ != nullptr) {
+        skipGpuCommitFunc_ = LoadSymbol("SkipGpuCommit");
+    }
+    if (skipGpuCommitFunc_ != nullptr) {
+        auto skipGpuCommitFunc = reinterpret_cast<void (*)()>(skipGpuCommitFunc_);
+        skipGpuCommitFunc();
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

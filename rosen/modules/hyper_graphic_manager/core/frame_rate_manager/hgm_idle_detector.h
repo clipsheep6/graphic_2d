@@ -49,7 +49,7 @@ public:
         return aceAnimatorIdleState_;
     }
 
-    void UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp);
+    void UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp, pid_t pid);
     bool GetSurfaceIdleState(uint64_t timestamp);
     int32_t GetSurfaceUpExpectFps();
     bool GetSupportSurface();

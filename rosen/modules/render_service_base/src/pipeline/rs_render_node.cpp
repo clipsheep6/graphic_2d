@@ -170,6 +170,10 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr const char *BUFFER_FROM_TEXTURE = "oh_flutter";
+    constexpr const int MAX_NODE_NAME_LEN = 10;
+};
 void RSRenderNode::OnRegister(const std::weak_ptr<RSContext>& context)
 {
     context_ = context;
@@ -865,6 +869,8 @@ void RSRenderNode::SetContentDirty()
     SetDirty();
 }
 
+pid_t RSRenderNode::flutterPid_ = 0;
+bool RSRenderNode::flutterIdle_ = true;
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
     bool dirtyEmpty = dirtyTypes_.none();
@@ -873,6 +879,10 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
         if (auto context = GetContext().lock()) {
             context->AddActiveNode(shared_from_this());
         }
+    }
+    if (nodeName_.substr(0, MAX_NODE_NAME_LEN) == BUFFER_FROM_TEXTURE) {
+        flutterIdle_ = false;
+        flutterPid_ = ExtractPid(GetId());
     }
     SetParentSubTreeDirty();
     dirtyStatus_ = NodeDirty::DIRTY;

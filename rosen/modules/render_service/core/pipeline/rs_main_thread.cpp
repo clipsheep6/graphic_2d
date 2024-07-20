@@ -169,6 +169,7 @@ constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
 const std::string PERF_FOR_BLUR_IF_NEEDED_TASK_NAME = "PerfForBlurIfNeeded";
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* HIDE_NOTCH_STATUS = "persist.sys.graphic.hideNotch.status";
+constexpr const char* BUFFER_FROM_TEXTURE = "oh_fluttr";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
@@ -1199,6 +1200,14 @@ void RSMainThread::ProcessAllSyncTransactionData()
     RequestNextVSync();
 }
 
+void RSMainThread::GetTextureFlutterIdleState()
+{
+    pid_t pid = 0;
+    if (frameRateMgr_ != nullptr && !RSRenderNode::GetTextureFlutterIdleState(pid)) {
+        frameRateMgr_->UpdateSurfaceTime(BUFFER_FROM_TEXTURE, timestamp_, pid);
+    }
+}
+
 void RSMainThread::ConsumeAndUpdateAllNodes()
 {
     ResetHardwareEnabledState(isUniRender_);
@@ -1230,7 +1239,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         }
         auto& surfaceHandler = static_cast<RSSurfaceHandler&>(*surfaceNode);
         if (frameRateMgr_ != nullptr && surfaceHandler.GetAvailableBufferCount() > 0) {
-            frameRateMgr_->UpdateSurfaceTime(surfaceNode->GetName(), timestamp_);
+            frameRateMgr_->UpdateSurfaceTime(surfaceNode->GetName(), timestamp_, ExtractPid(surfaceNode->GetId()));
         }
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler, false, timestamp_)) {
@@ -1716,6 +1725,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
+    GetTextureFlutterIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

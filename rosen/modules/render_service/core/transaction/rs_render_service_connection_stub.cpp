@@ -29,6 +29,11 @@
 #include "transaction/rs_ashmem_helper.h"
 #include "rs_trace.h"
 #include "rs_profiler.h"
+#ifdef RES_SCHED_ENABLE
+#include "res_sched_client.h"
+#include "res_type.h"
+#include <sched.h>
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +42,11 @@ constexpr size_t MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE = 1024 * 15; // 15kB
 constexpr size_t FILE_DESCRIPTOR_LIMIT = 15;
 constexpr size_t MAX_OBJECTNUM = INT_MAX;
 constexpr size_t MAX_DATA_SIZE = INT_MAX;
+
+#ifdef RES_SCHED_ENABLE
+const uint32_t RS_IPC_QOS_LEVEL = 7;
+constexpr const char* RS_BUNDLE_NAME = "render_service";
+#endif
 
 void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
 {
@@ -110,12 +120,41 @@ std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old, pid_t callin
 }
 }
 
+void RSRenderServiceConnectionStub::SetQos()
+{
+#ifdef RES_SCHED_ENABLE
+    std::string strBundleName = RS_BUNDLE_NAME;
+    std::string strPid = std::to_string(getpid());
+    std::string strTid = std::to_string(gettid());
+    std::string strQos = std::to_string(RS_IPC_QOS_LEVEL);
+    std::unordered_map<std::string, std::string> mapPayload;
+    mapPayload["pid"] = strPid;
+    mapPayload[strTid] = strQos;
+    mapPayload["bundleName"] = strBundleName;
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+    int64_t value = 0;
+    OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+    struct sched_param param = {0};
+    param.sched_priority = 1;
+    if (sched_setscheduler(0, SCHED_FIFO, &param) != 0) {
+        RS_LOGE("RSRenderService Couldn't set SCHED_FIFO.");
+    } else {
+        RS_LOGI("RSRenderService set SCHED_FIFO succeed.");
+    }
+#endif
+}
+
 int RSRenderServiceConnectionStub::OnRemoteRequest(
     uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     RS_PROFILER_ON_REMOTE_REQUEST(this, code, data, reply, option);
 
     pid_t callingPid = GetCallingPid();
+    if (!isSetQos) {
+        SetQos();
+        isSetQos = true;
+    }
+
 #ifdef ENABLE_IPC_SECURITY_ACCESS_COUNTER
     auto accessCount = securityUtils_.GetCodeAccessCounter(code);
     if (!securityManager_.IsAccessTimesRestricted(code, accessCount)) {

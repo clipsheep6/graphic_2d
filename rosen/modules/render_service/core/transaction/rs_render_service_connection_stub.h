@@ -42,7 +42,9 @@ private:
 
     void ReadDataBaseRs(DataBaseRs& info, MessageParcel& data);
     void ReadGameStateDataRs(GameStateData& info, MessageParcel& data);
+    void SetQos();
     RSRenderServiceSecurityUtils securityUtils_;
+    bool isSetQos = false;
 };
 } // namespace Rosen
 } // namespace OHOS

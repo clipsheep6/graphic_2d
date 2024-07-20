@@ -736,9 +736,11 @@ void RSSurfaceRenderNodeDrawable::DealWithSelfDrawingNodeBuffer(RSSurfaceRenderN
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     params.screenBrightnessNits = surfaceNode.GetDisplayNit();
 #endif
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
     if (surfaceNode.IsHardwareEnabledTopSurface()) {
         RSPointerRenderManager::GetInstance().SetCacheImgForPointer(canvas.GetSurface()->GetImageSnapshot());
     }
+#endif
 
     DrawSelfDrawingNodeBuffer(surfaceNode, canvas, surfaceParams, params);
 }

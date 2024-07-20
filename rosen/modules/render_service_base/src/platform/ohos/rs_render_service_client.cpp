@@ -25,7 +25,7 @@
 
 #include "command/rs_command.h"
 #include "command/rs_node_showing_command.h"
-#include "ipc_callbacks/pointer_luminance_callback_stub.h"
+#include "ipc_callbacks/pointer_render/pointer_luminance_callback_stub.h"
 #include "ipc_callbacks/rs_surface_occlusion_change_callback_stub.h"
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
@@ -381,6 +381,7 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
     renderService->RemoveVirtualScreen(id);
 }
 
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
 int32_t RSRenderServiceClient::SetPointerColorInversionConfig(float darkBuffer, float brightBuffer, int64_t interval)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
@@ -437,6 +438,7 @@ int32_t RSRenderServiceClient::UnRegisterPointerLuminanceChangeCallback()
     }
     return renderService->UnRegisterPointerLuminanceChangeCallback();
 }
+#endif
 
 class CustomScreenChangeCallback : public RSScreenChangeCallbackStub
 {

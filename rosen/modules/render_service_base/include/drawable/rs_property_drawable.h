@@ -128,6 +128,7 @@ public:
     void ForceClearCacheWithLastFrame();
     void MarkRotationChanged();
     void MarkNodeIsOccluded(bool isOccluded);
+    void MarkNodeIsSkipped(bool isSkipped);
     void ClearCacheIfNeeded();
 
     bool IsFilterCacheValid() const;
@@ -174,6 +175,7 @@ protected:
     FilterCacheType clearType_ = FilterCacheType::NONE;
     FilterCacheType lastCacheType_ = FilterCacheType::NONE;
     bool isOccluded_ = false;
+    bool isSkipped_ = false;
  
     // force cache with cacheUpdateInterval_
     bool isLargeArea_ = false;

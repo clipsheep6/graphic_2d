@@ -980,10 +980,11 @@ HWTEST_F(RSRenderNodeTest2, PostPrepareForBlurFilterNode, TestSize.Level1)
     RSRenderNode node(id, context);
     bool needRequestNextVsync = true;
     std::shared_ptr<RSDirtyRegionManager> rsDirtyManager = std::make_shared<RSDirtyRegionManager>();
+    std::unordered_set<NodeId> filterNodes;
     auto& properties = node.GetMutableRenderProperties();
     properties.backgroundFilter_ = std::make_shared<RSFilter>();
     properties.filter_ = std::make_shared<RSFilter>();
-    node.PostPrepareForBlurFilterNode(*rsDirtyManager, needRequestNextVsync);
+    node.PostPrepareForBlurFilterNode(*rsDirtyManager, needRequestNextVsync, filterNodes);
     ASSERT_TRUE(true);
 }
 

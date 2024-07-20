@@ -452,9 +452,8 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     ScreenInfo curScreenInfo = screenManager->QueryScreenInfo(paramScreenId);
     // skip frame according to skipFrameInterval value of SetScreenSkipFrameInterval interface
-    if (nodeSp->SkipFrame(curScreenInfo.skipFrameInterval)) {
+    if (nodeSp->SkipFrame(curScreenInfo.skipFrameInterval) && RSMainThread::Instance()->IsRequestedNextVSync()) {
         RS_TRACE_NAME("SkipFrame, screenId:" + std::to_string(paramScreenId));
-        screenManager->ForceRefreshOneFrameIfNoRNV();
         return;
     }
 

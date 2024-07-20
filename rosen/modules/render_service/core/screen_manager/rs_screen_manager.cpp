@@ -274,18 +274,6 @@ float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
 }
 #endif
 
-void RSScreenManager::ForceRefreshOneFrameIfNoRNV()
-{
-    auto mainThread = RSMainThread::Instance();
-    if (mainThread != nullptr && !mainThread->IsRequestedNextVSync()) {
-        RS_TRACE_NAME("No RNV, ForceRefreshOneFrame");
-        mainThread->PostTask([mainThread]() {
-            mainThread->SetDirtyFlag();
-        });
-        mainThread->RequestNextVSync();
-    }
-}
-
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)
 {
     if (output == nullptr) {

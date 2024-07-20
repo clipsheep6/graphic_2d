@@ -213,8 +213,6 @@ public:
 #ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     virtual void HandlePostureData(const SensorEvent * const event) = 0;
 #endif
-    virtual void ForceRefreshOneFrameIfNoRNV() = 0;
-
     virtual void ClearFrameBufferIfNeed() = 0;
 
     virtual int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) = 0;
@@ -412,8 +410,6 @@ public:
 #ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     void HandlePostureData(const SensorEvent * const event) override;
 #endif
-    void ForceRefreshOneFrameIfNoRNV() override;
-
     void ClearFrameBufferIfNeed() override;
 
     int32_t SetScreenConstraint(ScreenId id, uint64_t timestamp, ScreenConstraintType type) override;

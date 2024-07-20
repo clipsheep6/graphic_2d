@@ -171,5 +171,108 @@ napi_value GetFontMetricsAndConvertToJsValue(napi_env env, FontMetrics* metrics)
     }
     return objValue;
 }
+
+#ifdef ROSEN_OHOS
+using namespace OHOS::Media;
+std::shared_ptr<Drawing::ColorSpace> ColorSpaceToDrawingColorSpace(OHOS::Media::ColorSpace colorSpace)
+{
+    switch (colorSpace) {
+        case OHOS::Media::ColorSpace::DISPLAY_P3:
+            return Drawing::ColorSpace::CreateRGB(
+                Drawing::CMSTransferFuncType::SRGB, Drawing::CMSMatrixType::DCIP3);
+        case OHOS::Media::ColorSpace::LINEAR_SRGB:
+            return Drawing::ColorSpace::CreateSRGBLinear();
+        case OHOS::Media::ColorSpace::SRGB:
+            return Drawing::ColorSpace::CreateSRGB();
+        default:
+            return Drawing::ColorSpace::CreateSRGB();
+    }
+}
+
+Drawing::ColorType PixelFormatToDrawingColorType(PixelFormat pixelFormat)
+{
+    switch (pixelFormat) {
+        case PixelFormat::RGB_565:
+            return Drawing::ColorType::COLORTYPE_RGB_565;
+        case PixelFormat::RGBA_8888:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+        case PixelFormat::BGRA_8888:
+            return Drawing::ColorType::COLORTYPE_BGRA_8888;
+        case PixelFormat::ALPHA_8:
+            return Drawing::ColorType::COLORTYPE_ALPHA_8;
+        case PixelFormat::RGBA_F16:
+            return Drawing::ColorType::COLORTYPE_RGBA_F16;
+        case PixelFormat::UNKNOWN:
+        case PixelFormat::ARGB_8888:
+        case PixelFormat::RGB_888:
+        case PixelFormat::NV21:
+        case PixelFormat::NV12:
+        case PixelFormat::CMYK:
+        default:
+            return Drawing::ColorType::COLORTYPE_UNKNOWN;
+    }
+}
+
+Drawing::AlphaType AlphaTypeToDrawingAlphaType(OHOS::Media::AlphaType alphaType)
+{
+    switch (alphaType) {
+        case OHOS::Media::AlphaType::IMAGE_ALPHA_TYPE_UNKNOWN:
+            return Drawing::AlphaType::ALPHATYPE_UNKNOWN;
+        case OHOS::Media::AlphaType::IMAGE_ALPHA_TYPE_OPAQUE:
+            return Drawing::AlphaType::ALPHATYPE_OPAQUE;
+        case OHOS::Media::AlphaType::IMAGE_ALPHA_TYPE_PREMUL:
+            return Drawing::AlphaType::ALPHATYPE_PREMUL;
+        case OHOS::Media::AlphaType::IMAGE_ALPHA_TYPE_UNPREMUL:
+            return Drawing::AlphaType::ALPHATYPE_UNPREMUL;
+        default:
+            return Drawing::AlphaType::ALPHATYPE_UNKNOWN;
+    }
+}
+
+struct PixelMapReleaseContext {
+    explicit PixelMapReleaseContext(std::shared_ptr<PixelMap> pixelMap) : pixelMap_(pixelMap) {}
+
+    ~PixelMapReleaseContext()
+    {
+        pixelMap_ = nullptr;
+    }
+
+private:
+    std::shared_ptr<PixelMap> pixelMap_;
+};
+
+static void PixelMapReleaseProc(const void* /* pixels */, void* context)
+{
+    PixelMapReleaseContext* ctx = static_cast<PixelMapReleaseContext*>(context);
+    if (ctx) {
+        delete ctx;
+        ctx = nullptr;
+    }
+}
+
+std::shared_ptr<Drawing::Image> ExtractDrawingImage(std::shared_ptr<PixelMap> pixelMap)
+{
+    if (!pixelMap) {
+        ROSEN_LOGE("ExtractDrawingImage pixelMap is null");
+        return nullptr;
+    }
+    OHOS::Media::ImageInfo imageInfo;
+    pixelMap->GetImageInfo(imageInfo);
+    Drawing::ImageInfo drawingImageInfo { imageInfo.size.width, imageInfo.size.height,
+        PixelFormatToDrawingColorType(imageInfo.pixelFormat),
+        AlphaTypeToDrawingAlphaType(imageInfo.alphaType),
+        ColorSpaceToDrawingColorSpace(imageInfo.colorSpace) };
+    Drawing::Pixmap imagePixmap(drawingImageInfo,
+        reinterpret_cast<const void*>(pixelMap->GetPixels()), pixelMap->GetRowStride());
+    PixelMapReleaseContext* releaseContext = new PixelMapReleaseContext(pixelMap);
+    auto image = Drawing::Image::MakeFromRaster(imagePixmap, PixelMapReleaseProc, releaseContext);
+    if (!image) {
+        ROSEN_LOGE("ExtractDrawingImage Image::MakeFromRaster returned null");
+        delete releaseContext;
+        releaseContext = nullptr;
+    }
+    return image;
+}
+#endif
 } // namespace Drawing
 } // namespace OHOS::Rosen

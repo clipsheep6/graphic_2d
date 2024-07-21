@@ -303,7 +303,7 @@ public:
     void SetSkipDraw(bool skip);
     bool GetSkipDraw() const;
 
-    bool IsVisibleRegionEmpty(const Drawing::Region curSurfaceDrawRegion) const;
+    bool IsVisibleDirtyRegionEmpty(const Drawing::Region curSurfaceDrawRegion) const;
 
     void SetPreScalingMode(ScalingMode scalingMode)
     {

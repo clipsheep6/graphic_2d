@@ -269,6 +269,15 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class CanvasDrawRegionIsRegionContained : public TestBase {
+public:
+    explicit CanvasDrawRegionIsRegionContained(int type) : TestBase(type) {};
+    ~CanvasDrawRegionIsRegionContained() override {};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
 class CanvasDrawPixelMapRect : public TestBase {
 public:
     explicit CanvasDrawPixelMapRect(int type) : TestBase(type) {};
@@ -366,6 +375,18 @@ public:
         fileName_ = "CanvasClipRect";
     };
     ~CanvasClipRect() override {};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class CanvasIsClipRect : public TestBase {
+public:
+    explicit CanvasIsClipRect(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasIsClipRect";
+    };
+    ~CanvasIsClipRect() override {};
 
 protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;

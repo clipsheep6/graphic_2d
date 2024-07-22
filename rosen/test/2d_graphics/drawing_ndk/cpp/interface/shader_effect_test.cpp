@@ -144,3 +144,46 @@ void ShaderEffectCreateSweepGradient::OnTestPerformance(OH_Drawing_Canvas* canva
     OH_Drawing_PointDestroy(centerPt);
     OH_Drawing_BrushDestroy(brush);
 }
+
+void ShaderEffectCreatePixelMapShader::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 5.f);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    NativePixelMap_* nativePixelMap;
+    OH_Drawing_PixelMap* pixelMap = OH_Drawing_PixelMapGetFromNativePixelMap(nativePixelMap);
+    DRAWING_LOGI("CreatePixelMapShader::OnTestFunction pixelMap =%{public}p", pixelMap);
+
+    OH_Drawing_SamplingOptions* samplingOptions =
+        OH_Drawing_SamplingOptionsCreate(FILTER_MODE_NEAREST, MIPMAP_MODE_NONE);
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(matrix, 2.0f, 0.0f, 100.0f, 0.0f, 2.0f, 50.0f, 0.0f, 0.0f, 1.0f);
+    OH_Drawing_ShaderEffect* CreatePixelMapShader;
+    for (int i = 0; i < testCount_; i++) {
+        CreatePixelMapShader = OH_Drawing_ShaderEffectCreatePixelMapShader(pixelMap,
+            OH_Drawing_TileMode::CLAMP, OH_Drawing_TileMode::CLAMP,samplingOptions, matrix);
+    }
+    DRAWING_LOGI("CreatePixelMapShader::OnTestFunction =%{public}p", CreatePixelMapShader);
+}
+
+void ShaderEffectCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 5.f);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_ShaderEffect* shaderEffect = nullptr;
+    for (int i = 0; i < testCount_; i++) {
+        shaderEffect  = OH_Drawing_ShaderEffectCreate();
+    }
+    DRAWING_LOGI("ShaderEffectCreate::OnTestFunction =%{public}p", shaderEffect);
+}

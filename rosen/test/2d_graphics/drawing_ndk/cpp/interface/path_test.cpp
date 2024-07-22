@@ -174,6 +174,76 @@ void PathEffectCreateDashPathEffect::OnTestPerformance(OH_Drawing_Canvas* canvas
     OH_Drawing_CanvasDrawLine(canvas, x, y, x1, y1);
 }
 
+void PathEffectCreatePathDashEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 5.f);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    float vals[2] = {1, 1};
+    OH_Drawing_PathEffect* pathEffect = OH_Drawing_CreateDashPathEffect(vals, 2, 0);
+    OH_Drawing_PenSetPathEffect(pen, pathEffect);
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    OH_Drawing_PathEffect* PathDashEffect = nullptr;
+    for (int i = 0; i < testCount_; i++) {
+        PathDashEffect = OH_Drawing_CreatePathDashEffect(path, 10.0, 2.5, PATH_DASH_STYLE_TRANSLATE);
+    }
+    if (PathDashEffect) {
+        DRAWING_LOGI("PathDashEffect::OnTestFunction ret =%{public}p", PathDashEffect);
+    } else {
+        DRAWING_LOGI("Failed to create path dash effect.");
+    }
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+}
+
+void PathEffectCreateCornerPathEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 10);
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+    OH_Drawing_PathEffect* cornerPathEffect = nullptr;
+    for (int i = 0; i < testCount_; i++) {
+        cornerPathEffect = OH_Drawing_CreateCornerPathEffect(10);
+    }
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    if (cornerPathEffect) {
+        DRAWING_LOGI("CreateCornerPathEffect::OnTestFunction   ret =%{public}p", cornerPathEffect);
+    } else {
+        DRAWING_LOGI("CreateCornerPathEffect::OnTestFunction  Failed to create corner path effect.");
+    }
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_PenDestroy(pen);
+}
+
+void PathEffectCreateDisCreatePathEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 10);
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+    OH_Drawing_PathEffect* disCreatePathEffect = nullptr;
+    for (int i = 0; i < testCount_; i++) {
+        disCreatePathEffect = OH_Drawing_CreateDiscretePathEffect(100, -50, 10);
+    }
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    if (disCreatePathEffect) {
+        DRAWING_LOGI("CreateDisCreatePathEffect::OnTestFunction  ret =%{public}p", disCreatePathEffect);
+    } else {
+        DRAWING_LOGI("CreateDisCreatePathEffect::OnTestFunction  Failed to create discreate path effect.");
+    }
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_PenDestroy(pen);
+}
+
 void PathCopy::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     TestRend rand = TestRend();

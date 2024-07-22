@@ -39,3 +39,32 @@ void BrushReset::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(DemoRef);
 };
+
+void BrushGetShaderEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_ShaderEffect* shaderEffect = OH_Drawing_ShaderEffectCreateColorShader(0xFFFF0000);
+    OH_Drawing_BrushGetShaderEffect(brush, shaderEffect);
+    DRAWING_LOGI("BrushGetShaderEffect::OnTestPerformance ret =%{public}p", shaderEffect);
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetWidth(pen, 5.f);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+    OH_Drawing_ErrorCode code = OH_DRAWING_SUCCESS;
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_BrushGetShaderEffect(brush, shaderEffect);
+    }
+    DRAWING_LOGI("BrushGetShaderEffect::OnTestPerformance code =%{public}d", code);
+    DRAWING_LOGI("BrushGetShaderEffect::OnTestPerformance ret =%{public}p", shaderEffect);
+    OH_Drawing_ShaderEffect* retrievedShaderEffect = nullptr;
+    OH_Drawing_BrushGetShaderEffect(brush, retrievedShaderEffect);
+    if (retrievedShaderEffect == nullptr) {
+        DRAWING_LOGI("BrushGetShaderEffect::OnTestFunction ret =%{public}p", retrievedShaderEffect);
+    } else {
+        DRAWING_LOGE("BrushGetShaderEffect::OnTestFunction failed to get shaderEffect");
+    }
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100, 400, 400);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+};

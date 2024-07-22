@@ -52,6 +52,11 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
     if (screenManager == nullptr) {
         return false;
     }
+    VirtualScreenStatus screenStatus = screenManager->GetVirtualScreenStatus(node.GetScreenId());
+    if (screenStatus == VIRTUAL_SCREEN_PAUSE) {
+        RS_LOGD("RSUniRenderVirtualProcessor::Init screenStatus is pause");
+        return;
+    }
     auto virtualScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
     canvasRotation_ = screenManager->GetCanvasRotation(node.GetScreenId());
     scaleMode_ = screenManager->GetScaleMode(node.GetScreenId());

@@ -73,6 +73,7 @@ typedef enum {
  * @brief Creates an <b>OH_Drawing_ShaderEffect</b> that generates a extend shader.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @return Returns the pointer to the <b>OH_Drawing_ShaderEffect</b> object created.
  * @since 12
  * @version 1.0
  */

@@ -59,6 +59,7 @@ OH_Drawing_ImageFilter* OH_Drawing_ImageFilterCreateComposeImageFilter(OH_Drawin
     OH_Drawing_ImageFilter* ImageFilterTwo)
 {
     if (ImageFilterOne == nullptr || ImageFilterTwo == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
     std::shared_ptr<ImageFilter> imageFilter = ImageFilter::CreateComposeImageFilter(

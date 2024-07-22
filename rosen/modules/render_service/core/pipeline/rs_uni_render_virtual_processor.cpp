@@ -223,8 +223,8 @@ void RSUniRenderVirtualProcessor::CanvasInit(RSDisplayRenderNode& node)
 {
     if (node.IsFirstTimeToProcessor() || canvasRotation_) {
         if (node.IsFirstTimeToProcessor()) {
-            // Set RSTreeCount dump val when record sreen
-            RSSystemParameters::SetDumpRSTreeCount(15);
+            // Set RSTreeCount dump val when record sreen, dump 30 frames
+            RSSystemParameters::SetDumpRSTreeCount(RS_TREE_COUNT);
             RS_LOGI("RSUniRenderVirtualProcessor::FirstInit, id: %{public}" PRIu64 ", " \
                 "screen(%{public}f, %{public}f, %{public}f, %{public}f), " \
                 "rotation: %{public}d, correction: %{public}d, needRotation: %{public}d, scaleMode: %{public}d",

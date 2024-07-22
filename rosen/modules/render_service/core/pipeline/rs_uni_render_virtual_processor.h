@@ -21,6 +21,7 @@
 namespace OHOS {
 namespace Rosen {
 constexpr uint32_t ROI_REGIONS_MAX_CNT = 8;
+constexpr int32_t RS_TREE_COUNT = 30;
 struct RoiRegionInfo {
     uint32_t startX = 0;
     uint32_t startY = 0;

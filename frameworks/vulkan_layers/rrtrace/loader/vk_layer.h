@@ -13,14 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef TRACE3D_LOADER_SHM_H
-#define TRACE3D_LOADER_SHM_H
+#ifndef RRTRACE_LOADER_VK_LAYER_H
+#define RRTRACE_LOADER_VK_LAYER_H
 
-namespace trace3d {
+// redirect to SDK vulkan header
+#include <vulkan/vk_layer.h>
 
-void ShmCaptureInit();
-void ShmCaptureCleanup();
-
-} // namespace trace3d
-
-#endif // TRACE3D_LOADER_SHM_H
+#endif // RRTRACE_LOADER_VK_LAYER_H

@@ -1,0 +1,20 @@
+{
+  "file_format_version" : "1.1.2",
+  "layer" : {
+    "name": "VK_LAYER_RRTRACE_CaptureLoader",
+    "type": "GLOBAL",
+    "library_path": "libVkLayer_RrTraceCaptureLoader.so",
+    "api_version": "1.3.275",
+    "implementation_version": "0.1.0",
+    "description": "RrTrace Capture Layer Loader 0.1.0",
+    "functions": {
+      "vkNegotiateLoaderLayerInterfaceVersion": "VK_LAYER_RRTRACE_CaptureLoaderNegotiateLoaderLayerInterfaceVersion"
+    },
+    "pre_instance_functions": {
+      "vkEnumerateInstanceExtensionProperties": "VK_LAYER_RRTRACE_CaptureLoaderEnumerateInstanceExtensionProperties"
+    },
+    "disable_environment": {
+      "ENABLE_VULKAN_RRTRACE_CAPTURE_LOADER": "1"
+    }
+  }
+}

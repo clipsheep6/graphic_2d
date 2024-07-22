@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef TRACE3D_LOADER_H
-#define TRACE3D_LOADER_H
+#ifndef RRTRACE_LOADER_SHM_H
+#define RRTRACE_LOADER_SHM_H
 
-namespace trace3d {
+namespace rrtrace {
 
-void* CaptureInit();
-void CaptureCleanup();
+void ShmCaptureInit();
+void ShmCaptureCleanup();
 
-} // namespace trace3d
+} // namespace rrtrace
 
-#endif // TRACE3D_LOADER_H
+#endif // RRTRACE_LOADER_SHM_H

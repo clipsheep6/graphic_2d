@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "trace3d_loader_shm.h"
-#include "trace3d_loader_helper.h"
+#include "rrtrace_loader_shm.h"
+#include "rrtrace_loader_helper.h"
 
-namespace trace3d {
+namespace rrtrace {
 
 void* GetCaptureEntryLibHandle()
 {
@@ -30,10 +30,10 @@ void* GetCaptureEntryLibHandle()
 
 void* CaptureInit()
 {
-    std::string trace3dCaptureParam = OHOS::system::GetParameter(TRACE3D_CAPTURE_PARAM, "0");
-    if (trace3dCaptureParam != "1") {
-        TRACE3D_LOGI("%s:%d %s:'%s'. libVkLayer_Trace3DCaptureLoader.so will not be loaded\n",
-            __FUNCTION__, __LINE__, TRACE3D_CAPTURE_PARAM, trace3dCaptureParam.c_str());
+    std::string rrtraceCaptureParam = OHOS::system::GetParameter(RRTRACE_CAPTURE_PARAM, "0");
+    if (rrtraceCaptureParam != "1") {
+        RRTRACE_LOGI("%s:%d %s:'%s'. libVkLayer_RrTraceCaptureLoader.so will not be loaded\n",
+            __FUNCTION__, __LINE__, RRTRACE_CAPTURE_PARAM, rrtraceCaptureParam.c_str());
         return nullptr;
     }
     
@@ -49,7 +49,7 @@ void* CaptureInit()
         }
         size_t foundSize = TestBundledSharedLibrary(lib.name);
         if (foundSize > 0) {
-            TRACE3D_LOGI("%s:%d found bundle:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+            RRTRACE_LOGI("%s:%d found bundle:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
 
             if (!lib.handle && lib.mainEntry) {
                 libHandle = lib.handle = DlopenBundledSharedLibrary(lib.name);
@@ -59,10 +59,10 @@ void* CaptureInit()
         
         foundSize = TestStoredSharedLibrary(lib.name);
         if (foundSize > 0) {
-            TRACE3D_LOGI("%s:%d found stored:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+            RRTRACE_LOGI("%s:%d found stored:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
         }
 
-        const std::string shmFullName = std::string(TRACE3D_SHM_URI) + lib.shmName;
+        const std::string shmFullName = std::string(RRTRACE_SHM_URI) + lib.shmName;
         const size_t shmSize = GetFileSize(shmFullName.c_str());
         if (shmSize > 0 && foundSize != shmSize) {
             std::vector<uint8_t> blob;
@@ -72,7 +72,7 @@ void* CaptureInit()
             }
             foundSize = TestStoredSharedLibrary(lib.name);
             if (foundSize > 0) {
-                TRACE3D_LOGI("%s:%d found stored:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+                RRTRACE_LOGI("%s:%d found stored:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
             }
         }
         if (foundSize > 0) {
@@ -96,9 +96,9 @@ void CaptureCleanup()
     ShmCaptureCleanup();
 }
 
-} // namespace trace3d
+} // namespace rrtrace
 
 __attribute__((destructor)) static void CleanupCaptureLoaderLib()
 {
-    trace3d::CaptureCleanup();
+    rrtrace::CaptureCleanup();
 }

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "trace3d_loader_shm.h"
-#include "trace3d_loader_helper.h"
+#include "rrtrace_loader_shm.h"
+#include "rrtrace_loader_helper.h"
 
-namespace trace3d {
+namespace rrtrace {
 
 static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
 {
@@ -33,7 +33,7 @@ static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
 
         lib.shmFd = shm_open(lib.shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if (lib.shmFd < 0) {
-            TRACE3D_LOGE("%s:%d ERROR: shm_open '%s'\n", __FUNCTION__, __LINE__, lib.shmName);
+            RRTRACE_LOGE("%s:%d ERROR: shm_open '%s'\n", __FUNCTION__, __LINE__, lib.shmName);
             return false;
         }
         
@@ -43,17 +43,17 @@ static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
         if (mem) {
             errno_t ret = memcpy_s(mem, len, blob.data(), len);
             if (ret != EOK) {
-                TRACE3D_LOGE("%s:%d ERROR: memcpy_s! Error code: %d\n", __FUNCTION__, __LINE__, ret);
+                RRTRACE_LOGE("%s:%d ERROR: memcpy_s! Error code: %d\n", __FUNCTION__, __LINE__, ret);
             }
             munmap(mem, len);
 
-            TRACE3D_LOGI("%s:%d shm_open '%s' fd:%d\n", __FUNCTION__, __LINE__, lib.shmName, lib.shmFd);
+            RRTRACE_LOGI("%s:%d shm_open '%s' fd:%d\n", __FUNCTION__, __LINE__, lib.shmName, lib.shmFd);
         } else {
             shm_unlink(lib.shmName);
             close(lib.shmFd);
             lib.shmFd = -1;
 
-            TRACE3D_LOGE("%s:%d ERROR: mmap\n", __FUNCTION__, __LINE__);
+            RRTRACE_LOGE("%s:%d ERROR: mmap\n", __FUNCTION__, __LINE__);
         }
     }
     return lib.shmFd >= 0;
@@ -64,9 +64,9 @@ void ShmCaptureInit()
     for (auto &lib : g_captureLibs) {
         size_t foundSize = TestBundledSharedLibrary(lib.name);
         if (foundSize > 0) {
-            TRACE3D_LOGI("%s:%d found bundle:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+            RRTRACE_LOGI("%s:%d found bundle:'%s', size:%zu\n", __FUNCTION__, __LINE__, lib.name, foundSize);
 
-            if (!ShmOpenLibrary(TRACE3D_APP_LIB_URI, lib)) {
+            if (!ShmOpenLibrary(RRTRACE_APP_LIB_URI, lib)) {
             }
         }
     }
@@ -83,4 +83,4 @@ void ShmCaptureCleanup()
     }
 }
 
-} // namespace trace3d
+} // namespace rrtrace

@@ -103,6 +103,10 @@
         ],
         "third_party": [
           "flutter",
+          "jsoncpp",
+          "bounds_checking_function",
+          "openssl",
+          "cJSON",
           "skia"
         ]
       },

@@ -303,8 +303,8 @@ void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfac
     const int boundsHeight = static_cast<int>(property.GetBoundsHeight());
     if (bufferWidth != boundsWidth || bufferHeight != boundsHeight) {
         // float will cause loss of accuracy, and the result will 1 pixel less
-        double xScale = (ROSEN_EQ(boundsWidth, 0) ? 1.0 : 1.0 * bufferWidth / boundsWidth);
-        double yScale = (ROSEN_EQ(boundsHeight, 0) ? 1.0 : 1.0 * bufferHeight / boundsHeight);
+        double xScale = (ROSEN_EQ_Int(boundsWidth, 0) ? 1.0 : 1.0 * bufferWidth / boundsWidth);
+        double yScale = (ROSEN_EQ_Int(boundsHeight, 0) ? 1.0 : 1.0 * bufferHeight / boundsHeight);
         info.srcRect.x = info.srcRect.x * xScale;
         info.srcRect.y = info.srcRect.y * yScale;
         info.srcRect.w = std::min(static_cast<int32_t>(info.srcRect.w * xScale), bufferWidth);

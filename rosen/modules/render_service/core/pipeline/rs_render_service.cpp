@@ -550,9 +550,11 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpRenderServiceTree(dumpString); }).wait();
     }
-    if (argSets.count(arg9) || argSets.count(arg6_1) != 0) {
+    if (argSets.count(arg6_1) != 0) {
+        while (RSSystemParameters::GetDumpRSTreeCount() != 0) {
+        }
         mainThread_->ScheduleTask(
-            [this, &dumpString]() {DumpRenderServiceTree(dumpString, false); }).wait();
+            [this, &dumpString]() { DumpRenderServiceTree(dumpString, false); }).wait();
     }
     if (argSets.count(arg9) ||argSets.count(arg7) != 0) {
         mainThread_->ScheduleTask(

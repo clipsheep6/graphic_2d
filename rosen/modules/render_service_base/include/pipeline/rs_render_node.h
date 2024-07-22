@@ -312,7 +312,7 @@ public:
 
     void RenderTraceDebug() const;
 
-    static bool GetSupportFrameIdleState(pid_t& pid, std::string& dirtyNodeName)
+    static bool GetSupportedFrameIdleState(pid_t& pid, std::string& dirtyNodeName)
     {
         pid = pid_;
         dirtyNodeName = dirtyNodeName_;
@@ -323,9 +323,9 @@ public:
         return false;
     }
 
-    static void SetSupportFrameList(std::vector<std::string>& list)
+    static void SetSupportedFrameList(std::vector<std::string>& list)
     {
-        supportFrameList_ = list;
+        supportedFrameList_ = list;
     }
 
     inline bool ShouldPaint() const
@@ -950,7 +950,7 @@ private:
     static bool idleState_;
     static pid_t pid_;
     static std::string dirtyNodeName_;
-    static std::vector<std::string> supportFrameList_;
+    static std::vector<std::string> supportedFrameList_;
     CacheType cacheType_ = CacheType::NONE;
     // drawing group cache
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;

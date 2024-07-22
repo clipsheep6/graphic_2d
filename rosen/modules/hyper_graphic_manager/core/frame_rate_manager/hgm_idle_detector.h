@@ -77,7 +77,7 @@ public:
     {
         supportAppBufferList_ = supportAppBufferList;
     }
-    std::vector<std::string>& GetSupportFrameList() const
+    std::vector<std::string>& GetSupportedFrameList()
     {
         return supportAppBufferList_;
     }

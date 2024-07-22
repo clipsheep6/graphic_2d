@@ -1200,16 +1200,16 @@ void RSMainThread::ProcessAllSyncTransactionData()
     RequestNextVSync();
 }
 
-void RSMainThread::SetSupportFrameList()
+void RSMainThread::SetSupportedFrameList()
 {
-    if (!initDone && frameRateMgr_ != nullptr &&
+    if (!initStatus_ && frameRateMgr_ != nullptr &&
         !frameRateMgr_->GetIdleDetector().GetSupportFrameList().empty()) {
-        initDone = ture;
-        RSRenderNode::SetSupportFrameList(frameRateMgr_->GetIdleDetector().GetSupportFrameList());
+        initStatus_ = ture;
+        RSRenderNode::SetSupportedFrameList(frameRateMgr_->GetIdleDetector().GetSupportedFrameList());
     }
 }
 
-void RSMainThread::GetSupportFrameIdleState()
+void RSMainThread::UpdateSupportedFrameIdleState()
 {
     pid_t pid = 0;
     std::string dirtyNodeName = "";
@@ -1735,7 +1735,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
-    GetSupportFrameIdleState();
+    UpdateSupportFrameIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

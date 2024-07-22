@@ -871,7 +871,7 @@ void RSRenderNode::SetContentDirty()
 pid_t RSRenderNode::pid_ = 0;
 bool RSRenderNode::idleState_ = true;
 std::string RSRenderNode::dirtyNodeName_ = "";
-std::vector<std::string> RSRenderNode::supportFrameList_;
+std::vector<std::string> RSRenderNode::supportedFrameList_;
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
     bool dirtyEmpty = dirtyTypes_.none();
@@ -886,8 +886,8 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
         nodeName = nodeName.substr(0, MAX_NODE_NAME_LEN);
     }
 
-    auto it = std::find(supportFrameList_.begin(), supportFrameList_.end(), nodeName);
-    if (it != supportFrameList_.end()) {
+    auto it = std::find(supportedFrameList_.begin(), supportedFrameList_.end(), nodeName);
+    if (it != supportedFrameList_.end()) {
         idleState_ = false;
         dirtyNodeName_ = nodeName_;
         pid_ = ExtractPid(GetId());

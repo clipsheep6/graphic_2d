@@ -518,9 +518,9 @@ VKAPI_ATTR VkResult VKAPI_CALL VK_LAYER_RRTRACE_CaptureLoaderEnumerateInstanceEx
 
 // GLES Layer Entries
 
-typedef void (*__eglMustCastToProperFunctionPointerType)(void);
+typedef void (*__eglMustCastToProperFunctionPointerTypeT)(void);
 
-typedef __eglMustCastToProperFunctionPointerType(*PFNEGLGETNEXTLAYERPROCADDRESSPROC)(
+typedef __eglMustCastToProperFunctionPointerTypeT(*PFNEGLGETNEXTLAYERPROCADDRESSPROC)(
     void *, const char *funcName);
 
 typedef void*(*PFNEGLGETNEXTLAYERPROCADDRESSPROCOHOS)(
@@ -529,7 +529,7 @@ typedef void*(*PFNEGLGETNEXTLAYERPROCADDRESSPROCOHOS)(
 typedef void* (* DebugLayerInitializeType)(const void *funcTable,
     PFNEGLGETNEXTLAYERPROCADDRESSPROCOHOS next);
 typedef void* (* DebugLayerGetProcAddrType)(const char *funcName,
-    __eglMustCastToProperFunctionPointerType next);
+    __eglMustCastToProperFunctionPointerTypeT next);
 
 DebugLayerInitializeType g_rrtraceInitialize = nullptr;
 DebugLayerGetProcAddrType g_rrtraceLayerGetProcAddr = nullptr;
@@ -563,7 +563,7 @@ void* DebugLayerInitialize(const void *funcTable, PFNEGLGETNEXTLAYERPROCADDRESSP
 }
 
 RRTRACE_LOADER_API
-void* DebugLayerGetProcAddr(const char *funcName, __eglMustCastToProperFunctionPointerType next)
+void* DebugLayerGetProcAddr(const char *funcName, __eglMustCastToProperFunctionPointerTypeT next)
 {
     void *rrtracePtr = (void *)next;
 

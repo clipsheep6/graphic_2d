@@ -312,7 +312,7 @@ public:
 
     void RenderTraceDebug() const;
 
-    static bool GetSupportedFrameIdleState(pid_t& pid, std::string& dirtyNodeName)
+    static bool GetDrawingEngineTypeIdleState(pid_t& pid, std::string& dirtyNodeName)
     {
         pid = pid_;
         dirtyNodeName = dirtyNodeName_;
@@ -323,9 +323,9 @@ public:
         return false;
     }
 
-    static void SetSupportedFrameList(std::vector<std::string>& list)
+    static void SetDrawingEngineTypeList(std::vector<std::string>& list)
     {
-        supportedFrameList_ = list;
+        drawingEngineTypeList_ = list;
     }
 
     inline bool ShouldPaint() const

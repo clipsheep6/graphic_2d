@@ -356,7 +356,7 @@ void RSMainThread::Init()
         WaitUntilSurfaceCapProcFinished();
 #endif
         PerfMultiWindow();
-        SetSupportedFrameList();
+        SetDrawingEngineTypeList();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition: " + std::to_string(curTime_));
         RS_LOGD("DoComposition start time:%{public}" PRIu64, curTime_);
@@ -1200,20 +1200,20 @@ void RSMainThread::ProcessAllSyncTransactionData()
     RequestNextVSync();
 }
 
-void RSMainThread::SetSupportedFrameList()
+void RSMainThread::SetDrawingEngineTypeList()
 {
     if (!initStatus_ && frameRateMgr_ != nullptr &&
-        !frameRateMgr_->GetIdleDetector().GetSupportedFrameList().empty()) {
+        !frameRateMgr_->GetIdleDetector().GetDrawingEngineTypeList().empty()) {
         initStatus_ = ture;
-        RSRenderNode::SetSupportedFrameList(frameRateMgr_->GetIdleDetector().GetSupportedFrameList());
+        RSRenderNode::SetDrawingEngineTypeList(frameRateMgr_->GetIdleDetector().GetDrawingEngineTypeList());
     }
 }
 
-void RSMainThread::UpdateSupportedFrameIdleState()
+void RSMainThread::UpdateDrawingEngineTypeIdleState()
 {
     pid_t pid = 0;
     std::string dirtyNodeName = "";
-    if (frameRateMgr_ != nullptr && !RSRenderNode::GetSupportedFrameIdleState(pid, dirtyNodeName)) {
+    if (frameRateMgr_ != nullptr && !RSRenderNode::GetDrawingEngineTypeIdleState(pid, dirtyNodeName)) {
         frameRateMgr_->UpdateSurfaceTime(dirtyNodeName, timestamp_, pid);
     }
 }
@@ -1735,7 +1735,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
-    UpdateSupportedFrameIdleState();
+    UpdateDrawingEngineTypeIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

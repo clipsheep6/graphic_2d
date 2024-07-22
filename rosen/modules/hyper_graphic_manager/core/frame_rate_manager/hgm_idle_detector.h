@@ -77,7 +77,7 @@ public:
     {
         supportAppBufferList_ = supportAppBufferList;
     }
-    std::vector<std::string>& GetSupportedFrameList()
+    std::vector<std::string>& GetDrawingEngineTypeList()
     {
         return supportAppBufferList_;
     }

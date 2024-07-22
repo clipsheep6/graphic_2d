@@ -362,8 +362,8 @@ private:
 
     void OnVsync(uint64_t timestamp, uint64_t frameCount, void* data);
     void ProcessCommand();
-    void SetSupportedFrameList();
-    void UpdateSupportedFrameIdleState();
+    void SetDrawingEngineTypeList();
+    void UpdateDrawingEngineTypeIdleState();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();

@@ -171,7 +171,6 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr const char *BUFFER_FROM_TEXTURE = "oh_flutter";
     constexpr const int MAX_NODE_NAME_LEN = 10;
 };
 void RSRenderNode::OnRegister(const std::weak_ptr<RSContext>& context)
@@ -869,8 +868,10 @@ void RSRenderNode::SetContentDirty()
     SetDirty();
 }
 
-pid_t RSRenderNode::flutterPid_ = 0;
-bool RSRenderNode::flutterIdle_ = true;
+pid_t RSRenderNode::pid_ = 0;
+bool RSRenderNode::idleState_ = true;
+std::string RSRenderNode::dirtyNodeName_ = "";
+std::vector<std::string> RSRenderNode::supportFrameList_;
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
     bool dirtyEmpty = dirtyTypes_.none();
@@ -880,10 +881,18 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
             context->AddActiveNode(shared_from_this());
         }
     }
-    if (nodeName_.substr(0, MAX_NODE_NAME_LEN) == BUFFER_FROM_TEXTURE) {
-        flutterIdle_ = false;
-        flutterPid_ = ExtractPid(GetId());
+    auto nodeName = nodeName_;
+    if (nodeName.size() > MAX_NODE_NAME_LEN) {
+        nodeName = nodeName.substr(0, MAX_NODE_NAME_LEN);
     }
+
+    auto it = std::find(supportFrameList_.begin(), supportFrameList_.end(), nodeName);
+    if (it != supportFrameList_.end()) {
+        idleState_ = false;
+        dirtyNodeName_ = nodeName_;
+        pid_ = ExtractPid(GetId());
+    }
+
     SetParentSubTreeDirty();
     dirtyStatus_ = NodeDirty::DIRTY;
 }

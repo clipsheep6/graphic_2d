@@ -362,7 +362,8 @@ private:
 
     void OnVsync(uint64_t timestamp, uint64_t frameCount, void* data);
     void ProcessCommand();
-    void GetTextureFlutterIdleState();
+    void SetSupportFrameList();
+    void GetSupportFrameIdleState();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
@@ -682,6 +683,7 @@ private:
     bool lastFrameUIExtensionDataEmpty_ = false;
     // <pid, <uid, callback>>
     std::map<pid_t, std::pair<uint64_t, sptr<RSIUIExtensionCallback>>> uiExtensionListenners_ = {};
+    bool initDone = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

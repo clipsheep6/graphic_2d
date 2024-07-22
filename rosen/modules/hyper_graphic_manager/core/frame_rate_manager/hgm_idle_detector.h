@@ -77,6 +77,10 @@ public:
     {
         supportAppBufferList_ = supportAppBufferList;
     }
+    std::vector<std::string>& GetSupportFrameList() const
+    {
+        return supportAppBufferList_;
+    }
 private:
     bool appSupported_ = false;
     bool aceAnimatorIdleState_ = true;

@@ -312,14 +312,20 @@ public:
 
     void RenderTraceDebug() const;
 
-    static bool GetTextureFlutterIdleState(pid_t& pid)
+    static bool GetSupportFrameIdleState(pid_t& pid, std::string& dirtyNodeName)
     {
-        pid = flutterPid_;
-        if (flutterIdle_) {
+        pid = pid_;
+        dirtyNodeName = dirtyNodeName_;
+        if (idleState_) {
             return true;
         }
-        flutterIdle_ = true;
+        idleState_ = true;
         return false;
+    }
+
+    static void SetSupportFrameList(std::vector<std::string>& list)
+    {
+        supportFrameList_ = list;
     }
 
     inline bool ShouldPaint() const
@@ -941,8 +947,10 @@ private:
 #endif
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
     std::string nodeName_ = "";
-    static bool flutterIdle_;
-    static pid_t flutterPid_;
+    static bool idleState_;
+    static pid_t pid_;
+    static std::string dirtyNodeName_;
+    static std::vector<std::string> supportFrameList_;
     CacheType cacheType_ = CacheType::NONE;
     // drawing group cache
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;

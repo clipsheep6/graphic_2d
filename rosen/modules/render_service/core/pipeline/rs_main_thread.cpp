@@ -169,7 +169,6 @@ constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
 const std::string PERF_FOR_BLUR_IF_NEEDED_TASK_NAME = "PerfForBlurIfNeeded";
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* HIDE_NOTCH_STATUS = "persist.sys.graphic.hideNotch.status";
-constexpr const char* BUFFER_FROM_TEXTURE = "oh_flutter";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
@@ -357,6 +356,7 @@ void RSMainThread::Init()
         WaitUntilSurfaceCapProcFinished();
 #endif
         PerfMultiWindow();
+        SetSupportFrameList();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition: " + std::to_string(curTime_));
         RS_LOGD("DoComposition start time:%{public}" PRIu64, curTime_);
@@ -1200,11 +1200,21 @@ void RSMainThread::ProcessAllSyncTransactionData()
     RequestNextVSync();
 }
 
-void RSMainThread::GetTextureFlutterIdleState()
+void RSMainThread::SetSupportFrameList()
+{
+    if (!initDone && frameRateMgr_ != nullptr &&
+        !frameRateMgr_->GetIdleDetector().GetSupportFrameList().empty()) {
+        initDone = ture;
+        RSRenderNode::SetSupportFrameList(frameRateMgr_->GetIdleDetector().GetSupportFrameList());
+    }
+}
+
+void RSMainThread::GetSupportFrameIdleState()
 {
     pid_t pid = 0;
-    if (frameRateMgr_ != nullptr && !RSRenderNode::GetTextureFlutterIdleState(pid)) {
-        frameRateMgr_->UpdateSurfaceTime(BUFFER_FROM_TEXTURE, timestamp_, pid);
+    std::string dirtyNodeName = "";
+    if (frameRateMgr_ != nullptr && !RSRenderNode::GetSupportFrameIdleState(pid, dirtyNodeName)) {
+        frameRateMgr_->UpdateSurfaceTime(dirtyNodeName, timestamp_, pid);
     }
 }
 
@@ -1725,7 +1735,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
-    GetTextureFlutterIdleState();
+    GetSupportFrameIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

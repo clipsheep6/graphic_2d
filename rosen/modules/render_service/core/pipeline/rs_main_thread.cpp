@@ -356,7 +356,7 @@ void RSMainThread::Init()
         WaitUntilSurfaceCapProcFinished();
 #endif
         PerfMultiWindow();
-        SetSupportFrameList();
+        SetSupportedFrameList();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition: " + std::to_string(curTime_));
         RS_LOGD("DoComposition start time:%{public}" PRIu64, curTime_);

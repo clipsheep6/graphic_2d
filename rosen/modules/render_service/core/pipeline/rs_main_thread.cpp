@@ -1213,7 +1213,7 @@ void RSMainThread::UpdateSupportedFrameIdleState()
 {
     pid_t pid = 0;
     std::string dirtyNodeName = "";
-    if (frameRateMgr_ != nullptr && !RSRenderNode::GetSupportFrameIdleState(pid, dirtyNodeName)) {
+    if (frameRateMgr_ != nullptr && !RSRenderNode::GetSupportedFrameIdleState(pid, dirtyNodeName)) {
         frameRateMgr_->UpdateSurfaceTime(dirtyNodeName, timestamp_, pid);
     }
 }
@@ -1735,7 +1735,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
-    UpdateSupportFrameIdleState();
+    UpdateSupportedFrameIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

@@ -69,6 +69,7 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
 void RSUniRenderUtil::MergeDirtyHistoryForNode(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     RSDisplayRenderParams* params, bool useAlignedDirtyRegion)
 {
+    (void)params;
     // TO-DO curAllSurfaces will use surface node ptr vector
     auto& curAllSurfaces = node->GetCurAllSurfaces();
     // update all child surfacenode history
@@ -80,6 +81,9 @@ void RSUniRenderUtil::MergeDirtyHistoryForNode(std::shared_ptr<RSDisplayRenderNo
         RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::MergeDirtyHistory for surfaceNode %" PRIu64"",
             surfaceNode->GetId());
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
+        if (!surfaceDirtyManager) {
+            continue;
+        }
         if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
             ROSEN_LOGE("RSUniRenderUtil::MergeDirtyHistory with invalid buffer age %{public}d", bufferAge);
         }
@@ -142,6 +146,9 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::vector<RSBaseRen
             continue;
         }
         auto surfaceDirtyManager = renderParallel ? surfaceNode->GetSyncDirtyManager() : surfaceNode->GetDirtyManager();
+        if (!surfaceDirtyManager) {
+            continue;
+        }
         auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
         Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
             surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
@@ -414,7 +421,7 @@ void RSUniRenderUtil::SrcRectScaleFit(BufferDrawParam& params, const sptr<Surfac
     // Canvas is able to handle the situation when the window is out of screen, using bounds instead of dst.
     uint32_t boundsWidth = static_cast<uint32_t>(localBounds.GetWidth());
     uint32_t boundsHeight = static_cast<uint32_t>(localBounds.GetHeight());
-    if (boundsWidth == 0 || boundsHeight == 0) {
+    if (boundsWidth == 0 || boundsHeight == 0 || srcWidth == 0 || srcHeight == 0) {
         return;
     }
     if (srcWidth * boundsHeight > srcHeight * boundsWidth) {
@@ -863,7 +870,7 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
     }
     std::string surfaceName = node->GetName();
     bool needFilterSCB = node->GetSurfaceWindowType() == SurfaceWindowType::SYSTEM_SCB_WINDOW;
-    RS_LOGE("RSUniRenderUtil::IsNodeAssignSubThread %s", surfaceName.c_str());
+    RS_LOGI("RSUniRenderUtil::IsNodeAssignSubThread %s", surfaceName.c_str());
 
     if (needFilterSCB || node->IsSelfDrawingType()) {
         return false;

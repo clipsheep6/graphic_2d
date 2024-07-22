@@ -124,6 +124,11 @@ bool RSProcessor::InitForRenderThread(RSDisplayRenderNode& node, ScreenId mirror
         RS_LOGE("RSProcessor::InitForRenderThread params is null!");
         return false;
     }
+    if (renderEngine == nullptr) {
+        RS_LOGE("renderEngine is nullptr");
+        return false;
+    }
+    renderEngine_ = renderEngine;
 
     offsetX_ = params->GetDisplayOffsetX();
     offsetY_ = params->GetDisplayOffsetY();
@@ -131,12 +136,6 @@ bool RSProcessor::InitForRenderThread(RSDisplayRenderNode& node, ScreenId mirror
 
     screenInfo_ = params->GetScreenInfo();
     screenInfo_.rotation = params->GetNodeRotation();
-
-    renderEngine_ = renderEngine;
-    if (renderEngine_ == nullptr) {
-        RS_LOGE("renderEngine is nullptr");
-        return false;
-    }
 
     // CalculateScreenTransformMatrix
     auto mirrorNode = params->GetMirrorSource().lock();
@@ -204,24 +203,23 @@ bool RSProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offse
     if (isRenderThread) {
         return InitForRenderThread(node, mirroredId, renderEngine);
     }
-    offsetX_ = offsetX;
-    offsetY_ = offsetY;
-    mirroredId_ = mirroredId;
     auto screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {
         RS_LOGE("RSPhysicalScreenProcessor::Init: ScreenManager is nullptr");
         return false;
     }
+    if (renderEngine == nullptr) {
+        RS_LOGE("renderEngine is nullptr");
+        return false;
+    }
+    renderEngine_ = renderEngine;
+    offsetX_ = offsetX;
+    offsetY_ = offsetY;
+    mirroredId_ = mirroredId;
     screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     screenInfo_.rotation = node.GetRotation();
     auto mirrorNode = node.GetMirrorSource().lock();
     CalculateScreenTransformMatrix(mirrorNode ? *mirrorNode : node);
-
-    renderEngine_ = renderEngine;
-    if (renderEngine_ == nullptr) {
-        RS_LOGE("renderEngine is nullptr");
-        return false;
-    }
 
     if (mirroredId_ != INVALID_SCREEN_ID) {
         mirroredScreenInfo_ = screenManager->QueryScreenInfo(mirroredId_);

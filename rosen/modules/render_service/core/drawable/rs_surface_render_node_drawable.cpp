@@ -124,7 +124,8 @@ Drawing::Region RSSurfaceRenderNodeDrawable::CalculateVisibleRegion(RSRenderThre
         return resultRegion;
     }
 
-    if (uniParam->IsOcclusionEnabled() && surfaceParams->GetVisibleRegion().IsEmpty()) {
+    auto visibleRegion = surfaceParams->GetVisibleRegion();
+    if (uniParam->IsOcclusionEnabled() && visibleRegion.IsEmpty()) {
         return resultRegion;
     }
     // The region is dirty region of this SurfaceNode.
@@ -132,7 +133,8 @@ Drawing::Region RSSurfaceRenderNodeDrawable::CalculateVisibleRegion(RSRenderThre
     // The region is the result of global dirty region AND occlusion region.
     Occlusion::Region globalDirtyRegion = surfaceNode->GetGlobalDirtyRegion();
     // This include dirty region and occlusion region when surfaceNode is mainWindow.
-    auto visibleDirtyRegion = globalDirtyRegion.Or(surfaceNodeDirtyRegion);
+    Occlusion::Region dirtyRegion = globalDirtyRegion.Or(surfaceNodeDirtyRegion);
+    auto visibleDirtyRegion = dirtyRegion.And(visibleRegion);
     if (visibleDirtyRegion.IsEmpty()) {
         RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s NodeId:%" PRIu64 "",
             surfaceNode->GetName().c_str(), surfaceParams->GetId());
@@ -444,6 +446,7 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
     std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
     Drawing::Region& region)
 {
+    Occlusion::Region visibleRegion = surfaceParams->GetVisibleRegion();
     if (surfaceParams->IsMainWindowType() && surfaceParams->GetVisibleRegion().IsEmpty()) {
         return;
     }
@@ -452,9 +455,10 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
         Occlusion::Region calcRegion;
         if ((surfaceParams->IsMainWindowType() && surfaceParams->IsParentScaling()) ||
             surfaceParams->IsSubSurfaceNode() || uniParam->IsAllSurfaceVisibleDebugEnabled()) {
-            calcRegion = surfaceParams->GetVisibleRegion();
+            calcRegion = visibleRegion;
         } else if (!surfaceParams->GetTransparentRegion().IsEmpty()) {
-            calcRegion = surfaceParams->GetTransparentRegion();
+            auto transparentRegion = surfaceParams->GetTransparentRegion();
+            calcRegion = transparentRegion.And(visibleRegion);
         }
         if (!calcRegion.IsEmpty()) {
             auto dirtyRegion = calcRegion.And(accumulatedDirtyRegion);

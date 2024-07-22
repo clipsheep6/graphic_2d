@@ -15,7 +15,7 @@
 
 #include "drawing_error_code.h"
 
-OH_Drawing_ErrorCode g_drawingErrorCode = OH_DRAWING_SUCCESS;
+thread_local OH_Drawing_ErrorCode g_drawingErrorCode = OH_DRAWING_SUCCESS;
 
 OH_Drawing_ErrorCode OH_Drawing_ErrorCodeGet()
 {

@@ -1994,8 +1994,6 @@ void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDraw
     // force update if no next vsync when skip-frame enabled
     if (!needRequestNextVsync && filterDrawable->IsSkippingFrame()) {
         filterDrawable->ForceClearCacheWithLastFrame();
-        dirtyManager.MergeDirtyRect(filterRegion_);
-        isDirtyRegionUpdated_ = true;
         return;
     }
 
@@ -2327,7 +2325,7 @@ void RSRenderNode::ApplyModifiers()
     }
 
     // Temporary code, copy matrix into render params
-    if (LIKELY(RSUniRenderJudgement::IsUniRender())) {
+    if (LIKELY(RSUniRenderJudgement::IsUniRender() && !isTextureExportNode_)) {
         UpdateDrawableVecV2();
     } else {
         UpdateDrawableVec();

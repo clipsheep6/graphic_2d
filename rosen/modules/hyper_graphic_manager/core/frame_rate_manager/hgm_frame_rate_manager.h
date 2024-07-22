@@ -169,6 +169,7 @@ public:
     }
 
     static bool MergeRangeByPriority(VoteRange& rangeRes, const VoteRange& curVoteRange);
+    void CheckPackageInConfigList(std::unordered_map<pid_t, std::pair<int32_t, std::string>> foregroundPidAppMap);
 private:
     void Reset();
     void UpdateAppSupportStatus();
@@ -241,9 +242,7 @@ private:
     VoteInfo lastVoteInfo_;
     HgmMultiAppStrategy multiAppStrategy_;
     HgmTouchManager touchManager_;
-    std::atomic<uint32_t> lastTouchState_ = IDLE_STATE;
-    bool startCheck_ = false;
-    bool prepareCheck_ = false;
+    std::atomic<bool> startCheck_ = false;
     HgmIdleDetector idleDetector_;
     int32_t lastUpExpectFps_ = 0;
     bool isNeedUpdateAppOffset_ = false;

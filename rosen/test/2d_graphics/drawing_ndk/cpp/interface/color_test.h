@@ -133,4 +133,18 @@ protected:
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
+
+class ColorFilterCreate : public TestBase {
+public:
+    explicit ColorFilterCreate(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreate";
+    };
+    ~ColorFilterCreate() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
 #endif // INTERFACE_COLOR_TEST_H

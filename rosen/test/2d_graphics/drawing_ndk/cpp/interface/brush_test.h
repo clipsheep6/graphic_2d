@@ -29,4 +29,16 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class BrushGetShaderEffect : public TestBase {
+public:
+    explicit BrushGetShaderEffect(int type) : TestBase(type)
+    {
+        fileName_ = "BrushGetShaderEffect";
+    };
+    ~BrushGetShaderEffect() override {};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
 #endif // INTERFACE_BRUSH_TEST_H

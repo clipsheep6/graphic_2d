@@ -229,14 +229,16 @@ HWTEST_F(NativeDrawingBrushTest, NativeDrawingBrushTest_brushGetShaderEffect008,
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateColorShader(0xFFFF0000);
     EXPECT_NE(shaderEffect, nullptr);
-    OH_Drawing_BrushGetShaderEffect(nullptr, shaderEffect);
-    OH_Drawing_BrushGetShaderEffect(brush, nullptr);
-    OH_Drawing_ShaderEffect* retrievedShaderEffect = nullptr;
-    OH_Drawing_BrushSetShaderEffect(brush, retrievedShaderEffect);
-    OH_Drawing_BrushGetShaderEffect(brush, retrievedShaderEffect);
+    OH_Drawing_ErrorCode code = OH_DRAWING_SUCCESS;
+    code = OH_Drawing_BrushGetShaderEffect(nullptr, shaderEffect);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BrushGetShaderEffect(brush, nullptr);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+    code = OH_Drawing_BrushGetShaderEffect(brush, shaderEffect);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_ShaderEffectDestroy(shaderEffect);
-    OH_Drawing_ShaderEffectDestroy(retrievedShaderEffect);
 }
 } // namespace Drawing
 } // namespace Rosen

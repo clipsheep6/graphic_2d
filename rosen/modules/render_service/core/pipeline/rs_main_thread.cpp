@@ -1203,7 +1203,7 @@ void RSMainThread::ProcessAllSyncTransactionData()
 void RSMainThread::SetSupportedFrameList()
 {
     if (!initStatus_ && frameRateMgr_ != nullptr &&
-        !frameRateMgr_->GetIdleDetector().GetSupportFrameList().empty()) {
+        !frameRateMgr_->GetIdleDetector().GetSupportedFrameList().empty()) {
         initStatus_ = ture;
         RSRenderNode::SetSupportedFrameList(frameRateMgr_->GetIdleDetector().GetSupportedFrameList());
     }

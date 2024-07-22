@@ -52,7 +52,7 @@ void HgmIdleDetector::UpdateSurfaceTime(const std::string& surfaceName, uint64_t
         }
     }
 
-    RS_TRACE_NAME_FMT("Not Idle Surface Name = [%s] From Pid = [%d]",
+    RS_TRACE_NAME_FMT("UpdateSurfaceTime Not Idle Surface Name = [%s] From Pid = [%d]",
         surfaceName.c_str(), pid);
     frameTimeMap_[temp] = timestamp;
 }

@@ -51,6 +51,7 @@
 #include "interface/brush_test.h"
 #include "interface/canvas_test.h"
 #include "interface/color_test.h"
+#include "interface/error_code_test.h"
 #include "interface/font_test.h"
 #include "interface/mask_filter_test.h"
 #include "interface/matrix_test.h"
@@ -139,6 +140,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<Anisotropic>();
         } }, // 该用例OH_Drawing_SamplingOptionsCreate接口mode对应内容未开放,无法实现
+    { "thread_error_code",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ThreadErrorCodeTest>();
+        } }, // 该用例测试多线程不加锁抢占错误码互相是否影响
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {

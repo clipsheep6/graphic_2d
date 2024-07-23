@@ -73,8 +73,8 @@ void RSSurfaceHandler::ConsumeAndUpdateBuffer(SurfaceBufferEntry buffer)
     if (!buffer.buffer) {
         return;
     }
-    SetBufferSizeChanged(buffer.buffer);
     SetBuffer(buffer.buffer, buffer.acquireFence, buffer.damageRect, buffer.timestamp);
+    SetBufferSizeChanged(buffer.buffer);
     SetCurrentFrameBufferConsumed();
     RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") buffer update, "\
         "buffer timestamp = %{public}" PRId64 " .", GetNodeId(), buffer.timestamp);
@@ -112,8 +112,9 @@ RSSurfaceHandler::SurfaceBufferEntry RSSurfaceHandler::GetBufferFromCache(uint64
         }
     }
     if (buffer.buffer != nullptr) {
-        RS_TRACE_NAME_FMT("RSSurfaceHandler: get buffer from cache success, id = %" PRIu64 " cacheCount = %zu",
-            GetNodeId(), bufferCache_.size());
+        RS_TRACE_NAME_FMT("RSSurfaceHandler: get buffer from cache success, "
+            "id = %" PRIu64 ", timestamp = %" PRId64 ",cacheCount = %zu .",
+            GetNodeId(), buffer.timestamp, bufferCache_.size());
         RS_TRACE_INT("RSSurfaceHandler buffer cache", static_cast<int>(bufferCache_.size()));
     }
     return buffer;

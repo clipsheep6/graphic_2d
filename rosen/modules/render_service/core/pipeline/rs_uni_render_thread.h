@@ -22,8 +22,6 @@
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
-#include "drawable/rs_display_render_node_drawable.h"
-#include "drawable/rs_render_node_drawable.h"
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_context.h"
 #include "params/rs_render_thread_params.h"
@@ -34,6 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace DrawableV2 {
+class RSRenderNodeDrawable;
 class RSDisplayRenderNodeDrawable;
 }
 
@@ -77,6 +76,7 @@ public:
     void PostClearMemoryTask(ClearMemoryMoment moment, bool deeply, bool isDefaultClean);
     void MemoryManagementBetweenFrames();
     void PreAllocateTextureBetweenFrames();
+    void AsyncFreeVMAMemoryBetweenFrames();
     void ResetClearMemoryTask();
     bool GetClearMemoryFinished() const;
     bool GetClearMemDeeply() const;

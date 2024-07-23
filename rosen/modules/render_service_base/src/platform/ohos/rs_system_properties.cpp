@@ -273,7 +273,7 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
 bool RSSystemProperties::GetHardwareComposerEnabledForMirrorMode()
 {
     static bool hardwareComposerMirrorEnabled =
-        !IsFoldScreenFlag() && system::GetParameter("persist.rosen.hardwarecomposer.mirror.enabled", "1") != "0";
+        system::GetParameter("persist.rosen.hardwarecomposer.mirror.enabled", "0") != "0";
     return hardwareComposerMirrorEnabled;
 }
 
@@ -895,6 +895,14 @@ bool RSSystemProperties::GetPreAllocateTextureBetweenFramesEnabled()
         (std::atoi(system::GetParameter("persist.sys.graphic.mem.pre_allocate_texture_between_frames_enabled", "1")
                        .c_str()) != 0);
     return PreAllocateTextureBetweenFramesEnabled;
+}
+
+bool RSSystemProperties::GetAsyncFreeVMAMemoryBetweenFramesEnabled()
+{
+    static bool AsyncFreeVMAMemoryBetweenFramesEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.async_free_between_frames_enabled", "1").c_str()) !=
+            0);
+    return AsyncFreeVMAMemoryBetweenFramesEnabled;
 }
 
 const DdgrOpincType RSSystemProperties::ddgrOpincType_ =

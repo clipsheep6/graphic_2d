@@ -762,13 +762,23 @@ napi_value JsPath::OnGetPositionAndTangent(napi_env env, napi_callback_info info
     double distance = 0.0;
     GET_DOUBLE_PARAM(ARGC_ONE, distance);
 
-    Point* position = nullptr;
-    GET_UNWRAP_PARAM(ARGC_TWO, position);
+    Point position = Point(0.0, 0.0);
+    double posPoint[ARGC_TWO] = {0};
+    if (!ConvertFromJsPoint(env, argv[ARGC_TWO], posPoint, ARGC_TWO)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Incorrect parameter type. The type of x, y should be a number.");
+    }
+    position = Point(posPoint[ARGC_ZERO], posPoint[ARGC_ONE]);
 
-    Point* tangent = nullptr;
-    GET_UNWRAP_PARAM(ARGC_THREE, tangent);
+    Point tangent = Point(0.0, 0.0);
+    double tanPoint[ARGC_TWO] = {0};
+    if (!ConvertFromJsPoint(env, argv[ARGC_TWO], tanPoint, ARGC_TWO)) {
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
+            "Incorrect parameter type. The type of x, y should be a number.");
+    }
+    tangent = Point(tanPoint[ARGC_ZERO], tanPoint[ARGC_ONE]);
 
-    bool result = m_path->GetPositionAndTangent(distance, *position, *tangent, forceClosed);
+    bool result = m_path->GetPositionAndTangent(distance, position, tangent, forceClosed);
     return CreateJsNumber(env, result);
 }
 

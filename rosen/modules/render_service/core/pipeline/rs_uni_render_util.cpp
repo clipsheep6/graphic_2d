@@ -1855,5 +1855,14 @@ void RSUniRenderUtil::ProcessCacheImage(RSPaintFilterCanvas& canvas, Drawing::Im
     canvas.DrawImage(cacheImageProcessed, 0, 0, sampling);
     canvas.DetachBrush();
 }
+
+bool RSUniRenderUtil::IsDeviceSupportGpuOverDraw()
+{
+#ifdef RS_ENABLE_VK
+    auto& vkContext = OHOS::Rosen::RsVulkanContext::GetSingleton().GetRsVulkanInterface();
+    return vkContext.SupportFeatures() & RsVulkanInterface::SupportFeatures::OVERDRAW_FEATURE;
+#endif
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

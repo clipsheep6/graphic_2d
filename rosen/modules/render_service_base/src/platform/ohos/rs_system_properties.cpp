@@ -1043,7 +1043,7 @@ int RSSystemProperties::GetRSNodeLimit()
 
 bool RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
 {
-    static bool flag = system::GetParameter("rosen.gpu.overdraw.optimize.enabled", "0") != "0";
+    static bool flag = system::GetParameter("persist.rosen.gpu.overdraw.optimize.enabled", "0") != "0";
     return flag;
 }
 

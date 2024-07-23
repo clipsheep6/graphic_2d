@@ -30,7 +30,6 @@
 #include <securec.h>
 #if defined(RRTRACE_LOADER_OHOS)
 #include <hilog/log.h>
-#include <parameters.h>
 #endif
 
 #if defined(RRTRACE_LOADER_OHOS)
@@ -38,14 +37,6 @@
 #else
 #error "Unknown platform"
 #endif
-
-#define RRTRACE_APP_LIB_URI "/data/storage/el1/bundle/libs/arm64/"
-#define RRTRACE_APP_DATA_URI "/data/storage/el2/base/"
-#define RRTRACE_DATA_LOCAL_URI "/data/local/rrtrace/"
-#define RRTRACE_SYSTEM_LIB_URI "/system/lib64/"
-#define RRTRACE_SHM_URI "/dev/shm/"
-
-#define RRTRACE_CAPTURE_PARAM "rrtrace.capture"
 
 #undef LOG_DOMAIN
 // The "0xD001405" is the domain ID for graphic module that alloted by the OS.
@@ -60,31 +51,7 @@
 
 namespace rrtrace {
 
-struct CaptureLib {
-    const char *name{nullptr};
-    const char *shmName{nullptr};
-    const bool mainEntry{false};
-    int shmFd{-1};
-    void *handle{nullptr};
-};
-
-inline CaptureLib g_captureLibs[] = {
-    {"libVkLayer_gfxreconstruct.so", "rrtrace.GfxRecon"},
-    {"libAPITrace.so",               "rrtrace.ApiTrace"},
-    {"libPATrace.so",                "rrtrace.PaTrace"},
-    {"libVkLayer_RrTraceCapture.so", "rrtrace.Capture", true},
-};
-
 size_t GetFileSize(const char *fileName);
-size_t ReadFileData(const char *fileName, std::vector<uint8_t> &blob);
-size_t WriteFileData(const char *fileName, const std::vector<uint8_t> &blob);
-
-size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob);
-void *DlopenSharedLibrary(const char *libFullName);
-void *DlopenStoredSharedLibrary(const char *libName);
-size_t TestStoredSharedLibrary(const char *libName);
-void *DlopenBundledSharedLibrary(const char *libName);
-size_t TestBundledSharedLibrary(const char *libName);
 
 } // namespace rrtrace
 

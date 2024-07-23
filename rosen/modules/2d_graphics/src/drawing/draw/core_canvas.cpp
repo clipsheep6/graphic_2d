@@ -14,6 +14,7 @@
  */
 
 #include "core_canvas.h"
+#include "draw/canvas.h"
 
 #include "impl_factory.h"
 #include "utils/log.h"
@@ -319,11 +320,6 @@ void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     DRAW_API_WITH_PAINT(DrawImageRect, image, dst, sampling);
 }
 
-void CoreCanvas::DrawPicture(const Picture& picture)
-{
-    impl_->DrawPicture(picture);
-}
-
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     impl_->DrawSVGDOM(svgDom);
@@ -584,6 +580,13 @@ void CoreCanvas::GetLooperPaint(const Paint& paint, Paint& looperPaint)
     Filter filter = looperPaint.GetFilter();
     filter.SetMaskFilter(looper->GetMaskFilter());
     looperPaint.SetFilter(filter);
+}
+
+void Canvas::DrawPicture(const std::shared_ptr<Picture> picture)
+{
+    this->Save();
+    picture->Playback(this);
+    this->Restore();
 }
 } // namespace Drawing
 } // namespace Rosen

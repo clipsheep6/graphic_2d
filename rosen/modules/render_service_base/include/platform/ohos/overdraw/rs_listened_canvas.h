@@ -58,7 +58,6 @@ public:
         Drawing::SrcRectConstraint constraint = Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT) override;
     void DrawImageRect(const Drawing::Image& image,
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling) override;
-    void DrawPicture(const Drawing::Picture& picture) override;
 
     void Clear(Drawing::ColorQuad color) override;
     // paint

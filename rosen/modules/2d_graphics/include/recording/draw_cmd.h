@@ -799,15 +799,12 @@ public:
         OpDataHandle picture;
     };
     DrawPictureOpItem(const DrawCmdList& cmdList, ConstructorHandle* handle);
-    explicit DrawPictureOpItem(const Picture& picture)
-        : DrawOpItem(DrawOpItem::PICTURE_OPITEM), picture_(std::make_shared<Picture>(picture)) {}
     ~DrawPictureOpItem() override = default;
 
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
 private:
-    std::shared_ptr<Picture> picture_;
 };
 
 class DrawTextBlobOpItem : public DrawWithPaintOpItem {

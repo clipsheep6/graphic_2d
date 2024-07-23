@@ -22,6 +22,7 @@
 #include "drawing/engine_adapter/impl_interface/core_canvas_impl.h"
 #include "utils/drawing_macros.h"
 #include "utils/rect.h"
+#include "image/picture.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -439,14 +440,6 @@ public:
     virtual void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
         SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
     virtual void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling);
-
-    /**
-     * @brief Clip and Matrix are unchanged by picture contents, as if Save() was called
-     * before and Restore() was called after DrawPicture(). Picture records a series of
-     * draw commands for later playback.
-     * @param picture recorded drawing commands to play
-     */
-    virtual void DrawPicture(const Picture& picture);
 
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom);

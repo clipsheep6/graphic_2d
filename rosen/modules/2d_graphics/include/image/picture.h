@@ -16,24 +16,28 @@
 #ifndef PICTURE_H
 #define PICTURE_H
 
-#include "drawing/engine_adapter/impl_interface/picture_impl.h"
+#include <memory>
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+class Canvas;
+class DrawCmdList;
 class Picture {
 public:
-    Picture() noexcept;
-    virtual ~Picture() {};
-    template<typename T>
-    T* GetImpl() const
-    {
-        return pictureImplPtr->DowncastingTo<T>();
+    Picture(std::shared_ptr<DrawCmdList> cmdList);
+
+    ~Picture();
+
+    void Playback(Canvas* canvas);
+
+    std::shared_ptr<DrawCmdList> GetDrawCmdList() const {
+        return drawCmdList_;
     }
-    std::shared_ptr<Data> Serialize() const;
-    bool Deserialize(std::shared_ptr<Data> data);
+
 private:
-    std::shared_ptr<PictureImpl> pictureImplPtr;
+    std::shared_ptr<DrawCmdList> drawCmdList_ = nullptr;
+    friend class PictureRecorder;
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,27 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "image/picture.h"
-#include "recording/draw_cmd_list.h"
-#include "draw/canvas.h"
+#ifndef DRAWING_DEMO_DRAW_PARALLE_TEST_H
+#define DRAWING_DEMO_DRAW_PARALLE_TEST_H
+#include "test_base.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-Picture::Picture(std::shared_ptr<DrawCmdList> cmdList)
-    : drawCmdList_(cmdList) {
-}
-
-Picture::~Picture() {
-}
-
-void Picture::Playback(Canvas* canvas) {
-    if (drawCmdList_) {
-        drawCmdList_->Playback(*canvas);
-    }
-}
-
-} // namespace Drawing
+class DrawParalleTest : public TestBase {
+public:
+    DrawParalleTest() : TestBase() {}
+    ~DrawParalleTest() override = default;
+protected:
+    void OnTestFunctionCpu(Drawing::Canvas* canvas) override;
+    void OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas) override;
+    // void OnTestPerformance(Drawing::Canvas* canvas) override;
+};
 } // namespace Rosen
 } // namespace OHOS
+#endif // DRAWING_DEMO_DRAW_PARALLE_TEST_H

@@ -1517,7 +1517,7 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, Drawing::Canv
     if (mask == nullptr) {
         return;
     }
-    if (mask->IsSvgMask() && !mask->GetSvgDom() && !mask->GetSvgPicture()) {
+    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
         ROSEN_LOGD("RSPropertiesPainter::DrawMask not has Svg Mask property");
         return;
     }
@@ -1555,8 +1555,6 @@ void RSPropertiesPainter::ApplyMaskToCanvas(
         canvas.Scale(mask->GetScaleX(), mask->GetScaleY());
         if (mask->GetSvgDom()) {
             canvas.DrawSVGDOM(mask->GetSvgDom());
-        } else if (mask->GetSvgPicture()) {
-            canvas.DrawPicture(*mask->GetSvgPicture());
         }
     } else if (mask->IsGradientMask()) {
         Drawing::AutoCanvasRestore maskSave(canvas, true);

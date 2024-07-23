@@ -22,7 +22,6 @@
 #include "effect/color_space.h"
 #include "image/bitmap.h"
 #include "image/pixmap.h"
-#include "image/picture.h"
 #include "image/image_info.h"
 #include "utils/matrix.h"
 #include "utils/size.h"

@@ -497,21 +497,6 @@ void RSPaintFilterCanvasBase::DrawImageRect(const Image& image, const Rect& dst,
 #endif
 }
 
-void RSPaintFilterCanvasBase::DrawPicture(const Picture& picture)
-{
-#ifdef ENABLE_RECORDING_DCL
-    for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
-        if ((*iter) != nullptr && OnFilter()) {
-            (*iter)->DrawPicture(picture);
-        }
-    }
-#else
-    if (canvas_ != nullptr && OnFilter()) {
-        canvas_->DrawPicture(picture);
-    }
-#endif
-}
-
 void RSPaintFilterCanvasBase::DrawTextBlob(
     const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y)
 {

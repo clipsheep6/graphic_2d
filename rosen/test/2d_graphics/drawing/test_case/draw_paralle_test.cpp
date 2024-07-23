@@ -52,13 +52,13 @@ std::shared_ptr<Drawing::Picture> threadFunction() {
     pen.SetShaderEffect(e);
     recording->AttachPen(pen);
     recording->DrawImage(image, 500, 60, Drawing::SamplingOptions());
-    std::cout<<"thread 111"<<std::endl;
+    HILOGE("thread 111");
     recording->DrawBitmap(bitmap, 500, 360);
-    std::cout<<"thread 222"<<std::endl;
+    HILOGE("thread 222");
     recording->DrawTextBlob(textblob.get(), 500, 660);
-    std::cout<<"thread 333"<<std::endl;
+    HILOGE("thread 333");
     recording->DrawRect(rect);
-    std::cout<<"thread 444"<<std::endl;
+    HILOGE("thread 444");
     std::shared_ptr<Drawing::Picture> finishedPicture = picture.FinishingRecording();
     return finishedPicture;
 }
@@ -124,13 +124,13 @@ void DrawParalleTest::OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas)
     pen.SetShaderEffect(e);
     canvas->AttachPen(pen);
     canvas->DrawImage(image, 100, 60, Drawing::SamplingOptions());
-    std::cout<<"gpu 111"<<std::endl;
+    HILOGE("gpu 111");
     canvas->DrawBitmap(bitmap, 100, 360);
-    std::cout<<"gpu 222"<<std::endl;
+    HILOGE("gpu 222");
     canvas->DrawTextBlob(textblob.get(), 100, 660);
-    std::cout<<"gpu 333"<<std::endl;
+    HILOGE("gpu 333");
     canvas->DrawRect(rect);
-    std::cout<<"gpu 444"<<std::endl;
+    HILOGE("gpu 444");
     // 等待子线程执行完毕
     thread.join();
 

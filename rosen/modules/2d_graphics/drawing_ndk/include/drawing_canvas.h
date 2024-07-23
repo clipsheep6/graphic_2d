@@ -344,6 +344,17 @@ void OH_Drawing_CanvasDrawBitmapRect(OH_Drawing_Canvas*, const OH_Drawing_Bitmap
 void OH_Drawing_CanvasDrawRect(OH_Drawing_Canvas*, const OH_Drawing_Rect*);
 
 /**
+ * @brief Draws a Picture.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Picture Indicates the pointer to an <b>OH_Drawing_Picture</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawPicture(OH_Drawing_Canvas*, OH_Drawing_Picture*);
+
+/**
  * @brief Draws a circle.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

@@ -89,7 +89,6 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
     float darkBuffer = GetData<float>();
     float brightBuffer = GetData<float>();
     int64_t interval = GetData<int64_t>();
-    uint32_t screenStatus = GetData<uint32_t>();
 
     // test
     auto& rsInterfaces = RSInterfaces::GetInstance();
@@ -169,6 +168,7 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
     rsInterfaces.RegisterUIExtensionCallback(id, uiExtensionCallback);
     usleep(usleepTime);
 
+    VirtualScreenStatus screenStatus = VIRTUAL_SCREEN_PLAY;
     rsInterfaces.SetVirtualScreenStatus(static_cast<ScreenId>(id), static_cast<VirtualScreenStatus>(screenStatus));:
 
     return true;

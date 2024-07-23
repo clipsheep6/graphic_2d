@@ -45,17 +45,16 @@ bool RSUniRenderVirtualProcessor::InitForRenderThread(DrawableV2::RSDisplayRende
     if (screenManager == nullptr) {
         return false;
     }
-    VirtualScreenStatus screenStatus = screenManager->GetVirtualScreenStatus(node.GetScreenId());
-    if (screenStatus == VIRTUAL_SCREEN_PAUSE) {
-        RS_LOGD("RSUniRenderVirtualProcessor::Init screenStatus is pause");
-	node.ClearBufferCache();
-        return false;
-    }
     auto& params = displayDrawable.GetRenderParams();
     if (!params) {
         return false;
     }
     virtualScreenId_ = params->GetScreenId();
+    VirtualScreenStatus screenStatus = screenManager->GetVirtualScreenStatus(virtualScreenId_);
+    if (screenStatus == VIRTUAL_SCREEN_PAUSE) {
+        RS_LOGD("RSUniRenderVirtualProcessor::Init screenStatus is pause");
+        return false;
+    }
     auto virtualScreenInfo = screenManager->QueryScreenInfo(virtualScreenId_);
     canvasRotation_ = screenManager->GetCanvasRotation(virtualScreenId_);
     scaleMode_ = screenManager->GetScaleMode(virtualScreenId_);

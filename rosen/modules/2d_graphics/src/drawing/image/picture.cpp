@@ -21,15 +21,15 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 Picture::Picture(std::shared_ptr<DrawCmdList> cmdList)
-    : drawCmdList(cmdList) {
+    : drawCmdList_(cmdList) {
 }
 
 Picture::~Picture() {
 }
 
 void Picture::Playback(Canvas* canvas) {
-    if (drawCmdList) {
-        drawCmdList->Playback(*canvas);
+    if (drawCmdList_) {
+        drawCmdList_->Playback(*canvas);
     }
 }
 

@@ -30,7 +30,7 @@ public:
     std::shared_ptr<RecordingCanvas> BeginRecording(int32_t width, int32_t height);
     std::shared_ptr<Picture> FinishingRecording();
 private:
-    std::shared_ptr<RecordingCanvas> record = nullptr;
+    std::shared_ptr<RecordingCanvas> record_ = nullptr;
 };
 } // namespace Drawing
 } // namespace Rosen

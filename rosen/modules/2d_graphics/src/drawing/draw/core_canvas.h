@@ -442,14 +442,6 @@ public:
         SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
     virtual void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling);
 
-    /**
-     * @brief Clip and Matrix are unchanged by picture contents, as if Save() was called
-     * before and Restore() was called after DrawPicture(). Picture records a series of
-     * draw commands for later playback.
-     * @param picture recorded drawing commands to play
-     */
-    virtual void DrawPicture(const std::shared_ptr<Picture> picture);
-
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom);
 

@@ -42,7 +42,7 @@ std::shared_ptr<Drawing::Picture> threadFunction() {
     matrix.Rotate(45, 0, 0);
     auto e = Drawing::ShaderEffect::CreateImageShader(image, Drawing::TileMode::REPEAT, Drawing::TileMode::MIRROR, Drawing::SamplingOptions(), matrix);
     auto c = Drawing::ColorSpace::CreateRefImage(image);
-    auto rect = Drawing::Rect(0, 0, 500, 960);
+    auto rect = Drawing::Rect(500, 500, 700, 700);
 
     Drawing::Pen pen;
     pen.SetAntiAlias(true);
@@ -52,9 +52,13 @@ std::shared_ptr<Drawing::Picture> threadFunction() {
     pen.SetShaderEffect(e);
     recording->AttachPen(pen);
     recording->DrawImage(image, 500, 60, Drawing::SamplingOptions());
+    std::cout<<"thread 111"<<std::endl;
     recording->DrawBitmap(bitmap, 500, 360);
+    std::cout<<"thread 222"<<std::endl;
     recording->DrawTextBlob(textblob.get(), 500, 660);
+    std::cout<<"thread 333"<<std::endl;
     recording->DrawRect(rect);
+    std::cout<<"thread 444"<<std::endl;
     std::shared_ptr<Drawing::Picture> finishedPicture = picture.FinishingRecording();
     return finishedPicture;
 }
@@ -110,7 +114,7 @@ void DrawParalleTest::OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas)
     matrix.Rotate(45, 0, 0);
     auto e = Drawing::ShaderEffect::CreateImageShader(image, Drawing::TileMode::REPEAT, Drawing::TileMode::MIRROR, Drawing::SamplingOptions(), matrix);
     auto c = Drawing::ColorSpace::CreateRefImage(image);
-    auto rect = Drawing::Rect(100, 100, 100, 100);
+    auto rect = Drawing::Rect(100, 100, 700, 700);
 
     Drawing::Pen pen;
     pen.SetAntiAlias(true);
@@ -120,9 +124,13 @@ void DrawParalleTest::OnTestFunctionGpuUpScreen(Drawing::Canvas* canvas)
     pen.SetShaderEffect(e);
     canvas->AttachPen(pen);
     canvas->DrawImage(image, 100, 60, Drawing::SamplingOptions());
+    std::cout<<"gpu 111"<<std::endl;
     canvas->DrawBitmap(bitmap, 100, 360);
+    std::cout<<"gpu 222"<<std::endl;
     canvas->DrawTextBlob(textblob.get(), 100, 660);
+    std::cout<<"gpu 333"<<std::endl;
     canvas->DrawRect(rect);
+    std::cout<<"gpu 444"<<std::endl;
     // 等待子线程执行完毕
     thread.join();
 

@@ -38,17 +38,6 @@
 #error "Unknown platform"
 #endif
 
-#undef LOG_DOMAIN
-// The "0xD001405" is the domain ID for graphic module that alloted by the OS.
-#define LOG_DOMAIN 0xD001405
-
-#define LOADER_TAG "RRTRACELOADER"
-
-#define RRTRACE_LOGI(__format, ...) HiLogPrint(LOG_APP, LOG_INFO, LOG_DOMAIN, LOADER_TAG, __format, __VA_ARGS__)
-#define RRTRACE_LOGW(__format, ...) HiLogPrint(LOG_APP, LOG_WARN, LOG_DOMAIN, LOADER_TAG, __format, __VA_ARGS__)
-#define RRTRACE_LOGE(__format, ...) HiLogPrint(LOG_APP, LOG_ERROR, LOG_DOMAIN, LOADER_TAG, __format, __VA_ARGS__)
-#define RRTRACE_LOGD(__format, ...) HiLogPrint(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOADER_TAG, __format, __VA_ARGS__)
-
 namespace rrtrace {
 
 size_t GetFileSize(const char *fileName);

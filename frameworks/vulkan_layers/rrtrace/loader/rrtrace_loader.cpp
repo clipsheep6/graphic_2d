@@ -32,7 +32,7 @@ void* CaptureInit()
 {
     std::string rrtraceCaptureParam = OHOS::system::GetParameter(RRTRACE_CAPTURE_PARAM, "0");
     if (rrtraceCaptureParam != "1") {
-        RRTRACE_LOGI("%s:%d %s:'%s'. libVkLayer_RrTraceCaptureLoader.so will not be loaded\n",
+        RRTRACE_LOGI("%s:%d %s:'%s'. libVkLayer_RrTraceCapture.so will not be loaded\n",
             __FUNCTION__, __LINE__, RRTRACE_CAPTURE_PARAM, rrtraceCaptureParam.c_str());
         return nullptr;
     }

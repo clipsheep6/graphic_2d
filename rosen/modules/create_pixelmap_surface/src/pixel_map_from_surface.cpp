@@ -235,14 +235,14 @@ void PixelMapFromSurface::Clear() noexcept
 {
 #if defined(RS_ENABLE_GL)
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        if (texId_ != 0U) {
+            glDeleteTextures(1, &texId_);
+            texId_ = 0U;
+        }
         if (eglImage_ != EGL_NO_IMAGE_KHR) {
             auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
             eglDestroyImageKHR(disp, eglImage_);
             eglImage_ = EGL_NO_IMAGE_KHR;
-        }
-        if (texId_ != 0U) {
-            glDeleteTextures(1, &texId_);
-            texId_ = 0U;
         }
     }
 #endif
@@ -496,6 +496,9 @@ OHNativeWindowBuffer *PixelMapFromSurface::GetNativeWindowBufferFromSurface(
     if (srcRect.width > bufferWidth || srcRect.height > bufferHeight ||
         srcRect.left >= bufferWidth || srcRect.top >= bufferHeight ||
         srcRect.left + srcRect.width > bufferWidth || srcRect.top + srcRect.height > bufferHeight) {
+        RS_LOGE("invalid argument: srcRect[%{public}d, %{public}d, %{public}d, %{public}d],"
+            "bufferWidth=%{public}d, bufferHeight=%{public}d",
+            srcRect.left, srcRect.top, srcRect.width, srcRect.height, bufferWidth, bufferHeight);
         return nullptr;
     }
 

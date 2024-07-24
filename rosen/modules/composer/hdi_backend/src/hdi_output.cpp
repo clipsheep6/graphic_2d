@@ -37,6 +37,7 @@ using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 namespace OHOS {
 namespace Rosen {
 static constexpr uint32_t NUMBER_OF_HISTORICAL_FRAMES = 2;
+static const std::string GENERIC_METADATA_KEY_ARSR_PRE_NEEDED = "ArsrDoEnhance";
 
 std::shared_ptr<HdiOutput> HdiOutput::CreateHdiOutput(uint32_t screenId)
 {
@@ -336,12 +337,8 @@ int32_t HdiOutput::PreProcessLayersComp()
 
         uint32_t layersNum = layerIdMap_.size();
         // If doClientCompositionDirectly is true then layer->SetHdiLayerInfo and UpdateLayerCompType is no need to run.
-        doClientCompositionDirectly = ((layerCompCapacity_ != LAYER_COMPOSITION_CAPACITY_INVALID) &&
-                                            (layersNum > layerCompCapacity_));
-        if (!directClientCompositionEnabled_) {
-            doClientCompositionDirectly = false;
-        }
-
+        doClientCompositionDirectly = directClientCompositionEnabled_ &&
+            ((layerCompCapacity_ != LAYER_COMPOSITION_CAPACITY_INVALID) && (layersNum > layerCompCapacity_));
         for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); ++iter) {
             const LayerPtr &layer = iter->second;
             if (doClientCompositionDirectly) {
@@ -523,7 +520,6 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
         return ret;
     }
 
-    CHECK_DEVICE_NULL(device_);
     if (bufferCached && index < bufferCacheCountMax_) {
         ret = device_->SetScreenClientBuffer(screenId_, nullptr, index, fbAcquireFence);
     } else {
@@ -559,6 +555,10 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
 
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
+    }
+    if (thirdFrameAheadPresentFence_ == nullptr) {
+        HLOGE("thirdFrameAheadPresentFence is nullptr");
+        return GRAPHIC_DISPLAY_NULL_PTR;
     }
     int64_t timestamp = thirdFrameAheadPresentFence_->SyncFileReadTimestamp();
     bool startSample = false;
@@ -850,6 +850,10 @@ void HdiOutput::ClearFpsDump(std::string &result, const std::string &arg)
 
 static inline bool Cmp(const LayerDumpInfo &layer1, const LayerDumpInfo &layer2)
 {
+    if (layer1.layer == nullptr || layer1.layer->GetLayerInfo() == nullptr ||
+        layer2.layer == nullptr || layer2.layer->GetLayerInfo() == nullptr) {
+        return false;
+    }
     return layer1.layer->GetLayerInfo()->GetZorder() < layer2.layer->GetLayerInfo()->GetZorder();
 }
 

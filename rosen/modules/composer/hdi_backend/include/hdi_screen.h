@@ -65,8 +65,6 @@ public:
 private:
     uint32_t screenId_;
     HdiDevice *device_ = nullptr;
-
-    void Destroy();
 };
 
 } // namespace Rosen

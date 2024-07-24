@@ -26,7 +26,6 @@ public:
     Transform() = default;
     Transform(const Transform& other) = default;
     ~Transform() = default;
-    bool isValid_ = false;
     float pivotX_ { 0.5f };
     float pivotY_ { 0.5f };
     float pivotZ_ { 0.0f };
@@ -89,17 +88,14 @@ public:
     }
     void SetPivotX(float x)
     {
-        trans_.isValid_ = ture;
         trans_.pivotX_ = x;
     }
     void SetPivotY(float y)
     {
-       trans_.isValid_ = ture;
         trans_.pivotY_ = y;
     }
     void SetPivotZ(float z)
     {
-        trans_.isValid_ = ture;
         trans_.pivotZ_ = z;
     }
     void SetPivot(float x, float y)
@@ -109,12 +105,10 @@ public:
     }
     void SetScaleX(float x)
     {
-        trans_.isValid_ = ture;
         trans_.scaleX_ = x;
     }
     void SetScaleY(float y)
     {
-       trans_.isValid_ = ture;
         trans_.scaleY_ = y;
     }
     void SetScale(float x, float y)
@@ -124,12 +118,10 @@ public:
     }
     void SetSkewX(float x)
     {
-        trans_.isValid_ = ture;
         trans_.skewX_ = x;
     }
     void SetSkewY(float y)
     {
-        trans_.isValid_ = ture;
         trans_.skewY_ = y;
     }
     void SetSkew(float x, float y)
@@ -139,12 +131,10 @@ public:
     }
     void SetPerspX(float x)
     {
-        trans_.isValid_ = ture;
         trans_.perspX_ = x;
     }
     void SetPerspY(float y)
     {
-        trans_.isValid_ = ture;
         trans_.perspY_ = y;
     }
     void SetPersp(float x, float y)
@@ -154,44 +144,36 @@ public:
     }
     void SetRotation(float rotation)
     {
-        trans_.isValid_ = ture;
         trans_.rotation_ = rotation;
     }
     void SetRotationX(float rotationX)
     {
-        trans_.isValid_ = ture;
         trans_.rotationX_ = rotationX;
     }
     void SetRotationY(float rotationY)
     {
-        trans_.isValid_ = ture;
         trans_.rotationY_ = rotationY;
     }
     void SetTranslateX(float translateX)
     {
-        trans_.isValid_ = ture;
         trans_.translateX_ = translateX;
     }
     void SetTranslateY(float translateY)
     {
-        trans_.isValid_ = ture;
         trans_.translateY_ = translateY;
     }
     void SetTranslateZ(float translateZ)
     {
-        trans_.isValid_ = ture;
         if (!ROSEN_EQ(trans_.translateZ_, translateZ)) {
             trans_.translateZ_ = translateZ;
         }
     }
     void SetCameraDistance(float cameraDistance)
     {
-        trans_.isValid_ = ture;
         trans_.cameraDistance_ = cameraDistance;
     }
     void SetQuaternion(const Quaternion& quaternion)
     {
-        trans_.isValid_ = ture;
         trans_.quaternion_ = quaternion;
     }
 

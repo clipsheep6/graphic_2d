@@ -58,7 +58,6 @@ void RSDrawFrame::RenderFrame()
     Sync();
     const bool doJankStats = IsUniRenderAndOnVsync();
     JankStatsRenderFrameAfterSync(doJankStats);
-    RSMainThread::Instance()->ProcessUiCaptureTasks();
     RSUifirstManager::Instance().PostUifistSubTasks();
     UnblockMainThread();
     Render();

@@ -1807,6 +1807,21 @@ void RSMainThread::PrepareUiCaptureTasks(std::shared_ptr<RSUniRenderVisitor> uni
         uiCaptureTasks_.clear();
     }
     std::swap(pendingUiCaptureTasks_, uiCaptureTasks_);
+
+    if (!uiCaptureTasks_.empty()) {
+        std::function<void()> syncTask = []() -> void {
+            RS_TRACE_NAME("RSMainThread::PrepareUiCaptureTasks SyncModifiers");
+            auto& pendingSyncNodes = RSMainThread::Instance()->GetContext().pendingSyncNodes_;
+            for (auto& [id, weakPtr] : pendingSyncNodes) {
+                if (auto node = weakPtr.lock()) {
+                    node->Sync();
+                }
+            }
+            pendingSyncNodes.clear();
+        };
+        RSUniRenderThread::Instance().PostSyncTask(syncTask);
+        ProcessUiCaptureTasks();
+    }
 }
 
 void RSMainThread::ProcessUiCaptureTasks()

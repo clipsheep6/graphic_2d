@@ -60,7 +60,12 @@ add_library(entry SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    performance/canvas_clip_path_test.cpp
+    performance/canvas_draw_image_rect_with_src.cpp
+    performance/canvas_draw_image_rect.cpp
+    performance/canvas_draw_text_blob_text.cpp
+    performance/canvas_draw_shadow_test.cpp    
 )
 
 add_library(myxnode SHARED
@@ -114,7 +119,12 @@ add_library(myxnode SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    performance/canvas_clip_path_test.cpp
+    performance/canvas_draw_image_rect_with_src.cpp
+    performance/canvas_draw_image_rect.cpp
+    performance/canvas_draw_text_blob_text.cpp
+    performance/canvas_draw_shadow_test.cpp
 )
 
 find_library(

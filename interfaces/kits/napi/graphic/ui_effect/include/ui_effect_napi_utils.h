@@ -19,6 +19,10 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
+#include <js_runtime_utils.h>
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+
 #define UIEFFECT_IS_OK(x) ((x) == napi_ok)
 #define UIEFFECT_NOT_NULL(p) ((p) != nullptr)
 #define UIEFFECT_IS_READY(x, p) (UIEFFECT_IS_OK(x) && UIEFFECT_NOT_NULL(p))
@@ -41,6 +45,8 @@ do \
 
 #define UIEFFECT_ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
+constexpr int32_t ERR_NOT_SYSTEM_APP = 202;
+
 namespace OHOS {
 namespace Rosen {
 class UIEffectNapiUtils {
@@ -50,6 +56,12 @@ public:
         napi_valuetype res = napi_undefined;
         napi_typeof(env, root, &res);
         return res;
+    }
+     
+    static bool IsSystemApp()
+    {
+        uint64_t tokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+        return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
     }
 };
 } // namespace Rosen

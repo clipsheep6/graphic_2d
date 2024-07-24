@@ -172,6 +172,9 @@ OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr const int MAX_NODE_NAME_LEN = 10;
+};
 void RSRenderNode::OnRegister(const std::weak_ptr<RSContext>& context)
 {
     context_ = context;
@@ -849,6 +852,10 @@ void RSRenderNode::SetContentDirty()
     SetDirty();
 }
 
+pid_t RSRenderNode::pid_ = 0;
+bool RSRenderNode::idleState_ = true;
+std::string RSRenderNode::dirtyNodeName_ = "";
+std::vector<std::string> RSRenderNode::drawingEngineTypeList_;
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
     bool dirtyEmpty = dirtyTypes_.none();
@@ -858,6 +865,18 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
             context->AddActiveNode(shared_from_this());
         }
     }
+    auto nodeName = nodeName_;
+    if (nodeName.size() > MAX_NODE_NAME_LEN) {
+        nodeName = nodeName.substr(0, MAX_NODE_NAME_LEN);
+    }
+
+    auto it = std::find(drawingEngineTypeList_.begin(), drawingEngineTypeList_.end(), nodeName);
+    if (it != drawingEngineTypeList_.end()) {
+        idleState_ = false;
+        dirtyNodeName_ = nodeName_;
+        pid_ = ExtractPid(GetId());
+    }
+
     SetParentSubTreeDirty();
     dirtyStatus_ = NodeDirty::DIRTY;
 }

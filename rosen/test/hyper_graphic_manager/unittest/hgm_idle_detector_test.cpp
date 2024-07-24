@@ -35,6 +35,7 @@ namespace {
     constexpr uint32_t  fps60HZ = 60;
     constexpr uint32_t  fps90HZ = 90;
     constexpr uint32_t  fps120HZ = 120;
+    constexpr pid_t pid = 0;
 }
 class HgmIdleDetectorTest : public testing::Test {
 public:
@@ -116,7 +117,7 @@ HWTEST_F(HgmIdleDetectorTest, SetAndGetSurfaceTimeStatus, Function | SmallTest |
             idleDetector->supportAppBufferList_.insert(idleDetector->supportAppBufferList_.begin(), otherSurface);
         }
         STEP("3. set buffer renew time") {
-            idleDetector->UpdateSurfaceTime(bufferName, currTime);
+            idleDetector->UpdateSurfaceTime(bufferName, currTime, pid);
         }
         STEP("4. get buffer idle state") {
             bool ret = idleDetector->GetSurfaceIdleState(lastTime);

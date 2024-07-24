@@ -358,6 +358,7 @@ void RSMainThread::Init()
         WaitUntilSurfaceCapProcFinished();
 #endif
         PerfMultiWindow();
+        SetDrawingEngineTypeList();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition: " + std::to_string(curTime_));
         RS_LOGI("DoComposition start time:%{public}" PRIu64, curTime_);
@@ -1204,6 +1205,24 @@ void RSMainThread::ProcessAllSyncTransactionData()
     RequestNextVSync();
 }
 
+void RSMainThread::SetDrawingEngineTypeList()
+{
+    if (!initStatus_ && frameRateMgr_ != nullptr &&
+        !frameRateMgr_->GetIdleDetector().GetDrawingEngineTypeList().empty()) {
+        initStatus_ = ture;
+        RSRenderNode::SetDrawingEngineTypeList(frameRateMgr_->GetIdleDetector().GetDrawingEngineTypeList());
+    }
+}
+
+void RSMainThread::UpdateDrawingEngineTypeIdleState()
+{
+    pid_t pid = 0;
+    std::string dirtyNodeName = "";
+    if (frameRateMgr_ != nullptr && !RSRenderNode::GetDrawingEngineTypeIdleState(pid, dirtyNodeName)) {
+        frameRateMgr_->UpdateSurfaceTime(dirtyNodeName, timestamp_, pid);
+    }
+}
+
 void RSMainThread::ConsumeAndUpdateAllNodes()
 {
     ResetHardwareEnabledState(isUniRender_);
@@ -1236,7 +1255,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         }
         auto& surfaceHandler = *surfaceNode->GetMutableRSSurfaceHandler();
         if (frameRateMgr_ != nullptr && surfaceHandler.GetAvailableBufferCount() > 0) {
-            frameRateMgr_->UpdateSurfaceTime(surfaceNode->GetName(), timestamp_);
+            frameRateMgr_->UpdateSurfaceTime(surfaceNode->GetName(), timestamp_, ExtractPid(surfaceNode->GetId()));
         }
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler, false, timestamp_)) {
@@ -1714,6 +1733,7 @@ bool RSMainThread::IsRequestedNextVSync()
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
+    UpdateDrawingEngineTypeIdleState();
     if (rsFrameRateLinker_ != nullptr) {
         rsCurrRange_.type_ = RS_ANIMATION_FRAME_RATE_TYPE;
         HgmEnergyConsumptionPolicy::Instance().GetAnimationIdleFps(rsCurrRange_);

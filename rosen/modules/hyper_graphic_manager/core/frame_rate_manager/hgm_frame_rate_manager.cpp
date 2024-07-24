@@ -44,7 +44,7 @@ namespace {
     constexpr uint32_t REPORT_VOTER_INFO_LIMIT = 20;
     constexpr int32_t LAST_TOUCH_CNT = 1;
 
-    constexpr uint32_t FIRST_FRAME_TIME_OUT = 50; // 50ms
+    constexpr uint32_t FIRST_FRAME_TIME_OUT = 100; // 100ms
     constexpr uint32_t SCENE_BEFORE_XML = 1;
     constexpr uint32_t SCENE_AFTER_TOUCH = 3;
     constexpr uint64_t ENERGY_ASSURANCE_TASK_DELAY_TIME = 1000; //1s
@@ -194,9 +194,9 @@ void HgmFrameRateManager::ProcessPendingRefreshRate(uint64_t timestamp, uint32_t
     }
 }
 
-void HgmFrameRateManager::UpdateSurfaceTime(const std::string& name, uint64_t timestamp)
+void HgmFrameRateManager::UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp, pid_t pid)
 {
-    idleDetector_.UpdateSurfaceTime(name, timestamp);
+    idleDetector_.UpdateSurfaceTime(surfaceName, timestamp, pid);
 }
 
 void HgmFrameRateManager::UpdateAppSupportStatus()
@@ -249,6 +249,7 @@ void HgmFrameRateManager::UpdateGuaranteedPlanVote(uint64_t timestamp)
     }
 
     if (idleDetector_.GetSurfaceIdleState(timestamp) && idleDetector_.GetAceAnimatorIdleStatus()) {
+        RS_TRACE_NAME_FMT("HgmFrameRateManager:: Surface And AceAnimator Idle, Vote Idle");
         touchManager_.HandleThirdFrameIdle();
     } else {
         int32_t fps = idleDetector_.GetSurfaceUpExpectFps();

@@ -49,7 +49,7 @@ public:
         return aceAnimatorIdleState_;
     }
 
-    void UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp);
+    void UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp, pid_t pid);
     bool GetSurfaceIdleState(uint64_t timestamp);
     int32_t GetSurfaceUpExpectFps();
     bool GetSupportSurface();
@@ -76,6 +76,10 @@ public:
     void UpdateSupportAppBufferList(std::vector<std::string> &supportAppBufferList)
     {
         supportAppBufferList_ = supportAppBufferList;
+    }
+    std::vector<std::string>& GetDrawingEngineTypeList()
+    {
+        return supportAppBufferList_;
     }
 private:
     bool appSupported_ = false;

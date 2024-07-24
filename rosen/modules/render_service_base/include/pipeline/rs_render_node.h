@@ -307,6 +307,23 @@ public:
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
     void RenderTraceDebug() const;
+
+    static bool GetDrawingEngineTypeIdleState(pid_t& pid, std::string& dirtyNodeName)
+    {
+        pid = pid_;
+        dirtyNodeName = dirtyNodeName_;
+        if (idleState_) {
+            return true;
+        }
+        idleState_ = true;
+        return false;
+    }
+
+    static void SetDrawingEngineTypeList(std::vector<std::string>& list)
+    {
+        drawingEngineTypeList_ = list;
+    }
+
     inline bool ShouldPaint() const
     {
         return shouldPaint_;
@@ -930,6 +947,10 @@ private:
 #endif
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
     std::string nodeName_ = "";
+    static bool idleState_;
+    static pid_t pid_;
+    static std::string dirtyNodeName_;
+    static std::vector<std::string> supportedFrameList_;
     CacheType cacheType_ = CacheType::NONE;
     // drawing group cache
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;

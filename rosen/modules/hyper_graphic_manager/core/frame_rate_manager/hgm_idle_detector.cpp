@@ -14,6 +14,7 @@
  */
 
 #include "hgm_idle_detector.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -26,7 +27,7 @@ namespace {
     const std::string OTHER_SURFACE = "Other_SF";
 }
 
-void HgmIdleDetector::UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp)
+void HgmIdleDetector::UpdateSurfaceTime(const std::string& surfaceName, uint64_t timestamp, pid_t pid)
 {
     if (!GetAppSupportStatus() || frameTimeMap_.size() > MAX_BUFFER_COUNT) {
         if (!frameTimeMap_.empty()) {
@@ -51,6 +52,8 @@ void HgmIdleDetector::UpdateSurfaceTime(const std::string& surfaceName, uint64_t
         }
     }
 
+    RS_TRACE_NAME_FMT("UpdateSurfaceTime Not Idle Surface Name = [%s] From Pid = [%d]",
+        surfaceName.c_str(), pid);
     frameTimeMap_[temp] = timestamp;
 }
 

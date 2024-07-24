@@ -76,18 +76,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
     { "badapple",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); } }, // 字体相关问题，函数缺失
     { "alpha_image_alpha_tint", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImageAlphaTint>(); } },
-    { "shadowutils",
-        []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<ShadowUtils>(ShadowUtils::K_NO_OCCLUDERS);
-        } }, // maprect 接口计算不对
-    { "shadowutils_occl",
-        []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<ShadowUtils>(ShadowUtils::K_OCCLUDERS);
-        } }, // maprect 接口计算不对
-    { "shadowutils_gray",
-        []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<ShadowUtils>(ShadowUtils::K_GRAY_SCALE);
-        } }, // maprect 接口计算不对
     { "circular_arc_stroke_matrix",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); } },
     { "clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); } },
@@ -106,8 +94,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         []() -> std::shared_ptr<TestBase> { return std::make_shared<Gradients>(); } }, // 内部形状和颜色差异较大
     { "arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorro>(); } },
     { "stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); } },
-    { "lumafilter",
-        []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); } }, // 字体粗细、位置有差异
     { "points_maskfilter",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<PointsMaskFilter>();
@@ -125,20 +111,12 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         } }, // 有部分线条cpu出图部分缺失,gpu正常出图，颜色为黑色
     { "onebadarc",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); } }, // 完全按照逻辑所画出的图形不一致
-    { "skbug_8955",
-        []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<SkBug8955>();
-        } }, // font.textToGlyphs、font.getPos接口缺失
     { "surfacenew", []() -> std::shared_ptr<TestBase> { return std::make_shared<NewSurfaceGM>(); } },
     { "bitmaprect",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<DrawBitmapRect2>();
         } }, // OH_Drawing_CanvasDrawRect接口有问题内部逻辑并未用画笔而是用画刷
     { "bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); } },
-    { "anisotropic_hq",
-        []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<Anisotropic>();
-        } }, // 该用例OH_Drawing_SamplingOptionsCreate接口mode对应内容未开放,无法实现
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
@@ -524,6 +502,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
 };
+
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> StabilityCpuMap = {
+    { "aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); } },
+};
 } // namespace
 
 std::shared_ptr<TestBase> TestCaseFactory::GetFunctionCpuCase(std::string caseName)
@@ -546,7 +528,22 @@ std::shared_ptr<TestBase> TestCaseFactory::GetPerformanceCpuCase(std::string cas
     return PerformanceCpuMap.find(caseName)->second();
 }
 
+std::shared_ptr<TestBase> TestCaseFactory::GetStabilityCpuCase(std::string caseName)
+{
+    if (StabilityCpuMap.find(caseName) == StabilityCpuMap.end()) {
+        DRAWING_LOGE("caseName error");
+        return nullptr;
+    }
+
+    return StabilityCpuMap.find(caseName)->second();
+}
+
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> TestCaseFactory::GetFunctionCpuCaseAll()
 {
     return FunctionalCpuMap;
+}
+
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> TestCaseFactory::GetStabilityCpuCaseAll()
+{
+    return StabilityCpuMap;
 }

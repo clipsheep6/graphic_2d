@@ -1317,10 +1317,12 @@ void RSNode::SetUIBackgroundFilter(const OHOS::Rosen::Filter* backgroundFilter)
             auto rippleCenterX = waterRipplePara->GetRippleCenterX();
             auto rippleCenterY = waterRipplePara->GetRippleCenterY();
             auto progress = waterRipplePara->GetProgress();
+            auto rippleMode = waterRipplePara->GetRippleMode();
             RSWaterRipplePara rs_water_ripple_param = {
                 waveCount,
                 rippleCenterX,
-                rippleCenterY
+                rippleCenterY,
+                rippleMode
             };
             SetWaterRippleParams(rs_water_ripple_param, progress);
         }

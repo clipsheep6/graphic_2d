@@ -301,6 +301,8 @@ void GEVisualEffectImpl::SetWaterRippleParams(const std::string& tag, float para
             [](GEVisualEffectImpl* obj, float p) { obj->waterRippleParams_->rippleCenterX = p; } },
         { GE_FILTER_WATER_RIPPLE_RIPPLE_CENTER_Y,
             [](GEVisualEffectImpl* obj, float p) { obj->waterRippleParams_->rippleCenterY = p; } },
+        { GE_FILTER_WATER_RIPPLE_RIPPLE_MODE,
+            [](GEVisualEffectImpl* obj, float p) { obj->waterRippleParams_->rippleMode = p; } },
     };
  
     auto it = actions.find(tag);

@@ -68,7 +68,7 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
     }
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D
     // transformations
-    if (!trans_.isValid_ || (ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
+    if ((ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
         ROSEN_EQ(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
@@ -96,7 +96,7 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
     matrix_.Reset();
 
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D transformations
-    if (!trans_.isValid_ || (ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
+    if ((ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
         ROSEN_EQ(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
@@ -115,9 +115,6 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
 
 bool RSObjAbsGeometry::IsNeedClientCompose() const
 {
-    if (!trans_.isValid_) {
-        return false;
-    }
     // return false if rotation degree is times of 90
     return !ROSEN_EQ(std::remainder(trans_.rotation_, 90.f), 0.f, EPSILON);
 }
@@ -173,32 +170,29 @@ namespace {
 
 void RSObjAbsGeometry::UpdateAbsMatrix2D()
 {
-    if (!trans_.isValid_) {
-        matrix_.PreTranslate(x_, y_);
-    } else {
-        // Translate
-        if ((x_ + trans_.translateX_ != 0) || (y_ + trans_.translateY_ != 0)) {
-            matrix_.PreTranslate(x_ + trans_.translateX_, y_ + trans_.translateY_);
-        }
-        // Persp
-        if (!ROSEN_EQ(trans_.perspX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.perspY_, 0.f, EPSILON)) {
-            matrix_.PreTranslate(trans_.pivotX_ * width_, trans_.pivotY_ * height_);
-            ApplyPerspToMatrix(trans_, matrix_, false);
-            matrix_.PreTranslate(-trans_.pivotX_ * width_, -trans_.pivotY_ * height_);
-        }
-        // rotation
-        if (!ROSEN_EQ(trans_.rotation_, 0.f, EPSILON)) {
-            matrix_.PreRotate(trans_.rotation_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
-        }
-        // Skew
-        if (!ROSEN_EQ(trans_.skewX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.skewY_, 0.f, EPSILON)) {
-            matrix_.PreSkew(trans_.skewX_, trans_.skewY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
-        }
-        // Scale
-        if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
-            matrix_.PreScale(trans_.scaleX_, trans_.scaleY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
-        }
+    // Translate
+    if ((x_ + trans_.translateX_ != 0) || (y_ + trans_.translateY_ != 0)) {
+        matrix_.PreTranslate(x_ + trans_.translateX_, y_ + trans_.translateY_);\
     }
+    // Persp
+    if (!ROSEN_EQ(trans_.perspX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.perspY_, 0.f, EPSILON)) {
+        matrix_.PreTranslate(trans_.pivotX_ * width_, trans_.pivotY_ * height_);
+        ApplyPerspToMatrix(trans_, matrix_, false);
+        matrix_.PreTranslate(-trans_.pivotX_ * width_, -trans_.pivotY_ * height_);
+    }
+    // rotation
+    if (!ROSEN_EQ(trans_.rotation_, 0.f, EPSILON)) {
+        matrix_.PreRotate(trans_.rotation_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
+    }
+    // Skew
+    if (!ROSEN_EQ(trans_.skewX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.skewY_, 0.f, EPSILON)) {
+        matrix_.PreSkew(trans_.skewX_, trans_.skewY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
+    }
+    // Scale
+    if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
+        matrix_.PreScale(trans_.scaleX_, trans_.scaleY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
+    }
+
 }
 
 /**

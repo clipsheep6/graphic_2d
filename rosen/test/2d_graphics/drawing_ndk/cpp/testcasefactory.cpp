@@ -62,7 +62,11 @@
 #include "interface/surface_test.h"
 #include "interface/text_blob_test.h"
 #include "interface/typeface_test.h"
-
+#include "performance/canvas_clip_path_test.h"
+#include "performance/canvas_draw_image_rect_with_src.h"
+#include "performance/canvas_draw_image_rect.h"
+#include "performance/canvas_draw_text_blob_text.h"
+#include "performance/canvas_draw_shadow_test.h"
 #include "common/log_common.h"
 
 namespace {
@@ -152,6 +156,18 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawImageRect>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "canvas_ohdrawimagerect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<OHCanvasDrawImageRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_ohdrawimagerectpen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<OHCanvasDrawImageRectPen>(TestBase::DRAW_STYLE_COMPLEX);
+        } }, 
+    { "canvas_ohdrawimagerectbrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<OHCanvasDrawImageRectBrush>(TestBase::DRAW_STYLE_COMPLEX);
+        } },     
     { "canvas_translate",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasTranslate>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_scale",
@@ -176,9 +192,37 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawImageRectWithSrc>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "canvas_ohcanvasdrawimagerectwithsrc",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<OhCanvasDrawImageRectWithSrc>(TestBase::DRAW_STYLE_COMPLEX);
+        } },    
     { "canvas_drawshadow",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawShadow>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowline",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowLine>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowlinepen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowLinePen>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowlinebrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowLineBrush>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowcurve",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowCurve>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowcurvepen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowCurvePen>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawshadowcurvebrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawShadowCurveBrush>(TestBase::DRAW_STYLE_COMPLEX);
         } },
     { "canvas_skew",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSkew>(TestBase::DRAW_STYLE_COMPLEX); } },
@@ -206,6 +250,30 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawTextBlob>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "canvas_drawtextbloblong",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobLong>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawtextbloblongpen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobLongPen>(TestBase::DRAW_STYLE_COMPLEX);
+        } },    
+    { "canvas_drawtextbloblongbrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobLongBrush>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawtextblobmax",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobMax>(TestBase::DRAW_STYLE_COMPLEX);
+        } },  
+    { "canvas_drawtextblobmaxpen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobMaxPen>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawtextblobmaxbrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawTextBlobMaxBrush>(TestBase::DRAW_STYLE_COMPLEX);
+        } },      
     { "canvas_drawcliprect",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipRect>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_drawcliproundrect",
@@ -214,6 +282,19 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         } },
     { "canvas_drawclippath",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPath>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathline",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathLine>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathlinepen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathLinePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathlinebrush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathLineBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathcurve",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathCurve>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathcurvepen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathCurvePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_drawclippathcurvebrush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathCurveBrush>(TestBase::DRAW_STYLE_COMPLEX); } },    
+    
     { "canvas_drawpath",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPath>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_drawbitmap",

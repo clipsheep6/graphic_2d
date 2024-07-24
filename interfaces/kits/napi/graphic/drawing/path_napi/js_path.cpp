@@ -772,7 +772,7 @@ napi_value JsPath::OnGetPositionAndTangent(napi_env env, napi_callback_info info
 
     Point tangent = Point(0.0, 0.0);
     double tanPoint[ARGC_TWO] = {0};
-    if (!ConvertFromJsPoint(env, argv[ARGC_TWO], tanPoint, ARGC_TWO)) {
+    if (!ConvertFromJsPoint(env, argv[ARGC_THREE], tanPoint, ARGC_TWO)) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
             "Incorrect parameter type. The type of x, y should be a number.");
     }

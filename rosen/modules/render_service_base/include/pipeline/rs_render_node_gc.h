@@ -53,10 +53,14 @@ public:
         renderTask_ = hook;
     }
 
+    void AddToRemoveFromTreeBucket(const std::shared_ptr<RSBaseRenderNode>& node);
+    void ReleaseRemoveFromTreeBucket();
+
 private:
     gcTask mainTask_ = nullptr;
     gcTask renderTask_ = nullptr;
 
+    std::queue<std::vector<std::shared_ptr<RSBaseRenderNode>>> removeFromTreeBucket_;
     std::queue<std::vector<RSRenderNode*>> nodeBucket_;
     std::queue<std::vector<DrawableV2::RSRenderNodeDrawableAdapter*>> drawableBucket_;
     std::mutex nodeMutex_;

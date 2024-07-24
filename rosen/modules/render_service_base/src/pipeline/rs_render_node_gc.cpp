@@ -136,12 +136,48 @@ void RSRenderNodeGC::ReleaseDrawableMemory()
     }
     if (renderTask_) {
         auto task = []() {
+            RSRenderNodeGC::Instance().ReleaseRemoveFromTreeBucket();
             RSRenderNodeGC::Instance().ReleaseDrawableBucket();
             RSRenderNodeGC::Instance().ReleaseDrawableMemory();
         };
         renderTask_(task, DELETE_DRAWABLE_TASK, 0, AppExecFwk::EventQueue::Priority::IDLE);
     } else {
+        ReleaseRemoveFromTreeBucket();
         ReleaseDrawableBucket();
+    }
+}
+
+void RSRenderNodeGC::AddToRemoveFromTreeBucket(const std::shared_ptr<RSBaseRenderNode>& node)
+{
+    std::lock_guard<std::mutex> lock(nodeMutex_);
+    if (removeFromTreeBucket_.size() > 0) {
+        auto& bucket = removeFromTreeBucket_.back();
+        if (bucket.size() < BUCKET_MAX_SIZE) {
+            bucket.emplace_back(node);
+        } else {
+            removeFromTreeBucket_.push({node});
+        }
+    } else {
+        removeFromTreeBucket_.push({node});
+    }
+}
+
+void RSRenderNodeGC::ReleaseRemoveFromTreeBucket()
+{
+    std::vector<std::shared_ptr<RSBaseRenderNode>> toRemove;
+    {
+        std::lock_guard<std::mutex> lock(nodeMutex_);
+        if (removeFromTreeBucket_.empty()) {
+            return;
+        }
+        toRemove.swap(removeFromTreeBucket_.front());
+        removeFromTreeBucket_.pop();
+    }
+    RS_TRACE_NAME_FMT("ReleaseRemoveFromTreeBucket %d", toRemove.size());
+    for (auto node : toRemove) {
+        if (node) {
+            node->RemoveFromTree(false);
+        }
     }
 }
 } // namespace Rosen

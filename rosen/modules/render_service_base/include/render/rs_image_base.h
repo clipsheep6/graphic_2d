@@ -26,7 +26,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "transaction/rs_marshalling_helper.h"
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 #include "surface_buffer.h"
 #include "external_window.h"
 #endif
@@ -71,8 +71,11 @@ protected:
     void GenUniqueId(uint32_t id);
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     void ProcessYUVImage(std::shared_ptr<Drawing::GPUContext> gpuContext);
+    void SetCompressData(const std::shared_ptr<Drawing::Data> compressData);
+    void PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap,
+        const Drawing::SamplingOptions& sampling);
 #if defined(RS_ENABLE_VK)
-    void BindPixelMapToDrawingImage(Drawing::Canvas& canvas)
+    void BindPixelMapToDrawingImage(Drawing::Canvas& canvas);
     std::shared_ptr<Drawing::Image> MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer);
 #endif
 #endif
@@ -85,6 +88,7 @@ protected:
     std::shared_ptr<Drawing::Image> image_;
     void* imagePixelAddr_ = nullptr;
     std::shared_ptr<Media::PixelMap> pixelMap_;
+    std::shared_ptr<Drawing::Data> compressData_;
 
     RectF srcRect_;
     RectF dstRect_;
@@ -96,11 +100,13 @@ protected:
     bool renderServiceImage_ = false;
     bool isYUVImage_ = false;
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     mutable OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
     mutable pid_t tid_ = 0;
+#ifdef RS_ENABLE_VK
     mutable Drawing::BackendTexture backendTexture_ = {};
     mutable NativeBufferUtils::VulkanCleanupHelper* cleanUpHelper_ = nullptr;
+#endif
 #endif
 };
 } // namespace Rosen

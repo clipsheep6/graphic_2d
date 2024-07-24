@@ -67,27 +67,19 @@ public:
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
     bool GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer);
 #endif
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
-    bool MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceBuffer *surfaceBuffer);
-#endif
     void SetNodeId(NodeId id) override;
     void SetPaint(Drawing::Paint paint) override;
 protected:
     std::shared_ptr<RSImage> rsImage_;
 private:
-#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
     void PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap,
         const Drawing::SamplingOptions& sampling);
 #ifdef RS_ENABLE_GL
     mutable EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
     mutable GLuint texId_ = 0;
-#endif
     mutable OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
     mutable pid_t tid_ = 0;
-#endif
-#ifdef RS_ENABLE_VK
-    mutable Drawing::BackendTexture backendTexture_ = {};
-    mutable NativeBufferUtils::VulkanCleanupHelper* cleanUpHelper_ = nullptr;
 #endif
     std::shared_ptr<Drawing::Image> image_;
     Drawing::AdaptiveImageInfo imageInfo_;

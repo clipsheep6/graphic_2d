@@ -530,7 +530,7 @@ void RSProperties::UpdateSandBoxMatrix(const std::optional<Drawing::Matrix>& roo
     Drawing::scalar scaleFactors[2];
     bool getMinMaxScales = rootMat.GetMinMaxScales(scaleFactors);
     if (getMinMaxScales) {
-        hasScale = !ROSEN_EQ(scaleFactors[0], 1.f) || !ROSEN_EQ(scaleFactors[1], 1.f);
+        hasScale = !ROSEN_EQ_Float(scaleFactors[0], 1.f) || !ROSEN_EQ_Float(scaleFactors[1], 1.f);
     }
     if (hasScale) {
         sandbox_->matrix_ = std::nullopt;
@@ -2438,7 +2438,7 @@ float RSProperties::GetBackgroundBlurSaturation() const
 
 bool RSProperties::IsBackgroundBlurSaturationValid() const
 {
-    return (!ROSEN_EQ(GetBackgroundBlurSaturation(), 1.0f)) && ROSEN_GE(GetBackgroundBlurSaturation(), 0.0f);
+    return (!ROSEN_EQ_Float(GetBackgroundBlurSaturation(), 1.0f)) && ROSEN_GE(GetBackgroundBlurSaturation(), 0.0f);
 }
 
 void RSProperties::SetBackgroundBlurBrightness(float backgroundBlurBrightness)
@@ -2459,7 +2459,7 @@ float RSProperties::GetBackgroundBlurBrightness() const
 
 bool RSProperties::IsBackgroundBlurBrightnessValid() const
 {
-    return (!ROSEN_EQ(GetBackgroundBlurBrightness(), 1.0f)) && ROSEN_GE(GetBackgroundBlurBrightness(), 0.0f);
+    return (!ROSEN_EQ_Float(GetBackgroundBlurBrightness(), 1.0f)) && ROSEN_GE(GetBackgroundBlurBrightness(), 0.0f);
 }
 
 void RSProperties::SetBackgroundBlurMaskColor(Color backgroundMaskColor)
@@ -3069,13 +3069,13 @@ void RSProperties::SetLightIntensity(float lightIntensity)
     SetDirty();
     contentDirty_ = true;
 
-    if (ROSEN_EQ(lightIntensity, INVALID_INTENSITY)) { // skip when resetFunc call
+    if (ROSEN_EQ_Float(lightIntensity, INVALID_INTENSITY)) { // skip when resetFunc call
         return;
     }
     auto preIntensity = lightSourcePtr_->GetPreLightIntensity();
     auto renderNode = backref_.lock();
-    bool preIntensityIsZero = ROSEN_EQ(preIntensity, 0.f);
-    bool curIntensityIsZero = ROSEN_EQ(lightIntensity, 0.f);
+    bool preIntensityIsZero = ROSEN_EQ_Float(preIntensity, 0.f);
+    bool curIntensityIsZero = ROSEN_EQ_Float(lightIntensity, 0.f);
     if (preIntensityIsZero && !curIntensityIsZero) { // 0 --> non-zero
         RSPointLightManager::Instance()->RegisterLightSource(renderNode);
     } else if (!preIntensityIsZero && curIntensityIsZero) { // non-zero --> 0
@@ -3539,7 +3539,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for PositionZ, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetPositionZ(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetPositionZ(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", PositionZ[%.1f]", GetPositionZ()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3551,7 +3551,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Pivot, ret=" + std::to_string(ret);
     }
     Vector2f pivot = GetPivot();
-    if ((!ROSEN_EQ(pivot[0], defaultTrans->pivotX_) || !ROSEN_EQ(pivot[1], defaultTrans->pivotY_)) &&
+    if ((!ROSEN_EQ_Float(pivot[0], defaultTrans->pivotX_) || !ROSEN_EQ_Float(pivot[1], defaultTrans->pivotY_)) &&
         sprintf_s(buffer, UINT8_MAX, ", Pivot[%.1f,%.1f]", pivot[0], pivot[1]) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3583,7 +3583,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for Rotation, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetRotation(), defaultTrans->rotation_) &&
+    if (!ROSEN_EQ_Float(GetRotation(), defaultTrans->rotation_) &&
         sprintf_s(buffer, UINT8_MAX, ", Rotation[%.1f]", GetRotation()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3592,7 +3592,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for RotationX, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetRotationX(), defaultTrans->rotationX_) &&
+    if (!ROSEN_EQ_Float(GetRotationX(), defaultTrans->rotationX_) &&
         sprintf_s(buffer, UINT8_MAX, ", RotationX[%.1f]", GetRotationX()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3601,7 +3601,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for RotationY, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetRotationY(), defaultTrans->rotationY_) &&
+    if (!ROSEN_EQ_Float(GetRotationY(), defaultTrans->rotationY_) &&
         sprintf_s(buffer, UINT8_MAX, ", RotationY[%.1f]", GetRotationY()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3611,7 +3611,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for TranslateX, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetTranslateX(), defaultTrans->translateX_) &&
+    if (!ROSEN_EQ_Float(GetTranslateX(), defaultTrans->translateX_) &&
         sprintf_s(buffer, UINT8_MAX, ", TranslateX[%.1f]", GetTranslateX()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3621,7 +3621,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for TranslateY, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetTranslateY(), defaultTrans->translateY_) &&
+    if (!ROSEN_EQ_Float(GetTranslateY(), defaultTrans->translateY_) &&
         sprintf_s(buffer, UINT8_MAX, ", TranslateY[%.1f]", GetTranslateY()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3631,7 +3631,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for TranslateZ, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetTranslateZ(), defaultTrans->translateZ_) &&
+    if (!ROSEN_EQ_Float(GetTranslateZ(), defaultTrans->translateZ_) &&
         sprintf_s(buffer, UINT8_MAX, ", TranslateZ[%.1f]", GetTranslateZ()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3641,7 +3641,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ScaleX, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetScaleX(), defaultTrans->scaleX_) &&
+    if (!ROSEN_EQ_Float(GetScaleX(), defaultTrans->scaleX_) &&
         sprintf_s(buffer, UINT8_MAX, ", ScaleX[%.1f]", GetScaleX()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3651,7 +3651,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ScaleY, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetScaleY(), defaultTrans->scaleY_) &&
+    if (!ROSEN_EQ_Float(GetScaleY(), defaultTrans->scaleY_) &&
         sprintf_s(buffer, UINT8_MAX, ", ScaleY[%.1f]", GetScaleY()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3661,7 +3661,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for Alpha, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetAlpha(), 1.f) &&
+    if (!ROSEN_EQ_Float(GetAlpha(), 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Alpha[%.3f]", GetAlpha()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3671,7 +3671,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for Spherize, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetSpherize(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetSpherize(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Spherize[%.1f]", GetSpherize()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3681,7 +3681,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for AttractFraction, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetAttractionFraction(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetAttractionFraction(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", MiniFraction[%.1f]",  GetAttractionFraction()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3692,7 +3692,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for MiniDstpoint, ret=" + std::to_string(ret);
     }
     Vector2f attractionDstpoint = GetAttractionDstPoint();
-    if ((!ROSEN_EQ(attractionDstpoint[0], 0.f) || !ROSEN_EQ(attractionDstpoint[1], 0.f)) &&
+    if ((!ROSEN_EQ_Float(attractionDstpoint[0], 0.f) || !ROSEN_EQ_Float(attractionDstpoint[1], 0.f)) &&
         sprintf_s(buffer, UINT8_MAX, ", AttractionFraction DstPointY[%.1f,%.1f]",
         attractionDstpoint[0], attractionDstpoint[1]) != -1) {
         dumpInfo.append(buffer);
@@ -3703,7 +3703,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for blendmode, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetColorBlendMode(), 0) &&
+    if (!ROSEN_EQ_Int(GetColorBlendMode(), 0) &&
         sprintf_s(buffer, UINT8_MAX, ", skblendmode[%d], blendType[%d]",
         GetColorBlendMode() - 1, GetColorBlendApplyType()) != -1) {
         dumpInfo.append(buffer);
@@ -3714,7 +3714,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for LightUpEffect, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetLightUpEffect(), 1.f) &&
+    if (!ROSEN_EQ_Float(GetLightUpEffect(), 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", LightUpEffect[%.1f]", GetLightUpEffect()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3745,10 +3745,10 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for BgImage, ret=" + std::to_string(ret);
     }
-    if ((!ROSEN_EQ(GetBgImagePositionX(), defaultDecoration->bgImageRect_.left_) ||
-        !ROSEN_EQ(GetBgImagePositionY(), defaultDecoration->bgImageRect_.top_) ||
-        !ROSEN_EQ(GetBgImageWidth(), defaultDecoration->bgImageRect_.width_) ||
-        !ROSEN_EQ(GetBgImageHeight(), defaultDecoration->bgImageRect_.height_)) &&
+    if ((!ROSEN_EQ_Float(GetBgImagePositionX(), defaultDecoration->bgImageRect_.left_) ||
+        !ROSEN_EQ_Float(GetBgImagePositionY(), defaultDecoration->bgImageRect_.top_) ||
+        !ROSEN_EQ_Float(GetBgImageWidth(), defaultDecoration->bgImageRect_.width_) ||
+        !ROSEN_EQ_Float(GetBgImageHeight(), defaultDecoration->bgImageRect_.height_)) &&
         sprintf_s(buffer, UINT8_MAX, ", BgImage[%.1f %.1f %.1f %.1f]", GetBgImagePositionX(),
             GetBgImagePositionY(), GetBgImageWidth(), GetBgImageHeight()) != -1) {
         dumpInfo.append(buffer);
@@ -3823,7 +3823,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ShadowOffsetX, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetShadowOffsetX(), DEFAULT_SHADOW_OFFSET_X) &&
+    if (!ROSEN_EQ_Float(GetShadowOffsetX(), DEFAULT_SHADOW_OFFSET_X) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowOffsetX[%.1f]", GetShadowOffsetX()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3833,7 +3833,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ShadowOffsetY, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetShadowOffsetY(), DEFAULT_SHADOW_OFFSET_Y) &&
+    if (!ROSEN_EQ_Float(GetShadowOffsetY(), DEFAULT_SHADOW_OFFSET_Y) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowOffsetY[%.1f]", GetShadowOffsetY()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3843,7 +3843,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ShadowAlpha, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetShadowAlpha(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetShadowAlpha(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowAlpha[%.1f]", GetShadowAlpha()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3853,7 +3853,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ShadowElevation, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetShadowElevation(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetShadowElevation(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowElevation[%.1f]", GetShadowElevation()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3863,7 +3863,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for ShadowRadius, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetShadowRadius(), 0.f) &&
+    if (!ROSEN_EQ_Float(GetShadowRadius(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowRadius[%.1f]", GetShadowRadius()) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3904,7 +3904,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for GrayScale, ret=" + std::to_string(ret);
     }
     auto grayScale = GetGrayScale();
-    if (grayScale.has_value() && !ROSEN_EQ(*grayScale, 0.f) &&
+    if (grayScale.has_value() && !ROSEN_EQ_Float(*grayScale, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", GrayScale[%.1f]", *grayScale) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3915,7 +3915,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for DynamicLightUpRate, ret=" + std::to_string(ret);
     }
     auto dynamicLightUpRate = GetDynamicLightUpRate();
-    if (dynamicLightUpRate.has_value() && !ROSEN_EQ(*dynamicLightUpRate, 0.f) &&
+    if (dynamicLightUpRate.has_value() && !ROSEN_EQ_Float(*dynamicLightUpRate, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", DynamicLightUpRate[%.1f]", *dynamicLightUpRate) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3926,7 +3926,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for DynamicLightUpDegree, ret=" + std::to_string(ret);
     }
     auto dynamicLightUpDegree = GetDynamicLightUpDegree();
-    if (dynamicLightUpDegree.has_value() && !ROSEN_EQ(*dynamicLightUpDegree, 0.f) &&
+    if (dynamicLightUpDegree.has_value() && !ROSEN_EQ_Float(*dynamicLightUpDegree, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", DynamicLightUpDegree[%.1f]", *dynamicLightUpDegree) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3937,7 +3937,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Brightness, ret=" + std::to_string(ret);
     }
     auto brightness = GetBrightness();
-    if (brightness.has_value() && !ROSEN_EQ(*brightness, 1.f) &&
+    if (brightness.has_value() && !ROSEN_EQ_Float(*brightness, 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Brightness[%.1f]", *brightness) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3948,7 +3948,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Contrast, ret=" + std::to_string(ret);
     }
     auto contrast = GetContrast();
-    if (contrast.has_value() && !ROSEN_EQ(*contrast, 1.f) &&
+    if (contrast.has_value() && !ROSEN_EQ_Float(*contrast, 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Contrast[%.1f]", *contrast) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3959,7 +3959,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Saturate, ret=" + std::to_string(ret);
     }
     auto saturate = GetSaturate();
-    if (saturate.has_value() && !ROSEN_EQ(*saturate, 1.f) &&
+    if (saturate.has_value() && !ROSEN_EQ_Float(*saturate, 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Saturate[%.1f]", *saturate) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3970,7 +3970,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Sepia, ret=" + std::to_string(ret);
     }
     auto sepia = GetSepia();
-    if (sepia.has_value() && !ROSEN_EQ(*sepia, 0.f) &&
+    if (sepia.has_value() && !ROSEN_EQ_Float(*sepia, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Sepia[%.1f]", *sepia) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3981,7 +3981,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for Invert, ret=" + std::to_string(ret);
     }
     auto invert = GetInvert();
-    if (invert.has_value() && !ROSEN_EQ(*invert, 0.f) &&
+    if (invert.has_value() && !ROSEN_EQ_Float(*invert, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Invert[%.1f]", *invert) != -1) {
         dumpInfo.append(buffer);
     }
@@ -3992,7 +3992,7 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for HueRotate, ret=" + std::to_string(ret);
     }
     auto hueRotate = GetHueRotate();
-    if (hueRotate.has_value() && !ROSEN_EQ(*hueRotate, 0.f) &&
+    if (hueRotate.has_value() && !ROSEN_EQ_Float(*hueRotate, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", HueRotate[%.1f]", *hueRotate) != -1) {
         dumpInfo.append(buffer);
     }

@@ -447,7 +447,7 @@ void OH_Drawing_CanvasDrawPicture(OH_Drawing_Canvas* cCanvas, OH_Drawing_Picture
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
-    NativeHandle<Picture>* picture= Helper::CastTo<OH_Drawing_Picture*,NativeHandle<Picture>*>(cPicture);
+    NativeHandle<Picture>* picture = Helper::CastTo<OH_Drawing_Picture*,NativeHandle<Picture>*>(cPicture);
     canvas->DrawPicture(picture->value);
 }
 

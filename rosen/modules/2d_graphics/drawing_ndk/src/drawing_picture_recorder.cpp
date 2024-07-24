@@ -26,29 +26,27 @@ using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
 
-
-
 OH_Drawing_PictureRecorder* OH_Drawing_PictureRecorderCreate()
 {
     return (OH_Drawing_PictureRecorder*)new PictureRecorder();
 }
 
-OH_Drawing_Canvas* OH_Drawing_BeginRecording(OH_Drawing_PictureRecorder* recorder ,int32_t width , int32_t height)
+OH_Drawing_Canvas* OH_Drawing_BeginRecording(OH_Drawing_PictureRecorder* recorder, int32_t width, int32_t height)
 {
-    if(recorder == nullptr){
+    if (recorder == nullptr) {
         return nullptr;
     }
-    PictureRecorder* pictureRecorder= reinterpret_cast<PictureRecorder*>(recorder);
-    std::shared_ptr<RecordingCanvas> canvas= pictureRecorder->BeginRecording(width,height);
+    PictureRecorder* pictureRecorder = reinterpret_cast<PictureRecorder*>(recorder);
+    std::shared_ptr<RecordingCanvas> canvas = pictureRecorder->BeginRecording(width, height);
     return (OH_Drawing_Canvas*) (canvas.get());
-} 
+}
 
 OH_Drawing_Picture* OH_Drawing_FinishingRecording(OH_Drawing_PictureRecorder* recorder)
 {
-    if(recorder == nullptr){
+    if (recorder == nullptr) {
         return nullptr;
     }
-    PictureRecorder* pictureRecorder= reinterpret_cast<PictureRecorder*>(recorder);
+    PictureRecorder* pictureRecorder = reinterpret_cast<PictureRecorder*>(recorder);
     NativeHandle<Picture>* blurDrawLooperHandle = new NativeHandle<Picture>;
     if (blurDrawLooperHandle == nullptr) {
         return nullptr;
@@ -60,9 +58,9 @@ OH_Drawing_Picture* OH_Drawing_FinishingRecording(OH_Drawing_PictureRecorder* re
         return nullptr;
     }
     return Helper::CastTo<NativeHandle<Picture>*, OH_Drawing_Picture*>(blurDrawLooperHandle);
-
 }
 
-void OH_Drawing_PictureRecorderDestroy(OH_Drawing_PictureRecorder* recorder){
+void OH_Drawing_PictureRecorderDestroy(OH_Drawing_PictureRecorder* recorder)
+{
     delete reinterpret_cast<PictureRecorder*>(recorder);
 }

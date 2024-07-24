@@ -55,7 +55,7 @@ extern "C" {
 OH_Drawing_DrawCmdList* OH_Drawing_DrawCmdListCreate(void);
 
 /**
- * @brief 
+ * @brief Convert picture to CMDList format.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.

@@ -25,5 +25,5 @@ using namespace Drawing;
 
 void OH_Drawing_PictureDestroy(OH_Drawing_Picture* picture)
 {
-    delete Helper::CastTo<OH_Drawing_Picture*, NativeHandle<Picture>*>(picture);;
+    delete Helper::CastTo<OH_Drawing_Picture*, NativeHandle<Picture>*>(picture);
 }

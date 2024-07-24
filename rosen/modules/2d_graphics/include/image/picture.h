@@ -31,7 +31,8 @@ public:
 
     void Playback(Canvas* canvas);
 
-    std::shared_ptr<DrawCmdList> GetDrawCmdList() const {
+    std::shared_ptr<DrawCmdList> GetDrawCmdList() const
+    {
         return drawCmdList_;
     }
 

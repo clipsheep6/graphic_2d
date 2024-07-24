@@ -65,7 +65,7 @@ OH_Drawing_PictureRecorder* OH_Drawing_PictureRecorderCreate(void);
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Canvas* OH_Drawing_BeginRecording(OH_Drawing_PictureRecorder* recorder,int32_t width,int32_t height);
+OH_Drawing_Canvas* OH_Drawing_BeginRecording(OH_Drawing_PictureRecorder* recorder, int32_t width, int32_t height);
 
 /**
  * @brief Finish the recording process of the drawing recorder and obtain the recorded drawing object.
@@ -87,7 +87,7 @@ OH_Drawing_Picture* OH_Drawing_FinishingRecording(OH_Drawing_PictureRecorder* re
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_PictureRecorderDestroy(OH_Drawing_PictureRecorder* recorder );
+void OH_Drawing_PictureRecorderDestroy(OH_Drawing_PictureRecorder* recorder);
 
 
 #ifdef __cplusplus

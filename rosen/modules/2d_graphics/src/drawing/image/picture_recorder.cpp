@@ -26,20 +26,22 @@ PictureRecorder::PictureRecorder() {
 PictureRecorder::~PictureRecorder() {
 }
 
-std::shared_ptr<RecordingCanvas> PictureRecorder::BeginRecording(int32_t width, int32_t height) {
+std::shared_ptr<RecordingCanvas> PictureRecorder::BeginRecording(int32_t width, int32_t height)
+{
     record_ = std::make_shared<RecordingCanvas>(width, height);
     return record_;
 }
 
-std::shared_ptr<Picture> PictureRecorder::FinishingRecording() {
+std::shared_ptr<Picture> PictureRecorder::FinishingRecording()
+{
     if (!record_) {
         std::cout << "FinishingRecording 111" << std::endl;
         return nullptr;
     }
     std::cout << "FinishingRecording 222" << std::endl;
-    // 获取 RecordingCanvas 记录的绘制命令列表
+
     std::shared_ptr<DrawCmdList> cmdList = record_->GetDrawCmdList();
-    // 创建一个新的 Picture 对象,并传入绘制命令列表
+
     std::shared_ptr<Picture> picture = std::make_shared<Picture>(cmdList);
     record_ = nullptr;
     return picture;

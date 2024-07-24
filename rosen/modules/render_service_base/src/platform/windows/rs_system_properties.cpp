@@ -482,5 +482,10 @@ bool RSSystemProperties::GetLayerCursorEnable()
 {
     return false;
 }
+
+bool RSSystemProperties::GetLayerDirtyRegionEnabled()
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

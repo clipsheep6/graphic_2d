@@ -27,7 +27,7 @@ config("libglfw_render_context_config") {
 }
 
 config("libglfw_render_context_public_config") {
-  include_dirs = [ "export" ]
+  include_dirs = [ "export" ]111
 }
 
 ohos_shared_library("libglfw_render_context") {

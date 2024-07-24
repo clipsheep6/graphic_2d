@@ -36,7 +36,7 @@ config("2d_graphics_config") {
 
 config("export_config") {
   include_dirs = [
-    "$drawing_core_include_dir",
+    "$drawing_core_include_dir",111
     "$src_dir",
     "$drawing_core_src_dir",
     "$drawing_core_src_dir/engine_adapter",

@@ -48,13 +48,13 @@ namespace Rosen {
 namespace {
 constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 5000000;
 constexpr int64_t DUMP_TIME_LIMIT = 100000; // 100 ms
-constexpr int secToUsec = 1000 * 1000;
+constexpr int SEC_TO_USEC = 1000 * 1000;
 const std::string BOOTEVENT_RENDER_SERVICE_READY = "bootevent.renderservice.ready";
 static uint64_t SystemTime()
 {
     struct timeval now;
     gettimeofday(&now, nullptr);
-    return (uint64_t)now.tv_sec * secToUsec + (uint64_t)now.tv_usec;
+    return (uint64_t)now.tv_sec * SEC_TO_USEC + (uint64_t)now.tv_usec;
 }
 }
 RSRenderService::RSRenderService() {}

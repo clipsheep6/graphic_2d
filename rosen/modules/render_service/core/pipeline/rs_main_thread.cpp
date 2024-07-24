@@ -3023,7 +3023,7 @@ void RSMainThread::SendCommands()
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame)
 {
-    dumpString.appned("-- [pid, curIdx]: " + transactionFlags_ + "\n");
+    dumpString.append("-- [pid, curIdx]: " + transactionFlags_ + "\n");
     dumpString.append("-- current timeStamp: " + std::to_string(timestamp_) + "\n");
     dumpString.append("-- vsyncId: " + std::to_string(vsyncId_) + "\n");
     if (LIKELY(forceDumpSingleFrame)) {

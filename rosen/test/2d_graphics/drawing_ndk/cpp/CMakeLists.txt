@@ -60,7 +60,9 @@ add_library(entry SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    performance/sub_basic_graphics_special_performance_c_property.cpp
+    performance/sub_basic_graphics_special_performance_c_ops_witch.cpp
 )
 
 add_library(myxnode SHARED
@@ -114,7 +116,9 @@ add_library(myxnode SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    performance/sub_basic_graphics_special_performance_c_property.cpp
+    performance/sub_basic_graphics_special_performance_c_ops_witch.cpp
 )
 
 find_library(
@@ -123,6 +127,8 @@ find_library(
     # Specifies the name of the NDK library that
     # you want CMake to locate.
     hilog_ndk.z
+    performance/sub_basic_graphics_special_performance_c_property.cpp
+    performance/sub_basic_graphics_special_performance_c_ops_witch.cpp
 )
 target_link_libraries(entry PUBLIC EGL)
 target_link_libraries(entry PUBLIC GLESv3)

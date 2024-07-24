@@ -20,7 +20,6 @@
 #include <memory>
 #include <native_drawing/drawing_font_collection.h>
 #include <native_drawing/drawing_text_typography.h>
-#include <native_buffer/native_buffer.h>
 #include <sstream>
 #include <string>
 #include <sys/types.h>
@@ -414,7 +413,7 @@ napi_value MyXComponent::NapiGetTime(napi_env env, napi_callback_info info)
     if (render != nullptr) {
         DRAWING_LOGE("DrawingTest render->GetTime");
         napi_value value = nullptr;
-        (void)napi_create_int32(env, render->GetTime(), &value);
+        (void)napi_create_uint32(env, render->GetTime(), &value);
         return value;
     } else {
         DRAWING_LOGE("DrawingTest render is nullptr");

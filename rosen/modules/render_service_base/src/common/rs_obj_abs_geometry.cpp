@@ -171,26 +171,26 @@ namespace {
 void RSObjAbsGeometry::UpdateAbsMatrix2D()
 {
     // Translate
-    if ((x_ + trans_->translateX_ != 0) || (y_ + trans_->translateY_ != 0)) {
-        matrix_.PreTranslate(x_ + trans_->translateX_, y_ + trans_->translateY_);
+    if ((x_ + trans_.translateX_ != 0) || (y_ + trans_.translateY_ != 0)) {
+        matrix_.PreTranslate(x_ + trans_.translateX_, y_ + trans_.translateY_);
     }
     // Persp
-    if (!ROSEN_EQ(trans_->perspX_, 0.f, EPSILON) || !ROSEN_EQ(trans_->perspY_, 0.f, EPSILON)) {
-        matrix_.PreTranslate(trans_->pivotX_ * width_, trans_->pivotY_ * height_);
+    if (!ROSEN_EQ(trans_.perspX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.perspY_, 0.f, EPSILON)) {
+        matrix_.PreTranslate(trans_.pivotX_ * width_, trans_.pivotY_ * height_);
         ApplyPerspToMatrix(trans_.value(), matrix_, false);
-        matrix_.PreTranslate(-trans_->pivotX_ * width_, -trans_->pivotY_ * height_);
+        matrix_.PreTranslate(-trans_.pivotX_ * width_, -trans_.pivotY_ * height_);
     }
     // rotation
-    if (!ROSEN_EQ(trans_->rotation_, 0.f, EPSILON)) {
-        matrix_.PreRotate(trans_->rotation_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
+    if (!ROSEN_EQ(trans_.rotation_, 0.f, EPSILON)) {
+        matrix_.PreRotate(trans_.rotation_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
     }
     // Skew
-    if (!ROSEN_EQ(trans_->skewX_, 0.f, EPSILON) || !ROSEN_EQ(trans_->skewY_, 0.f, EPSILON)) {
-        matrix_.PreSkew(trans_->skewX_, trans_->skewY_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
+    if (!ROSEN_EQ(trans_.skewX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.skewY_, 0.f, EPSILON)) {
+        matrix_.PreSkew(trans_.skewX_, trans_.skewY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
     }
     // Scale
-    if (!ROSEN_EQ(trans_->scaleX_, 1.f) || !ROSEN_EQ(trans_->scaleY_, 1.f)) {
-        matrix_.PreScale(trans_->scaleX_, trans_->scaleY_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
+    if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
+        matrix_.PreScale(trans_.scaleX_, trans_.scaleY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
     }
 }
 

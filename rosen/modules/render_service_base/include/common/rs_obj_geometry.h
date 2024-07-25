@@ -223,7 +223,7 @@ public:
     }
     float GetSkewY() const
     {
-        return trans_->skewY_;
+        return trans_.skewY_;
     }
     float GetPerspX() const
     {

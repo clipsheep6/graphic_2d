@@ -313,27 +313,26 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(*uniParam, *surfaceParams, *this, isUiFirstNode);
     // when surfacenode named "CapsuleWindow", cache the current canvas as SkImage for screen recording
-    auto ancestorDrawableTmp = surfaceParams->GetAncestorDisplayDrawable().lock();
+    auto ancestorDrawableTmp =
+        std::static_pointer_cast<RSDisplayRenderNodeDrawable>(surfaceParams->GetAncestorDisplayDrawable().lock());
     if (ancestorDrawableTmp == nullptr) {
         RS_LOGE("ancestorDrawable is nullptr");
         return;
     }
-    auto curDisplayDrawable = std::static_pointer_cast<RSDisplayRenderNodeDrawable>(ancestorDrawableTmp);
     // To be deleted after captureWindow being deleted
     if (surfaceParams->GetName().find("CapsuleWindow") != std::string::npos) {
-        CacheImgForCapture(*rscanvas, *curDisplayDrawable);
-        RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetRootIdOfCaptureWindow(curDisplayDrawable->GetId());
+        CacheImgForCapture(*rscanvas, *ancestorDrawableTmp);
+        uniParam->SetRootIdOfCaptureWindow(ancestorDrawableTmp->GetId());
     }
 
     if (!isUiFirstNode) {
         MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
-    }
-
-    if (!isUiFirstNode && uniParam->IsOpDropped() && surfaceParams->IsVisibleRegionEmpty(curSurfaceDrawRegion)) {
-        RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s %sAlpha: %f, NodeId:"
-            "%" PRIu64 "", name_.c_str(), surfaceParams->GetAbsDrawRect().ToString().c_str(),
-            surfaceParams->GetGlobalAlpha(), surfaceParams->GetId());
-        return;
+        if (uniParam->IsOpDropped() && surfaceParams->IsVisibleRegionEmpty(curSurfaceDrawRegion)) {
+            RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s %sAlpha: %f, NodeId:"
+                "%" PRIu64 "", name_.c_str(), surfaceParams->GetAbsDrawRect().ToString().c_str(),
+                surfaceParams->GetGlobalAlpha(), surfaceParams->GetId());
+            return;
+        }
     }
     const auto &absDrawRect = surfaceParams->GetAbsDrawRect();
     // warning : don't delete this trace or change trace level to optional !!!
@@ -443,13 +442,14 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(
         return;
     }
     auto surfaceParams = static_cast<RSSurfaceRenderParams*>(renderParams_.get());
-    if (surfaceParams->IsMainWindowType() && surfaceParams->GetVisibleRegion().IsEmpty()) {
+    auto isMainWindowType = surfaceParams->IsMainWindowType();
+    if (isMainWindowType && surfaceParams->GetVisibleRegion().IsEmpty()) {
         return;
     }
-    if (surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow()) {
+    if (isMainWindowType || surfaceParams->IsLeashWindow()) {
         auto& accumulatedDirtyRegion = uniParam.GetAccumulatedDirtyRegion();
         Occlusion::Region calcRegion;
-        if ((surfaceParams->IsMainWindowType() && surfaceParams->IsParentScaling()) ||
+        if ((isMainWindowType && surfaceParams->IsParentScaling()) ||
             surfaceParams->IsSubSurfaceNode() || uniParam.IsAllSurfaceVisibleDebugEnabled()) {
             calcRegion = surfaceParams->GetVisibleRegion();
         } else if (!surfaceParams->GetTransparentRegion().IsEmpty()) {

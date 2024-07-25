@@ -317,6 +317,16 @@ constexpr float PI = M_PI;
 static const float PI = std::atanf(1.0) * 4;
 #endif
 
+inline constexpr bool ROSEN_EQ_Float(const float& x, const float& y)
+{
+    return (std::abs((x) - (y)) <= (std::numeric_limits<float>::epsilon()));
+}
+
+inline bool ROSEN_EQ_INT(int x, int y)
+{
+    return x == y;
+}
+
 template<typename T>
 inline constexpr bool ROSEN_EQ(const T& x, const T& y)
 {

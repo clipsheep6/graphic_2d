@@ -44,8 +44,8 @@ constexpr int32_t ERRNO_OTHER = -2;
 constexpr int32_t THREAD_PRIORTY = -6;
 constexpr int32_t SCHED_PRIORITY = 2;
 constexpr int32_t DEFAULT_VSYNC_RATE = 1;
-constexpr uint32_t SOCKET_CHANNEL_SIZE = 1024;
-constexpr int32_t VSYNC_CONNECTION_MAX_SIZE = 128;
+constexpr uint32_t SOCKET_CHANNEL_SIZE = 1024 * 4;
+constexpr int32_t VSYNC_CONNECTION_MAX_SIZE = 256;
 }
 
 VSyncConnection::VSyncConnectionDeathRecipient::VSyncConnectionDeathRecipient(
@@ -183,11 +183,23 @@ int32_t VSyncConnection::PostEvent(int64_t now, int64_t period, int64_t vsyncCou
     data[1] = period;
     data[2] = vsyncCount;
     int32_t ret = socketPair->SendData(data, sizeof(data));
+    int socketDataBytes = socketPair->GetChannelDataBytes();
+    if (socketDataBytes > sizeof(data) * 2) { // more than 2 vsync signals are accumulated.
+        VLOGW("VSync Signal is not processed in time, please check pid:%{public}d, socket data bytes:%{public}d",
+            proxyPid_, socketDataBytes);
+        if (ret == ERRNO_EAGAIN) {
+            RS_TRACE_NAME_FMT("socket data bytes:%d is too large, remove the earlies data and retry SendData.",
+                socketDataBytes);
+            int64_t receiveData[3];
+            socketPair->ReceiveData(receiveData, sizeof(receiveData));
+            ret = socketPair->SendData(data, sizeof(data));
+        }
+    }
     if (ret > -1) {
         ScopedDebugTrace successful("successful");
         info_.postVSyncCount_++;
     } else {
-        ScopedBytrace failed("failed");
+        RS_TRACE_NAME_FMT("failed, socket data bytes:%d", socketPair->GetChannelDataBytes());
     }
     return ret;
 }

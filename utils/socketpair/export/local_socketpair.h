@@ -45,6 +45,7 @@ public:
 
     int32_t SendData(const void *vaddr, size_t size);
     int32_t ReceiveData(void *vaddr, size_t size);
+    int32_t GetChannelDataBytes();
 private:
     int32_t SendFdToBinder(MessageParcel &data, int32_t &fd);
     void CloseFd(int32_t &fd);

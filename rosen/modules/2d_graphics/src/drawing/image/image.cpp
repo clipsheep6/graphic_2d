@@ -121,6 +121,16 @@ bool Image::IsValid(GPUContext* context) const
 {
     return imageImplPtr->IsValid(context);
 }
+
+bool Image::PinAsTexture(GPUContext* context) const
+{
+    return imageImplPtr->PinAsTexture(context);
+}
+
+void Image::UnPinAsTexture(GPUContext* context) const
+{
+    return imageImplPtr->UnPinAsTexture(context);
+}
 #endif
 
 bool Image::AsLegacyBitmap(Bitmap& bitmap) const

@@ -72,6 +72,8 @@ public:
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace) = 0;
     virtual BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) = 0;
     virtual bool IsValid(GPUContext* context) const = 0;
+    virtual bool PinAsTexture(GPUContext* context) const = 0;
+    virtual void UnPinAsTexture(GPUContext* context) const = 0;
 #endif
     virtual bool AsLegacyBitmap(Bitmap& bitmap) const = 0;
     virtual int GetWidth() const = 0;

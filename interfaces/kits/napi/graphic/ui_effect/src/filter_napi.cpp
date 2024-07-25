@@ -21,6 +21,7 @@ namespace {
     constexpr uint32_t NUM_2 = 2;
     constexpr uint32_t NUM_3 = 3;
     constexpr uint32_t NUM_4 = 4;
+    constexpr uint32_t NUM_5 = 5;
 }
 
 namespace OHOS {
@@ -300,8 +301,8 @@ napi_value FilterNapi::SetWaterRipple(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     napi_status status;
     napi_value thisVar = nullptr;
-    napi_value argValue[NUM_4] = {0};
-    size_t argCount = NUM_4;
+    napi_value argValue[NUM_5] = {0};
+    size_t argCount = NUM_5;
     UIEFFECT_JS_ARGS(env, info, status, argCount, argValue, thisVar);
     UIEFFECT_NAPI_CHECK_RET_D(UIEFFECT_IS_OK(status), nullptr, FILTER_LOG_E("fail to napi_get_water_ripple_info"));
  
@@ -311,8 +312,9 @@ napi_value FilterNapi::SetWaterRipple(napi_env env, napi_callback_info info)
     float waveCount = 0.0f;
     float rippleCenterX = 0.0f;
     float rippleCenterY = 0.0f;
+    float rippleMode = 0.0f;
  
-    if (argCount != NUM_4) {
+    if (argCount != NUM_5) {
         FILTER_LOG_E("Args number less than 4");
     }
     
@@ -320,11 +322,13 @@ napi_value FilterNapi::SetWaterRipple(napi_env env, napi_callback_info info)
     waveCount = GetSpecialValue(env, argValue[NUM_1]);
     rippleCenterX = GetSpecialValue(env, argValue[NUM_2]);
     rippleCenterY = GetSpecialValue(env, argValue[NUM_3]);
+    rippleMode = GetSpecialValue(env, argValue[NUM_4]);
 
     para->SetProgress(progress);
     para->SetWaveCount(waveCount);
     para->SetRippleCenterX(rippleCenterX);
     para->SetRippleCenterY(rippleCenterY);
+    para->SetRippleMode(rippleMode);
    
     Filter* filterObj = nullptr;
     NAPI_CALL(env, napi_unwrap(env, thisVar, reinterpret_cast<void**>(&filterObj)));

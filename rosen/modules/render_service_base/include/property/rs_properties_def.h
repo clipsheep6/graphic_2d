@@ -147,10 +147,11 @@ struct RSWaterRipplePara {
     float waveCount = 0.0f;
     float rippleCenterX = 0.5f;
     float rippleCenterY = 0.7f;
+    float rippleMode = 1.0f;
     bool operator==(const RSWaterRipplePara& other) const
     {
         return (waveCount == other.waveCount && rippleCenterX == other.rippleCenterX &&
-        rippleCenterY == other.rippleCenterY);
+        rippleCenterY == other.rippleCenterY && rippleMode == other.rippleMode);
     }
 };
 

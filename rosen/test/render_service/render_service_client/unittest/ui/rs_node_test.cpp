@@ -6976,10 +6976,12 @@ HWTEST_F(RSNodeTest, SetWaterRippleParams, TestSize.Level1)
     float rippleCenterX = 0.3f;
     float rippleCenterY = 0.5f;
     float progress = 0.5f;
+    float rippleMode = 1.0f;
     RSWaterRipplePara rs_water_ripple_param = {
         waveCount,
         rippleCenterX,
-        rippleCenterY
+        rippleCenterY,
+        rippleMode
     };
     auto rsNode = RSCanvasNode::Create();
     rsNode->SetWaterRippleParams(rs_water_ripple_param, progress);

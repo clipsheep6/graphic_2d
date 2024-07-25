@@ -297,6 +297,8 @@ HWTEST_F(GEVisualEffectImplTest, SetParam010, TestSize.Level1)
     EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleCenterX, 0.5f);
     geVisualEffectImpl.SetWaterRippleParams(Drawing::GE_FILTER_WATER_RIPPLE_RIPPLE_CENTER_Y, 0.5f);
     EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleCenterY, 0.5f);
+    geVisualEffectImpl.SetWaterRippleParams(Drawing::GE_FILTER_WATER_RIPPLE_RIPPLE_MODE, 1.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleMode, 1.0f);
 }
 
 /**
@@ -341,6 +343,8 @@ HWTEST_F(GEVisualEffectImplTest, SetWaterRippleParams001, TestSize.Level1)
     EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleCenterX, 0.5f);
     geVisualEffectImpl.SetWaterRippleParams(Drawing::GE_FILTER_WATER_RIPPLE_RIPPLE_CENTER_Y, 0.5f);
     EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleCenterY, 0.5f);
+    geVisualEffectImpl.SetWaterRippleParams(Drawing::GE_FILTER_WATER_RIPPLE_RIPPLE_MODE, 1.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetWaterRippleParams()->rippleMode, 1.0f);
 }
 
 /**

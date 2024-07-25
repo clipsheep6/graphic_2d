@@ -68,12 +68,23 @@ public:
         return rippleCenterY_;
     }
 
+    void SetRippleMode(float rippleMode)
+    {
+        rippleMode_ = rippleMode;
+    }
+
+    float GetRippleMode() const
+    {
+        return rippleMode_;
+    }
+
 private:
     float rippleCenterX_ = 0.0f;
     float rippleCenterY_ = 0.0f;
     float progress_ = 0.0f;
     float waveCount_ = 0.0f;
+    float rippleMode_ = 0.0f;
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // UIEFFECT_FILTER_BLUR_PARA_H
+#endif // UIEFFECT_FILTER_WATER_RIPPPLE_PARA_H

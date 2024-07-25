@@ -2470,10 +2470,12 @@ HWTEST_F(RSPropertiesTest, GenerateBackgroundFilter001, TestSize.Level1)
     float waveCount = 2.0f;
     float rippleCenterX = 0.3f;
     float rippleCenterY = 0.5f;
+    float rippleMode = 1.0f;
     RSWaterRipplePara rs_water_ripple_param = {
         waveCount,
         rippleCenterX,
-        rippleCenterY
+        rippleCenterY,
+        rippleMode
     };
     properties.waterRippleParams_ =  std::optional<RSWaterRipplePara>(rs_water_ripple_param);
     properties.GenerateBackgroundFilter();
@@ -3178,10 +3180,12 @@ HWTEST_F(RSPropertiesTest, SetNGetWaterRippleParams002, TestSize.Level1)
     float rippleCenterX = 0.3f;
     float rippleCenterY = 0.5f;
     float progress = 0.5f;
+    float rippleMode = 1.0f;
     RSWaterRipplePara rs_water_ripple_param = {
         waveCount,
         rippleCenterX,
-        rippleCenterY
+        rippleCenterY,
+        rippleMode
     };
     properties.SetWaterRippleParams(rs_water_ripple_param);
     properties.SetWaterRippleProgress(progress);

@@ -2926,8 +2926,10 @@ void RSProperties::GenerateWaterRippleFilter()
     float waveCount = waterRippleParams_->waveCount;
     float rippleCenterX = waterRippleParams_->rippleCenterX;
     float rippleCenterY = waterRippleParams_->rippleCenterY;
+    float rippleMode = waterRippleParams_->rippleMode;
     std::shared_ptr<RSWaterRippleShaderFilter> waterRippleFilter =
-        std::make_shared<RSWaterRippleShaderFilter>(waterRippleProgress_, waveCount, rippleCenterX, rippleCenterY);
+        std::make_shared<RSWaterRippleShaderFilter>(waterRippleProgress_, waveCount, rippleCenterX, rippleCenterY,
+            rippleMode);
     std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(waterRippleFilter);
     if (!backgroundFilter_) {
         backgroundFilter_ = originalFilter;

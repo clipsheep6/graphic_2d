@@ -46,9 +46,10 @@ HWTEST_F(RSWaterRippleShaderFilterTest, GenerateGEVisualEffectTest, TestSize.Lev
     float waveCount = 2.0f;
     float rippleCenterX = 0.3f;
     float rippleCenterY = 0.5f;
+    float rippleMode = 1.0f;
 
     auto rsWaterRippleShaderFilter = std::make_shared<RSWaterRippleShaderFilter>(progress, waveCount, rippleCenterX,
-                                                                                rippleCenterY);
+                                                                                rippleCenterY, rippleMode);
     auto visualEffectContainer = std::make_shared<Drawing::GEVisualEffectContainer>();
     rsWaterRippleShaderFilter->GenerateGEVisualEffect(visualEffectContainer);
     EXPECT_FALSE(visualEffectContainer->filterVec_.empty());

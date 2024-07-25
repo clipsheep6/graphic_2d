@@ -418,7 +418,7 @@ HWTEST_F(RSRenderPropertyTest, IsNearEqual002, TestSize.Level1)
     std::shared_ptr<RSFilter> rsFilter2 = RSFilter::CreateLightUpEffectFilter(15.f);
     auto prop7 = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(rsFilter2);
     EXPECT_TRUE(property7.IsNearEqual(prop7, zeroThreshold));
-    Vector4<Color> vect4Color(Color(), Color(), Color(), Color());
+    Vector4<Color> vect4Color(Color(0), Color(0), Color(0), Color(0));
     auto prop8 = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(vect4Color);
     EXPECT_TRUE(property8.IsNearEqual(prop8, zeroThreshold));
     auto prop9 = std::make_shared<RSRenderAnimatableProperty<RRect>>(RRect(RectF(), 0.f, 0.f));

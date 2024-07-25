@@ -767,6 +767,7 @@ ImageType ColorPickerNapi::ParserArgumentType(napi_env env, napi_value argv)
     ret = napi_get_named_property(env, global, "ImageSource", &constructor);
     if (ret != napi_ok) {
         EFFECT_LOG_E("Get ImageSourceNapi property failed!");
+        return ImageType::TYPE_UNKOWN;
     }
 
     ret = napi_instanceof(env, argv, constructor, &isInstance);
@@ -778,6 +779,7 @@ ImageType ColorPickerNapi::ParserArgumentType(napi_env env, napi_value argv)
     ret = napi_get_named_property(env, global, "PixelMap", &constructor);
     if (ret != napi_ok) {
         EFFECT_LOG_E("Get PixelMapNapi property failed!");
+        return ImageType::TYPE_UNKOWN;
     }
 
     ret = napi_instanceof(env, argv, constructor, &isInstance);

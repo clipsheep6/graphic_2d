@@ -458,7 +458,6 @@ static void GetMainColorComplete(napi_env env, napi_status status, void* data)
     if (context == nullptr) {
         EFFECT_LOG_E("GetMainColorComplete asyncContext is nullptr");
         return;
-
     }
     if (context->errorMsg != nullptr) {
         context->status = ERROR;

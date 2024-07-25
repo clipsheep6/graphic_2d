@@ -2727,6 +2727,10 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByGlobalCleanFilter(
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto filter = cleanFilter.begin(); filter != cleanFilter.end(); ++filter) {
         auto& rendernode = nodeMap.GetRenderNode<RSRenderNode>(filter->first);
+        if(rendernode == nullptr){
+            ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: rendernode is null");
+            continue;
+        }
         if (rendernode->IsAIBarFilterCacheValid()) {
             ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: skip intersection for using cache");
             continue;

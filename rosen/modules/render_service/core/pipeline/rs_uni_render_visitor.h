@@ -178,7 +178,7 @@ public:
 
     void SurfaceOcclusionCallbackToWMS();
 
-    std::unordered_set<NodeId> GetCurrentBlackList() const;
+    const std::unordered_set<NodeId>& GetCurrentBlackList() const;
 
     static void ClearRenderGroupCache();
 

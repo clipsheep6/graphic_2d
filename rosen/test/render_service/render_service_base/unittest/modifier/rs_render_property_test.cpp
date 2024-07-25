@@ -267,37 +267,44 @@ HWTEST_F(RSRenderPropertyTest, OnChange, TestSize.Level1)
  */
 HWTEST_F(RSRenderPropertyTest, IsNearEqual, TestSize.Level1)
 {
-    RSRenderAnimatableProperty<float> property;
+    RSRenderAnimatableProperty<float> propertyFloat;
     Vector2f vector2f;
-    RSRenderAnimatableProperty<Vector2f> propertyTwo(vector2f);
+    RSRenderAnimatableProperty<Vector2f> propertyVector2f(vector2f);
     Matrix3f matrix3f;
     RSRenderAnimatableProperty<Matrix3f> propertyMatrix3f(matrix3f);
     Color color;
     RSRenderAnimatableProperty<Color> propertyColor(color);
-    std::shared_ptr<RSFilter> rsFilter = std::make_shared<RSFilter>();
+    std::shared_ptr<RSFilter> rsFilter = RSFilter::CreateLightUpEffectFilter(15.f);
     RSRenderAnimatableProperty<std::shared_ptr<RSFilter>> propertyRSFilter(rsFilter);
-    Vector4<Color> vector4;
-    RSRenderAnimatableProperty<Vector4<Color>> propertyVector4Color(vector4);
-    RRect rect;
-    RSRenderAnimatableProperty<RRect> propertyRect(rect);
+    Vector4<Color> vector4Color;
+    RSRenderAnimatableProperty<Vector4<Color>> propertyVector4Color(vector4Color);
+    RRect rrect;
+    RSRenderAnimatableProperty<RRect> propertyRRect(rrect);
+    float threshold = 1.f;
 
     std::shared_ptr<RSRenderPropertyBase> value;
-    EXPECT_TRUE(property.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyTwo.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyMatrix3f.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyColor.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyRSFilter.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyVector4Color.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyRect.IsNearEqual(value, 1.f));
+    EXPECT_TRUE(propertyFloat.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyVector2f.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyMatrix3f.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyColor.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyRSFilter.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyVector4Color.IsNearEqual(value, threshold));
+    EXPECT_TRUE(propertyRRect.IsNearEqual(value, threshold));
 
-    value = std::make_shared<RSRenderPropertyBase>();
-    EXPECT_TRUE(property.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyTwo.IsNearEqual(value, 1.f));
-    EXPECT_FALSE(propertyMatrix3f.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyColor.IsNearEqual(value, 1.f));
-    EXPECT_TRUE(propertyRSFilter.IsNearEqual(value, 1.f));
-    EXPECT_FALSE(propertyVector4Color.IsNearEqual(value, 1.f));
-    ASSERT_FALSE(propertyRect.IsNearEqual(value, 1.f));
+    auto propFloat = std::make_shared<RSRenderAnimatableProperty<float>>(1.f);
+    EXPECT_TRUE(propertyFloat.IsNearEqual(propFloat, threshold));
+    auto propVector2f = std::make_shared<RSRenderAnimatableProperty<Vector2f>>(Vector2f(1.f, 1.f));
+    EXPECT_TRUE(propertyVector2f.IsNearEqual(propVector2f, threshold));
+    auto propMatrix3f = std::make_shared<RSRenderAnimatableProperty<Matrix3f>>(Matrix3f());
+    EXPECT_TRUE(propertyMatrix3f.IsNearEqual(propMatrix3f, threshold));
+    auto propColor = std::make_shared<RSRenderAnimatableProperty<Color>>(Color(0x1010101));
+    EXPECT_TRUE(propertyColor.IsNearEqual(propColor, threshold));
+    auto propFilter = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(RSFilter::CreateLightUpEffectFilter(15.9f));
+    EXPECT_TRUE(propertyRSFilter.IsNearEqual(propFilter, threshold));
+    auto propVector4Color = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(Vector4<Color>(Color(0x1010101), Color(0x1010101), Color(0x1010101), Color(0x1010101)));
+    EXPECT_TRUE(propertyVector4Color.IsNearEqual(propVector4Color, threshold));
+    auto propRRect = std::make_shared<RSRenderAnimatableProperty<RRect>>(RRect(RectF(), 1.f, 1.f));
+    ASSERT_TRUE(propertyRRect.IsNearEqual(propRRect, threshold));
 }
 
 /**
@@ -380,30 +387,37 @@ HWTEST_F(RSRenderPropertyTest, IsNearEqual001, TestSize.Level1)
 HWTEST_F(RSRenderPropertyTest, IsNearEqual002, TestSize.Level1)
 {
     RSRenderAnimatableProperty<float> property1;
-    RSRenderAnimatableProperty<Vector2f> property2;
+    Vector2f vector2f;
+    RSRenderAnimatableProperty<Vector2f> property2(vector2f);
     RSRenderAnimatableProperty<Quaternion> property3;
-    RSRenderAnimatableProperty<Vector4f> property4;
+    Vector4f vector4f;
+    RSRenderAnimatableProperty<Vector4f> property4(vector4f);
     RSRenderAnimatableProperty<Matrix3f> property5;
     RSRenderAnimatableProperty<Color> property6;
-    RSRenderAnimatableProperty<std::shared_ptr<RSFilter>> property7;
-    RSRenderAnimatableProperty<Vector4<Color>> property8;
+    std::shared_ptr<RSFilter> rsFilter = RSFilter::CreateLightUpEffectFilter(15.f);
+    RSRenderAnimatableProperty<std::shared_ptr<RSFilter>> property7(rsFilter);
+    Vector4<Color> vector4Color;
+    RSRenderAnimatableProperty<Vector4<Color>> property8(vector4Color);
     RSRenderAnimatableProperty<RRect> property9;
-    RSRenderAnimatableProperty<std::shared_ptr<RSFilter>> property10;
-    const std::shared_ptr<RSRenderPropertyBase> value = std::make_shared<RSRenderPropertyBase>();
-    const int* filter = nullptr;
-    const PropertyId id = 0;
-    RSRenderProperty test(filter, id);
-    test.Set(nullptr);
     float zeroThreshold = 0.0;
-    ASSERT_TRUE(property1.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property2.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property3.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property4.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property5.IsNearEqual(value, zeroThreshold));
-    ASSERT_TRUE(property6.IsNearEqual(value, zeroThreshold));
-    ASSERT_TRUE(property7.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property8.IsNearEqual(value, zeroThreshold));
-    ASSERT_FALSE(property9.IsNearEqual(value, zeroThreshold));
-    ASSERT_TRUE(property10.IsEqual(value));
+
+    auto prop1 = std::make_shared<RSRenderAnimatableProperty<float>>(0.f);
+    EXPECT_TRUE(property1.IsNearEqual(prop1, zeroThreshold));
+    auto prop2 = std::make_shared<RSRenderAnimatableProperty<Vector2f>>(Vector2f(0.f, 0.f));
+    EXPECT_TRUE(property2.IsNearEqual(prop2, zeroThreshold));
+    auto prop3 = std::make_shared<RSRenderAnimatableProperty<Quaternion>>(Quaternion());
+    EXPECT_TRUE(property3.IsNearEqual(prop3, zeroThreshold));
+    auto prop4 = std::make_shared<RSRenderAnimatableProperty<Vector4f>>(Vector4f(0.f, 0.f, 0.f, 0.f));
+    EXPECT_TRUE(property4.IsNearEqual(prop4, zeroThreshold));
+    auto prop5 = std::make_shared<RSRenderAnimatableProperty<Matrix3f>>(Matrix3f());
+    EXPECT_TRUE(property5.IsNearEqual(prop5, zeroThreshold));
+    auto prop6 = std::make_shared<RSRenderAnimatableProperty<Color>>(Color());
+    EXPECT_TRUE(property6.IsNearEqual(prop6, zeroThreshold));
+    auto prop7 = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(RSFilter::CreateLightUpEffectFilter(15.f));
+    EXPECT_TRUE(property7.IsNearEqual(prop7, zeroThreshold));
+    auto prop8 = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(Vector4<Color>(Color(), Color(), Color(), Color()));
+    EXPECT_TRUE(property8.IsNearEqual(prop8, zeroThreshold));
+    auto prop9 = std::make_shared<RSRenderAnimatableProperty<RRect>>(RRect(RectF(), 0.f, 0.f));
+    ASSERT_TRUE(property9.IsNearEqual(prop9, zeroThreshold));
 }
 }

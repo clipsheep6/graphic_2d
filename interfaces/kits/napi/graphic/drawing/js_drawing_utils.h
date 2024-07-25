@@ -341,6 +341,8 @@ bool ConvertFromJsIRect(napi_env env, napi_value jsValue, int32_t* ltrb, size_t 
 
 bool ConvertFromJsPoint(napi_env env, napi_value jsValue, double* point, size_t size);
 
+bool ConvertFromJsPoint2d(napi_env env, napi_value src, Drawing::Point& point);
+
 bool ConvertFromJsPoint3d(napi_env env, napi_value src, Point3& point3d);
 
 bool ConvertFromJsShadowFlag(napi_env env, napi_value src, ShadowFlags& shadowFlag,

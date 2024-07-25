@@ -15,15 +15,15 @@
 
 #include <fstream>
 #include "js_fontcollection.h"
+#include "ability.h"
 #include "log_wrapper.h"
 #include "napi_async_work.h"
+#include "napi_base_context.h"
 
 namespace OHOS::Rosen {
 namespace {
 constexpr size_t FILE_HEAD_LENGTH = 7; // 7 is the size of "file://"
 const std::string CLASS_NAME = "FontCollection";
-const std::string LOCAL_BIND_PATH = "/data/storage/el1/bundle/";
-const std::string HAP_POSTFIX = ".hap";
 const int32_t GLOBAL_ERROR = 10000;
 struct FontArgumentsConcreteContext : public ContextBase {
     std::string familyName;
@@ -171,17 +171,6 @@ bool JsFontCollection::SpiltAbsoluteFontPath(std::string& absolutePath)
     return false;
 }
 
-std::unique_ptr<Global::Resource::ResourceManager> JsFontCollection::GetResourManager(const std::string& moudleName)
-{
-    auto hapPath = LOCAL_BIND_PATH + moudleName + HAP_POSTFIX;
-    auto resManager = Global::Resource::CreateResourceManager();
-    if (!resManager) {
-        return nullptr;
-    }
-    resManager->AddResource(hapPath.c_str());
-    return std::unique_ptr<Global::Resource::ResourceManager>(resManager);
-}
-
 bool JsFontCollection::GetResourcePartData(napi_env env, ResourceInfo& info, napi_value paramsNApi,
     napi_value bundleNameNApi, napi_value moduleNameNApi)
 {
@@ -271,20 +260,60 @@ bool JsFontCollection::ParseResourceType(napi_env env, napi_value value, Resourc
     return true;
 }
 
-bool JsFontCollection::ParseResourcePath(const std::string familyName, ResourceInfo& info)
+static std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(napi_env env, napi_value value)
+{
+    TEXT_LOGE("GetResourceManager in");
+    bool stageMode = false;
+    napi_status status = AbilityRuntime::IsStageContext(env, value, stageMode);
+    if (status != napi_ok) {
+        TEXT_LOGE("GetResourceManager IsStageContext failed");
+        return nullptr;
+    }
+    TEXT_LOGI("GetResourceManager is stage mode: %{public}s", stageMode ? "true" : "false");
+
+    if (stageMode) {
+        TEXT_LOGI("GetResourceManager Getting context with stage model");
+        auto context = AbilityRuntime::GetStageModeContext(env, value);
+        if (!context) {
+            TEXT_LOGE("GetResourceManager get context failed");
+            return nullptr;
+        }
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context);
+        if (!abilityContext) {
+            TEXT_LOGE("GetResourceManager get Stage model ability context failed");
+            return nullptr;
+        }
+        auto resourceManager = abilityContext->GetResourceManager();
+        TEXT_ERROR_CHECK(resourceManager != nullptr, return nullptr, "GetResourceManager failed, resourceManager is nullptr");
+        return resourceManager;
+    } else {
+        TEXT_LOGI("GetResourceManager not stageMode");
+        auto ability = AbilityRuntime::GetCurrentAbility(env);
+        TEXT_ERROR_CHECK(ability != nullptr, return nullptr,
+            "GetResourceManager failed, ability is nullptr");
+        auto abilityContext = ability->GetAbilityContext();
+        TEXT_ERROR_CHECK(abilityContext != nullptr, return nullptr,
+            "GetResourceManager failed, abilityContext is nullptr");
+
+        auto resourceManager = abilityContext->GetResourceManager();
+        TEXT_ERROR_CHECK(resourceManager != nullptr, return nullptr,
+            "GetResourceManager failed, resourceManager is nullptr");
+        return resourceManager;
+    }
+}
+
+bool JsFontCollection::ParseResourcePath(const std::string familyName, ResourceInfo& info, napi_env env, napi_value value)
 {
     int32_t state = 0;
-
-    auto reSourceManager = GetResourManager(info.moduleName);
-    if (reSourceManager == nullptr) {
-        return false;
-    }
+    auto resourceManager = GetResourceManager(env, value);
+    TEXT_CHECK(resourceManager != nullptr, return false);
     if (info.type == static_cast<int32_t>(ResourceType::STRING)) {
         std::string rPath;
         if (info.resId < 0 && info.params[0].size() > 0) {
             rPath = info.params[0];
         } else {
-            state = reSourceManager->GetStringById(info.resId, rPath);
+            state = resourceManager->GetStringById(info.resId, rPath);
+            TEXT_LOGI("prepareLoadFontAsyncPromise resourceManager->GetStringById :%{public}s", rPath.c_str());
             if (state >= GLOBAL_ERROR || state < 0) {
                 return false;
             }
@@ -295,18 +324,20 @@ bool JsFontCollection::ParseResourcePath(const std::string familyName, ResourceI
     } else if (info.type == static_cast<int32_t>(ResourceType::RAWFILE)) {
         size_t dataLen = 0;
         std::unique_ptr<uint8_t[]> rawData;
-        state = reSourceManager->GetRawFileFromHap(info.params[0], dataLen, rawData);
+        state = resourceManager->GetRawFileFromHap(info.params[0], dataLen, rawData);
         if (state >= GLOBAL_ERROR || state < 0) {
             return false;
         }
         if (!fontcollection_->LoadFont(familyName.c_str(), rawData.get(), dataLen)) {
             return false;
         }
+        TEXT_LOGI("prepareLoadFontAsyncPromise succeeded for rawfile");
         return true;
     } else {
         TEXT_LOGE("incorrect path type of font file");
         return false;
     }
+    TEXT_LOGI("prepareLoadFontAsyncPromise succeeded");
     return true;
 }
 
@@ -363,10 +394,10 @@ bool JsFontCollection::GetFontFileProperties(const std::string path, const std::
 
 napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
 {
-    size_t argc = ARGC_TWO;
-    napi_value argv[ARGC_TWO] = {nullptr};
+    size_t argc = 3;
+    napi_value argv[3] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
-        argc < ARGC_TWO) {
+        argc < 3) {
         return nullptr;
     }
     std::string familyName;
@@ -383,7 +414,7 @@ napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
     }
 
     ResourceInfo resourceInfo;
-    if (!ParseResourceType(env, argv[1], resourceInfo) || !ParseResourcePath(familyName, resourceInfo)) {
+    if (!ParseResourceType(env, argv[1], resourceInfo) || !ParseResourcePath(familyName, resourceInfo, env, argv[2])) {
         return nullptr;
     }
 
@@ -439,7 +470,7 @@ napi_value JsFontCollection::OnLoadFontAsync(napi_env env, napi_callback_info in
 
     context->GetCbInfo(env, info, inputParser);
 
-    auto executor = [context]() {
+    auto executor = [context, env]() {
         TEXT_ERROR_CHECK(context != nullptr, return, "OnLoadFontAsync executor error, context is nullptr");
 
         auto* fontCollection = reinterpret_cast<JsFontCollection*>(context->native);
@@ -457,8 +488,8 @@ napi_value JsFontCollection::OnLoadFontAsync(napi_env env, napi_callback_info in
                 context->familyName), napi_invalid_arg, "OnLoadFontAsync executor GetFontFileProperties failed",
                 TextErrorCode::ERROR_INVALID_PARAM);
         } else {
-            NAPI_CHECK_ARGS_RETURN_VOID(context, fontCollection->ParseResourcePath(context->familyName, context->info),
-                napi_invalid_arg, "OnLoadFontAsync executor load font failed, path is invalid",
+            NAPI_CHECK_ARGS_RETURN_VOID(context, fontCollection->ParseResourcePath(context->familyName,
+                context->info, env, nullptr), napi_invalid_arg, "OnLoadFontAsync executor load font failed, path is invalid",
                 TextErrorCode::ERROR_INVALID_PARAM);
         }
     };

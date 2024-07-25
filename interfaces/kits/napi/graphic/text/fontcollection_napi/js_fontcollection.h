@@ -42,9 +42,8 @@ private:
     static thread_local napi_ref constructor_;
     napi_value OnLoadFont(napi_env env, napi_callback_info info);
     napi_value OnClearCaches(napi_env env, napi_callback_info info);
-    std::unique_ptr<Global::Resource::ResourceManager> GetResourManager(const std::string& moudleName);
     bool SpiltAbsoluteFontPath(std::string& absolutePath);
-    bool ParseResourcePath(const std::string familyName, ResourceInfo& info);
+    bool ParseResourcePath(const std::string familyName, ResourceInfo& info, napi_env env, napi_value value);
     bool ParseResourceType(napi_env env, napi_value value, ResourceInfo& info);
     bool GetResourcePartData(napi_env env, ResourceInfo& info, napi_value paramsNApi,
         napi_value bundleNameNApi, napi_value moduleNameNApi);

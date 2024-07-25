@@ -18,6 +18,8 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cerrno>
@@ -172,6 +174,13 @@ int32_t LocalSocketPair::ReceiveData(void *vaddr, size_t size)
         return -1;
     }
     return length;
+}
+
+int32_t LocalSocketPair::GetChannelDataBytes()
+{
+    int bytes = 0;
+    ioctl(receiveFd_, FIONREAD, &bytes);
+    return bytes;
 }
 
 // internal interface

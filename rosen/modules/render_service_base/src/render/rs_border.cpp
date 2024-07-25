@@ -23,15 +23,6 @@ namespace Rosen {
 namespace {
 constexpr int PARAM_DOUBLE = 2;
 constexpr int32_t DASHED_LINE_LENGTH = 3;
-// constexpr float SWEEP_ANGLE = 60.0f;
-// constexpr float TOP_END = 270.0f;
-// constexpr float TOP_START = TOP_END - SWEEP_ANGLE;
-// constexpr float RIGHT_END = 0.0f;
-// constexpr float RIGHT_START = 360.0f - SWEEP_ANGLE;
-// constexpr float BOTTOM_END = 90.0f;
-// constexpr float BOTTOM_START = BOTTOM_END - SWEEP_ANGLE;
-// constexpr float LEFT_END = 180.0f;
-// constexpr float LEFT_START = LEFT_END - SWEEP_ANGLE;
 } // namespace
 
 // defines short names for widths/half widths of each borders
@@ -450,10 +441,6 @@ void RSBorder::DrawTopBorder(Drawing::Canvas& canvas, Drawing::Pen& pen, const D
         offsetX + width - RIGHTW / 2.f - endArcWidth, y, offsetX + width - RIGHTW / 2.f, y + endArcHeight);
     // create drawing path from left top corner to right top corner
     Drawing::Path topBorder;
-    // topBorder.MoveTo(std::min(x, offsetX + tlRad.GetX() / 2.f), y + tlRad.GetY());
-    // topBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), TOP_START, SWEEP_ANGLE);
-    // topBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), TOP_END, SWEEP_ANGLE);
-    // topBorder.LineTo(std::max(offsetX + width - RIGHTW2, offsetX + width - trRad.GetX() / 2.f), y + trRad.GetY());3
     topBorder.AddRoundRect(rrect);
     canvas.AttachPen(pen);
     if (GetStyle(RSBorder::TOP) == BorderStyle::SOLID) {
@@ -516,11 +503,6 @@ void RSBorder::DrawRightBorder(Drawing::Canvas& canvas, Drawing::Pen& pen, const
     auto re = Drawing::Rect(x - endArcWidth, height - BOTTOMW2 - endArcHeight, x, height - BOTTOMW2);
     // create drawing path from right top corner to right bottom corner
     Drawing::Path rightBorder;
-    // rightBorder.MoveTo(x - trRad.GetX(), std::min(y, offsetY + trRad.GetY() / 2.f));
-    // rightBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), RIGHT_START, SWEEP_ANGLE);
-    // rightBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), RIGHT_END, SWEEP_ANGLE);
-    // rightBorder.LineTo(
-    //     x - brRad.GetX(), std::max(offsetY + height - BOTTOMW2, offsetY + height - brRad.GetY() / 2.f));
     rightBorder.AddRoundRect(rrect);
     canvas.AttachPen(pen);
     if (GetStyle(RSBorder::RIGHT) == BorderStyle::SOLID) {
@@ -582,10 +564,6 @@ void RSBorder::DrawBottomBorder(Drawing::Canvas& canvas, Drawing::Pen& pen, cons
     auto re = Drawing::Rect(x, y - endArcHeight, x + endArcWidth, y);
     // create drawing path from right bottom corner to left bottom corner
     Drawing::Path bottomBorder;
-    // bottomBorder.MoveTo(std::max(offsetX + width - RIGHTW2, offsetY + width - brRad.GetX() / 2.f), y - brRad.GetY());
-    // bottomBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), BOTTOM_START, SWEEP_ANGLE);
-    // bottomBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), BOTTOM_END, SWEEP_ANGLE);
-    // bottomBorder.LineTo(std::min(x, offsetX + blRad.GetX() / 2.f), y - blRad.GetY());
     bottomBorder.AddRoundRect(rrect);
     canvas.AttachPen(pen);
     if (GetStyle(RSBorder::BOTTOM) == BorderStyle::SOLID) {
@@ -647,10 +625,6 @@ void RSBorder::DrawLeftBorder(Drawing::Canvas& canvas, Drawing::Pen& pen, const 
     auto re = Drawing::Rect(x, y, x + endArcWidth, y + endArcHeight);
     // create drawing path from left bottom corner to left top corner
     Drawing::Path leftBorder;
-    // leftBorder.MoveTo(x + blRad.GetX(), std::max(offsetY + height - BOTTOMW2, offsetY + height - blRad.GetY() / 2.f));
-    // leftBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), LEFT_START, SWEEP_ANGLE);
-    // leftBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), LEFT_END, SWEEP_ANGLE);
-    // leftBorder.LineTo(x + tlRad.GetX(), std::min(y, offsetY + tlRad.GetY() / 2.f));
     leftBorder.AddRoundRect(rrect);
     canvas.AttachPen(pen);
     if (GetStyle(RSBorder::LEFT) == BorderStyle::SOLID) {

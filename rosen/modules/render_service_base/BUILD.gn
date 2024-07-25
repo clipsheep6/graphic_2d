@@ -43,7 +43,7 @@ if (!is_mingw && !is_mac && !is_cross_platform) {
   ohos_static_library("particle_cxx_cppdeps") {
     branch_protector_ret = "pac_ret"
     sanitize = {
-      cfi = false
+      cfi = true
       cfi_cross_dso = false
       debug = false
       blocklist = "./rs_base_blocklist.txt"

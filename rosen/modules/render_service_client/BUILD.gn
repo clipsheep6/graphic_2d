@@ -295,7 +295,7 @@ config("render_service_client_link_config") {
 ohos_shared_library("librender_service_client") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    cfi = false
+    cfi = true
     cfi_cross_dso = false
     debug = false
     blocklist = "./rs_client_blocklist.txt"

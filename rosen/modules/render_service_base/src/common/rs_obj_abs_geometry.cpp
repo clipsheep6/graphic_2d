@@ -177,7 +177,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
     // Persp
     if (!ROSEN_EQ(trans_.perspX_, 0.f, EPSILON) || !ROSEN_EQ(trans_.perspY_, 0.f, EPSILON)) {
         matrix_.PreTranslate(trans_.pivotX_ * width_, trans_.pivotY_ * height_);
-        ApplyPerspToMatrix(trans_.value(), matrix_, false);
+        ApplyPerspToMatrix(trans_, matrix_, false);
         matrix_.PreTranslate(-trans_.pivotX_ * width_, -trans_.pivotY_ * height_);
     }
     // rotation

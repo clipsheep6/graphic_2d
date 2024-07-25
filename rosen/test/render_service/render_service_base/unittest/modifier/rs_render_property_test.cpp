@@ -299,9 +299,11 @@ HWTEST_F(RSRenderPropertyTest, IsNearEqual, TestSize.Level1)
     EXPECT_TRUE(propertyMatrix3f.IsNearEqual(propMatrix3f, threshold));
     auto propColor = std::make_shared<RSRenderAnimatableProperty<Color>>(Color(0x1010101));
     EXPECT_TRUE(propertyColor.IsNearEqual(propColor, threshold));
-    auto propFilter = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(RSFilter::CreateLightUpEffectFilter(15.9f));
+    std::shared_ptr<RSFilter> rsFilter2 = RSFilter::CreateLightUpEffectFilter(15.9f);
+    auto propFilter = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(rsFilter2);
     EXPECT_TRUE(propertyRSFilter.IsNearEqual(propFilter, threshold));
-    auto propVector4Color = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(Vector4<Color>(Color(0x1010101), Color(0x1010101), Color(0x1010101), Color(0x1010101)));
+    Vector4<Color> vect4Color(Color(0x1010101), Color(0x1010101), Color(0x1010101), Color(0x1010101));
+    auto propVector4Color = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(vect4Color);
     EXPECT_TRUE(propertyVector4Color.IsNearEqual(propVector4Color, threshold));
     auto propRRect = std::make_shared<RSRenderAnimatableProperty<RRect>>(RRect(RectF(), 1.f, 1.f));
     ASSERT_TRUE(propertyRRect.IsNearEqual(propRRect, threshold));
@@ -413,9 +415,11 @@ HWTEST_F(RSRenderPropertyTest, IsNearEqual002, TestSize.Level1)
     EXPECT_TRUE(property5.IsNearEqual(prop5, zeroThreshold));
     auto prop6 = std::make_shared<RSRenderAnimatableProperty<Color>>(Color());
     EXPECT_TRUE(property6.IsNearEqual(prop6, zeroThreshold));
-    auto prop7 = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(RSFilter::CreateLightUpEffectFilter(15.f));
+    std::shared_ptr<RSFilter> rsFilter2 = RSFilter::CreateLightUpEffectFilter(15.f);
+    auto prop7 = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(rsFilter2);
     EXPECT_TRUE(property7.IsNearEqual(prop7, zeroThreshold));
-    auto prop8 = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(Vector4<Color>(Color(), Color(), Color(), Color()));
+    Vector4<Color> vect4Color(Color(), Color(), Color(), Color());
+    auto prop8 = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(vect4Color);
     EXPECT_TRUE(property8.IsNearEqual(prop8, zeroThreshold));
     auto prop9 = std::make_shared<RSRenderAnimatableProperty<RRect>>(RRect(RectF(), 0.f, 0.f));
     ASSERT_TRUE(property9.IsNearEqual(prop9, zeroThreshold));

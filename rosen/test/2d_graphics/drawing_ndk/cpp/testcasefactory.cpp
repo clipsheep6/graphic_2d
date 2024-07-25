@@ -252,7 +252,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase>
         { return std::make_shared<CanvasClipPathLinePen>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_drawclippathlinebrush",
-        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipPathLineBrush>(TestBase::DRAW_STYLE_COMPLEX);
+        []() -> std::shared_ptr<TestBase>
+        { return std::make_shared<CanvasClipPathLineBrush>(TestBase::DRAW_STYLE_COMPLEX);
         } },
     { "canvas_drawclippathcurve",
         []() -> std::shared_ptr<TestBase>

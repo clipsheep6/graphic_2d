@@ -41,6 +41,7 @@
 int g_five = 5;
 int g_fourteen = 14;
 int g_fivee = 500;
+int g_ten = 10;
 
 void CanvasDrawTextBlobMaxOnTestPerformance(
     OH_Drawing_Canvas* canvas, DrawingType drawingType, int32_t testCount)
@@ -106,7 +107,7 @@ void CanvasDrawTextBlobLongOnTestPerformance(
     OH_Drawing_FontSetTextSize(font, g_fourteen);
     OH_Drawing_TextBlob* blob = OH_Drawing_TextBlobCreateFromText(text.c_str(), len, font, TEXT_ENCODING_UTF8);
     for (int i = 0; i < testCount; i++) {
-        OH_Drawing_CanvasDrawTextBlob(canvas, blob, g_five, i * 10);
+        OH_Drawing_CanvasDrawTextBlob(canvas, blob, g_five, i * g_ten);
     }
 
     DESTROY_EFFECT;

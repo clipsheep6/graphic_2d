@@ -39,6 +39,7 @@
 int g_size = -500;
 int g_ten = 10;
 int g_fifty = 50;
+int g_thirty = 30;
 OH_Drawing_Image* precondItion()
 {
     // 初始化位图对象
@@ -109,7 +110,7 @@ void CanvasDrawImageRectTest(OH_Drawing_Canvas* canvas, DrawingType drawingType,
     OH_Drawing_Rect* dstR = OH_Drawing_RectCreate(0, 100, 100, 100); // image显示在这个区域上
     for (size_t i = 0; i < testCount; ++i) {
         if ((i + 1) % g_fifty == 0) {
-            OH_Drawing_CanvasTranslate(canvas, g_size, 30);
+            OH_Drawing_CanvasTranslate(canvas, g_size, g_thirty);
         }
         OH_Drawing_CanvasDrawImageRect(canvas, image, dst, option);
         OH_Drawing_CanvasTranslate(canvas, g_ten, 0);

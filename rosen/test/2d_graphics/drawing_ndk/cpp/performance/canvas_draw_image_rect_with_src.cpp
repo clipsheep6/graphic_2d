@@ -40,6 +40,7 @@ int g_two = 2;
 int g_three = 3;
 int g_zero = 4;
 int g_fivee = -500;
+int g_thirty = 30;
 // OH_Drawing_Image *precondItions():创建了一个位图（bitmap），并在其上绘制了一个圆形，然后生成了一个图像（image）对象
 OH_Drawing_Image* precondItions()
 {
@@ -109,7 +110,7 @@ void OhCanvasDrawImageRectWithSrc::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_Rect* dst = OH_Drawing_RectCreate(0, 0, 64, 64); // 64正方形
     for (size_t i = 0; i < testCount_; ++i) {
         if ((i + 1) % g_size == 0) {
-            OH_Drawing_CanvasTranslate(canvas, g_fivee, 30);
+            OH_Drawing_CanvasTranslate(canvas, g_fivee, g_thirty);
         }
         OH_Drawing_Rect* srcR = arrayRect[i % 4];
         OH_Drawing_CanvasDrawImageRect(canvas, image, dst, option);

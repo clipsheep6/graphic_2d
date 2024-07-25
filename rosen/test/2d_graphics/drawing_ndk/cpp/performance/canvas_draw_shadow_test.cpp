@@ -42,6 +42,7 @@ int g_size = 4;
 int g_two = 2;
 int g_size = 1000;
 int g_hundred = 100;
+int g_eight = 180;
 void CanvasDrawShadowLineOnTestPerformance(
     OH_Drawing_Canvas* canvas, DrawingType drawingType, int32_t testCount)
 {
@@ -131,7 +132,7 @@ void CanvasDrawShadowCurveOnTestPerformance(
         OH_Drawing_Path* path = OH_Drawing_PathCreate();
         for (int i = 0; i < g_hundred; i++) {
             OH_Drawing_PathMoveTo(path, (i + 1) * g_size, 1 + j * g_two);
-            OH_Drawing_PathArcTo(path, i * g_size, j * g_two, (i + 1) * g_size, (j + 1) * g_two, 0, 180);
+            OH_Drawing_PathArcTo(path, i * g_size, j * g_two, (i + 1) * g_size, (j + 1) * g_two, 0, g_eight);
             OH_Drawing_PathQuadTo(path, g_two + i * g_size, j * g_two, (i + 1) * g_size, 1 + j * g_two);
         }
         OH_Drawing_CanvasDrawPath(canvas, path);

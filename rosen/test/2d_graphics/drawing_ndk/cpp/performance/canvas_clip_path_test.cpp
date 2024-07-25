@@ -40,6 +40,8 @@ int g_fifty = 50;
 int g_ten = 10;
 int g_two = 2;
 int g_twenty = 20;
+int g_five = 5;
+int g_eight = 180;
 void PerformanceCanvasClipPathLine(
     OH_Drawing_Canvas* canvas, DrawingType drawingType, int32_t testCount)
 {
@@ -106,9 +108,9 @@ void PerformanceCanvasClipPathCurve(
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     for (int j = 0; j < g_fifty; j++) {
         for (int i = 0; i < g_fifty; i++) {
-            OH_Drawing_PathMoveTo(path, (i + 1) * g_twenty, 5 + j * g_ten);
-            OH_Drawing_PathArcTo(path, i * g_twenty, j * g_ten, (i + 1) * g_twenty, (j + 1) * g_ten, 0, 180);
-            OH_Drawing_PathQuadTo(path, g_ten + i * g_twenty, j * g_ten, (i + 1) * g_twenty, 5 + j * g_ten);
+            OH_Drawing_PathMoveTo(path, (i + 1) * g_twenty, g_five + j * g_ten);
+            OH_Drawing_PathArcTo(path, i * g_twenty, j * g_ten, (i + 1) * g_twenty, (j + 1) * g_ten, 0, g_eight);
+            OH_Drawing_PathQuadTo(path, g_ten + i * g_twenty, j * g_ten, (i + 1) * g_twenty, g_five + j * g_ten);
         }
         OH_Drawing_CanvasDrawPath(canvas, path);
     }

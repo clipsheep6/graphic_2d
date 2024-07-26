@@ -21,6 +21,8 @@
 #include <hitrace_meter.h>
 #include "event_handler.h"
 #include "graphic_common.h"
+#include "res_sched_client.h"
+#include "res_type.h"
 #include "rs_frame_report_ext.h"
 #include "vsync_log.h"
 #include "sandbox_utils.h"
@@ -141,11 +143,27 @@ VsyncError VSyncReceiver::Init()
         std::shared_ptr<AppExecFwk::EventRunner> runner = AppExecFwk::EventRunner::Create(true);
         looper_ = std::make_shared<AppExecFwk::EventHandler>(runner);
         runner->Run();
+        looper_->PostTask([this] { this->ThreadCreateNotify(); });
     }
 
     looper_->AddFileDescriptorListener(fd_, AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_, "vSyncTask");
     init_ = true;
     return VSYNC_ERROR_OK;
+}
+
+void VSyncReceiver::ThreadCreateNotify()
+{
+    int32_t pid = getprocpid();
+    int32_t uid = getuid();
+    int32_t tid = static_cast<int32_t>(getproctid());
+    VLOGI("vsync thread pid=%{public}d, tid=%{public}d, uid=%{public}d.", pid, tid, uid);
+
+    std::unordered_map<std::string, std::string> mapPayload;
+    mapPayload["pid"] = std::to_string(pid);
+    mapPayload["uid"] = std::to_string(uid);
+    mapPayload["tid"] = std::to_string(tid);
+    OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(
+        ResourceSchedule::ResType::RES_TYPE_REPORT_VSYNC_TID, tid, mapPayload);
 }
 
 VSyncReceiver::~VSyncReceiver()
@@ -274,6 +292,16 @@ VsyncError VSyncReceiver::SetUiDvsyncSwitch(bool dvsyncSwitch)
         return VSYNC_ERROR_API_FAILED;
     }
     return connection_->SetUiDvsyncSwitch(dvsyncSwitch);
+}
+
+VsyncError VSyncReceiver::SetUiDvsyncConfig(int32_t bufferCount)
+{
+    std::lock_guard<std::mutex> locker(initMutex_);
+    if (!init_) {
+        return VSYNC_ERROR_API_FAILED;
+    }
+    VLOGI("%{public}s bufferCount:%{public}d", __func__, bufferCount);
+    return connection_->SetUiDvsyncConfig(bufferCount);
 }
 } // namespace Rosen
 } // namespace OHOS

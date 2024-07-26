@@ -34,6 +34,7 @@
 #include "common/rs_common_def.h"
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
@@ -169,9 +170,6 @@ public:
 
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
-
-    bool WaitUntilDisplayNodeBufferReleased(RSDisplayRenderNode& node);
-    void NotifyDisplayNodeBufferReleased();
 
     bool WaitHardwareThreadTaskExecute();
     void NotifyHardwareThreadCanExecuteTask();
@@ -524,11 +522,6 @@ private:
     mutable std::mutex uniRenderMutex_;
     bool uniRenderFinished_ = false;
     std::condition_variable uniRenderCond_;
-    // used for blocking mainThread before displayNode has no freed buffer to request
-    mutable std::mutex displayNodeBufferReleasedMutex_;
-    bool displayNodeBufferReleased_ = false;
-    // used for stalling mainThread before displayNode has no freed buffer to request
-    std::condition_variable displayNodeBufferReleasedCond_;
 
     bool clearMemoryFinished_ = true;
     bool clearMemDeeply_ = false;
@@ -587,6 +580,7 @@ private:
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> selfDrawingNodes_;
     bool isHardwareForcedDisabled_ = false; // if app node has shadow or filter, disable hardware composer for all
+    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> hardwareEnabledDrwawables_;
 
     // used for watermark
     std::mutex watermarkMutex_;
@@ -649,6 +643,13 @@ private:
 
     bool forceUIFirstChanged_ = false;
 
+    // uiextension
+    std::mutex uiExtensionMutex_;
+    UIExtensionCallbackData uiExtensionCallbackData_;
+    bool lastFrameUIExtensionDataEmpty_ = false;
+    // <pid, <uid, callback>>
+    std::map<pid_t, std::pair<uint64_t, sptr<RSIUIExtensionCallback>>> uiExtensionListenners_ = {};
+
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
@@ -674,13 +675,6 @@ private:
     bool isFirstFrameOfPartialRender_ = false;
     bool isPartialRenderEnabledOfLastFrame_ = false;
     bool isRegionDebugEnabledOfLastFrame_ = false;
-
-    // uiextension
-    std::mutex uiExtensionMutex_;
-    UIExtensionCallbackData uiExtensionCallbackData_;
-    bool lastFrameUIExtensionDataEmpty_ = false;
-    // <pid, <uid, callback>>
-    std::map<pid_t, std::pair<uint64_t, sptr<RSIUIExtensionCallback>>> uiExtensionListenners_ = {};
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

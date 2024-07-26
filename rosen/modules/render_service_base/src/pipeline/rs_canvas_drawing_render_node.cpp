@@ -486,7 +486,9 @@ void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
                 continue;
             }
             drawCmdLists_[type].emplace_back(cmd);
-            SetNeedProcess(true);
+            if (cmd->GetOpItemSize() > 0) {
+                SetNeedProcess(true);
+            }
         }
     }
 }
@@ -516,21 +518,12 @@ const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDraw
 
 void RSCanvasDrawingRenderNode::ClearResource()
 {
-    std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
-    if (drawCmdListsVisited_) {
+    if (renderDrawable_ && renderDrawable_->IsDrawCmdListsVisited()) {
+        std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
         drawCmdLists_.clear();
-        drawCmdListsVisited_ = false;
+        renderDrawable_->SetDrawCmdListsVisited(false);
     }
 }
 
-bool RSCanvasDrawingRenderNode::IsDrawCmdListsVisited() const
-{
-    return drawCmdListsVisited_;
-}
-
-void RSCanvasDrawingRenderNode::SetDrawCmdListsVisited(bool flag)
-{
-    drawCmdListsVisited_ = flag;
-}
 } // namespace Rosen
 } // namespace OHOS

@@ -47,15 +47,13 @@ RSRenderNodeDrawable::RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&&
     : RSRenderNodeDrawableAdapter(std::move(node))
 {
     auto task = [this] { this->RSRenderNodeDrawable::ClearCachedSurface(); };
-    std::const_pointer_cast<RSRenderNode>(node)->RegisterClearSurfaceFunc(task);
+    RegisterClearSurfaceFunc(task);
 }
 
 RSRenderNodeDrawable::~RSRenderNodeDrawable()
 {
     ClearCachedSurface();
-    if (auto renderNode = renderNode_.lock()) {
-        std::const_pointer_cast<RSRenderNode>(renderNode)->ResetClearSurfaeFunc();
-    }
+    ResetClearSurfaceFunc();
 }
 
 RSRenderNodeDrawable::Ptr RSRenderNodeDrawable::OnGenerate(std::shared_ptr<const RSRenderNode> node)
@@ -190,9 +188,10 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
     if (needUpdateCache) {
         filterRects_.clear();
     }
+    bool isForegroundFilterCache = params.GetForegroundFilterCache() != nullptr;
     // in case of no filter
-    if (needUpdateCache && (!hasFilter || params.GetRSFreezeFlag())) {
-        RS_TRACE_NAME_FMT("UpdateCacheSurface id:%llu", nodeId_);
+    if (needUpdateCache && (!hasFilter || isForegroundFilterCache || params.GetRSFreezeFlag())) {
+        RS_TRACE_NAME_FMT("UpdateCacheSurface id:%llu, isForegroundFilter:%d", nodeId_, isForegroundFilterCache);
         UpdateCacheSurface(canvas, params);
         return;
     }
@@ -253,10 +252,9 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const 
     }
 
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
-    if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect()) {
+    if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect() &&
+        !HasFilterOrEffect()) {
         RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", nodeId_);
-        Drawing::AutoCanvasRestore arc(canvas, true);
-        DrawBackground(canvas, params.GetBounds());
         return;
     }
 

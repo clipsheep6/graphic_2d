@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 #include "include/command/rs_node_command.h"
+#include "params/rs_render_params.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -281,24 +282,6 @@ HWTEST_F(RSNodeCommandTest, SetOutOfParent001, TestSize.Level1)
 
     nodeId = 1;
     RSNodeCommandHelper::SetOutOfParent(context, nodeId, outOfParent);
-    EXPECT_EQ(1, nodeId);
-}
-
-/**
- * @tc.name: SetTakeSurfaceForUIFlag001
- * @tc.desc: test results of SetTakeSurfaceForUIFlag
- * @tc.type: FUNC
- * @tc.require: issueI9P2KH
- */
-HWTEST_F(RSNodeCommandTest, SetTakeSurfaceForUIFlag001, TestSize.Level1)
-{
-    RSContext context;
-    NodeId nodeId = 0;
-    RSNodeCommandHelper::SetTakeSurfaceForUIFlag(context, nodeId);
-    EXPECT_EQ(0, nodeId);
-
-    nodeId = 1;
-    RSNodeCommandHelper::SetTakeSurfaceForUIFlag(context, nodeId);
     EXPECT_EQ(1, nodeId);
 }
 

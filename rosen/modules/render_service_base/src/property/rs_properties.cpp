@@ -1626,11 +1626,11 @@ std::string RSProperties::GetFgBrightnessDescription() const
     }
     std::string description =
         "ForegroundBrightness, cubicCoeff: " + std::to_string(fgBrightnessParams_->rates_.x_) +
-        " quadCoeff: " + std::to_string(fgBrightnessParams_->rates_.y_) +
-        " rate: " + std::to_string(fgBrightnessParams_->rates_.z_) +
-        " lightUpDegree: " + std::to_string(fgBrightnessParams_->rates_.w_) +
-        " saturation: " + std::to_string(fgBrightnessParams_->saturation_) +
-        " fgBrightnessFract: " + std::to_string(fgBrightnessParams_->fraction_);
+        ", quadCoeff: " + std::to_string(fgBrightnessParams_->rates_.y_) +
+        ", rate: " + std::to_string(fgBrightnessParams_->rates_.z_) +
+        ", lightUpDegree: " + std::to_string(fgBrightnessParams_->rates_.w_) +
+        ", saturation: " + std::to_string(fgBrightnessParams_->saturation_) +
+        ", fgBrightnessFract: " + std::to_string(fgBrightnessParams_->fraction_);
     return description;
 }
 
@@ -1641,11 +1641,11 @@ std::string RSProperties::GetBgBrightnessDescription() const
     }
     std::string description =
         "BackgroundBrightnessInternal, cubicCoeff: " + std::to_string(bgBrightnessParams_->rates_.x_) +
-        " quadCoeff: " + std::to_string(bgBrightnessParams_->rates_.y_) +
-        " rate: " + std::to_string(bgBrightnessParams_->rates_.z_) +
-        " lightUpDegree: " + std::to_string(bgBrightnessParams_->rates_.w_) +
-        " saturation: " + std::to_string(bgBrightnessParams_->saturation_) +
-        " fgBrightnessFract: " + std::to_string(bgBrightnessParams_->fraction_);
+        ", quadCoeff: " + std::to_string(bgBrightnessParams_->rates_.y_) +
+        ", rate: " + std::to_string(bgBrightnessParams_->rates_.z_) +
+        ", lightUpDegree: " + std::to_string(bgBrightnessParams_->rates_.w_) +
+        ", saturation: " + std::to_string(bgBrightnessParams_->saturation_) +
+        ", fgBrightnessFract: " + std::to_string(bgBrightnessParams_->fraction_);
     return description;
 }
 
@@ -2199,9 +2199,9 @@ void RSProperties::ResetDirty()
 
 void RSProperties::RecordCurDirtyStatus()
 {
-    curIsDirty_ = false;
-    curGeoDirty_ = false;
-    curContentDirty_ = false;
+    curIsDirty_ = isDirty_;
+    curGeoDirty_ = geoDirty_;
+    curContentDirty_ = contentDirty_;
 }
 
 void RSProperties::AccmulateDirtyStatus()
@@ -2219,6 +2219,11 @@ bool RSProperties::IsDirty() const
 bool RSProperties::IsGeoDirty() const
 {
     return geoDirty_;
+}
+
+bool RSProperties::IsCurGeoDirty() const
+{
+    return curGeoDirty_;
 }
 
 bool RSProperties::IsContentDirty() const
@@ -3540,7 +3545,7 @@ std::string RSProperties::Dump() const
     }
 
     // Pivot
-    std::unique_ptr<Transform> defaultTrans = std::make_unique<Transform>();
+    std::unique_ptr<RSTransform> defaultTrans = std::make_unique<RSTransform>();
     ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
     if (ret != EOK) {
         return "Failed to memset_s for Pivot, ret=" + std::to_string(ret);

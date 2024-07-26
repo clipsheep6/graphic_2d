@@ -123,6 +123,7 @@ public:
     VSyncReceiver &operator=(const VSyncReceiver &) = delete;
 
     virtual VsyncError Init();
+    void ThreadCreateNotify();
     virtual VsyncError RequestNextVSync(FrameCallback callback);
     virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
     virtual VsyncError GetVSyncPeriod(int64_t &period);
@@ -139,6 +140,7 @@ public:
     virtual bool IsRequestedNextVSync();
     virtual VsyncError SetVsyncCallBackForEveryFrame(FrameCallback callback, bool isOpen);
     virtual VsyncError SetUiDvsyncSwitch(bool dvsyncSwitch);
+    virtual VsyncError SetUiDvsyncConfig(int32_t bufferCount);
 private:
     VsyncError Destroy();
     sptr<IVSyncConnection> connection_;

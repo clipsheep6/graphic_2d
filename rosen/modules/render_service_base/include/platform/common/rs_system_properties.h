@@ -139,6 +139,7 @@ public:
     static PartialRenderType GetPartialRenderEnabled();
     static PartialRenderType GetUniPartialRenderEnabled();
     static float GetClipRectThreshold();
+    static bool GetAllSurfaceVisibleDebugEnabled();
     static bool GetVirtualDirtyDebugEnabled();
     static bool GetVirtualDirtyEnabled();
     static bool GetOcclusionEnabled();
@@ -200,6 +201,7 @@ public:
     static bool GetBlurExtraFilterEnabled();
     static bool GetPurgeBetweenFramesEnabled();
     static bool GetPreAllocateTextureBetweenFramesEnabled();
+    static bool GetAsyncFreeVMAMemoryBetweenFramesEnabled();
 
     static bool GetAnimationCacheEnabled();
 
@@ -236,6 +238,7 @@ public:
     static bool GetEffectMergeEnabled();
     static SubTreePrepareCheckType GetSubTreePrepareCheckType();
     static bool GetHDRImageEnable();
+    static bool GetLayerCursorEnable();
     static bool IsForceClient();
     static bool GetUnmarshParallelFlag();
     static uint32_t GetUnMarshParallelSize();

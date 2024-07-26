@@ -223,6 +223,14 @@ float RSSystemProperties::GetClipRectThreshold()
     return threshold == nullptr ? std::atof(DEFAULT_CLIP_RECT_THRESHOLD) : std::atof(threshold);
 }
 
+bool RSSystemProperties::GetAllSurfaceVisibleDebugEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.allsurfacevisibledebug.enabled", "0");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 0) != 0;
+}
+
 bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.virtualdirtydebug.enabled", "0");
@@ -265,7 +273,7 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
 bool RSSystemProperties::GetHardwareComposerEnabledForMirrorMode()
 {
     static bool hardwareComposerMirrorEnabled =
-        !IsFoldScreenFlag() && system::GetParameter("persist.rosen.hardwarecomposer.mirror.enabled", "1") != "0";
+        system::GetParameter("persist.rosen.hardwarecomposer.mirror.enabled", "0") != "0";
     return hardwareComposerMirrorEnabled;
 }
 
@@ -903,6 +911,14 @@ bool RSSystemProperties::GetPreAllocateTextureBetweenFramesEnabled()
     return PreAllocateTextureBetweenFramesEnabled;
 }
 
+bool RSSystemProperties::GetAsyncFreeVMAMemoryBetweenFramesEnabled()
+{
+    static bool AsyncFreeVMAMemoryBetweenFramesEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.mem.async_free_between_frames_enabled", "1").c_str()) !=
+            0);
+    return AsyncFreeVMAMemoryBetweenFramesEnabled;
+}
+
 const DdgrOpincType RSSystemProperties::ddgrOpincType_ =
     static_cast<DdgrOpincType>(std::atoi((system::GetParameter("persist.ddgr.opinctype", "2")).c_str()));
 const DdgrOpincDfxType RSSystemProperties::ddgrOpincDfxType_ =
@@ -993,6 +1009,14 @@ SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
     int changed = 0;
     const char *type = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<SubTreePrepareCheckType>(ConvertToInt(type, 2)); // Default value 2
+}
+
+bool RSSystemProperties::GetLayerCursorEnable()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.layercursor.enable", "0");
+    int changed = 0;
+    const char *num = CachedParameterGetChanged(g_Handle, &changed);
+    return (ConvertToInt(num, 0) != 0) && IsPcType();
 }
 
 bool RSSystemProperties::GetHDRImageEnable()

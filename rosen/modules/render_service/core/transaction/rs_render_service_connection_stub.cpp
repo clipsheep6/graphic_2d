@@ -124,7 +124,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         return ERR_INVALID_STATE;
     }
 #endif
-    static const std::set<uint32_t> descriptorCheckList = {
+    static constexpr std::array descriptorCheckList = {
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_FOCUS_APP_INFO),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_DEFAULT_SCREEN_ID),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_SCREEN_ID),
@@ -225,7 +225,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_CAST_SCREEN_ENABLE_SKIP_WINDOW),
         static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_UIEXTENSION_CALLBACK)
     };
-    if (descriptorCheckList.find(code) != descriptorCheckList.cend()) {
+    if (std::find(std::cbegin(descriptorCheckList), std::cend(descriptorCheckList), code) !=
+        std::cend(descriptorCheckList)) {
         auto token = data.ReadInterfaceToken();
         if (token != RSIRenderServiceConnection::GetDescriptor()) {
             if (code == static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_PIXEL_MAP_FROM_SURFACE)) {
@@ -425,6 +426,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_POINTER_COLOR_INVERSION_CONFIG): {
             float darkBuffer = data.ReadFloat();
             float brightBuffer = data.ReadFloat();
@@ -459,6 +461,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+#endif
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_ACTIVE_MODE): {
             ScreenId id = data.ReadUint64();
             uint32_t modeId = data.ReadUint32();
@@ -591,13 +594,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             captureConfig.captureType = static_cast<SurfaceCaptureType>(data.ReadUint8());
             captureConfig.isSync = data.ReadBool();
 
-            auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
-            if (node && node->GetType() == RSRenderNodeType::DISPLAY_NODE &&
-                !securityManager_.IsInterfaceCodeAccessible(code)) {
-                RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest no permission to access TAKE_SURFACE_CAPTURE");
-                return ERR_INVALID_STATE;
-            }
-            TakeSurfaceCapture(id, cb, captureConfig);
+            TakeSurfaceCapture(id, cb, captureConfig, securityManager_.IsInterfaceCodeAccessible(code));
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_APPLICATION_AGENT): {

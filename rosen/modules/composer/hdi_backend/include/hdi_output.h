@@ -35,6 +35,7 @@ static constexpr uint32_t LAYER_COMPOSITION_CAPACITY_INVALID = 0;
 
 // dump layer
 struct LayerDumpInfo {
+    uint64_t nodeId;
     uint64_t surfaceId;
     LayerPtr layer;
 };
@@ -121,6 +122,7 @@ private:
     std::vector<sptr<SurfaceBuffer> > bufferCache_;
     uint32_t bufferCacheCountMax_ = 0;
     mutable std::mutex layerMutex_;
+    mutable std::mutex surfaceIdMutex_;
 
     std::vector<uint32_t> layersId_;
     std::vector<sptr<SyncFence>> fences_;
@@ -141,6 +143,8 @@ private:
 
     // DISPLAY ENGINE
     bool CheckIfDoArsrPre(const LayerInfoPtr &layerInfo);
+
+    void ClearBufferCache();
 };
 } // namespace Rosen
 } // namespace OHOS

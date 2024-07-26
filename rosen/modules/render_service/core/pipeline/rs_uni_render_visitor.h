@@ -206,7 +206,6 @@ private:
     void DrawCacheRegionForDFX(std::map<NodeId, RectI>& cacheRects);
     void DrawHwcRegionForDFX(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& hwcNodes);
     void DrawAllSurfaceDirtyRegionForDFX(RSDisplayRenderNode& node, const Occlusion::Region& region);
-    void DrawTargetSurfaceDirtyRegionForDFX(RSDisplayRenderNode& node);
     void DrawAllSurfaceOpaqueRegionForDFX(RSDisplayRenderNode& node);
     void DrawSurfaceOpaqueRegionForDFX(RSSurfaceRenderNode& node);
     void DrawTargetSurfaceVisibleRegionForDFX(RSDisplayRenderNode& node);
@@ -273,11 +272,17 @@ private:
 
     void UpdatePrepareClip(RSRenderNode& node);
 
+    void CheckMergeDisplayDirtyByTransparent(RSSurfaceRenderNode& surfaceNode) const;
+    void CheckMergeDisplayDirtyByZorderChanged(RSSurfaceRenderNode& surfaceNode) const;
+    void CheckMergeDisplayDirtyByPosChanged(RSSurfaceRenderNode& surfaceNode) const;
+    void CheckMergeDisplayDirtyByShadowChanged(RSSurfaceRenderNode& surfaceNode) const;
+    void CheckMergeDisplayDirtyBySurfaceChanged() const;
+    void CheckMergeDisplayDirtyByAttraction(RSSurfaceRenderNode& surfaceNode) const;
     void CheckMergeSurfaceDirtysForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const;
-    void CheckMergeTransparentDirtysForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const;
+    void CheckMergeDisplayDirtyByTransparentRegions(RSSurfaceRenderNode& surfaceNode) const;
 
     bool IfSkipInCalcGlobalDirty(RSSurfaceRenderNode& surfaceNode) const;
-    void CheckMergeTransparentFilterForDisplay(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
+    void CheckMergeDisplayDirtyByTransparentFilter(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode,
         Occlusion::Region& accumulatedDirtyRegion);
     // If reusable filter cache covers whole screen, mark lower layer to skip process
     void CheckAndUpdateFilterCacheOcclusion(std::vector<RSBaseRenderNode::SharedPtr>& curMainAndLeashSurfaces) const;
@@ -327,13 +332,6 @@ private:
     void MergeRemovedChildDirtyRegion(RSRenderNode& node, bool needMap = false);
     // Reset curSurface info as upper surfaceParent in case surfaceParent has multi children
     void ResetCurSurfaceInfoAsUpperSurfaceParent(RSSurfaceRenderNode& node);
-
-    // set global dirty region to each surface node
-    void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
-    void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
-        const Occlusion::Region alignedDirtyRegion);
-    void AlignGlobalAndSurfaceDirtyRegions(std::shared_ptr<RSDisplayRenderNode>& node);
-
     void CheckAndSetNodeCacheType(RSRenderNode& node);
     bool UpdateCacheSurface(RSRenderNode& node);
     void DrawSpherize(RSRenderNode& node);
@@ -391,9 +389,6 @@ private:
     void PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSRenderNode>& cacheRootNode,
         std::shared_ptr<RSEffectRenderNode> effectNode);
 
-    // offscreen render related
-    void PrepareOffscreenRender(RSRenderNode& node);
-    void FinishOffscreenRender(bool isMirror = false);
     // close partialrender when perform window animation
     void ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node);
     bool DrawBlurInCache(RSRenderNode& node);
@@ -402,7 +397,6 @@ private:
     bool ForceHardwareComposer(RSSurfaceRenderNode& node) const;
     // return if srcRect is allowed by dss restriction
     bool UpdateSrcRectForHwcNode(RSSurfaceRenderNode& node, bool isProtected = false);
-    std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
 
     void SwitchColorFilterDrawing(int currentSaveCount);
     void ProcessShadowFirst(RSRenderNode& node, bool inSubThread);
@@ -410,10 +404,6 @@ private:
     void RestoreCurSurface();
     void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
     void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
-
-    // used to catch overdraw
-    void StartOverDraw();
-    void FinishOverDraw();
 
     void SendRcdMessage(RSDisplayRenderNode& node);
 
@@ -499,6 +489,7 @@ private:
     bool isTargetDirtyRegionDfxEnabled_ = false;
     bool isOpaqueRegionDfxEnabled_ = false;
     bool isVisibleRegionDfxEnabled_ = false;
+    bool isAllSurfaceVisibleDebugEnabled_ = false;
     bool isDisplayDirtyDfxEnabled_ = false;
     bool isCanvasNodeSkipDfxEnabled_ = false;
     bool isVirtualDirtyEnabled_ = false;
@@ -541,6 +532,7 @@ private:
     bool isUIFirstDebugEnable_ = false;
     bool hasSelfDraw_ = false;
     bool ancestorNodeHasAnimation_ = false;
+    bool hasAccumulatedClip_ = false;
     uint32_t threadIndex_ = UNI_MAIN_THREAD_INDEX;
     // check each surface could be reused per frame
     // currently available to uiFirst

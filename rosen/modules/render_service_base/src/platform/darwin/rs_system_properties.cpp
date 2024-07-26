@@ -97,6 +97,11 @@ float RSSystemProperties::GetClipRectThreshold()
     return 1.f;
 }
 
+bool RSSystemProperties::GetAllSurfaceVisibleDebugEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetVirtualDirtyDebugEnabled()
 {
     return {};
@@ -469,6 +474,11 @@ bool RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
 }
 
 bool RSSystemProperties::GetSkipDisplayIfScreenOffEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetLayerCursorEnable()
 {
     return false;
 }

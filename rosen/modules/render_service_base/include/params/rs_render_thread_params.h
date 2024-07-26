@@ -58,6 +58,11 @@ public:
         return isRegionDebugEnabled_;
     }
 
+    bool IsAllSurfaceVisibleDebugEnabled() const
+    {
+        return isAllSurfaceVisibleDebugEnabled_;
+    }
+
     bool IsVirtualDirtyEnabled() const
     {
         return isVirtualDirtyEnabled_;
@@ -98,10 +103,11 @@ public:
         return selfDrawingNodes_;
     }
 
-    const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetHardwareEnabledTypeNodes() const
+    const std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr>& GetHardwareEnabledTypeDrawables() const
     {
-        return hardwareEnabledTypeNodes_;
+        return hardwareEnabledTypeDrawables_;
     }
+
 
     void SetPendingScreenRefreshRate(uint32_t rate)
     {
@@ -365,6 +371,7 @@ private:
     bool isDisplayDirtyDfxEnabled_ = false;
     bool isOpaqueRegionDfxEnabled_ = false;
     bool isVisibleRegionDfxEnabled_ = false;
+    bool isAllSurfaceVisibleDebugEnabled_ = false;
     bool isOpDropped_ = false;
     bool isOcclusionEnabled_ = false;
     bool isUIFirstDebugEnable_ = false;
@@ -373,7 +380,7 @@ private:
     bool isMirrorScreenDirty_ = false;
     DirtyRegionDebugType dirtyRegionDebugType_ = DirtyRegionDebugType::DISABLED;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> selfDrawingNodes_;
-    std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledTypeNodes_;
+    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> hardwareEnabledTypeDrawables_;
     bool isForceCommitLayer_ = false;
     bool hasMirrorDisplay_ = false;
     // accumulatedDirtyRegion to decide whether to skip tranasparent nodes.

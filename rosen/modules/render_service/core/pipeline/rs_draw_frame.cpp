@@ -26,10 +26,11 @@
 #include "pipeline/rs_uni_render_thread.h"
 #include "property/rs_filter_cache_manager.h"
 #include "rs_frame_report.h"
+#include "rs_profiler.h"
 #ifdef SUBTREE_PARALLEL_ENABLE
 #include "rs_parallel_manager.h"
 #endif
-#include "rs_profiler.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -94,6 +95,11 @@ void RSDrawFrame::ReleaseSelfDrawingNodeBuffer()
 void RSDrawFrame::PostAndWait()
 {
     RS_TRACE_NAME_FMT("PostAndWait, parallel type %d", static_cast<int>(rsParallelType_));
+    RsFrameReport& fr = RsFrameReport::GetInstance();
+    if (fr.GetEnable()) {
+        fr.SendCommandsStart();
+        fr.RenderEnd();
+    }
     uint32_t renderFrameNumber = RS_PROFILER_GET_FRAME_NUMBER();
     switch (rsParallelType_) {
         case RsParallelType::RS_PARALLEL_TYPE_SYNC: { // wait until render finish in render thread
@@ -102,8 +108,8 @@ void RSDrawFrame::PostAndWait()
                 RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
-                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
                 unirenderInstance_.SetMainLooping(false);
+                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
             });
             break;
         }

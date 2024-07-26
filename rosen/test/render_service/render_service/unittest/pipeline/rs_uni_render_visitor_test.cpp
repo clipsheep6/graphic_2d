@@ -4958,4 +4958,132 @@ HWTEST_F(RSUniRenderVisitorTest, UpdateHwcNodeEnableByGlobalFilter, TestSize.Lev
     
     rsUniRenderVisitor->UpdateHwcNodeEnableByGlobalFilter(node);
 }
+/**
+ * @tc.name: CollectEffectInfo001
+ * @tc.desc: Test CollectEffectInfo with default constructed visitor
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, CollectEffectInfo001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    ASSERT_NE(rsContext, nullptr);
+    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(10, rsContext->weak_from_this());
+    ASSERT_NE(rsBaseRenderNode, nullptr);
+    rsBaseRenderNode->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->CollectEffectInfo(*rsBaseRenderNode);
+}
+
+/**
+ * @tc.name: CollectEffectInfo002
+ * @tc.desc: Test CollectEffectInfo with different type nodes
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, CollectEffectInfo002, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    ASSERT_NE(rsContext, nullptr);
+    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(10, rsContext->weak_from_this());
+    ASSERT_NE(rsBaseRenderNode, nullptr);
+    rsBaseRenderNode->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    
+    auto node1 = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(node1, nullptr);
+    node1->SetSurfaceNodeType(RSSurfaceNodeType::LEASH_WINDOW_NODE);
+
+    node1->AddChild(rsBaseRenderNode);
+    rsUniRenderVisitor->CollectEffectInfo(*node1);
+
+    auto node2 = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(node2, nullptr);
+    node2->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
+
+    node1->RemoveChild(rsBaseRenderNode);
+    node1->AddChild(node2);
+    rsUniRenderVisitor->CollectEffectInfo(*node1);
+
+    node1->AddChild(rsBaseRenderNode);
+    rsUniRenderVisitor->CollectEffectInfo(*node1);
+}
+
+/**
+ * @tc.name: UpdateLeashWindowVisibleRegionEmpty001
+ * @tc.desc: Test UpdateLeashWindowVisibleRegionEmpty with empty node
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateLeashWindowVisibleRegionEmpty001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    RSDisplayNodeConfig displayConfig;
+    config.id = 10;
+    auto rsSurfaceRenderNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    rsSurfaceRenderNode->InitRenderParams();
+    // 11 non-zero node id
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(11, displayConfig, rsContext->weak_from_this());
+    rsDisplayRenderNode->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    rsUniRenderVisitor->InitDisplayInfo(*rsDisplayRenderNode);
+
+    rsUniRenderVisitor->UpdateLeashWindowVisibleRegionEmpty(*rsSurfaceRenderNode);
+}
+
+/**
+ * @tc.name: UpdateSubSurfaceNodeRectInSkippedSubTree001
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSubSurfaceNodeRectInSkippedSubTree001
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSubSurfaceNodeRectInSkippedSubTree001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    node->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->UpdateSubSurfaceNodeRectInSkippedSubTree(*node);
+}
+
+/**
+ * @tc.name: UpdateSubSurfaceNodeRectInSkippedSubTree002
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSubSurfaceNodeRectInSkippedSubTree002, TARGETED_CACHE
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSubSurfaceNodeRectInSkippedSubTree002, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    node->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    node->drawingCacheType_ = RSDrawingCacheType::TARGETED_CACHE;
+    rsUniRenderVisitor->UpdateSubSurfaceNodeRectInSkippedSubTree(*node);
+}
+
+/**
+ * @tc.name: UpdateSubSurfaceNodeRectInSkippedSubTree003
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSubSurfaceNodeRectInSkippedSubTree003
+ *           firstVisitedCache_ = INVALID_NODEID
+ * @tc.type: FUNC
+ * @tc.require: issuesIAE8IM
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSubSurfaceNodeRectInSkippedSubTree003, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    node->InitRenderParams();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->firstVisitedCache_ = INVALID_NODEID;
+    node->drawingCacheType_ = RSDrawingCacheType::TARGETED_CACHE;
+    rsUniRenderVisitor->UpdateSubSurfaceNodeRectInSkippedSubTree(*node);
+}
+
 } // OHOS::Rosen

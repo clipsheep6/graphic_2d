@@ -152,6 +152,7 @@ void HdiBackend::Repaint(const OutputPtr &output)
     int32_t skipState = INT32_MAX;
     int32_t ret = output->PreProcessLayersComp();
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+        HLOGE("PreProcessLayersComp failed, ret is %{public}d", ret);
         return;
     }
 
@@ -236,6 +237,9 @@ void HdiBackend::OnPrepareComplete(bool needFlush, const OutputPtr &output, std:
 
 static inline bool Cmp(const LayerInfoPtr &layer1, const LayerInfoPtr &layer2)
 {
+    if (layer1 == nullptr || layer2 == nullptr) {
+        return false;
+    }
     return layer1->GetZorder() < layer2->GetZorder();
 }
 

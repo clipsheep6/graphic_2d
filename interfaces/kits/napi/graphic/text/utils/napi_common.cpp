@@ -149,16 +149,6 @@ void ParsePartTextStyle(napi_env env, napi_value argValue, TextStyle& textStyle)
     SetTextStyleBaseType(env, argValue, textStyle);
     ReceiveFontFeature(env, argValue, textStyle);
     ReceiveFontVariation(env, argValue, textStyle);
-    napi_get_named_property(env, argValue, "ellipsis", &tempValue);
-    std::string text = "";
-    if (tempValue != nullptr && ConvertFromJsValue(env, tempValue, text)) {
-        textStyle.ellipsis = Str8ToStr16(text);
-    }
-    napi_get_named_property(env, argValue, "ellipsisMode", &tempValue);
-    uint32_t ellipsisModal = 0;
-    if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &ellipsisModal)== napi_ok) {
-        textStyle.ellipsisModal = EllipsisModal(ellipsisModal);
-    }
     napi_get_named_property(env, argValue, "locale", &tempValue);
     std::string textLocale = "";
     if (tempValue != nullptr && ConvertFromJsValue(env, tempValue, textLocale)) {
@@ -320,6 +310,22 @@ bool GetTextStyleFromJS(napi_env env, napi_value argValue, TextStyle& textStyle)
     return true;
 }
 
+void SetParagraphStyleEllipsis(napi_env env, napi_value argValue, TypographyStyle& pographyStyle)
+{
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, argValue, "ellipsis", &tempValue);
+    std::string text = "";
+    if (tempValue != nullptr && ConvertFromJsValue(env, tempValue, text)) {
+        pographyStyle.ellipsis = Str8ToStr16(text);
+    }
+    napi_get_named_property(env, argValue, "ellipsisMode", &tempValue);
+    uint32_t ellipsisModal = 0;
+    if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &ellipsisModal)== napi_ok) {
+        pographyStyle.ellipsisModal = EllipsisModal(ellipsisModal);
+    }
+    return;
+}
+
 bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle& pographyStyle)
 {
     if (argValue == nullptr) {
@@ -367,6 +373,7 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
         SetStrutStyleFromJS(env, strutStyleValue, pographyStyle);
     }
 
+    SetParagraphStyleEllipsis(env, argValue, pographyStyle);
     SetEnumValueFromJS(env, argValue, "textHeightBehavior", pographyStyle.textHeightBehavior);
 
     return true;
@@ -555,9 +562,6 @@ napi_value CreateTextStyleJsValue(napi_env env, TextStyle textStyle)
         napi_set_named_property(env, objValue, "heightScale", CreateJsNumber(env, textStyle.heightScale));
         napi_set_named_property(env, objValue, "halfLeading", CreateJsValue(env, textStyle.halfLeading));
         napi_set_named_property(env, objValue, "heightOnly", CreateJsValue(env, textStyle.heightOnly));
-        napi_set_named_property(env, objValue, "ellipsis", CreateStringJsValue(env, textStyle.ellipsis));
-        napi_set_named_property(env, objValue, "ellipsisMode", CreateJsNumber(
-            env, static_cast<uint32_t>(textStyle.ellipsisModal)));
         napi_set_named_property(env, objValue, "locale", CreateJsValue(env, textStyle.locale));
     }
     return objValue;

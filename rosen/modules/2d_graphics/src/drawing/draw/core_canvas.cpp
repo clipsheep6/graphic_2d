@@ -265,6 +265,12 @@ void CoreCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], co
     DRAW_API_WITH_PAINT(DrawPatch, cubics, colors, texCoords, mode);
 }
 
+void CoreCanvas::DrawDoublePatches(const Point cubicsUp[12], const Point cubicsDown[12],
+    const Point texCoords[4], BlendMode mode)
+{
+    DRAW_API_WITH_PAINT(DrawDoublePatches, cubicsUp, cubicsDown, texCoords, mode);
+}
+
 void CoreCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
 {
     DRAW_API_WITH_PAINT(DrawVertices, vertices, mode);

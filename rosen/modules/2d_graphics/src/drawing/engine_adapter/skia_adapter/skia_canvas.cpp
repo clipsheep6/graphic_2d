@@ -500,6 +500,47 @@ void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         static_cast<SkBlendMode>(mode), skPaint_);
 }
 
+void SkiaCanvas::DrawDoublePatches(const Point cubicsUp[12], const Point cubicsDown[12],
+    const Point texCoords[4], BlendMode mode, const Paint& paint)
+{
+    if (!skCanvas_) {
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+
+    const size_t cubicsPointCount = 12;
+    std::vector<SkPoint> skiaCubicsUp = {};
+    std::vector<SkPoint> skiaCubicsDown = {};
+    if (cubicsUp != nullptr && cubicsDown != nullptr) {
+        skiaCubicsUp.resize(cubicsPointCount);
+        skiaCubicsDown.resize(cubicsPointCount);
+        for (size_t i = 0; i < cubicsPointCount; ++i) {
+            skiaCubicsUp[i].fX = cubicsUp[i].GetX();
+            skiaCubicsUp[i].fY = cubicsUp[i].GetY();
+            skiaCubicsDown[i].fX = cubicsDown[i].GetX();
+            skiaCubicsDown[i].fY = cubicsDown[i].GetY();
+        }
+    }
+
+    const size_t texCoordCount = 4;
+    std::vector<SkPoint> skiaTexCoords = {};
+    if (texCoords != nullptr) {
+        skiaTexCoords.resize(texCoordCount);
+        for (size_t i = 0; i < texCoordCount; ++i) {
+            skiaTexCoords[i].fX = texCoords[i].GetX();
+            skiaTexCoords[i].fY = texCoords[i].GetY();
+        }
+    }
+
+    skPaint_ = defaultPaint_;
+    SkiaPaint::PaintToSkPaint(paint, skPaint_);
+    skCanvas_->drawDoublePatches(
+        skiaCubicsUp.empty() ? nullptr : skiaCubicsUp.data(),
+        skiaCubicsDown.empty() ? nullptr : skiaCubicsDown.data(),
+        skiaTexCoords.empty() ? nullptr : skiaTexCoords.data(),
+        static_cast<SkBlendMode>(mode), skPaint_);
+}
+
 void SkiaCanvas::DrawVertices(const Vertices& vertices, BlendMode mode, const Paint& paint)
 {
     if (!skCanvas_) {

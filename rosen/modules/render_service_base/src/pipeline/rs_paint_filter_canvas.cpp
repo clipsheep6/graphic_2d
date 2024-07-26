@@ -343,6 +343,22 @@ void RSPaintFilterCanvasBase::DrawPatch(const Drawing::Point cubics[12], const D
 #endif
 }
 
+void RSPaintFilterCanvasBase::DrawDoublePatches(const Drawing::Point cubicsUp[12], const Drawing::Point cubicsDown[12],
+    const Drawing::Point texCoords[4], Drawing::BlendMode mode)
+{
+#ifdef ENABLE_RECORDING_DCL
+    for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
+        if ((*iter) != nullptr && OnFilter()) {
+            (*iter)->DrawDoublePatches(cubicsUp, cubicsDown, texCoords, mode);
+        }
+    }
+#else
+    if (canvas_ != nullptr && OnFilter()) {
+        canvas_->DrawDoublePatches(cubicsUp, cubicsDown, texCoords, mode);
+    }
+#endif
+}
+
 void RSPaintFilterCanvasBase::DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode)
 {
 #ifdef ENABLE_RECORDING_DCL

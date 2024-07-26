@@ -68,8 +68,8 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
     }
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D
     // transformations
-    if ((ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
-        ROSEN_EQ(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
+    if ((ROSEN_EQ_Float(trans_.translateZ_, 0.f) && ROSEN_EQ_Float(trans_.rotationX_, 0.f) &&
+        ROSEN_EQ_Float(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
         // Otherwise, update the absolute matrix with 3D transformations
@@ -96,8 +96,8 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
     matrix_.Reset();
 
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D transformations
-    if ((ROSEN_EQ(trans_.translateZ_, 0.f) && ROSEN_EQ(trans_.rotationX_, 0.f) &&
-        ROSEN_EQ(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
+    if ((ROSEN_EQ_Float(trans_.translateZ_, 0.f) && ROSEN_EQ_Float(trans_.rotationX_, 0.f) &&
+        ROSEN_EQ_Float(trans_.rotationY_, 0.f) && trans_.quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
         // Otherwise, update the absolute matrix with 3D transformations
@@ -116,7 +116,7 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
 bool RSObjAbsGeometry::IsNeedClientCompose() const
 {
     // return false if rotation degree is times of 90
-    return !ROSEN_EQ(std::remainder(trans_.rotation_, 90.f), 0.f, EPSILON);
+    return !ROSEN_EQ_Float(std::remainder(trans_.rotation_, 90.f), 0.f, EPSILON);
 }
 
 namespace {
@@ -189,7 +189,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
         matrix_.PreSkew(trans_.skewX_, trans_.skewY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
     }
     // Scale
-    if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
+    if (!ROSEN_EQ_Float(trans_.scaleX_, 1.f) || !ROSEN_EQ_Float(trans_.scaleY_, 1.f)) {
         matrix_.PreScale(trans_.scaleX_, trans_.scaleY_, trans_.pivotX_ * width_, trans_.pivotY_ * height_);
     }
 }
@@ -224,7 +224,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         // Skew
         ApplySkewToMatrix44(trans_, matrix3D, false);
         // Scale
-        if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
+        if (!ROSEN_EQ_Float(trans_.scaleX_, 1.f) || !ROSEN_EQ_Float(trans_.scaleY_, 1.f)) {
             matrix3D.PreScale(trans_.scaleX_, trans_.scaleY_, 1.f);
         }
         // Translate
@@ -261,7 +261,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
             matrix3D.PreSkew(trans_.skewX_, trans_.skewY_);
         }
         // Scale
-        if (!ROSEN_EQ(trans_.scaleX_, 1.f) || !ROSEN_EQ(trans_.scaleY_, 1.f)) {
+        if (!ROSEN_EQ_Float(trans_.scaleX_, 1.f) || !ROSEN_EQ_Float(trans_.scaleY_, 1.f)) {
             matrix3D.PreScale(trans_.scaleX_, trans_.scaleY_);
         }
         // Pivot

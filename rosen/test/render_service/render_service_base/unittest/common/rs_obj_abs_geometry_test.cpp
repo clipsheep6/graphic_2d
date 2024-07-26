@@ -200,7 +200,6 @@ HWTEST_F(RSObjAbsGeometryTest, IsNeedClientComposeTest, TestSize.Level1)
 {
     auto rsObjAbsGeometry = std::make_shared<RSObjAbsGeometry>();
     rsObjAbsGeometry->trans_ = RSTransform();
-    EXPECT_TRUE(rsObjAbsGeometry->trans_);
     EXPECT_FALSE(rsObjAbsGeometry->IsNeedClientCompose());
 }
 

@@ -77,12 +77,6 @@ static const std::vector<struct JsEnumInt> g_blendMode = {
     { "LUMINOSITY", static_cast<int32_t>(BlendMode::LUMINOSITY) },
 };
 
-static const std::vector<struct JsEnumInt> g_pathMeasureMatrixFlags = {
-    { "GET_POSITION_MATRIX", static_cast<int32_t>(PathMeasureMatrixFlags::GET_POSITION_MATRIX) },
-    { "GET_TANGENT_MATRIX", static_cast<int32_t>(PathMeasureMatrixFlags::GET_TANGENT_MATRIX) },
-    { "GET_POS_AND_TAN_MATRIX", static_cast<int32_t>(PathMeasureMatrixFlags::GET_POS_AND_TAN_MATRIX) },
-};
-
 static const std::vector<struct JsEnumInt> g_textEncoding = {
     { "TEXT_ENCODING_UTF8", static_cast<int32_t>(TextEncoding::UTF8) },
     { "TEXT_ENCODING_UTF16", static_cast<int32_t>(TextEncoding::UTF16) },
@@ -231,7 +225,6 @@ static const std::vector<struct JsEnumInt> g_tileMode = {
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "BlendMode", g_blendMode },
-    { "PathMeasureMatrixFlags", g_pathMeasureMatrixFlags },
     { "TextEncoding", g_textEncoding },
     { "ShadowFlag", g_shadowFlag },
     { "FilterMode", g_filterMode },

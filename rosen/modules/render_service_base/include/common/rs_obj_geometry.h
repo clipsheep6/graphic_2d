@@ -164,7 +164,7 @@ public:
     }
     void SetTranslateZ(float translateZ)
     {
-        if (!ROSEN_EQ(trans_.translateZ_, translateZ)) {
+        if (!ROSEN_EQ_Float(trans_.translateZ_, translateZ)) {
             trans_.translateZ_ = translateZ;
         }
     }

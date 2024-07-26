@@ -229,7 +229,7 @@ HWTEST_F(RSObjAbsGeometryTest, UpdateAbsMatrix2DTest, TestSize.Level1)
     rsObjAbsGeometry->trans_.scaleX_ = 0.f;
     rsObjAbsGeometry->trans_.scaleY_ = 0.f;
     rsObjAbsGeometry->UpdateAbsMatrix2D();
-    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleX);
-    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleY);
+    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleX, 0.f);
+    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleY, 0.f);
 }
 } // namespace OHOS::Rosen

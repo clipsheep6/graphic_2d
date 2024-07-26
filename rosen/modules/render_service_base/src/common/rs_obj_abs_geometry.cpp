@@ -116,7 +116,7 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
 bool RSObjAbsGeometry::IsNeedClientCompose() const
 {
     // return false if rotation degree is times of 90
-    return !ROSEN_EQ_Float(std::remainder(trans_.rotation_, 90.f), 0.f, EPSILON);
+    return !ROSEN_EQ(std::remainder(trans_.rotation_, 90.f), 0.f, EPSILON);
 }
 
 namespace {

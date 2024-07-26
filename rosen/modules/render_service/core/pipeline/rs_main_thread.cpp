@@ -78,7 +78,9 @@
 #include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/sk_resource_manager.h"
-#include "pipeline/rs_pointer_render_manager.h"
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
+#include "pipeline/pointer_render/rs_pointer_render_manager.h"
+#endif
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -235,7 +237,7 @@ public:
     AccessibilityObserver() = default;
     void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
     {
-        RS_LOGD("AccessibilityObserver OnConfigChanged configId: %{public}d", id);
+        RS_LOGI("RSMainThread AccessibilityObserver OnConfigChanged configId: %{public}d", id);
         ColorFilterMode mode = ColorFilterMode::COLOR_FILTER_END;
         if (id == CONFIG_ID::CONFIG_DALTONIZATION_COLOR_FILTER) {
             switch (value.daltonizationColorFilter) {
@@ -506,12 +508,14 @@ void RSMainThread::Init()
 
     RSRcdRenderManager::InitInstance();
 
+#ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
 #if defined (RS_ENABLE_VK)
     RSPointerRenderManager::InitInstance(GetRenderEngine()->GetVkImageManager());
 #endif
 
 #if defined (RS_ENABLE_GL) && defined (RS_ENABLE_EGLIMAGE)
     RSPointerRenderManager::InitInstance(GetRenderEngine()->GetEglImageManager());
+#endif
 #endif
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
@@ -3865,10 +3869,11 @@ void RSMainThread::UIExtensionNodesTraverseAndCallback()
     std::lock_guard<std::mutex> lock(uiExtensionMutex_);
     RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(context_->GetNodeMap(), uiExtensionCallbackData_);
     if (CheckUIExtensionCallbackDataChanged()) {
-        RS_TRACE_NAME("RSMainThread::UIExtensionNodesTraverseAndCallback.");
-        for (auto iter = uiExtensionListenners_.begin(); iter != uiExtensionListenners_.end(); ++iter) {
-            auto userId = iter->second.first;
-            auto callback = iter->second.second;
+        RS_OPTIONAL_TRACE_NAME_FMT("RSMainThread::UIExtensionNodesTraverseAndCallback data size: [%lu]",
+            uiExtensionCallbackData_.size());
+        for (const auto& item : uiExtensionListenners_) {
+            auto userId = item.second.first;
+            auto callback = item.second.second;
             if (callback) {
                 callback->OnUIExtension(std::make_shared<RSUIExtensionData>(uiExtensionCallbackData_), userId);
             }
@@ -3881,19 +3886,18 @@ void RSMainThread::UIExtensionNodesTraverseAndCallback()
 bool RSMainThread::CheckUIExtensionCallbackDataChanged() const
 {
     // empty for two consecutive frames, callback can be skipped.
-    if (uiExtensionCallbackData_.empty() && lastFrameUIExtensionDataEmpty_) {
-        RS_TRACE_NAME("RSMainThread::UIExtensionCallbackData is consecutively empty, skip callback.");
-        return false;
+    if (uiExtensionCallbackData_.empty()) {
+        return !lastFrameUIExtensionDataEmpty_;
     }
     // layout of host node was not changed, callback can be skipped.
     const auto& nodeMap = context_->GetNodeMap();
-    for (auto iter = uiExtensionCallbackData_.begin(); iter != uiExtensionCallbackData_.end(); ++iter) {
-        auto hostNode = nodeMap.GetRenderNode(iter->first);
+    for (const auto& data : uiExtensionCallbackData_) {
+        auto hostNode = nodeMap.GetRenderNode(data.first);
         if (hostNode != nullptr && !hostNode->LastFrameSubTreeSkipped()) {
             return true;
         }
     }
-    RS_TRACE_NAME("RSMainThread::CheckUIExtensionCallbackDataChanged, all host nodes were not changed.");
+    RS_OPTIONAL_TRACE_NAME("RSMainThread::CheckUIExtensionCallbackDataChanged, all host nodes were not changed.");
     return false;
 }
 

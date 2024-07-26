@@ -157,9 +157,10 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
 {
     auto canvasDrawingPtr = std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(shared_from_this());
-    auto task = [this, canvasDrawingPtr]() {
+    pid_t threadId = threadId_;
+    auto task = [this, canvasDrawingPtr, threadId]() {
         std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
-        if (!surface_ || !canvas_ || !renderParams_) {
+        if (!surface_ || !canvas_ || !renderParams_ || threadId != threadId_) {
             return;
         }
         if (renderParams_->GetCanvasDrawingSurfaceChanged()) {
@@ -168,8 +169,9 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         auto rect = GetRenderParams()->GetBounds();
         DrawContent(*canvas_, rect);
         renderParams_->SetNeedProcess(false);
+        canvas_->Flush();
     };
-    RSTaskDispatcher::GetInstance().PostTask(threadId_, task, false);
+    RSTaskDispatcher::GetInstance().PostTask(threadId, task, false);
 }
 
 bool RSCanvasDrawingRenderNodeDrawable::InitSurface(int width, int height, RSPaintFilterCanvas& canvas)
@@ -402,6 +404,10 @@ bool RSCanvasDrawingRenderNodeDrawable::GetPixelmap(const std::shared_ptr<Media:
         RS_LOGE("RSCanvasDrawingRenderNodeDrawable::GetPixelmap: pixelmap is nullptr");
         return false;
     }
+    if (!canvas_ || !image_ || !surface_) {
+        RS_LOGE("RSCanvasDrawingRenderNodeDrawable::GetPixelmap: canvas/image/surface is nullptr");
+        return false;
+    }
     std::shared_ptr<Drawing::Image> image;
     std::shared_ptr<Drawing::GPUContext> grContext;
     if (!GetCurrentContextAndImage(grContext, image, tid)) {
@@ -522,6 +528,21 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK(int width, int height,
     } else {
         if (!backendTexture_.IsValid() || !backendTexture_.GetTextureInfo().GetVKTextureInfo()) {
             backendTexture_ = RSUniRenderUtil::MakeBackendTexture(width, height);
+            if (!backendTexture_.IsValid()) {
+                surface_ = nullptr;
+                recordingCanvas_ = nullptr;
+                image_ = nullptr;
+                canvas_ = nullptr;
+                backendTexture_ = {};
+                if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+                    RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+                    vulkanCleanupHelper_ = nullptr;
+                }
+                RS_LOGE(
+                    "RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForVK size too big [%{public}d, %{public}d] failed",
+                    width, height);
+                return false;
+            }
         }
         auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
         bool isNewCreate = false;

@@ -135,7 +135,7 @@ bool CheckScbReadyToDraw(const std::shared_ptr<RSBaseRenderNode>& child)
     return false;
 }
 
-bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
+bool IsFirstFrameReadyToDraw(const RSSurfaceRenderNode& node)
 {
     bool result = false;
     auto sortedChildren = node.GetSortedChildren();
@@ -1208,7 +1208,7 @@ bool RSUniRenderVisitor::IsSubTreeOccluded(RSRenderNode& node) const
                 surfaceNode.GetVisibleRegion().IsEmpty());
             auto isOccluded = hasMirrorDisplay_ ?
                 surfaceNode.GetVisibleRegionInVirtual().IsEmpty() : surfaceNode.GetVisibleRegion().IsEmpty();
-            if (isOccluded) {
+            if (isOccluded && curSurfaceDirtyManager_) {
                 curSurfaceDirtyManager_->Clear();
             }
             surfaceNode.AccmulateDirtyInOcclusion(isOccluded);
@@ -1548,6 +1548,10 @@ void RSUniRenderVisitor::QuickPrepareEffectRenderNode(RSEffectRenderNode& node)
 {
     // 0. check current node need to tranverse
     auto dirtyManager = curSurfaceNode_ ? curSurfaceDirtyManager_ : curDisplayDirtyManager_;
+    if (!dirtyManager) {
+        RS_LOGE("RSUniRenderVisitor::QuickPrepareEffectRenderNode dirtyManager is nullptr");
+        return;
+    }
     auto dirtyFlag = dirtyFlag_;
     auto prevAlpha = curAlpha_;
     curAlpha_ *= std::clamp(node.GetRenderProperties().GetAlpha(), 0.f, 1.f);
@@ -2054,7 +2058,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByRotateAndAlpha(std::shared_ptr<RSS
     }
     // [planning] degree only multiples of 90 now
     int degree = RSUniRenderUtil::GetRotationDegreeFromMatrix(totalMatrix);
-    bool hasRotate = degree % RS_ROTATION_90 != 0 || RSUniRenderUtil::Is3DRotation(totalMatrix);
+    bool hasRotate = degree % RS_ROTATION_90 != 0;
     if (hasRotate) {
         RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by rotation:%d",
             hwcNode->GetName().c_str(), hwcNode->GetId(), degree);
@@ -2902,6 +2906,11 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByGlobalCleanFilter(
     for (auto filter = cleanFilter.begin(); filter != cleanFilter.end(); ++filter) {
         if (hwcNodePtr.GetDstRect().Intersect(filter->second)) {
             auto& rendernode = nodeMap.GetRenderNode<RSRenderNode>(filter->first);
+            if (rendernode == nullptr) {
+                ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: rendernode is null");
+                continue;
+            }
+
             if (rendernode->IsAIBarFilterCacheValid()) {
                 ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: skip intersection for using cache");
                 continue;
@@ -2968,7 +2977,7 @@ void RSUniRenderVisitor::UpdateSubSurfaceNodeRectInSkippedSubTree(const RSRender
 
 RectI RSUniRenderVisitor::GetVisibleEffectDirty(RSRenderNode& node) const
 {
-    RectI childEffectRect = RectI();
+    RectI childEffectRect;
     auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto& nodeId : node.GetVisibleEffectChild()) {
         if (auto& subnode = nodeMap.GetRenderNode<RSRenderNode>(nodeId)) {
@@ -3236,8 +3245,8 @@ void RSUniRenderVisitor::UpdateSurfaceRenderNodeScale(RSSurfaceRenderNode& node)
             float boundsWidth = property.GetBoundsWidth();
             float boundsHeight = property.GetBoundsHeight();
             isScale =
-                !ROSEN_EQ(std::min(dstRectWidth, dstRectHeight), std::min(boundsWidth, boundsHeight), EPSILON_SCALE)
-                || !ROSEN_EQ(std::max(dstRectWidth, dstRectHeight), std::max(boundsWidth, boundsHeight), EPSILON_SCALE);
+                !ROSEN_EQ(std::min(dstRectWidth, dstRectHeight), std::min(boundsWidth, boundsHeight), EPSILON_SCALE) ||
+                !ROSEN_EQ(std::max(dstRectWidth, dstRectHeight), std::max(boundsWidth, boundsHeight), EPSILON_SCALE);
         }
     }
     node.SetIsScaleInPreFrame(node.IsScale());
@@ -3899,11 +3908,11 @@ void RSUniRenderVisitor::AssignGlobalZOrderAndCreateLayer(
 void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
     std::shared_ptr<RSCanvasListener>& overdrawListener)
 {
-#if defined(NEW_RENDER_CONTEXT)
     if (renderFrame == nullptr) {
         RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: renderFrame is nullptr");
         return;
     }
+#if defined(NEW_RENDER_CONTEXT)
     auto renderSurface = renderFrame->GetSurface();
     if (renderSurface == nullptr) {
         RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: renderSurface is nullptr");

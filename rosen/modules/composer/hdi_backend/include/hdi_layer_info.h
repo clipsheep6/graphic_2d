@@ -49,8 +49,8 @@ static const std::map<GraphicCompositionType, std::string> CompositionTypeStrs =
     {GRAPHIC_COMPOSITION_DEVICE_CLEAR,       "4 <device clear composistion>"},
     {GRAPHIC_COMPOSITION_CLIENT_CLEAR,       "5 <client clear composistion>"},
     {GRAPHIC_COMPOSITION_TUNNEL,             "6 <tunnel composistion>"},
-    {GRAPHIC_COMPOSITION_BUTT,               "7 <uninitialized>"},
-    {GRAPHIC_COMPOSITION_SOLID_COLOR,        "8 <layercolor composition>"},
+    {GRAPHIC_COMPOSITION_SOLID_COLOR,        "7 <layercolor composition>"},
+    {GRAPHIC_COMPOSITION_BUTT,               "8 <uninitialized>"},
 };
 
 static const std::map<GraphicBlendType, std::string> BlendTypeStrs = {
@@ -108,6 +108,16 @@ public:
     void SetZorder(int32_t zOrder)
     {
         zOrder_ = static_cast<uint32_t>(zOrder);
+    }
+
+    void SetType(const GraphicLayerType& layerType)
+    {
+        layerType_ = layerType;
+    }
+
+    GraphicLayerType GetType() const
+    {
+        return layerType_;
     }
 
     void SetAlpha(const GraphicLayerAlpha &alpha)
@@ -533,6 +543,7 @@ public:
 
 private:
     uint32_t zOrder_ = 0;
+    GraphicLayerType layerType_ = GraphicLayerType::GRAPHIC_LAYER_TYPE_GRAPHIC;
     GraphicIRect layerRect_;
     GraphicIRect boundRect_; // node's bound width and height related to this layer, used for uni render redraw
     std::vector<GraphicIRect> visibleRegions_;

@@ -76,6 +76,7 @@ void RSSurfaceOhosVulkan::SetNativeWindowInfo(int32_t width, int32_t height, boo
     NativeWindowHandleOpt(mNativeWindow, SET_BUFFER_GEOMETRY, width, height);
     NativeWindowHandleOpt(mNativeWindow, GET_BUFFER_GEOMETRY, &mHeight, &mWidth);
     NativeWindowHandleOpt(mNativeWindow, SET_COLOR_GAMUT, colorSpace_);
+    NativeWindowHandleOpt(mNativeWindow, SET_TIMEOUT, timeOut_);
 }
 
 
@@ -144,15 +145,8 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
         nativeSurface.window = mNativeWindow;
         nativeSurface.graphicColorGamut = colorSpace_;
         if (!NativeBufferUtils::MakeFromNativeWindowBuffer(
-            mSkContext, nativeWindowBuffer, nativeSurface, width, height, isProtected)) {
-            ROSEN_LOGE("RSSurfaceOhosVulkan: MakeFromeNativeWindow failed");
-            mSurfaceList.pop_back();
-            NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
-            mSurfaceMap.erase(nativeWindowBuffer);
-            return nullptr;
-        }
-
-        if (!nativeSurface.drawingSurface) {
+            mSkContext, nativeWindowBuffer, nativeSurface, width, height, isProtected)
+            || !nativeSurface.drawingSurface) {
             ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
             mSurfaceList.pop_back();
             NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
@@ -274,6 +268,11 @@ void RSSurfaceOhosVulkan::SetColorSpace(GraphicColorGamut colorSpace)
         mSurfaceMap.clear();
         mSurfaceList.clear();
     }
+}
+
+void RSSurfaceOhosVulkan::SetTimeOut(int32_t timeOut)
+{
+    timeOut_ = timeOut;
 }
 
 void RSSurfaceOhosVulkan::SetSurfaceBufferUsage(uint64_t usage)

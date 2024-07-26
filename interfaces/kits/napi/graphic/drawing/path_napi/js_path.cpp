@@ -753,7 +753,7 @@ napi_value JsPath::OnGetPositionAndTangent(napi_env env, napi_callback_info info
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
-    napi_value argv[ARGC_SIX] = {nullptr};
+    napi_value argv[ARGC_FOUR] = {nullptr};
     CHECK_PARAM_NUMBER_WITHOUT_OPTIONAL_PARAMS(argv, ARGC_FOUR);
 
     bool forceClosed = false;

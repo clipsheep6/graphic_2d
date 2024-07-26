@@ -326,6 +326,16 @@ public:
         return isMirrorScreenDirty_;
     }
 
+    void SetDirtyFlag(bool flag)
+    {
+        isDirty_ = flag;
+    }
+
+    bool GetDirtyFlag() const
+    {
+        return isDirty_;
+    }
+
     void SetImplicitAnimationEnd(bool isImplicitAnimationEnd)
     {
         isImplicitAnimationEnd_ = isImplicitAnimationEnd;
@@ -378,6 +388,7 @@ private:
     bool isVirtualDirtyDfxEnabled_ = false;
     bool isVirtualDirtyEnabled_ = false;
     bool isMirrorScreenDirty_ = false;
+    bool isDirty_ = false;
     DirtyRegionDebugType dirtyRegionDebugType_ = DirtyRegionDebugType::DISABLED;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> selfDrawingNodes_;
     std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> hardwareEnabledTypeDrawables_;

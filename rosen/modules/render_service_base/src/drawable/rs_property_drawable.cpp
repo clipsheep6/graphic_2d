@@ -256,6 +256,11 @@ void RSFilterDrawable::MarkNodeIsOccluded(bool isOccluded)
     isOccluded_ = isOccluded;
 }
 
+void RSFilterDrawable::MarkNodeIsSkipped(bool isSkipped)
+{
+    isSkipped_ = isSkipped;
+}
+
 void RSFilterDrawable::ForceClearCacheWithLastFrame()
 {
     forceClearCacheForLastFrame_ = true;
@@ -385,11 +390,13 @@ void RSFilterDrawable::ClearFilterCache()
         renderClearFilteredCacheAfterDrawing_ = false;     // hold blur image
     }
     if (renderIsEffectNode_) { renderClearFilteredCacheAfterDrawing_ = renderFilterHashChanged_; }
-    lastCacheType_ = isOccluded_ ? cacheManager_->GetCachedType() : (renderClearFilteredCacheAfterDrawing_ ?
-        FilterCacheType::SNAPSHOT : FilterCacheType::FILTERED_SNAPSHOT);
+
+    bool shouldSkip = isSkipped_ || RSUifirstManager::Instance().HasDoneNode();
+    lastCacheType_ = (isOccluded_ || shouldSkip) ? cacheManager_->GetCachedType() :
+        (renderClearFilteredCacheAfterDrawing_ ? FilterCacheType::SNAPSHOT : FilterCacheType::FILTERED_SNAPSHOT);
     RS_TRACE_NAME_FMT("RSFilterDrawable::ClearFilterCache nodeId[%llu], clearType:%d,"
-        " isOccluded_:%d, lastCacheType:%d needClearMemoryForGpu:%d ClearFilteredCacheAfterDrawing:%d",
-        nodeId_, clearType_, isOccluded_, lastCacheType_, needClearMemoryForGpu, renderClearFilteredCacheAfterDrawing_);
+        " isOccluded_:%d, shouldSkip:%d, lastCacheType:%d needClearMemoryForGpu:%d ClearFilteredCacheAfterDrawing:%d",
+        nodeId_, clearType_, isOccluded_, shouldSkip, lastCacheType_, needClearMemoryForGpu, renderClearFilteredCacheAfterDrawing_);
 }
 
 void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)

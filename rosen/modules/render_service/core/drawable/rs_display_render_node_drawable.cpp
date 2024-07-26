@@ -333,7 +333,7 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(
 {
     if (GetSyncDirtyManager()->IsCurrentFrameDirty() ||
         (params.GetMainAndLeashSurfaceDirty() || RSUifirstManager::Instance().HasDoneNode()) ||
-        RSMainThread::Instance()->GetDirtyFlag()) {
+        RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetDirtyFlag()) {
         return false;
     }
 
@@ -649,7 +649,6 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
             cacheImgForCapture_ = curCanvas_->GetSurface()->GetImageSnapshot();
         }
     }
-    RSMainThread::Instance()->SetDirtyFlag(false);
 
     if (Drawing::PerformanceCaculate::GetDrawingFlushPrint()) {
         RS_LOGI("Drawing Performance Flush start %{public}lld", Drawing::PerformanceCaculate::GetUpTime(false));

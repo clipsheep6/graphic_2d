@@ -96,6 +96,9 @@ ohos_shared_library("text_napi_impl") {
   ]
 
   external_deps = [
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:napi_base_context",
+    "ability_runtime:ability_context_native",
     "graphic_surface:surface",
     "hilog:libhilog",
     "napi:ace_napi",

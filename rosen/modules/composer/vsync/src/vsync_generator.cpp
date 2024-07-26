@@ -21,6 +21,7 @@
 #include <sched.h>
 #include <sys/resource.h>
 #include <string>
+#include <parameters.h>
 #include "vsync_log.h"
 #include <ctime>
 #include <vsync_sampler.h>

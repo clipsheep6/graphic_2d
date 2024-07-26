@@ -199,7 +199,7 @@ HWTEST_F(RSObjAbsGeometryTest, ConcatMatrixTest, TestSize.Level1)
 HWTEST_F(RSObjAbsGeometryTest, IsNeedClientComposeTest, TestSize.Level1)
 {
     auto rsObjAbsGeometry = std::make_shared<RSObjAbsGeometry>();
-    rsObjAbsGeometry->trans_ = std::make_optional<RSTransform>();
+    rsObjAbsGeometry->trans_ = RSTransform();
     EXPECT_TRUE(rsObjAbsGeometry->trans_);
     EXPECT_FALSE(rsObjAbsGeometry->IsNeedClientCompose());
 }
@@ -225,11 +225,11 @@ HWTEST_F(RSObjAbsGeometryTest, GetDataRangeTest, TestSize.Level1)
 HWTEST_F(RSObjAbsGeometryTest, UpdateAbsMatrix2DTest, TestSize.Level1)
 {
     auto rsObjAbsGeometry = std::make_shared<RSObjAbsGeometry>();
-    rsObjAbsGeometry->trans_ = std::make_optional<RSTransform>();
-    rsObjAbsGeometry->trans_->rotation_ = 0.5f;
-    rsObjAbsGeometry->trans_->scaleX_ = 0.f;
-    rsObjAbsGeometry->trans_->scaleY_ = 0.f;
+    rsObjAbsGeometry->trans_.rotation_ = 0.5f;
+    rsObjAbsGeometry->trans_.scaleX_ = 0.f;
+    rsObjAbsGeometry->trans_.scaleY_ = 0.f;
     rsObjAbsGeometry->UpdateAbsMatrix2D();
-    EXPECT_TRUE(rsObjAbsGeometry->trans_.has_value());
+    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleX, 0.f);
+    EXPECT_FLOAT_EQ(rsObjAbsGeometry->trans_.scaleY, 0.f);
 }
 } // namespace OHOS::Rosen

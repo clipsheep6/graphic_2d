@@ -246,7 +246,6 @@ public:
     bool PrepareOffscreenRender();
     void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
     bool IsHardwareEnabled();
-
     std::shared_ptr<RSSurfaceHandler> GetMutableRSSurfaceHandlerUiFirstOnDraw()
     {
         return surfaceHandlerUiFirst_;
@@ -262,14 +261,13 @@ public:
     {
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE && GetName() == "pointer window";
     }
-
 #ifdef SUBTREE_PARALLEL_ENABLE
     std::mutex mutex_;
     Drawing::Region GetCurSurfaceDrawRegion()
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        ++GetCurSurfaceDrawRegionCount_;
-        if (GetCurSurfaceDrawRegionCount_ > 1) {
+        ++getCurSurfaceDrawRegionCount_;
+        if (getCurSurfaceDrawRegionCount_ > 1) {
             RS_LOGE("SurfaceDrawable Name %{public}s, GetCurSurfaceDrawRegionCount_ %{public}d", GetName().c_str, GetCurSurfaceDrawRegionCount_.load());
         }
         Drawing::Region region;
@@ -279,12 +277,14 @@ public:
 
     int GetCurSurfaceDrawRegionCount()
     {
-        return GetCurSurfaceDrawRegionCount_.load();
+        return getCurSurfaceDrawRegionCount_.load();
     }
 
     void SetCurSurfaceDrawRegion(Drawing::Region& region)
     {
-        curSurfaceDrawRegion_ = std::move(region);
+        std::lock_guard<std::mutex> lock(mutex_);
+        getCurSurfaceDrawRegionCount_.store(0);
+        curSurfaceDrawRegion_.Clone(region);
     }
     void DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams);
     void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams& uniParam, Drawing::Region& region);
@@ -293,8 +293,8 @@ public:
 #endif
 
 private:
-    void CacheImgForCapture(RSPaintFilterCanvas& canvas, RSDisplayRenderNodeDrawable& curDisplayNode);
     explicit RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
+    void CacheImgForCapture(RSPaintFilterCanvas& canvas, RSDisplayRenderNodeDrawable& curDisplayNode);
     bool DealWithUIFirstCache(
         RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams, RSRenderThreadParams& uniParams);
     void OnGeneralProcess(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams, bool isSelfDrawingSurface);
@@ -373,10 +373,6 @@ private:
     uint64_t frameCount_ = 0;
     bool isSubThreadSkip_ = false;
 
-#ifdef SUBTREE_PARALLEL_ENABLE
-   Drawing::Region curSurfaceDrawRegion_;
-#endif
-
     RSPaintFilterCanvas* curCanvas_ = nullptr;
     std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr; // temporary holds offscreen surface
     int releaseCount_ = 0;
@@ -401,6 +397,10 @@ private:
     // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
     Occlusion::Region dirtyRegionBelowCurrentLayer_;
     bool dirtyRegionBelowCurrentLayerIsEmpty_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+   std::atomic<int> getCurSurfaceDrawRegionCount_ = 0;
+   Drawing::Region curSurfaceDrawRegion_ {};
+#endif
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

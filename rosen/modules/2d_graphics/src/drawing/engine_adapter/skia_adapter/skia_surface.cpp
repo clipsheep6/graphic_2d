@@ -57,6 +57,21 @@ SkSurface::BackendHandleAccess ConvertToSkiaBackendAccess(BackendAccess access)
 }
 }
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+static inline bool onMigrateCallback(sk_sp<SkSurface> skSurface)
+{
+    if (skSurface == nullptr) {
+        return false;
+    }
+    auto grctx = GrAsDirectContext(skSurface->recordingContext());
+    if (grctx == nullptr || !grctx->canMigrate()) {
+        return false;
+    }
+    grctx->onMigrateCallback([s = std::move(skSurface)](){});
+    return true;
+}
+#endif
+
 SkiaSurface::SkiaSurface() {}
 
 void SkiaSurface::PostSkSurfaceToTargetThread()
@@ -87,6 +102,11 @@ void SkiaSurface::PostSkSurfaceToTargetThread()
 
 SkiaSurface::~SkiaSurface()
 {
+#ifdef SUBTREE_PARALLEL_ENABLE
+    if (onMigrateCallback(std::move(skSurface_))) {
+        return;
+    }
+#endif
     PostSkSurfaceToTargetThread();
 }
 

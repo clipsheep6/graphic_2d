@@ -210,7 +210,7 @@ bool RSSurfaceRenderNodeDrawable::PrepareOffscreenRender()
     int maxRenderSize = std::max(offscreenWidth, offscreenHeight);
     // create offscreen surface and canvas
     if (offscreenSurface_ == nullptr || maxRenderSize_ != maxRenderSize) {
-        RS_LOGD("PrepareOffscreenRender create offscreen surface offscreenSurface_, \
+        RS_LOGD("PrepareOffscreenRender create offscreen surface offscreenSurface_,\
             new [%{public}d, %{public}d %{public}d]", offscreenWidth, offscreenHeight, maxRenderSize);
         RS_TRACE_NAME_FMT("PrepareOffscreenRender surface size: [%d, %d]", maxRenderSize, maxRenderSize);
         maxRenderSize_ = maxRenderSize;
@@ -274,12 +274,6 @@ bool RSSurfaceRenderNodeDrawable::IsHardwareEnabled()
 
 void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
-#ifdef SUBTREE_PARALLEL_ENABLE
-   ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this);
-   if (RSParallelManager::Singleton().CheckIsParallelFrame() && drawType == ParallelDrawType::Skip) {
-       return;
-   }
-#endif
     if (!ShouldPaint()) {
         return;
     }
@@ -289,6 +283,13 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw, rscanvas us nullptr");
         return;
     }
+#ifdef SUBTREE_PARALLEL_ENABLE
+   if (!(rscanvas->GetIsParallelCanvas()) &&
+        RSParallelManager::Singleton().CheckIsParallelFrame() &&
+        RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
+       return;
+   }
+#endif
     auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
     if (UNLIKELY(!uniParam)) {
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw uniParam is nullptr");
@@ -343,6 +344,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         CacheImgForCapture(*rscanvas, *curDisplayDrawable);
         RSUniRenderThread::Instance().GetRSRenderThreadParams()->SetRootIdOfCaptureWindow(curDisplayDrawable->GetId());
     }
+
 #ifndef SUBTREE_PARALLEL_ENABLE
     if (!isUiFirstNode) {
         MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
@@ -425,7 +427,6 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         && surfaceParams->IsGpuOverDrawBufferOptimizeNode()) {
         EnableGpuOverDrawDrawBufferOptimization(*curCanvas_, surfaceParams);
     }
-
 
     OnGeneralProcess(*curCanvas_, *surfaceParams, isSelfDrawingSurface);
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE

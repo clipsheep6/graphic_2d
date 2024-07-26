@@ -19,47 +19,12 @@
 #include "static_factory.h"
 #include "utils/log.h"
 #include "utils/system_properties.h"
-#ifdef SUBTREE_PARALLEL_ENABLE
-//Migration
-#include "skia_adapter/skia_gpu_context.h"
 #endif
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-#ifdef SUBTREE_PARALLEL_ENABLE
-static inline void onMigrateCallback(std::shared_ptr<Canvas>& canvas, std::shared_ptr<SurfaceImpl>& surface)
-{
-    if(canvas ==nullptr || surface == nullptr){
-        return ;
-    }
-    auto ctx = canvas->GetGPUContext();
-    if(ctx ==nullptr){
-        return ;
-    }
-    auto skctx = ctx->GetImpl<SkiaGPUContext>();
-    if (skctx ==nullptr){
-        return ;
-    }
-    auto grctx = skctx->GetGrContext();
-    if(grctx == nullptr){
-        return ;
-    }
-    if(!grctx->canMigrate()){
-        return ;
-    }
-     grctx->onMigrateCallback([s = surface, c = canvas](){});
-}
-#endif
-
 Surface::Surface() : impl_(ImplFactory::CreateSurfaceImpl()), cachedCanvas_(nullptr) {}
-
-#ifdef SUBTREE_PARALLEL_ENABLE
-Surface::~Surface()
-{
-    onMigrateCallback(cachedCanvas_,impl_);
-}
-#endif
 
 bool Surface::Bind(const Bitmap& bitmap)
 {

@@ -175,7 +175,7 @@ ohos_shared_library("librender_service") {
     ]
   }
 
-  if(defined(graphic_2d_feature_subtree_parallel_enable) && graphic_2d_feature_subtree_parallel_enable){
+  if (defined(graphic_2d_feature_subtree_parallel_enable) && graphic_2d_feature_subtree_parallel_enable) {
     sources += [
       "$graphic_2d_ext_root/subtree/rs_parallel_manager.cpp",
       "$graphic_2d_ext_root/subtree/container/rs_parallel_container.cpp",
@@ -220,14 +220,14 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/create_pixelmap_surface/include",
     "$graphic_2d_root/rosen/modules/graphics_effect/include",
   ]
-  if(graphic_2d_feature_subtree_parallel_enable){
-    include_dirs += ["$graphic_2d_ext_root/subtree"]
+  if (graphic_2d_feature_subtree_parallel_enable) {
+    include_dirs += [ "$graphic_2d_ext_root/subtree" ]
   }
   if (use_video_processing_engine) {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
   }
 
-  if(graphic_2d_feature_subtree_parallel_enable){
+  if (graphic_2d_feature_subtree_parallel_enable) {
     include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/kits" ]
     include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/inner_api" ]
   }
@@ -347,7 +347,7 @@ ohos_shared_library("librender_service") {
     include_dirs += ddgr_ext_configs.libddgr_ext_adaptor_include_dirs
   }
 
-  if(graphic_2d_feature_subtree_parallel_enable){
+  if (graphic_2d_feature_subtree_parallel_enable) {
     external_deps += [ "ffrt:libffrt" ]
   }
 
@@ -427,7 +427,7 @@ ohos_executable("render_service") {
     "$graphic_2d_root/utils/color_manager/export",
   ]
 
-  if(graphic_2d_feature_subtree_parallel_enable){
+  if (graphic_2d_feature_subtree_parallel_enable) {
     include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/kits" ]
     include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/inner_api" ]
   }
@@ -446,7 +446,7 @@ ohos_executable("render_service") {
     "ipc:ipc_core",
   ]
 
-   if(graphic_2d_feature_subtree_parallel_enable){
+   if (graphic_2d_feature_subtree_parallel_enable) {
     external_deps += [ "ffrt:libffrt" ]
   }
 

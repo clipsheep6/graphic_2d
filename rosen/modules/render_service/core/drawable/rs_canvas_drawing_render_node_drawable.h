@@ -54,12 +54,6 @@ public:
         return curThreadInfo_.first;
     }
     void ResetSurface();
-#ifdef SUBTREE_PARALLEL_ENABLE
-private:
-    void UpdatePreThreadInfo();
-    void UpdateCurThreadInfo(RSPaintFilterCanvas& paintFilterCanvas);
-    NativeBufferUtils::VulkanCleanupHelper* vulkanCleanupHelper_;
- #endif
     bool IsDrawCmdListsVisited() const override
     {
         return drawCmdListsVisited_;
@@ -83,9 +77,6 @@ private:
     void FlushForVK(float width, float height, std::shared_ptr<RSContext> context,
         NodeId nodeId, RSPaintFilterCanvas& rscanvas);
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-#ifdef SUBTREE_PARALLEL_ENABLE
-    bool ReuseBackendTexture(int width,int height,RSPaintFilterCanvas& canvas);
-#endif
     bool ResetSurfaceWithTexture(int width, int height, RSPaintFilterCanvas& canvas);
     bool ReuseBackendTexture(int width, int height, RSPaintFilterCanvas& canvas);
     void ClearPreSurface(std::shared_ptr<Drawing::Surface>& surface);

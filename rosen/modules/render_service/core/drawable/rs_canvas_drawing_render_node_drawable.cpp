@@ -26,19 +26,8 @@
 #include "pipeline/sk_resource_manager.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "platform/common/rs_log.h"
-#include <sys/prctl.h>
-#include "skia_adapter/skia_gpu_context.h"
-
-#ifdef SUBTREE_PARALLEL_ENABLE
-#include "rs_trace.h"
-#include "pipeline/subtree/rs_parallel_macro.h"
-#include "pipeline/subtree/rs_parallel_resource_manager.h"
-#include "pipeline/rs_uni_render_util.h"
-#endif
 
 namespace OHOS::Rosen::DrawableV2 {
-static std::mutex drawingMutex;
-
 namespace {
     constexpr int EDGE_WIDTH_LIMIT = 1000;
 }
@@ -70,29 +59,6 @@ RSRenderNodeDrawable::Ptr RSCanvasDrawingRenderNodeDrawable::OnGenerate(std::sha
     return new RSCanvasDrawingRenderNodeDrawable(std::move(node));
 }
 
-#ifdef SUBTREE_PARALLEL_ENABLE
-void RSCanvasDrawingRenderNodeDrawable::UpdatePreThreadInfo()
-{
-    if(preThreadInfo_.second && surface_){
-       preThreadInfo_.second(std::move(surface_));
-    }
-    preThreadInfo_ = curThreadInfo_;
-}
-void RSCanvasDrawingRenderNodeDrawable::UpdateCurThreadInfo(RSPaintFilterCanvas& paintFilterCanvas)
-{
-    auto threadIdx = paintFilterCanvas.GetParallelThreadIdx();
-    auto threadId = RSUniRenderUtil::CheckIsParallelFrame(paintFilterCanvas) ?
-                    RSUniRenderThread::Instance().GetTid() :
-                    (paintFilterCanvas.GetIsParallelCanvas() ?
-                       RSSubThreadManager::Instance()->GetReThreadIndexMap()[threadIdx] :
-                       RSUniRenderThread::Instance().GetTid());
-    auto clearFunc = [idx = threadIdx](std::shared_ptr<Drawing::Surface>surface){
-        RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface),nullptr,idx,0);
-    };
-    SetSurfaceClearFunc({threadIdx,clearFunc },threadId);
-}
-#endif
-
 void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
     std::unique_lock<std::recursive_mutex> lock(drawableMutex_);
@@ -104,10 +70,10 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         ResetSurface();
         params->SetCanvasDrawingSurfaceChanged(false);
     }
-    auto& paintFilterCanvas = static_cast<RSPaintFilterCanvas&>(canvas);
-    RSAutoCanvasRestore acr(static_cast<RSPaintFilterCanvas*>(&canvas), RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
+    RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     if (!canvas.GetRecordingState()) {
-        params->ApplyAlphaAndMatrixToCanvas(paintFilterCanvas);
+        params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
     }
 
     auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
@@ -115,18 +81,12 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         QuickReject(canvas, params->GetLocalDrawRect())) {
         return;
     }
-#ifdef SUBTREE_PARALLEL_ENABLE
-    UpdateCurThreadInfo(paintFilterCanvas);
-    auto& bounds = params->GetBounds();
-    if (!InitSurface(bounds.GetWidth(), bounds.GetHeight(), paintFilterCanvas)) {
-        RS_LOGE("Failed to init surface!");
-#else
-    auto threadIdx = paintFilterCanvas.GetParallelThreadIdx();
+    auto threadIdx = paintFilterCanvas->GetParallelThreadIdx();
     auto clearFunc = [idx = threadIdx](std::shared_ptr<Drawing::Surface> surface) {
         // The second param is null, 0 is an invalid value.
         RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, idx, 0);
     };
-    auto threadId = paintFilterCanvas.GetIsParallelCanvas() ?
+    auto threadId = paintFilterCanvas->GetIsParallelCanvas() ?
         RSSubThreadManager::Instance()->GetReThreadIndexMap()[threadIdx] : RSUniRenderThread::Instance().GetTid();
     SetSurfaceClearFunc({ threadIdx, clearFunc }, threadId);
 
@@ -134,7 +94,6 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     auto surfaceParams = params->GetCanvasDrawingSurfaceParams();
     if (!InitSurface(surfaceParams.width, surfaceParams.height, *paintFilterCanvas)) {
         RS_LOGE("Failed to init surface!");
-#endif
         return;
     }
 
@@ -209,7 +168,7 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         DrawContent(*canvas_, rect);
         renderParams_->SetNeedProcess(false);
     };
-    RSTaskDispatcher::GetInstance().PostTask(threadId, task, false);
+    RSTaskDispatcher::GetInstance().PostTask(threadId_, task, false);
 }
 
 bool RSCanvasDrawingRenderNodeDrawable::InitSurface(int width, int height, RSPaintFilterCanvas& canvas)
@@ -223,7 +182,7 @@ bool RSCanvasDrawingRenderNodeDrawable::InitSurface(int width, int height, RSPai
         return InitSurfaceForVK(width, height, canvas);
     }
 #endif
-  return false;
+    return false;
 }
 
 bool RSCanvasDrawingRenderNodeDrawable::InitSurfaceForGL(int width, int height, RSPaintFilterCanvas& canvas)
@@ -235,12 +194,7 @@ bool RSCanvasDrawingRenderNodeDrawable::InitSurfaceForGL(int width, int height, 
             return false;
         }
     } else if ((isGpuSurface_) && (preThreadInfo_.first != curThreadInfo_.first)) {
-#ifdef SUBTREE_PARALLEL_ENABLE
-   UpdatePreThreadInfo();
-   if(!ReuseBackendTexture(width,height,canvas)){
-#else
         if (!ResetSurfaceWithTexture(width, height, canvas)) {
-#endif
             return false;
         }
     }
@@ -268,15 +222,11 @@ bool RSCanvasDrawingRenderNodeDrawable::InitSurfaceForVK(int width, int height, 
     }
     return true;
 }
-}
 
 void RSCanvasDrawingRenderNodeDrawable::FlushForGL(float width, float height, std::shared_ptr<RSContext> context,
     NodeId nodeId, RSPaintFilterCanvas& rscanvas)
 {
     if (!recordingCanvas_) {
-#ifdef SUBTREE_PARALLEL_ENABLE
-    image_ = surface_->GetImageSnapshot();
-#else
         if (rscanvas.GetParallelThreadIdx() != curThreadInfo_.first) {
             if (!backendTexture_.IsValid()) {
                 RS_LOGE("RSCanvasDrawingRenderNodeDrawable::Flush backendTexture_ is nullptr");
@@ -305,7 +255,6 @@ void RSCanvasDrawingRenderNodeDrawable::FlushForGL(float width, float height, st
         if (image_) {
             SKResourceManager::Instance().HoldResource(image_);
         }
-#endif
     } else {
         auto cmds = recordingCanvas_->GetDrawCmdList();
         if (cmds && !cmds->IsEmpty()) {
@@ -635,31 +584,11 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
     auto gpuContext = canvas.GetRecordingState() ? nullptr : canvas.GetGPUContext();
     isGpuSurface_ = true;
     if (gpuContext == nullptr) {
-        RS_LOGD("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
-#ifndef SUBTREE_PARALLEL_ENABLE
+        RS_LOGE("RSCanvasDrawingRenderNodeDrawable::ResetSurface: gpuContext is nullptr");
         isGpuSurface_ = false;
-#endif
         surface_ = Drawing::Surface::MakeRaster(info);
     } else {
-#ifdef SUBTREE_PARALLEL_ENABLE
-      if(!backendTexture_.IsValid() || !backendTexture_.GetTextureInfo().GetVKTextureInfo()){
-         backendTexture_ = RSUniRenderUtil::MakeBackendTexture(width,height);
-      }
-      auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
-      bool cleanUpFirstCreated = false;
-      if(vulkanCleanupHelper_ == nullptr){
-        vulkanCleanupHelper_ = new NativeBufferUtils::VulkanCleanupHelper(
-            RsVulkanContext::GetSingleton(),vkTextureInfo->vkImage,vkTextureInfo->vkAlloc.memory);
-            cleanUpFirstCreate = true;
-      }
-      surface_ = Drawing::Surface::MakeFromBackendTexture(gpuContext.get(),backendTexture_.GetTextureInfo(),
-                 Drawing::TextureOrigin::BOTTOM_LEFT,1,Drawing::ColorType::COLORTYPE_RGBA_8888,nullptr,
-                 NativeBufferUtils::DeleteVkImage,cleanUpFirstCreated? vulkanCleanupHelper_ : vulkanCleanupHelper_->Ref());
-                 RS_LOGE("[%{public}s] surface_: %{public}d, %{public}u,context",
-                          GetThreadName(),surface_ != nullptr,GetGPUContextID(canvas));
-#else
-      surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
-#endif
+        surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
         if (!surface_) {
             isGpuSurface_ = false;
             surface_ = Drawing::Surface::MakeRaster(info);
@@ -680,7 +609,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
         return false;
     }
     recordingCanvas_ = nullptr;
-    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
+    canvas_ = std::make_unique<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
 

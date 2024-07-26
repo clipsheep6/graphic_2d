@@ -72,20 +72,20 @@ if (graphic_2d_feature_product == "phone" ||
   graphic_2d_feature_enable_stack_culling = true
 }
 
-if(graphic_2d_feature_product == "phone"){
-    graphic_2d_feature_subtree_parallel_enable = true
-  }
+if(graphic_2d_feature_product == "phone") {
+  graphic_2d_feature_subtree_parallel_enable = true
+}
 
 if (graphic_2d_feature_product == "phone" ||
     graphic_2d_feature_product == "tablet") {
-    graphic_2d_feature_enable_opinc = true
+  graphic_2d_feature_enable_opinc = true
 }
 
 gpu_defines = []
 accessibility_defines = []
 
 if(graphic_2d_feature_subtree_parallel_enable){
-  gpu_defines +=[
+  gpu_defines += [
     "SUBTREE_PARALLEL_ENABLE",
     "SUBTREE_PARALLEL_DEBUG_ENABLE",
     "RS_ENABLE_FFRT"

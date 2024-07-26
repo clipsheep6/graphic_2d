@@ -548,21 +548,14 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     SetDisplayNodeSkipFlag(*uniParam, false);
     RSMainThread::Instance()->SetFrameIsRender(true);
 
-    RS_TRACE_BEGIN("WaitUntilDisplayNodeBufferReleased");
-    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(*this);
-    RS_TRACE_END();
     bool isHdrOn = params->GetHDRPresent();
     RS_LOGD("SetHDRPresent: %{public}d OnDraw", isHdrOn);
     if (isHdrOn) {
         params->SetNewPixelFormat(GRAPHIC_PIXEL_FMT_RGBA_1010102);
     }
-    auto& hardwareDrawables = uniParam->GetHardwareEnabledTypeDrawables();
-    for (const auto& drawable : hardwareDrawables) {
-        if ( UNLIKELY(!drawable || !drawable->GetRenderParams())) {
-            continue;
-        }
-        drawable->GetRenderParams()->SetLayerCreated(false);
-    }
+    RS_TRACE_BEGIN("WaitUntilDisplayNodeBufferReleased");
+    RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(*this);
+    RS_TRACE_END();
     // displayNodeSp to get  rsSurface witch only used in renderThread
     auto renderFrame = RequestFrame(*params, processor);
     if (!renderFrame) {
@@ -605,10 +598,10 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
   auto& curAllSurfaces = params->GetAllMainAndLeashSurfaceDrawables();
   bool isuifirsNode = curCanvas_->GetIsParallelCanvas();
 
-  for(int i = curAllSurfaces.size() -1; i >= 0; i--) {
+  for (int i = curAllSurfaces.size() -1; i >= 0; i--) {
     auto& renderNodeDrawable  = curAllSurfaces[i];
     std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable =
-      std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
+        std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
     if (!surfaceNodeDrawable->ShouldPaint()) {
         continue;
     }
@@ -625,18 +618,13 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
         RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
-        surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
+            surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
         continue;
     }
-    auto renderNode = surfaceNodeDrawable->GetRenderNode();
-    if (renderNode == nullptr) {
-        continue;
-    }
-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
-    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
-    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(uniParam, surfaceParams, surfaceNode, isuifirsNode);
+    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(*uniParam, *surfaceParams,
+        *surfaceNodeDrawable, isuifirsNode);
     if (!isuifirstNode) {
-        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(uniParam, surfaceParams, surfaceNode, curSurfaceDrawRegion);
+        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
     }
     surfaceNodeDrawable->SetCurSurfaceDrawRegion(curSurfaceDrawRegion);
   }
@@ -684,10 +672,10 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
             SetHighContrastIfEnabled(*curCanvas_);
 #ifdef SUBTREE_PARALLEL_ENABLE
-            isOpincDropNodeExt_ = true;
             curCanvas_->SetIsSubtreeParallel(true);
             if (isSubtreeParallelOff || needOffscreen || RSParallelManager::Singleton().OnProcessChildren(this)!=0) {
                 curCanvas_->SetIsSubtreeParallel(false);
+                RSParallelManager::Singleton().ClearSubtreeParallelRes();
                 RSRenderNodeDrawable::OnDraw(*curCanvas_);
             }
 #else

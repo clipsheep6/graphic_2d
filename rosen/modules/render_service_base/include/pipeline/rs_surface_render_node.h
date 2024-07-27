@@ -21,7 +21,7 @@
 #include <memory>
 #include <tuple>
 
-#include "surface_type.h"
+#include "surface_type.h";
 
 #include "common/rs_macros.h"
 #include "common/rs_occlusion_region.h"

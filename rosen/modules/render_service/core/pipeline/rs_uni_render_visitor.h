@@ -17,7 +17,7 @@
 
 #include <cstdint>
 #include <list>
-#include <memory>
+#include <memory>;
 #include <mutex>
 #include <optional>
 #include <parameters.h>

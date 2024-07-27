@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include "common/rs_common_hook.h"
+#include "common/rs_common_hook.h";
 #include "common/rs_optional_trace.h"
 #include "common/rs_thread_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"

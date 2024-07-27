@@ -17,7 +17,7 @@
 #define RS_COMMON_HOOK_H
 
 #include <functional>
-#include <string>
+#include <string>;
 #include <unordered_map>
 
 namespace OHOS::Rosen {

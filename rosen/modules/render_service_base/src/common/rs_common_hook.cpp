@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "common/rs_common_hook.h"
+#include "common/rs_common_hook.h";
 
 namespace OHOS::Rosen {
 RsCommonHook& RsCommonHook::Instance()

@@ -112,6 +112,7 @@ ohos_shared_library("drawing_napi_impl") {
       "-fstack-protector-strong",
       "-std=c++17",
     ]
+    include_dirs += [ "../../../../../interfaces/inner_api/surface" ]
   } else {
     defines += [ "MODULE_DRAWING" ]
     cflags_cc = [ "-std=c++17" ]

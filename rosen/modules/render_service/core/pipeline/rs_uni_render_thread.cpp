@@ -52,17 +52,16 @@
 #include "common/rs_singleton.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
-
-#ifdef RS_ENABLE_FFRT
-#include "ffrt_inner.h"
-#endif
-
 #include "pipeline/rs_uifirst_manager.h"
+#include "rs_parallel_manager.h"
 
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
 #endif
 
+#ifdef RS_ENABLE_FFRT
+#include "ffrt_inner.h"
+#endif
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -703,6 +702,9 @@ void RSUniRenderThread::PostClearMemoryTask(ClearMemoryMoment moment, bool deepl
             this->clearMemoryFinished_ = true;
         }
         RSUifirstManager::Instance().TryReleaseTextureForIdleThread();
+#ifdef SUBTREE_PARALLEL_ENABLE
+        RSParallelManager::Singleton().TryReleaseTextureForSubtreeParallel();
+#endif
         this->exitedPidSet_.clear();
         this->clearMemDeeply_ = false;
         this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);

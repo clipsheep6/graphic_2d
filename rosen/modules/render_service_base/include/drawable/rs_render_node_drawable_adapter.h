@@ -36,6 +36,7 @@ class RSRenderNode;
 class RSRenderParams;
 class RSDisplayRenderNode;
 class RSSurfaceRenderNode;
+class RSSurfaceHandler;
 #ifdef SUBTREE_PARALLEL_ENABLE
 class RSParallelManager;
 #endif

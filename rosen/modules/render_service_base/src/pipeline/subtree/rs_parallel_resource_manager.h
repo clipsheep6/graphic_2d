@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
- #pragma once
+#pragma once
 
- #include <list>
- #include <map>
- #include <mutex>
- #include <set>
- #include <unistd.h>
+#include <list>
+#include <map>
+#include <mutex>
+#include <set>
+#include <unistd.h>
 
- using OnMigrateFunc = std::function<void()>;
- using MigrateFunc = std::function<void(void*, const OnMigrateFunc& func)>;
- using OnFailedFunc = std::function<std::string()>;
- using FailedFunc = std::function<void(const OnFailedFunc& func)>;
- using DebugCallback = std::function<void(const std::string&)>;
- using CheckFunc = std::function<bool()>;
+using OnMigrateFunc = std::function<void()>;
+using MigrateFunc = std::function<void(void*, const OnMigrateFunc& func)>;
+using OnFailedFunc = std::function<std::string()>;
+using FailedFunc = std::function<void(const OnFailedFunc& func)>;
+using DebugCallback = std::function<void(const std::string&)>;
+using CheckFunc = std::function<bool()>;
 
-
- namespace OHOS::Rosen {
-
+//Release Migration
+namespace OHOS::Rosen {
+//Foward
 class RSGPUResourceManager;
 struct RecycleBucket;
 namespace Drawing {
@@ -38,7 +38,7 @@ namespace Drawing {
     class Image;
 }
 
-
+//TypeDef
     using ThreadTag = int;
     using Resource = OnMigrateFunc;
     using Container = std::list<Resource>;
@@ -48,7 +48,7 @@ namespace Drawing {
     using ImagePtr = std::shared_ptr<Drawing::Image>;
     using ContextPtr = std::shared_ptr<Drawing::GPUContext>;
 
-
+//Resource Holder
 class RSB_EXPORT RSParallelResourceManager final{
     public:
     static RSParallelResourceManager& Singleton();

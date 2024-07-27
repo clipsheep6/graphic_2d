@@ -55,7 +55,6 @@ SkSurface::BackendHandleAccess ConvertToSkiaBackendAccess(BackendAccess access)
     }
     return SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess;
 }
-}
 
 #ifdef SUBTREE_PARALLEL_ENABLE
 static inline bool onMigrateCallback(sk_sp<SkSurface> skSurface)
@@ -67,10 +66,11 @@ static inline bool onMigrateCallback(sk_sp<SkSurface> skSurface)
     if (grctx == nullptr || !grctx->canMigrate()) {
         return false;
     }
-    grctx->onMigrateCallback([s = std::move(skSurface)](){});
+    grctx->onMigrateCallback([s = std::move(skSurface)] () {});
     return true;
 }
 #endif
+}
 
 SkiaSurface::SkiaSurface() {}
 

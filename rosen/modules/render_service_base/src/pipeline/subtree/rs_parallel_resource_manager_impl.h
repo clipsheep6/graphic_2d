@@ -26,7 +26,6 @@
 #include <map>
 #include <sys/prctl.h>
 
-
 namespace OHOS::Rosen {
 
 static inline const char* GetThreadName()
@@ -92,7 +91,6 @@ void RSGPUResourceManager::RegisterMigrate(const MigrateFunc& migrate)
 
 void RSGPUResourceManager::Collect(ThreadTag  dst, const Resource& res)
 {
-
     std::unique_lock<std::mutex> lock(bucketMutex_);
     bucketMapping_[dst].Collect(res);
 }

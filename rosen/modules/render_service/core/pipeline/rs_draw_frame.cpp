@@ -30,8 +30,6 @@
 #ifdef SUBTREE_PARALLEL_ENABLE
 #include "rs_parallel_manager.h"
 #endif
-
-
 namespace OHOS {
 namespace Rosen {
 RSDrawFrame::RSDrawFrame()
@@ -127,8 +125,8 @@ void RSDrawFrame::PostAndWait()
                 RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
-                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
                 unirenderInstance_.SetMainLooping(false);
+                RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
             });
 
             frameCV_.wait(frameLock, [this] { return canUnblockMainThread; });

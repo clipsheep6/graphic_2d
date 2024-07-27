@@ -612,8 +612,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     auto enableType = surfaceParams->GetUifirstNodeEnableParam();
     std::string surfaceName = surfaceNodeDrawable->GetName();
-    if (enableType != MultiThreadCacheType::NONE || surfaceName.substr(0, 17) == "ARK_APP_SUBWINDOW")
-    {
+    if (enableType != MultiThreadCacheType::NONE || surfaceName.substr(0, 17) == "ARK_APP_SUBWINDOW") {
         isSubtreeParallelOff = true;
     }
     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {

@@ -352,7 +352,7 @@ void RSUniRenderUtil::SrcRectScaleFit(BufferDrawParam& params, const sptr<Surfac
                 params.srcRect.GetLeft() + params.srcRect.GetWidth(),
                 params.srcRect.GetTop() + static_cast<int32_t>(halfdh) + static_cast<int32_t>(newHeight));
     }
-    RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleFit name:%{public}s, "
+    RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleFit name:%{public}s,"
         " dstRect [%{public}f %{public}f %{public}f %{public}f]",
         surface->GetName().c_str(), params.dstRect.GetLeft(), params.dstRect.GetTop(),
         params.dstRect.GetWidth(), params.dstRect.GetHeight());
@@ -407,7 +407,7 @@ void RSUniRenderUtil::SrcRectScaleDown(BufferDrawParam& params, const sptr<Surfa
                 params.srcRect.GetLeft() + params.srcRect.GetWidth(),
                 params.srcRect.GetTop() + static_cast<int32_t>(halfdh) + static_cast<int32_t>(newHeight));
     }
-    RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown name:%{public}s, "
+    RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown name:%{public}s,"
         " srcRect [%{public}f %{public}f %{public}f %{public}f]",
         surface->GetName().c_str(), params.srcRect.GetLeft(), params.srcRect.GetTop(),
         params.srcRect.GetWidth(), params.srcRect.GetHeight());
@@ -851,13 +851,16 @@ pid_t RSUniRenderUtil::GetThreadId(RSPaintFilterCanvas* rsCanvas) {
         return gettid();
     }
 }
+
 bool RSUniRenderUtil::IsDrawableWindowScene(RSSurfaceRenderParams* surfaceParams)
 {
     std::string surfaceName = surfaceParams->GetName();
     return (surfaceParams->IsLeashWindow() && (surfaceName.substr(0, 11) == "WindowScene"))
          || (surfaceName.substr(0, 10) == "SCBDesktop");
 }
-bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation) {
+
+bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node)
+{
     auto deviceType = RSMainThread::Instance()->GetDeviceType();
     std::string surfaceName = node->GetName();
 
@@ -866,18 +869,15 @@ bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> nod
     }
     auto children = node->GetSortedChildren();
 
-    if (deviceType != DeviceType::PC) {
-        return node->IsLeashWindow() && !node->GetForceUIFirst()
-               && (surfaceName.substr(0, 11) == "WindowScene")&& !node->HasFilter()
-               && children->size()  == 1 && ((*children)[0]->GetType() == RSRenderNodeType::SURFACE_NODE);
-    } else {
-        if ((node->IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
-            node->IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId())) &&
-            node->GetHasSharedTransitionNode()) {
-                return false;
-            }
-            return node->QuerySubAssignable(isDisplayRotation);
-    }
+    return node->IsLeashWindow() && (surfaceName.substr(0,11) == "WindowScene")
+           && children->size() == 1 && ((*children)[0]->GetType() == RSRenderNodeType::SURFACE_NODE);
+}
+
+bool RSUniRenderUtil::IsNodeSCBDesktop(std::shared_ptr<RSSurfaceRenderNode> node)
+{
+    std::string surfaceName  = node->GetName();
+    return (surfaceName.substr(0,10) == "SCBDesktop") || (surfaceName.substr(0,17) == "SCBNegativeScreen")
+           || (surfaceName.substr(0,15) == "SCBGlobalSearch");
 }
 #endif
 

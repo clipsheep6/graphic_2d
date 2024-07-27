@@ -14,6 +14,7 @@
  */
 
 #pragma once
+
 #include "./rs_parallel_recorder.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 
@@ -23,6 +24,7 @@ public:
    RSParallelStatusCanvas(Drawing::Canvas* canvas);
    ~RSParallelStatusCanvas() override;
 public:
+    //Draw Command Hook
     void DrawPoint(const Drawing::Point& point) override {}
     void DrawPoints(Drawing::PointMode mode, size_t count, const Drawing::Point pts[]) override {}
     void DrawLine(const Drawing::Point& startPt, const Drawing::Point& endPt) override {}
@@ -43,7 +45,6 @@ public:
     void DrawPatch(const Drawing::Point cubics[12], const Drawing::ColorQuad colors[4],
         const Drawing::Point texCoords[4], Drawing::BlendMode mode) override {}
     void DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode) override {}
-
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override {}
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
@@ -57,6 +58,7 @@ public:
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling) override {}
     void DrawPicture(const Drawing::Picture& picture) override {}
     void DrawTextBlob(const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y) override {}
+    //ABORT!!!
     void SaveLayer(const Drawing::SaveLayerOps& saveLayerOps) override;
 };
 
@@ -66,6 +68,7 @@ public:
     RSParallelDrawCanvas(Drawing::Surface* surface);
     ~RSParallelDrawCanvas() override;
     void InheritStatus(RSParallelStatusCanvas* statusCanvas);
+    //Shared Draw
     void DrawImage(const Drawing::Image& image,
         const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling) override;
     void DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,

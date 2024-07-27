@@ -48,7 +48,6 @@ public:
 private:
     std::shared_ptr<RSParallelRecorder> recorder_;
 #endif
-
 public:
     RSPaintFilterCanvasBase(Drawing::Canvas* canvas);
     ~RSPaintFilterCanvasBase() override = default;
@@ -315,15 +314,6 @@ public:
 #ifdef SUBTREE_PARALLEL_ENABLE
     virtual void SetIsSubtreeParallel(bool canSharedDraw) {};
     void CopyParallelConfiguration(const RSPaintFilterCanvas& other);
-    void IncTreeDepth(){
-        curTreeDepth++;
-    }
-    void DecTreeDepth(){
-        curTreeDepth--;
-    }
-    uint32_t GetCurTreeDepth(){
-        return curTreeDepth;
-    }
 #endif
 
 protected:
@@ -393,9 +383,6 @@ private:
     bool recordDrawable_ = false;
     bool hasHdrPresent_ = false;
     bool isCapture_ = false;
-#ifdef SUBTREE_PARALLEL_ENABLE
-   uint32_t curTreeDepth { 0 };
-#endif
 };
 
 // Helper class similar to SkAutoCanvasRestore, but also restores alpha and/or env

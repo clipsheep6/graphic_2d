@@ -396,7 +396,7 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
         RS_OPTIONAL_TRACE_NAME_FMT("CachedSurfaceReuse node %llu quickSkip subtree", node.GetId());
     } else if (curSurfaceDirtyManager_ != nullptr && curDisplayNode_ != nullptr &&
         (isCachedSurfaceReuse_ || isSurfaceDirtyNodeLimited_ || !UpdateCacheChangeStatus(node))) {
-        RS_OPTIONAL_TRACE_NAME_FMT("UpdateCacheChangeStatus node %llu simply update subtree, isCachedSurfaceReuse_ %d, "
+        RS_OPTIONAL_TRACE_NAME_FMT("UpdateCacheChangeStatus node %llu simply update subtree, isCachedSurfaceReuse_ %d,"
             " isSurfaceDirtyNodeLimited_ %d, hasUseEffect %d", node.GetId(), isCachedSurfaceReuse_,
             isSurfaceDirtyNodeLimited_, node.ChildHasVisibleEffect());
         UpdateSubTreeInCache(node.ReinterpretCastTo<RSRenderNode>(), *children);
@@ -1664,7 +1664,7 @@ bool RSUniRenderVisitor::IsLeashAndHasMainSubNode(RSRenderNode& node) const
     }
     // check leashWindow surface has first level mainwindow node
     auto children = node.GetSortedChildren();
-    auto iter = std::find_if ((*children).begin(), (*children).end(),
+    auto iter = std::find_if((*children).begin(), (*children).end(),
         [](const std::shared_ptr<RSRenderNode>& node) {
         if (node->GetType() == RSRenderNodeType::SURFACE_NODE) {
             const auto& surfaceNode = static_cast<RSSurfaceRenderNode&>(*node);
@@ -3535,8 +3535,8 @@ void RSUniRenderVisitor::DrawDirtyRectForDFX(const RectI& dirtyRect, const Drawi
     ROSEN_LOGD("DrawDirtyRectForDFX current dirtyRect = %{public}s", dirtyRect.ToString().c_str());
     auto rect = Drawing::Rect(dirtyRect.left_, dirtyRect.top_,
         dirtyRect.left_ + dirtyRect.width_, dirtyRect.top_ + dirtyRect.height_);
-    std::string position = std::to_string(dirtyRect.left_) + ', ' + std::to_string(dirtyRect.top_) + ', ' +
-        std::to_string(dirtyRect.width_) + ', ' + std::to_string(dirtyRect.height_) + extra;
+    std::string position = std::to_string(dirtyRect.left_) + ',' + std::to_string(dirtyRect.top_) + ',' +
+        std::to_string(dirtyRect.width_) + ',' + std::to_string(dirtyRect.height_) + extra;
     const int defaultTextOffsetX = edgeWidth;
     const int defaultTextOffsetY = 30; // text position has 30 pixelSize under the Rect
     Drawing::Pen rectPen;
@@ -3807,7 +3807,7 @@ void RSUniRenderVisitor::ProcessShadowFirst(RSRenderNode& node, bool inSubThread
 void RSUniRenderVisitor::CheckSkipRepeatShadow(RSRenderNode& node, const bool resetStatus)
 {
     // In normal process, if shadow has drawn in drawCacheWithBlur, no need to draw again in children node
-    // not comming from drawCacheWithBlur and updateCacheProcess, child has shadow, skip draw shadow child later
+    // not comming from drawCacheWithBlur and updateCacheProcess, child has shadow,skip draw shadow child later
     if (!drawCacheWithBlur_ && !notRunCheckAndSetNodeCacheType_ && !allCacheFilterRects_[node.GetId()].empty() &&
         node.ChildHasVisibleFilter() && updateCacheProcessCnt_ == 0) {
         if (resetStatus) {
@@ -4946,8 +4946,8 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
     // The cache is not refreshed continuously.
     node.cacheCnt_ = 0;
     cacheReuseTimes++;
-    RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap , NodeId: " + std::to_string(node.GetId()) +
-        " , CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
+    RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap ,NodeId: " + std::to_string(node.GetId()) +
+        " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)

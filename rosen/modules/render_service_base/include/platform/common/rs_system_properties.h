@@ -211,7 +211,6 @@ public:
     static bool GetUIFirstDebugEnabled();
 #ifdef SUBTREE_PARALLEL_ENABLE
      static bool GetSubtreeParallelEnable();
-
      static bool GetSubtreeParallelDebugEnabled();
 #endif
     static bool GetSurfaceOffscreenEnadbled();

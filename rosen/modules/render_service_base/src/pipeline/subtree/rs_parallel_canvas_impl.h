@@ -21,6 +21,7 @@
 namespace OHOS::Rosen {
 #ifdef USE_ROSEN_DRAWING
 using namespace Drawing;
+
 RSParallelStatusCanvas::RSParallelStatusCanvas(Drawing::Canvas* canvas)
     : RSPaintFilterCanvas(canvas)
 {}
@@ -32,6 +33,7 @@ void RSParallelStatusCanvas::SaveLayer(const SaveLayerOps& saveLayerRec)
 RS_LOGE("RSParallelStatusCanvas::SaveLayer Error");
 abort();
 }
+
 RSParallelDrawCanvas::RSParallelDrawCanvas(Drawing::Canvas* canvas)
     : RSPaintFilterCanvas(canvas)
 {}
@@ -44,13 +46,16 @@ RSParallelDrawCanvas::~RSParallelDrawCanvas() = default;
 
 void RSParallelDrawCanvas::InheritStatus(RSParallelStatusCanvas* statusCanvas)
 {
+    //playback
     if (statusCanvas != nullptr) {
+
         auto recorder = statusCanvas->GetParallelRecorder();
         RSParallelPlayback(recorder, this);
     }
 }
 
-void RSParallelDrawCanvas::SetIsSubtreeParallel(bool canSharedDraw) {
+void RSParallelDrawCanvas::SetIsSubtreeParallel(bool canSharedDraw)
+{
     canSharedDraw_ = canSharedDraw;
 }
 
@@ -62,15 +67,14 @@ void RSParallelDrawCanvas::DrawImage(const Drawing::Image& image, const Drawing:
         auto gpuContext = GetGPUContext();
         auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image, gpuContext, false);
         if (draw != nullptr) {
-            RSPaintFilterCanvas::DrawImage(*draw, px , py, sampling);
+            RSPaintFilterCanvas::DrawImage(*draw, px, py, sampling);
             return ;
         }
      }
      RSPaintFilterCanvas::DrawImage(image, px, py, sampling);
 }
 
-void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src,
-                                     const Drawing::Rect& dst,
+void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src,const Drawing::Rect& dst,
                                      const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
 {
      if (canSharedDraw_) {
@@ -85,8 +89,7 @@ void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Draw
 }
 
 void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image,
-                                         const Drawing::Rect& dst,
-                                         const Drawing::SamplingOptions& sampling)
+                                         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling)
 {
      if (canSharedDraw_) {
         auto gpuContext = GetGPUContext();
@@ -124,8 +127,8 @@ void RSParallelCanvas::RemoveStatusCanvas(size_t idx)
     if (idx < pCanvasList_.size()) {
         pCanvasList_.erase(pCanvasList_.begin() + idx);
         statusCanvasMap_.erase(idx);
-
-}
+    }
 }
 
 #endif
+}

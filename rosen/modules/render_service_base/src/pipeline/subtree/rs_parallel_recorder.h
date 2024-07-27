@@ -13,21 +13,17 @@
  * limitations under the License.
  */
 
- #pragma once
+#pragma once
 
- #include <list>
+#include <list>
 
-
-
- namespace OHOS::Rosen {
-
+namespace OHOS::Rosen {
+//Forward
 class RSParallelRecorder;
 class RSPaintFilterCanvasBase;
 
-
 using CanvasStatusOp = std::function<void(RSPaintFilterCanvasBase* canvas)>;
 using RSParallelRecorderPtr = std::shared_ptr<RSParallelRecorder>;
-
 
 class RSParallelRecorder final {
 public:
@@ -44,8 +40,6 @@ public:
 
   inline void Playback(RSPaintFilterCanvasBase* newCanvas) {
     {
-
-
         std::for_each(recorder_.begin(), recorder_.end(), [newCanvas](auto& oop){ op(newCanvas); });
     }
   }
@@ -57,8 +51,6 @@ public:
 private:
    std::list<CanvasStatusOp> recorder_;
  };
-
-
 
 template <typename T, typename R, typename ...Args>
 static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
@@ -95,7 +87,6 @@ static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
         (canvas->*MemFunc)(p1, p2, p3);
     });
 }
-
 
 static inline void RSParallelPlayback(RSParallelRecorderPtr& recorder, RSPaintFilterCanvasBase* newCanvas)
 {

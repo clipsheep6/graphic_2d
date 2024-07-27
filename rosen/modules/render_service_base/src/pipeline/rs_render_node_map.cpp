@@ -18,6 +18,7 @@
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 
@@ -231,8 +232,7 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
         }
         // update node flag to avoid animation fallback
         pair.second->fallbackAnimationOnDestroy_ = false;
-        // remove node from tree
-        pair.second->RemoveFromTree(false);
+        RSRenderNodeGC::Instance().AddToRemoveFromTreeBucket(pair.second);
         return true;
     });
 

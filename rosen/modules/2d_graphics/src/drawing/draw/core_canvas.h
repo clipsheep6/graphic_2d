@@ -731,12 +731,6 @@ public:
     }
 
     virtual bool DrawBlurImage(const Image& image, const HpsBlurParameter& blurParams);
-#ifdef SUBTREE_PARALLEL_ENABLE
-    inline std::shared_ptr<CoreCanvasImpl>GetImpl()
-    {
-       return impl_;
-    }
-#endif
 
     /**
      * @brief                   Get the size after HPS blur downsampling. Only VK will return valid values.

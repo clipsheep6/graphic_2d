@@ -19,7 +19,6 @@
 #include "static_factory.h"
 #include "utils/log.h"
 #include "utils/system_properties.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {

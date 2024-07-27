@@ -70,7 +70,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         ResetSurface();
         params->SetCanvasDrawingSurfaceChanged(false);
     }
-    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
+    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     if (!canvas.GetRecordingState()) {
         params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
@@ -81,6 +81,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         QuickReject(canvas, params->GetLocalDrawRect())) {
         return;
     }
+
     auto threadIdx = paintFilterCanvas->GetParallelThreadIdx();
     auto clearFunc = [idx = threadIdx](std::shared_ptr<Drawing::Surface> surface) {
         // The second param is null, 0 is an invalid value.
@@ -597,7 +598,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
                 return false;
             }
             recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
-            canvas_ = std::make_shared<RSPaintFilterCanvas>(recordingCanvas_.get());
+            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
             return true;
         }
     }
@@ -609,7 +610,7 @@ bool RSCanvasDrawingRenderNodeDrawable::ResetSurfaceForGL(int width, int height,
         return false;
     }
     recordingCanvas_ = nullptr;
-    canvas_ = std::make_unique<RSPaintFilterCanvas>(surface_.get());
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
 

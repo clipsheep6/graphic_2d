@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include "common/rs_common_hook.h";
+#include "common/rs_common_hook.h"
 #include "common/rs_optional_trace.h"
 #include "common/rs_thread_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -728,10 +728,20 @@ void HgmFrameRateManager::HandlePackageEvent(pid_t pid, uint32_t listSize, const
 void HgmFrameRateManager::CheckPackageInConfigList(std::unordered_map<pid_t,
     std::pair<int32_t, std::string>> foregroundPidAppMap)
 {
-    std::unordered_map<std::string, std::string> videoConfigFromHgm = RsCommonHook::Instance().GetVideoSurfaceConfig();
-    for (auto pair: foregroundPidAppMap) {
-        if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end()) {
-            RsCommonHook::Instance().SetVideoSurfaceFlag(true);
+    auto rsCommonHook = RsCommonHook::Instance();
+    std::unordered_map<std::string, std::string> videoConfigFromHgm = rsCommonHook.GetVideoSurfaceConfig();
+    if (!videoConfigFromHgm.empty()) {
+        for (auto pair: foregroundPidAppMap) {
+            // 1 means crop source tuning
+            if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end() &&
+                videoConfigFromHgm[pair.second.second] == "1") {
+                    rsCommonHook.SetVideoSurfaceFlag(true);
+            // 2 means skip hardware disabled by hwc and background alpha
+            } else if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end() &&
+                       videoConfigFromHgm[pair.second.second] == "2") {
+                rsCommonHook.hardwareDsiabledByHwcNodeSkippedFlag_ = true;
+                rsCommonHook.hardwareDisabledByBackgroundAlphaSkippedFlag_ = true; 
+            }
         }
     }
 }

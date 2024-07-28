@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-module_output_path = "graphic_2d/rosen/graphic_test/graphic_test"
+module_output_path = "graphic_2d/graphic_test/graphic_test"
 
 group("unittest") {
   testonly = true
@@ -26,7 +26,7 @@ ohos_unittest("RSGraphicTestTemplateTest") {
   module_out_path = module_output_path
   sources = [ "test_template.cpp" ]
 
-  deps = [ "$graphic_2d_root/rosen/graphic_test/graphic_test_framework:rs_graphic_test_main" ]
+  deps = [ "$graphic_2d_root/graphic_test/graphic_test_framework:rs_graphic_test_main" ]
 
   defines = []
   external_deps = [

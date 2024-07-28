@@ -1439,6 +1439,8 @@ private:
     bool doDirectComposition_ = true;
     bool isSkipDraw_ = false;
 
+    bool isHardwareForcedByBackgroundAlpha_ = false;
+
     // UIExtension record, <UIExtension, hostAPP>
     inline static std::unordered_map<NodeId, NodeId> secUIExtensionNodes_ = {};
     friend class SurfaceNodeCommandHelper;

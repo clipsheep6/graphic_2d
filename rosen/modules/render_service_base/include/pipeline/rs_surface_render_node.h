@@ -21,7 +21,7 @@
 #include <memory>
 #include <tuple>
 
-#include "surface_type.h";
+#include "surface_type.h"
 
 #include "common/rs_macros.h"
 #include "common/rs_occlusion_region.h"
@@ -225,6 +225,16 @@ public:
     void SetHardwareForcedDisabledByVisibility(bool forcesDisabled)
     {
         isHardwareForcedDisabledByVisibility_ = forcesDisabled;
+    }
+
+    void SetNodeHasBackgroundColorAlpha(bool forcesDisabled)
+    {
+        isHardwareForcedByBackgroundAlpha_ = forcesDisabled;
+    }
+
+    bool IsNodeHasBackgroundColorAlpha() const
+    {
+        return isHardwareForcedByBackgroundAlpha_;
     }
 
     void SetHardwareDisabledByCache(bool disabledByCache)

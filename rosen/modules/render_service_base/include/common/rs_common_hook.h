@@ -17,7 +17,7 @@
 #define RS_COMMON_HOOK_H
 
 #include <functional>
-#include <string>;
+#include <string>
 #include <unordered_map>
 
 namespace OHOS::Rosen {
@@ -29,14 +29,18 @@ public:
     // source crop tuning
     void SetVideoSurfaceConfig(std::unordered_map<std::string, std::string> sourceTuningConfig);
     const std::unordered_map<std::string, std::string>& GetVideoSurfaceConfig() const;
-    void SetVideoSurfaceFlag(bool VideoSurfaceFlag);
+    void SetVideoSurfaceFlag(bool videoSurfaceFlag);
     bool GetVideoSurfaceFlag() const;
+    bool IsHardwareDisabledByHwcNodeSkipped() const;
+    bool IsHardwareDisabledByBackgroundAlphaSkipped() const;
+    bool hardwareDisabledByHwcNodeSkippedFlag_ = false;
+    bool hardwareDisabledByBackgroundAlphaSkippedFlag_ = false;
 
 private:
     std::function<void()> startNewAniamtionFunc_ = nullptr;
     // source crop tuning
     std::unordered_map<std::string, std::string> sourceTuningConfig_;
-    bool VideoSurfaceFlag_ = false;
+    bool videoSurfaceFlag_ = false;
 };
 } // namespace OHOS::Rosen
 #endif

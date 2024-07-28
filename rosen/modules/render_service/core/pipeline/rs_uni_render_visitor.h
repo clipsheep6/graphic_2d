@@ -176,6 +176,8 @@ public:
         screenInfo_ = screenInfo;
     }
 
+    void UpdateHardwareStateByHwcNodeBackgroundAlpha(const std::vector<std::weak_ptr<RSSurfaceRenderNode>>& hwcNodes);
+
     void SurfaceOcclusionCallbackToWMS();
 
     std::unordered_set<NodeId> GetCurrentBlackList() const;

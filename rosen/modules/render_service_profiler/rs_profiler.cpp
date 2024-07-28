@@ -400,7 +400,7 @@ void RSProfiler::OnParallelRenderEnd(uint32_t frameNumber)
         return;
     }
 
-    const double currentTime = static_cast<double>(g_frameRenderBeginTimestamp) * 1e-9;
+    const double currentTime = Utils::ToSeconds(g_frameRenderBeginTimestamp);
     const double timeSinceRecordStart = currentTime - g_recordStartTime;
 
     if (timeSinceRecordStart > 0.0) {
@@ -457,6 +457,16 @@ void RSProfiler::OnFrameEnd()
     UpdateBetaRecord();
 
     g_renderServiceCpuId = Utils::GetCpuId();
+
+    std::string value;
+    constexpr int maxMsgPerFrame = 32;
+    value = GendMessageBase();
+    for(int i = 0; value != "" && i < maxMsgPerFrame; value = GendMessageBase(), i++) {
+        if (!value.length()) {
+            break;
+        }
+        Network::SendMessage(value);
+    }
 }
 
 void RSProfiler::CalcNodeWeigthOnFrameEnd(uint64_t frameLength)
@@ -796,7 +806,7 @@ void RSProfiler::RecordUpdate()
 
     const uint64_t frameLengthNanosecs = RawNowNano() - g_frameBeginTimestamp;
 
-    const double currentTime = g_frameBeginTimestamp * 1e-9; // Now();
+    const double currentTime = Utils::ToSeconds(g_frameBeginTimestamp);
     const double timeSinceRecordStart = currentTime - g_recordStartTime;
 
     if (timeSinceRecordStart > 0.0) {
@@ -1248,6 +1258,7 @@ void RSProfiler::RecordStart(const ArgList& args)
 
     if (!OpenBetaRecordFile(g_recordFile)) {
         g_recordFile.Create(RSFile::GetDefaultPath());
+        g_recordFile.SetVersion(RSFILE_VERSION_LATEST);
     }
 
     g_recordFile.AddLayer(); // add 0 layer
@@ -1306,9 +1317,24 @@ void RSProfiler::RecordStop(const ArgList& args)
             stream.write(reinterpret_cast<const char*>(&item), sizeof(item));
         }
 
+        // FIRST FRAME HEADER
         uint32_t sizeFirstFrame = static_cast<uint32_t>(g_recordFile.GetHeaderFirstFrame().size());
         stream.write(reinterpret_cast<const char*>(&sizeFirstFrame), sizeof(sizeFirstFrame));
         stream.write(reinterpret_cast<const char*>(&g_recordFile.GetHeaderFirstFrame()[0]), sizeFirstFrame);
+
+        // ANIME START TIMES
+        std::vector<std::pair<uint64_t, int64_t>> headerAnimeStartTimes;
+        std::unordered_map<AnimationId, std::vector<int64_t>> &headerAnimeStartTimesMap = AnimeGetStartTimes();
+        for(const auto& item : headerAnimeStartTimesMap) {
+            for(const auto time : item.second) {
+                headerAnimeStartTimes.push_back({Utils::PatchNodeId(item.first), time - Utils::ToNanoseconds(g_recordStartTime)});
+            }
+        }
+
+        uint32_t startTimesSize = headerAnimeStartTimes.size();
+        stream.write(reinterpret_cast<const char*>(&startTimesSize), sizeof(startTimesSize));
+        stream.write(reinterpret_cast<const char*>(headerAnimeStartTimes.data()), 
+            startTimesSize * sizeof(std::pair<uint64_t, int64_t>));
 
         ImageCache::Serialize(stream);
         Network::SendBinary(stream.str().data(), stream.str().size());
@@ -1343,6 +1369,20 @@ void RSProfiler::PlaybackPrepareFirstFrame(const ArgList& args)
         return;
     }
     std::string dataFirstFrame = g_playbackFile.GetHeaderFirstFrame();
+
+    auto& startTimes = AnimeGetStartTimes();
+    startTimes.clear();
+    const auto& startTimesMap = g_playbackFile.GetAnimeStartTimes();
+    for(const auto& item : startTimesMap) {
+        if (startTimes.count(item.first)) {
+            startTimes[item.first].push_back(item.second);
+        }
+        else {
+            std::vector<int64_t> times;
+            times.push_back(item.second);
+            startTimes[item.first] = times;
+        }
+    }
 
     // get first frame data
     FirstFrameUnmarshalling(dataFirstFrame, g_playbackFile.GetVersion());
@@ -1379,9 +1419,10 @@ void RSProfiler::PlaybackStart(const ArgList& args)
         while (IsPlaying()) {
             const int64_t timestamp = static_cast<int64_t>(RawNowNano());
 
-            PlaybackUpdate();
+            const double deltaTime = Now() - g_playbackStartTime;
+            const double readTime = PlaybackUpdate(deltaTime);
             if (g_playbackStartTime >= 0) {
-                SendTelemetry(Now() - g_playbackStartTime);
+                //NEXT STEP ADD: SendTelemetry(deltaTime);
             }
 
             const int64_t timeout = timeoutLimit - static_cast<int64_t>(RawNowNano()) + timestamp;
@@ -1407,17 +1448,11 @@ void RSProfiler::PlaybackStop(const ArgList& args)
     Respond("Playback stop");
 }
 
-void RSProfiler::PlaybackUpdate()
+double RSProfiler::PlaybackUpdate(const double deltaTime)
 {
-    if (!IsPlaying()) {
-        return;
-    }
-
-    const double deltaTime = Now() - g_playbackStartTime;
-
     std::vector<uint8_t> data;
     double readTime = 0.0;
-    if (!g_playbackShouldBeTerminated && g_playbackFile.ReadRSData(deltaTime, data, readTime)) {
+    while (!g_playbackShouldBeTerminated && g_playbackFile.ReadRSData(deltaTime, data, readTime)) {
         std::stringstream stream(std::ios::in | std::ios::out | std::ios::binary);
         stream.write(reinterpret_cast<const char*>(data.data()), data.size());
         stream.seekg(0);
@@ -1471,6 +1506,7 @@ void RSProfiler::PlaybackUpdate()
         TimePauseClear();
         g_playbackShouldBeTerminated = false;
     }
+    return readTime;
 }
 
 void RSProfiler::PlaybackPrepare(const ArgList& args)
@@ -1493,7 +1529,7 @@ void RSProfiler::PlaybackPause(const ArgList& args)
 
     const uint64_t currentTime = RawNowNano();
     const double recordPlayTime = Now() - g_playbackStartTime;
-    TimePauseAt(currentTime, currentTime);
+    TimePauseAt(g_frameBeginTimestamp, currentTime);
     Respond("OK: " + std::to_string(recordPlayTime));
 }
 

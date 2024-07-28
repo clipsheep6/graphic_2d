@@ -118,9 +118,8 @@ void RSUifirstManager::ResetUifirstNode(std::shared_ptr<RSSurfaceRenderNode>& no
     RSMainThread::Instance()->GetContext().AddPendingSyncNode(nodePtr);
     auto drawable = GetSurfaceDrawableByID(nodePtr->GetId());
     if (drawable) {
-        drawable->ResetUifirst();
+        drawable->ResetUifirst((!nodePtr->IsOnTheTree()) && nodePtr->IsNodeToBeCaptured());
     }
-    nodePtr->SetIsNodeToBeCaptured(false);
 }
 
 void RSUifirstManager::MergeOldDirty(RSSurfaceRenderNode& node)
@@ -285,7 +284,7 @@ void RSUifirstManager::ProcessDoneNode()
                 it = capturedNodes_.erase(it);
                 continue;
             }
-            
+            node->SetIsNodeToBeCaptured(false);
             ResetUifirstNode(node);
             it = capturedNodes_.erase(it);
         } else {
@@ -1075,7 +1074,7 @@ bool RSUifirstManager::IsLeashWindowCache(RSSurfaceRenderNode& node, bool animat
         if (RSUifirstManager::Instance().IsRecentTaskScene()) {
             isNeedAssignToSubThread = node.IsScale() && LeashWindowContainMainWindow(node);
         } else {
-            isNeedAssignToSubThread = animation || node.IsNodeToBeCaptured();
+            isNeedAssignToSubThread = animation;
         }
         // 1: Planning: support multi appwindows
         isNeedAssignToSubThread = (isNeedAssignToSubThread || ROSEN_EQ(node.GetGlobalAlpha(), 0.0f) ||
@@ -1278,7 +1277,7 @@ void RSUifirstManager::UpdateUIFirstLayerInfo(const ScreenInfo& screenInfo, floa
 void RSUifirstManager::ProcessTreeStateChange(RSSurfaceRenderNode& node)
 {
     // Planning: do not clear complete image for card
-    if (node.IsOnTheTree() || node.IsNodeToBeCaptured()) {
+    if (node.IsOnTheTree()) {
         return;
     }
     RSUifirstManager::Instance().DisableUifirstNode(node);

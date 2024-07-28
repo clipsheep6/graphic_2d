@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "common/rs_common_hook.h";
+#include "common/rs_common_hook.h"
 
 namespace OHOS::Rosen {
 RsCommonHook& RsCommonHook::Instance()
@@ -44,13 +44,24 @@ const std::unordered_map<std::string, std::string>& RsCommonHook::GetVideoSurfac
     return sourceTuningConfig_;
 }
 
-void RsCommonHook::SetVideoSurfaceFlag(bool VideoSurfaceFlag)
+void RsCommonHook::SetVideoSurfaceFlag(bool videoSurfaceFlag)
 {
-    VideoSurfaceFlag_ = VideoSurfaceFlag;
+    videoSurfaceFlag_ = videoSurfaceFlag;
 }
 
 bool RsCommonHook::GetVideoSurfaceFlag() const
 {
-    return VideoSurfaceFlag_;
+    return videoSurfaceFlag_;
 }
+
+bool RsCommonHook::IsHardwareDisabledByHwcNodeSkipped() const
+{
+    return hardwareDisabledByHwcNodeSkippedFlag_;
+}
+
+bool RsCommonHook::IsHardwareDisabledByBackgroundAlphaSkipped() const
+{
+    return hardwareDisabledByBackgroundAlphaSkippedFlag_;
+}
+
 } // namespace OHOS::Rosen

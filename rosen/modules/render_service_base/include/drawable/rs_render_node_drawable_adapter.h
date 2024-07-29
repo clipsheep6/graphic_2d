@@ -200,6 +200,7 @@ private:
     friend class OHOS::Rosen::RSDisplayRenderNode;
     friend class OHOS::Rosen::RSSurfaceRenderNode;
     friend class RSRenderNodeShadowDrawable;
+    friend class RSUseEffectDrawable;
 
 #ifdef SUBTREE_PARALLEL_ENABLE
      friend class OHOS::Rosen::RSParallelManager;

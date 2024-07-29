@@ -1418,9 +1418,13 @@ HWTEST_F(RSRenderNodeTest, MoveChildTest005, TestSize.Level1)
     std::shared_ptr<RSRenderNode> child1 = std::make_shared<RSRenderNode>(1);
     std::shared_ptr<RSRenderNode> child2 = std::make_shared<RSRenderNode>(2);
     std::shared_ptr<RSRenderNode> child3 = std::make_shared<RSRenderNode>(3);
+    std::shared_ptr<RSRenderNode> childNotExist = std::make_shared<RSRenderNode>(4);
     nodeTest->AddChild(child1);
     nodeTest->AddChild(child2);
     nodeTest->AddChild(child3);
+    nodeTest->isFullChildrenListValid_ = true;
+    nodeTest->MoveChild(childNotExist, 2);
+    EXPECT_TRUE(nodeTest->isFullChildrenListValid_);
     nodeTest->isFullChildrenListValid_ = true;
     nodeTest->MoveChild(child2, 3);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
@@ -1429,6 +1433,9 @@ HWTEST_F(RSRenderNodeTest, MoveChildTest005, TestSize.Level1)
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
     nodeTest->isFullChildrenListValid_ = true;
     nodeTest->MoveChild(child2, 4);
+    EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
+    nodeTest->isFullChildrenListValid_ = true;
+    nodeTest->MoveChild(child2, 1);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
 }
 
@@ -1465,6 +1472,14 @@ HWTEST_F(RSRenderNodeTest, ParentChildRelationshipTest006, TestSize.Level1)
     nodeTest->AddChild(child2);
     nodeTest->AddChild(child3);
     nodeTest->RemoveChild(child1, false);
+    EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
+
+    std::shared_ptr<RSRenderNode> child4 = std::make_shared<RSRenderNode>(3);
+    nodeTest->isFullChildrenListValid_ = true;
+    nodeTest->AddChild(child4);
+    nodeTest->isOnTheTree_ = false;
+    nodeTest->isBootAnimation_ = true;
+    nodeTest->RemoveChild(child4, false);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
 
     nodeTest->isFullChildrenListValid_ = true;
@@ -1538,7 +1553,7 @@ HWTEST_F(RSRenderNodeTest, AddCrossParentChildTest008, TestSize.Level1)
 
     nodeTest->isOnTheTree_ = true;
     nodeTest->isFullChildrenListValid_ = true;
-    nodeTest->AddCrossParentChild(child3, 4);
+    nodeTest->AddCrossParentChild(child3, 2);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
 }
 
@@ -1577,8 +1592,7 @@ HWTEST_F(RSRenderNodeTest, RemoveCrossParentChild009, TestSize.Level1)
     nodeTest->RemoveCrossParentChild(child1, newParent1);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);
 
-    nodeTest->disappearingTransitionCount_ = 0;
-    parent = nullptr;
+    nodeTest->disappearingTransitionCount_ = 1;
     nodeTest->isFullChildrenListValid_ = true;
     nodeTest->RemoveCrossParentChild(child2, newParent2);
     EXPECT_FALSE(nodeTest->isFullChildrenListValid_);

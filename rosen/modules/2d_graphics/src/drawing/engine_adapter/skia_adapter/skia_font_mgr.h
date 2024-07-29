@@ -54,6 +54,7 @@ public:
     int CountFamilies() const override;
     void GetFamilyName(int index, std::string& str) const override;
     FontStyleSet* CreateStyleSet(int index) const override;
+    int CheckFontValidity(const char *fontPath, std::vector<std::string> &fullnameVec) const override;
 private:
     sk_sp<SkFontMgr> skFontMgr_;
 };

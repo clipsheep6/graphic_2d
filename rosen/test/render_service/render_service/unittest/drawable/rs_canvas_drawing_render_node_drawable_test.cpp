@@ -113,7 +113,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, InitSurfaceTest, TestSize.Level1
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     drawable->surface_ = nullptr;
@@ -263,7 +263,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceTest002, TestSize.Le
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     canvas.recordingState_ = true;
@@ -288,7 +288,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceWithTextureTest, Tes
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     drawable->canvas_ = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);

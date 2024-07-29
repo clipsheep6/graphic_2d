@@ -123,6 +123,21 @@ public:
         return true;
     }
     virtual void SetDrawCmdListsVisited(bool flag) {}
+    virtual bool CheckAndSetIsDrawCmdListsVisited()
+    {
+        return false;
+    }
+
+    virtual bool IsNeedProcess() const
+    {
+        return false;
+    }
+    virtual void SetNeedProcess(bool flag) {}
+    virtual bool CheckAndSetIsNeedProcess()
+    {
+        return false;
+    }
+
 protected:
     // Util functions
     bool QuickReject(Drawing::Canvas& canvas, const RectF& localDrawRect);

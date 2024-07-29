@@ -70,7 +70,7 @@ public:
     void ClearOp();
     void ResetSurface(int width, int height);
     bool IsNeedProcess() const;
-    void SetNeedProcess(bool needProcess);
+    void SetNeedProcess();
     void PlaybackInCorrespondThread();
     const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& GetDrawCmdLists() const;
     void ClearResource() override;

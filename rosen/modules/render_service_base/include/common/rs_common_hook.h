@@ -31,6 +31,7 @@ public:
     const std::unordered_map<std::string, std::string>& GetVideoSurfaceConfig() const;
     void SetVideoSurfaceFlag(bool videoSurfaceFlag);
     bool GetVideoSurfaceFlag() const;
+
     // use in updating hwcnode hardware state with background alpha
     bool IsHardwareDisabledByHwcNodeSkipped() const;
     bool IsHardwareDisabledByBackgroundAlphaSkipped() const;

@@ -589,8 +589,8 @@ void RSPaintFilterCanvasBase::ClipRoundRect(const RoundRect& roundRect, ClipOp o
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-   RSParallelRecord<RSPaintFilterCanvasBase, void, RoundRect, ClipOp, bool>
-   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, roundRect, op, doAntiAlias);
+    RSParallelRecord<RSPaintFilterCanvasBase, void, RoundRect, ClipOp, bool>
+    (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, roundRect, op, doAntiAlias);
 #endif
 }
 

@@ -93,11 +93,6 @@ void RSDrawFrame::ReleaseSelfDrawingNodeBuffer()
 void RSDrawFrame::PostAndWait()
 {
     RS_TRACE_NAME_FMT("PostAndWait, parallel type %d", static_cast<int>(rsParallelType_));
-    RsFrameReport& fr = RsFrameReport::GetInstance();
-    if (fr.GetEnable()) {
-        fr.SendCommandsStart();
-        fr.RenderEnd();
-    }
     uint32_t renderFrameNumber = RS_PROFILER_GET_FRAME_NUMBER();
     switch (rsParallelType_) {
         case RsParallelType::RS_PARALLEL_TYPE_SYNC: { // wait until render finish in render thread
@@ -106,8 +101,8 @@ void RSDrawFrame::PostAndWait()
                 RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
-                unirenderInstance_.SetMainLooping(false);
                 RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
+                unirenderInstance_.SetMainLooping(false);
             });
             break;
         }
@@ -125,8 +120,8 @@ void RSDrawFrame::PostAndWait()
                 RS_PROFILER_ON_PARALLEL_RENDER_BEGIN();
                 RenderFrame();
                 unirenderInstance_.RunImageReleaseTask();
-                unirenderInstance_.SetMainLooping(false);
                 RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber);
+                unirenderInstance_.SetMainLooping(false);
             });
 
             frameCV_.wait(frameLock, [this] { return canUnblockMainThread; });

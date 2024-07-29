@@ -676,6 +676,7 @@ public:
      {
         return weight_;
      }
+
      void SetWeight(uint32_t weight)
      {
         weight_ = weight;
@@ -862,7 +863,7 @@ private:
     RectI oldChildrenRect_;
     RectI oldClipRect_;
     Drawing::Matrix oldAbsMatrix_;
-    
+
     // aim to record children rect in abs coords, without considering clip
     RectI absChildrenRect_;
     // aim to record current frame clipped children dirty region, in abs coords

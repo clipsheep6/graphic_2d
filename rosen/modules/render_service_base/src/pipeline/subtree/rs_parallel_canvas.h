@@ -82,10 +82,10 @@ private:
 
 class RSB_EXPORT RSParallelCanvas : public RSPaintFilterCanvas {
 public:
-   RSParallelCanvas(Drawing::Surface* surface);
-   size_t AddParallelStatusCanvas(Drawing::Canvas* canvas);
-   void RemoveAllStatusCanvas();
-   void RemoveStatusCanvas(size_t idx);
+    RSParallelCanvas(Drawing::Surface* surface);
+    size_t AddParallelStatusCanvas(Drawing::Canvas* canvas);
+    void RemoveAllStatusCanvas();
+    void RemoveStatusCanvas(size_t idx);
 
 private:
     std::unordered_map<size_t, std::shared_ptr<RSParallelStatusCanvas>> statusCanvasMap_{};

@@ -50,8 +50,8 @@ void RSCanvasRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (!(paintFilterCanvas->GetIsParallelCanvas()) &&
         RSParallelManager::Singleton().CheckIsParallelFrame() &&
         RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
-            return;
-        }
+        return;
+    }
 #endif
     const auto& params = GetRenderParams();
     auto isOpincDraw = PreDrawableCacheState(*params, isOpincDropNodeExt_);

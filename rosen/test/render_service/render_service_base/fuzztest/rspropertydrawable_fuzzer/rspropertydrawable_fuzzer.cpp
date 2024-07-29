@@ -99,6 +99,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     rsFilterDrawable.MarkFilterForceUseCache();
     rsFilterDrawable.MarkFilterForceClearCache();
     rsFilterDrawable.MarkRotationChanged();
+    rsFilterDrawable.MarkRotationChangedClear();
     rsFilterDrawable.MarkNodeIsOccluded(true);
     rsFilterDrawable.IsFilterCacheValid();
     rsFilterDrawable.NeedPendingPurge();

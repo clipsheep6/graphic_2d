@@ -1799,11 +1799,13 @@ void RSRenderNode::UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirt
     isDirtyRegionUpdated_ = true;
 }
 
-void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged, bool rotationStatusChanged)
+void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged, bool hdrChanged,
+    bool rotationStatusChanged)
 {
-    bool rotationClear = false;
-    if (!IsInstanceOf<RSEffectRenderNode>() && rotationChanged) {
-        rotationClear = true;
+    if (IsInstanceOf<RSEffectRenderNode>()) {
+        rotationChanged = false;
+        hdrChanged = false;
+        rotationStatusChanged = false;
     }
     const auto& properties = GetRenderProperties();
     if (properties.GetBackgroundFilter()) {
@@ -1812,20 +1814,22 @@ void RSRenderNode::CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged
             auto bgDirty = dirtySlots_.count(RSDrawableSlot::BACKGROUND_COLOR) ||
                 dirtySlots_.count(RSDrawableSlot::BACKGROUND_SHADER) ||
                 dirtySlots_.count(RSDrawableSlot::BACKGROUND_IMAGE);
-            if (!(filterDrawable->IsForceClearFilterCache()) && (rotationClear || bgDirty)) {
-                RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu] background color or shader or image is dirty", GetId());
+            if (!(filterDrawable->IsForceClearFilterCache()) && (rotationChanged || hdrChanged || bgDirty)) {
+                RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu]::CheckBlurFilterCacheNeedForceClearOrSave"
+                    " rotationChanged:%d, hdrChanged:%d, background dirty:%d",
+                    GetId(), rotationChanged, hdrChanged, bgDirty);
                 filterDrawable->MarkFilterForceClearCache();
+                filterDrawable->MarkRotationChangedClear(rotationChanged);
             }
         }
-    }
-    if (IsInstanceOf<RSEffectRenderNode>()) {
-        rotationStatusChanged = false;
     }
     if (properties.GetFilter()) {
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
             if (!(filterDrawable->IsForceClearFilterCache()) && (rotationStatusChanged || !dirtySlots_.empty())) {
-                RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu] foreground is dirty", GetId());
+                RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode[%llu]::CheckBlurFilterCacheNeedForceClearOrSave"
+                    " rotationStatusChanged:%d, foreground dirty:%d",
+                    GetId(), rotationStatusChanged, !dirtySlots_.empty());
                 filterDrawable->MarkFilterForceClearCache();
             }
         }
@@ -1980,6 +1984,12 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
 void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
     RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync)
 {
+    // When clearing the cache due to rotation, add the filter region to the dirty manager to ensure
+    // that the node will be rendered.
+    if (filterDrawable->IsForceClearFilterCache() && filterDrawable->IsRotationChangedClear()) {
+        dirtyManager.MergeDirtyRect(filterRegion_);
+        isDirtyRegionUpdated_ = true;
+    }
     if (IsForceClearOrUseFilterCache(filterDrawable)) {
         return;
     }

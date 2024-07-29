@@ -1338,7 +1338,7 @@ void RSUniRenderVisitor::CheckFilterCacheNeedForceClearOrSave(RSRenderNode& node
         RSLuminanceControl::Get().IsDimmingOn(curDisplayNode_->GetScreenId()) : false;
     bool rotationStatusChanged = curDisplayNode_ ?
         curDisplayNode_->GetPreRotationStatus() != curDisplayNode_->GetCurRotationStatus() : false;
-    node.CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged, rotationStatusChanged);
+    node.CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged, hdrChanged, rotationStatusChanged);
 }
 
 void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
@@ -2779,7 +2779,7 @@ void RSUniRenderVisitor::CheckFilterNodeInSkippedSubTreeNeedClearCache(
         if (auto effectNode = RSRenderNode::ReinterpretCast<RSEffectRenderNode>(filterNode)) {
             UpdateRotationStatusForEffectNode(*effectNode);
         }
-        filterNode->CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged || hdrChanged, rotationStatusChanged);
+        filterNode->CheckBlurFilterCacheNeedForceClearOrSave(rotationChanged, hdrChanged, rotationStatusChanged);
         filterNode->MarkClearFilterCacheIfEffectChildrenChanged();
         if (filterNode->GetRenderProperties().GetBackgroundFilter()) {
             filterNode->UpdateFilterCacheWithBelowDirty(dirtyManager, false);

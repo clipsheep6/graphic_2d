@@ -127,12 +127,14 @@ public:
     void MarkEffectNode();
     void ForceClearCacheWithLastFrame();
     void MarkRotationChanged();
+    void MarkRotationChangedClear(bool rotationClear = true);
     void MarkNodeIsOccluded(bool isOccluded);
     void ClearCacheIfNeeded();
 
     bool IsFilterCacheValid() const;
     bool IsForceClearFilterCache() const;
     bool IsForceUseFilterCache() const;
+    bool IsRotationChangedClear() const;
     bool NeedPendingPurge() const;
     bool IsSkippingFrame() const;
     bool IsAIBarCacheValid();
@@ -160,6 +162,7 @@ protected:
     bool filterRegionChanged_ = false;
     bool filterInteractWithDirty_ = false;
     bool rotationChanged_ = false;
+    bool rotationChangedClear_ = false;
     bool forceClearCacheForLastFrame_ = false;
     bool isAIBarInteractWithHWC_ = false;
     bool isEffectNode_ = false;

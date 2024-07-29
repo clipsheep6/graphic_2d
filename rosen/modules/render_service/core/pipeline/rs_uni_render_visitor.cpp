@@ -2067,7 +2067,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByHwcNodeBelowSelfInApp(std::vector<
         return;
     }
     for (auto rect : hwcRects) {
-        if (dst.Intersect(rect) && RsCommonHook::Instance().IsHardwareDisabledByHwcNodeSkipped()) {
+        if (dst.Intersect(rect) && !RsCommonHook::Instance().IsHardwareDisabledByHwcNodeSkipped()) {
             RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by hwc node above",
                 hwcNode->GetName().c_str(), hwcNode->GetId());
             hwcNode->SetHardwareForcedDisabledState(true);
@@ -2902,14 +2902,20 @@ void RSUniRenderVisitor::UpdateHardwareStateByHwcNodeBackgroundAlpha(
             hwcNodeVector.push_back(hwcNodes[i]);
         } else if (hwcNodePtr->IsNodeHasBackgroundColorAlpha() &&
                    !hwcNodePtr->IsHardwareForcedDisabled() && hwcNodeVector.size() != 0) {
-            for (int j = hwcNodeVector.size() - 1; j >= 0; j--) {
-                if (hwcNodePtr->GetDstRect().IsInsideOf(hwcNodeVector[j].lock()->GetDstRect())) {
-                    hwcNodePtr->SetHardwareForcedDisabledState(false);
-                    break;
-                } else {
-                    hwcNodePtr->SetHardwareForcedDisabledState(true);
-                }
-            }
+            UpdateHardwareStateByCoverage(hwcNodes[i], hwcNodeVector);
+        }
+    }
+}
+
+void RSUniRenderVisitor::UpdateHardwareStateByCoverage(std::weak_ptr<RSSurfaceRenderNode> hwcNode,
+    std::vector<std::weak_ptr<RSSurfaceRenderNode>>& hwcNodeVector)
+{
+    for (int i = hwcNodeVector.size() - 1; i >= 0; i--) {
+        if (hwcNode.lock()->GetDstRect().IsInsideOf(hwcNodeVector[i].lock()->GetDstRect())) {
+            hwcNode.lock()->SetHardwareForcedDisabledState(false);
+            break;
+        } else {
+            hwcNode.lock()->SetHardwareForcedDisabledState(true);
         }
     }
 }

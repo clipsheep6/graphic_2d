@@ -522,5 +522,7 @@ void SetRectStyleFromJS(napi_env env, napi_value argValue, RectStyle& rectStyle)
 
 napi_value GetFontMetricsAndConvertToJsValue(napi_env env, Drawing::FontMetrics* metrics);
 
+bool GetTextTabFromJS(napi_env env, napi_value argValue, TextTab& tab);
+
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

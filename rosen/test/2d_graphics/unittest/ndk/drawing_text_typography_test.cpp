@@ -2917,4 +2917,64 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest107, TestSize.Level
     OH_Drawing_PointDestroy(offset);
     EXPECT_TRUE(shadow != nullptr);
 }
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest108
+ * @tc.desc: test for the text tab create and destroy.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest108, TestSize.Level1)
+{
+    OH_Drawing_TextTab* textTab = OH_Drawing_CreateTextTab(TEXT_ALIGN_LEFT, 0.0);
+    EXPECT_TRUE(textTab != nullptr);
+    OH_Drawing_TextTab* textTab2 = OH_Drawing_CreateTextTab(TEXT_ALIGN_END, -1.0);
+    EXPECT_TRUE(textTab2 != nullptr);
+    OH_Drawing_DestroyTextTab(textTab);
+    OH_Drawing_DestroyTextTab(textTab2);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest109
+ * @tc.desc: test for get alignment of the text tab .
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest109, TestSize.Level1)
+{
+    OH_Drawing_TextTab* textTab = OH_Drawing_CreateTextTab(TEXT_ALIGN_LEFT, 0.0);
+    EXPECT_EQ(OH_Drawing_GetTextTabAlign(textTab), TEXT_ALIGN_LEFT);
+    OH_Drawing_TextTab* textTab2 = OH_Drawing_CreateTextTab(TEXT_ALIGN_JUSTIFY, 0.0);
+    EXPECT_EQ(OH_Drawing_GetTextTabAlign(textTab), TEXT_ALIGN_LEFT);
+    OH_Drawing_DestroyTextTab(textTab);
+    OH_Drawing_DestroyTextTab(textTab2);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest110
+ * @tc.desc: test for get location of the text tab .
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest110, TestSize.Level1)
+{
+    OH_Drawing_TextTab* textTab = OH_Drawing_CreateTextTab(TEXT_ALIGN_LEFT, 0.0);
+    EXPECT_EQ(OH_Drawing_GetTextTabLocation(textTab), 0.0);
+    OH_Drawing_DestroyTextTab(textTab);
+    OH_Drawing_TextTab* textTab2 = OH_Drawing_CreateTextTab(TEXT_ALIGN_LEFT, -100.0);
+    EXPECT_EQ(OH_Drawing_GetTextTabLocation(textTab2), -100.0);
+    OH_Drawing_DestroyTextTab(textTab2);
+}
+
+/*
+ * @tc.name: OH_Drawing_TypographyTest111
+ * @tc.desc: test for typography style set text tab.
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest111, TestSize.Level1)
+{
+    OH_Drawing_TextTab* textTab = OH_Drawing_CreateTextTab(TEXT_ALIGN_LEFT, -1.0);
+    OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
+    OH_Drawing_SetTypographyTextTab(typoStyle, textTab);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->tab.alignment_, TextAlign::LEFT);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->tab.location_, -1.0);
+    OH_Drawing_DestroyTextTab(textTab);
+}
 }

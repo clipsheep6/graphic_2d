@@ -14,9 +14,10 @@
  */
 
 #include "rs_surface_frame_ohos_vulkan.h"
-#include "rs_trace.h"
 #include "platform/common/rs_log.h"
+
 #include "platform/common/rs_system_properties.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,7 +31,8 @@ RSSurfaceFrameOhosVulkan::RSSurfaceFrameOhosVulkan(std::shared_ptr<Drawing::Surf
 void RSSurfaceFrameOhosVulkan::SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height)
 {
 #ifdef RS_ENABLE_VK
-    if (!RSSystemProperties::IsUseVulkan()) {
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return;
     }
     RS_TRACE_FUNC();
@@ -44,7 +46,8 @@ void RSSurfaceFrameOhosVulkan::SetDamageRegion(int32_t left, int32_t top, int32_
 void RSSurfaceFrameOhosVulkan::SetDamageRegion(const std::vector<RectI>& rects)
 {
 #ifdef RS_ENABLE_VK
-    if (!RSSystemProperties::IsUseVulkan()) {
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return;
     }
     RS_TRACE_FUNC();

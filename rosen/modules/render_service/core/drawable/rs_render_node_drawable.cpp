@@ -86,33 +86,33 @@ void RSRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 #ifdef SUBTREE_PARALLEL_ENABLE
 void RSRenderNodeDrawable::OnDrawParallel(Drawing::Canvas& canvas, const Drawing::Rect& bounds)
 {
-   if (RSParallelManager::Singleton().CheckIsParallelFrame()) {
-    static_cast<RSPaintFilterCanvas*>(&canvas)->IncTreeDepth();
-    ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this);
-    switch(drawType) {
-        case ParallelDrawType::DrawAll:
-            DrawAll (canvas, bounds);
-            break;
-        case ParallelDrawType::DrawBackgroundAndContentAndChildren:
-            DrawBackground(canvas, bounds);
-            DrawContent(canvas, bounds);
-            DrawChildren(canvas, bounds);
-            break;
-        case ParallelDrawType::DrawChildren:
-            DrawChildren(canvas, bounds);
-            break;
-        case ParallelDrawType::DrawChildrenAndForeground:
-            DrawChildren(canvas, bounds);
-            DrawForeground(canvas, bounds);
-            break;
-        case ParallelDrawType::Skip:
-            break;
-        default:
-            DrawAll(canvas, bounds);
-    }
+    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+    if (!(paintFilterCanvas->GetIsParallelCanvas()) && RSParallelManager::Singleton().CheckIsParallelFrame()) {
+        ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this);
+        switch (drawType) {
+            case ParallelDrawType::DrawAll:
+                DrawAll (canvas, bounds);
+                break;
+            case ParallelDrawType::DrawBackgroundAndContentAndChildren:
+                DrawBackground(canvas, bounds);
+                DrawContent(canvas, bounds);
+                DrawChildren(canvas, bounds);
+                break;
+            case ParallelDrawType::DrawChildren:
+                DrawChildren(canvas, bounds);
+                break;
+            case ParallelDrawType::DrawChildrenAndForeground:
+                DrawChildren(canvas, bounds);
+                DrawForeground(canvas, bounds);
+                break;
+            case ParallelDrawType::Skip:
+                break;
+            default:
+                DrawAll(canvas, bounds);
+        }
     static_cast<RSPaintFilterCanvas*>(&canvas)->DecTreeDepth();
    } else {
-    DrawAll(canvas, bounds);
+        DrawAll(canvas, bounds);
    }
 }
 #endif

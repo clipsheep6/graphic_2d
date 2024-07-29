@@ -59,6 +59,9 @@
 #endif
 namespace {
 constexpr int32_t CORNER_SIZE = 4;
+constexpr int THREADID_YELLOW = 11;
+constexpr int THREADID_ORANGE = 12;
+constexpr int THREADID_PURPLE = 13;
 }
 namespace OHOS::Rosen::DrawableV2 {
 RSSurfaceRenderNodeDrawable::Registrar RSSurfaceRenderNodeDrawable::instance_;
@@ -287,7 +290,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
    if (!(rscanvas->GetIsParallelCanvas()) &&
         RSParallelManager::Singleton().CheckIsParallelFrame() &&
         RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
-       return;
+        return;
    }
 #endif
     auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
@@ -845,13 +848,13 @@ void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& ca
     auto sizeDebug = surfaceParams.GetCacheSize();
     Drawing::Brush rectBrush;
     auto threadId = canvas.GetParallelThreadIdx();
-    if (threadId == 11) {
+    if (threadId == THREADID_YELLOW) {
         //yellow
         rectBrush.SetColor(Drawing::Color(255, 192, 128, 128));
-    } else if (threadId == 12) {
+    } else if (threadId == THREADID_ORANGE) {
         //orange
         rectBrush.SetColor(Drawing::Color(255, 128, 0, 128));
-    } else if (threadId == 13) {
+    } else if (threadId == THREADID_PURPLE) {
         //purple
         rectBrush.SetColor(Drawing::Color(192, 0, 128, 128));
     } else {

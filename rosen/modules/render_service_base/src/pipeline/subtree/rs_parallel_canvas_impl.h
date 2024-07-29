@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_CANVAS_IMPL_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_CANVAS_IMPL_H
 
 #include "./rs_parallel_recorder.h"
 #include "./rs_parallel_canvas.h"
@@ -73,14 +73,14 @@ void RSParallelDrawCanvas::DrawImage(const Drawing::Image& image, const Drawing:
     RSPaintFilterCanvas::DrawImage(image, px, py, sampling);
 }
 
-void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src,const Drawing::Rect& dst,
-                                     const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
+void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+                                         const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
 {
     if (canSharedDraw_) {
     auto gpuContext = GetGPUContext();
     auto draw = RSParallelResourceManager::Singleton().GenerateSharedImageForDraw(image, gpuContext);
     if (draw != nullptr) {
-        RSPaintFilterCanvas::DrawImageRect(*draw, src , dst, sampling, constraint);
+        RSPaintFilterCanvas::DrawImageRect(*draw, src, dst, sampling, constraint);
         return ;
     }
     }
@@ -131,3 +131,4 @@ void RSParallelCanvas::RemoveStatusCanvas(size_t idx)
 
 #endif
 }
+#endif

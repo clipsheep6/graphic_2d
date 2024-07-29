@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RESOURCE_MANAGER_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RESOURCE_MANAGER_H
 
 #include <list>
 #include <map>
@@ -39,17 +39,17 @@ namespace Drawing {
 }
 
 //TypeDef
-    using ThreadTag = int;
-    using Resource = OnMigrateFunc;
-    using Container = std::list<Resource>;
-    using ContainerPtr = std::unique_ptr<Container>;
-    using BucketMapping = std::map<ThreadTag, RecycleBucket>;
-    using MigrateMapping = std::map<ThreadTag, MigrateFunc>;
-    using ImagePtr = std::shared_ptr<Drawing::Image>;
-    using ContextPtr = std::shared_ptr<Drawing::GPUContext>;
+using ThreadTag = int;
+using Resource = OnMigrateFunc;
+using Container = std::list<Resource>;
+using ContainerPtr = std::unique_ptr<Container>;
+using BucketMapping = std::map<ThreadTag, RecycleBucket>;
+using MigrateMapping = std::map<ThreadTag, MigrateFunc>;
+using ImagePtr = std::shared_ptr<Drawing::Image>;
+using ContextPtr = std::shared_ptr<Drawing::GPUContext>;
 
 //Resource Holder
-class RSB_EXPORT RSParallelResourceManager final{
+class RSB_EXPORT RSParallelResourceManager final {
     public:
     static RSParallelResourceManager& Singleton();
     void RegisterMigrate(Drawing::GPUContext* gpuctx, const MigrateFunc& migrate, bool force = false);
@@ -73,3 +73,4 @@ private:
 };
 
 }
+#endif

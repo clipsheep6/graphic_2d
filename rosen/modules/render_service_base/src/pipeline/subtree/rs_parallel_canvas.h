@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_CANVAS_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_CANVAS_H
 
 #include "./rs_parallel_recorder.h"
 #include "pipeline/rs_paint_filter_canvas.h"
@@ -48,7 +48,7 @@ public:
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override {}
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
-        Drawing::FilterMode filter,const Drawing::Brush* brush = nullptr) override {}
+        Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override {}
     void DrawBitmap(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py) override {}
     void DrawImage(const Drawing::Image& image,
         const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling) override {}
@@ -92,3 +92,4 @@ private:
 };
 
 }
+#endif

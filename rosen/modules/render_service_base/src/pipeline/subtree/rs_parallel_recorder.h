@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RECORDER_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RECORDER_H
 
 #include <list>
 
@@ -32,25 +32,20 @@ public:
     ~RSParallelRecorder() = default;
 
     inline void Record(const CanvasStatusOp& op) {
-     {
-
-       recorder_.emplace_back(op);
+        recorder_.emplace_back(op);
     }
-}
 
-  inline void Playback(RSPaintFilterCanvasBase* newCanvas) {
-    {
+    inline void Playback(RSPaintFilterCanvasBase* newCanvas) {
         std::for_each(recorder_.begin(), recorder_.end(), [newCanvas](auto& oop){ op(newCanvas); });
     }
-  }
 
-  inline int Size() const {
-     return recorder_.size();
-  }
+    inline int Size() const {
+        return recorder_.size();
+    }
 
 private:
-   std::list<CanvasStatusOp> recorder_;
- };
+    std::list<CanvasStatusOp> recorder_;
+};
 
 template <typename T, typename R, typename ...Args>
 static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
@@ -59,7 +54,7 @@ static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
     if (recorder == nullptr) {
         return ;
     }
-    recorder->Record([MemFunc, args...] (T* canvas){
+    recorder->Record([MemFunc, args...] (T* canvas) {
         (canvas->*MemFunc)(args...);
     });
 }
@@ -71,19 +66,19 @@ static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
     if (recorder == nullptr) {
         return ;
     }
-    recorder->Record([MemFunc, c, args...] (T* canvas){
+    recorder->Record([MemFunc, c, args...] (T* canvas) {
         (canvas->*MemFunc)(c, args...);
     });
 }
 
 template <typename T, typename R, typename P1, typename P2, typename P3>
 static inline void RSParallelRecord(RSParallelRecorderPtr& recorder,
-                                    R (T::*MemFunc)(const P1&, P2&, P3), const P1& p1 , P2& p2, P3 p3)
+                                    R (T::*MemFunc)(const P1&, P2&, P3), const P1& p1, P2& p2, P3 p3)
 {
     if (recorder == nullptr) {
         return;
     }
-    recorder->Record([MemFunc, p1, p2, p3] (T* canvas) mutable{
+    recorder->Record([MemFunc, p1, p2, p3] (T* canvas) mutable {
         (canvas->*MemFunc)(p1, p2, p3);
     });
 }
@@ -96,3 +91,4 @@ static inline void RSParallelPlayback(RSParallelRecorderPtr& recorder, RSPaintFi
 }
 
  }
+#endif

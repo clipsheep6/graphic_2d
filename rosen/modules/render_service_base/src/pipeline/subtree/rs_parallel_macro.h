@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_MACRO_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_MACRO_H
 
 #define DEFAULT_CONSTURCT_(T) \
     T()
@@ -23,11 +23,11 @@
 
 #define DISALLOW_COPY_AND_ASSIGN(T) \
     T(const T&) = delete;       \
-    T& operator = (const T&) = delete\
+    T& operator=(const T&) = delete\
 
 #define DISALLOW_MOVE_AND_ASSIGN(T) \
     T(const T&&) = delete;       \
-    T& operator = (const T&&) = delete\
+    T& operator=(const T&&) = delete
 
 #define SINGLETON_DECLARE(T) \
     DEFAULT_CONSTURCT_(T); \
@@ -47,3 +47,4 @@
 
 #define SUBTREE_TRACE_NAME_FMT(fmt, ...) \
     HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__)
+#endif

@@ -589,8 +589,8 @@ void RSPaintFilterCanvasBase::ClipRoundRect(const RoundRect& roundRect, ClipOp o
     }
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
-    RSParallelRecord<RSPaintFilterCanvasBase, void, RoundRect, ClipOp, bool>
-    (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, roundRect, op, doAntiAlias);
+    RSParallelRecord<RSPaintFilterCanvasBase, void, RoundRect, ClipOp, bool>(recorder_,
+        &RSPaintFilterCanvasBase::ClipRoundRect, roundRect, op, doAntiAlias);
 #endif
 }
 
@@ -610,9 +610,8 @@ void RSPaintFilterCanvasBase::ClipRoundRect(const Drawing::Rect& rect,
 #endif
 #ifdef SUBTREE_PARALLEL_ENABLE
    RSParallelRecord<RSPaintFilterCanvasBase, void, Drawing::Rect, std::vector<Drawing::Point>, bool>
-   (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, rect, pts, doAntiAlias);
+       (recorder_, &RSPaintFilterCanvasBase::ClipRoundRect, rect, pts, doAntiAlias);
 #endif
-
 }
 
 void RSPaintFilterCanvasBase::ClipPath(const Path& path, ClipOp op, bool doAntiAlias)
@@ -1386,7 +1385,8 @@ void RSPaintFilterCanvas::CopyHDRConfiguration(const RSPaintFilterCanvas& other)
     targetColorGamut_ = other.targetColorGamut_;
 }
 #ifdef SUBTREE_PARALLEL_ENABLE
-void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& other) {
+void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& other)
+{
     static auto sEnvDeepCopy = [] (std::stack<Env>& s1, const std::stack<Env>& s2, ContextPtr& gpuContext) {
         auto& e1 = s1.top();
         auto& e2 = s2.top();
@@ -1416,8 +1416,6 @@ void RSPaintFilterCanvas::CopyParallelConfiguration(const RSPaintFilterCanvas& o
     threadIndex_ = other.threadIndex_;
 }
 #endif
-
-
 
 void RSPaintFilterCanvas::CopyConfigurationToOffscreenCanvas(const RSPaintFilterCanvas& other)
 {

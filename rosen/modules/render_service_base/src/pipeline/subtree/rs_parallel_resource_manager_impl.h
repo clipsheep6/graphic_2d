@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RESOURCE_MANAGER_IMPL_H
+#define RENDER_SERVICE_BASE_SUBTREE_RS_PARALLEL_RESOURCE_MANAGER_IMPL_H
 
 #include "pipeline/subtree/rs_parallel_resource_manager.h"
 #include "pipeline/subtree/rs_parallel_macro.h"
@@ -98,7 +99,7 @@ void RSGPUResourceManager::Collect(ThreadTag dst, const Resource& res)
 void RSGPUResourceManager::Dispatch()
 {
     static const auto s_migrateFunc = [this] () {DoRelease(); };
-    for(const auto& item :migrateMapping_) {
+    for (const auto& item :migrateMapping_) {
         item.second(nullptr, s_migrateFunc);
     }
 }
@@ -116,7 +117,7 @@ inline void RSGPUResourceManager::DoRelease()
     }
     if (needClear) {
         SUBTREE_TRACE_NAME_FMT("Release: %d",  empty->size());
-        for(auto& callback : *empty) {
+        for (auto& callback : *empty) {
             callback();
         }
         empty->clear();
@@ -162,7 +163,8 @@ RSParallelResourceManager::RSParallelResourceManager()
 #ifdef SUBTREE_PARALLEL_DEBUG
 
     auto debugCallback = [threadName, threadTag](const std::string& debugLog) {
-    RS_LOGD("Resource[%{public}s] ReleaseMigrate: [%{public}s](%{public}d)->[%{public}s](%{public}d)", debugLog.c_str(), GetThreadName(), gettid(), threadName.c_str(), threadTag);
+    RS_LOGD("Resource[%{public}s] ReleaseMigrate: [%{public}s](%{public}d)->[%{public}s](%{public}d)",
+        debugLog.c_str(), GetThreadName(), gettid(), threadName.c_str(), threadTag);
     };
     grctx->registerDebugCallback(debugCallback);
 #endif
@@ -212,7 +214,6 @@ ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref, C
     }
     Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
     Drawing::BitmapFormat format = {ref->GetColorType(), ref->GetAlphaType() };
-    // auto backendTexture = ref->GetBackendTexture(false, &origin);
     if (!backendTexture.IsValid()) {
         return nullptr;
     }
@@ -221,8 +222,8 @@ ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref, C
     if (!image->BuildFromTexture(*newCtx, backendTexture.GetTextureInfo(),
          origin, format, nullptr, ReleaseResourceHolder, holder)) {
             return nullptr;
-         }
-         return image;
+    }
+    return image;
 }
 
 struct RSParallelResourceHolder2{
@@ -239,7 +240,8 @@ static void ReleaseResourceHolder2(void* context)
     }
 }
 
-ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Image& ref, ContextPtr& newCtx, bool isOriginTop)
+ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Image& ref,
+    ContextPtr& newCtx, bool isOriginTop)
 {
     if (newCtx == nullptr || ref.IsValid(newCtx.get())) {
         return nullptr;
@@ -263,3 +265,4 @@ ImagePtr RSParallelResourceManager::GenerateSharedImageForDraw(const Drawing::Im
 }
 
 }
+#endif

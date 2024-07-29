@@ -873,15 +873,15 @@ bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> nod
     }
     auto children = node->GetSortedChildren();
 
-    return node->IsLeashWindow() && (surfaceName.substr(0,11) == "WindowScene")
+    return node->IsLeashWindow() && (surfaceName.substr(0, 11) == "WindowScene")
            && children->size() == 1 && ((*children)[0]->GetType() == RSRenderNodeType::SURFACE_NODE);
 }
 
 bool RSUniRenderUtil::IsNodeSCBDesktop(std::shared_ptr<RSSurfaceRenderNode> node)
 {
     std::string surfaceName  = node->GetName();
-    return (surfaceName.substr(0,10) == "SCBDesktop") || (surfaceName.substr(0,17) == "SCBNegativeScreen")
-           || (surfaceName.substr(0,15) == "SCBGlobalSearch");
+    return (surfaceName.substr(0, 10) == "SCBDesktop") || (surfaceName.substr(0, 17) == "SCBNegativeScreen")
+           || (surfaceName.substr(0, 15) == "SCBGlobalSearch");
 }
 #endif
 

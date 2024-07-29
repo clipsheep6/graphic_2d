@@ -163,16 +163,16 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
    auto gpuContext = canvas.GetGPUContext();
    if (cachedSnapshot_ != nullptr && cachedSnapshot_->cachedImage_ != nullptr &&
        !cachedSnapshot_->cachedImage_->IsValid(gpuContext.get())) {
-       Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
-       auto backendTexture = cachedSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
-       cachedSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
+           Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+           auto backendTexture = cachedSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
+           cachedSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
            BuildFromTextureByRef(cachedSnapshot_->cachedImage_, gpuContext, backendTexture);
     }
     if (cachedFilteredSnapshot_ != nullptr && cachedFilteredSnapshot_->cachedImage_ != nullptr &&
         !cachedFilteredSnapshot_->cachedImage_->IsValid(gpuContext.get())) {
-        Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
-        auto backendTexture = cachedFilteredSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
-        cachedFilteredSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
+            Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+            auto backendTexture = cachedFilteredSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
+            cachedFilteredSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
             BuildFromTextureByRef(cachedFilteredSnapshot_->cachedImage_, gpuContext, backendTexture);
     }
 #endif

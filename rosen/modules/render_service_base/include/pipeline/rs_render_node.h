@@ -673,15 +673,15 @@ public:
     }
 
 #ifdef SUBTREE_PARALLEL_ENABLE
-     uint32_t GetWeight() const
-     {
+    uint32_t GetWeight() const
+    {
         return weight_;
-     }
+    }
 
-     void SetWeight(uint32_t weight)
-     {
+    void SetWeight(uint32_t weight)
+    {
         weight_ = weight;
-     }
+    }
 #endif
 
     void SkipSync()

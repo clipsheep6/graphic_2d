@@ -53,7 +53,7 @@ bool RsCommonHook::GetVideoSurfaceFlag() const
 {
     return videoSurfaceFlag_;
 }
-
+// skip hwcnode hardware state updating 
 bool RsCommonHook::IsHardwareDisabledByHwcNodeSkipped() const
 {
     return hardwareDisabledByHwcNodeSkippedFlag_;

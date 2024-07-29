@@ -178,6 +178,9 @@ public:
 
     void UpdateHardwareStateByHwcNodeBackgroundAlpha(const std::vector<std::weak_ptr<RSSurfaceRenderNode>>& hwcNodes);
 
+    void UpdateHardwareStateByCoverage(std::weak_ptr<RSSurfaceRenderNode> hwcNode,
+    std::vector<std::weak_ptr<RSSurfaceRenderNode>>& hwcNodeVector);
+
     void SurfaceOcclusionCallbackToWMS();
 
     std::unordered_set<NodeId> GetCurrentBlackList() const;

@@ -64,9 +64,9 @@ namespace OHOS {
         static bool firstComeIn = true;
         if (firstComeIn) {
 #if (defined(__aarch64__) || defined(__x86_64__))
-            const char *path = "/system/lib64/platformsdk/libvulkan.so";
+            const char *path = "/system/lib64/libvulkan.so.1";
 #else
-            const char *path = "/system/lib/platformsdk/libvulkan.so";
+            const char *path = "/system/lib/libvulkan.so.1";
 #endif
             g_libVulkan = dlopen(path, RTLD_NOW | RTLD_LOCAL);
             if (g_libVulkan == nullptr) {

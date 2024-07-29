@@ -88,7 +88,7 @@ void RsVulkanInterface::Init(bool isProtected)
 
 RsVulkanInterface::~RsVulkanInterface()
 {
-    for (auto && semaphoreFence : usedSemaphoreFenceList_) {
+    for (auto&& semaphoreFence : usedSemaphoreFenceList_) {
         if (semaphoreFence.fence != nullptr) {
             semaphoreFence.fence->Wait(-1);
         }
@@ -371,7 +371,7 @@ bool RsVulkanInterface::OpenLibraryHandle()
 {
     ROSEN_LOGI("VulkanProcTable OpenLibararyHandle: dlopen libvulkan.so.");
     dlerror();
-    handle_ = dlopen("/system/lib64/platformsdk/libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+    handle_ = dlopen("/system/lib64/libvulkan.so", RTLD_NOW | RTLD_LOCAL);
     if (handle_ == nullptr) {
         ROSEN_LOGE("Could not open the vulkan library: %{public}s", dlerror());
         return false;

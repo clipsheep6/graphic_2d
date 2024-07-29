@@ -731,16 +731,21 @@ void HgmFrameRateManager::CheckPackageInConfigList(std::unordered_map<pid_t,
     auto rsCommonHook = RsCommonHook::Instance();
     std::unordered_map<std::string, std::string> videoConfigFromHgm = rsCommonHook.GetVideoSurfaceConfig();
     if (!videoConfigFromHgm.empty()) {
-        for (auto pair: foregroundPidAppMap) {
-            // 1 means crop source tuning
-            if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end() &&
-                videoConfigFromHgm[pair.second.second] == "1") {
+        return;
+    }
+    for (auto pair: foregroundPidAppMap) {
+        if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end()) {
+            switch (videoConfigFromHgm[pair.second.second]) {
+                case "1":
+                    // 1 means crop source tuning
                     rsCommonHook.SetVideoSurfaceFlag(true);
-            // 2 means skip hardware disabled by hwc and background alpha
-            } else if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end() &&
-                       videoConfigFromHgm[pair.second.second] == "2") {
-                rsCommonHook.hardwareDisabledByHwcNodeSkippedFlag_ = true;
-                rsCommonHook.hardwareDisabledByBackgroundAlphaSkippedFlag_ = true; 
+                    break;
+                case "2":
+                    // 2 means skip hardware disabled by hwc and background alpha
+                    rsCommonHook.hardwareDisabledByHwcNodeSkippedFlag_ = true;
+                    rsCommonHook.hardwareDisabledByBackgroundAlphaSkippedFlag_ = true; 
+                default:
+                    break;
             }
         }
     }

@@ -117,12 +117,12 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, InitSurfaceTest, TestSize.Level1
     int width = 1;
     int height = 1;
     drawable->surface_ = nullptr;
-    auto result = drawable->InitSurface(width, height, canvas);
+    auto result = drawable->InitSurface(width, height, &canvas);
     EXPECT_EQ(result, true);
 
     drawable->surface_ = std::make_shared<Drawing::Surface>();
     drawable->surface_->cachedCanvas_ = std::make_shared<Drawing::Canvas>(0, 0);
-    result = drawable->InitSurface(width, height, canvas);
+    result = drawable->InitSurface(width, height, &canvas);
     EXPECT_EQ(result, true);
 }
 
@@ -267,12 +267,12 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceTest002, TestSize.Le
     int width = 1;
     int height = 1;
     canvas.recordingState_ = true;
-    auto result = drawable->ResetSurfaceForGL(width, height, canvas);
+    auto result = drawable->ResetSurfaceForGL(width, height, &canvas);
     EXPECT_EQ(result, true);
 
     canvas.recordingState_ = false;
     drawable->image_ = std::make_shared<Drawing::Image>();
-    result = drawable->ResetSurfaceForGL(width, height, canvas);
+    result = drawable->ResetSurfaceForGL(width, height, &canvas);
     EXPECT_EQ(result, true);
 }
 
@@ -294,7 +294,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceWithTextureTest, Tes
     drawable->canvas_ = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     drawable->surface_ = std::make_shared<Drawing::Surface>();
     drawable->image_ = std::make_shared<Drawing::Image>();
-    auto result = drawable->ResetSurfaceWithTexture(width, height, canvas);
+    auto result = drawable->ResetSurfaceWithTexture(width, height, &canvas);
     ASSERT_EQ(result, false);
 }
 #endif

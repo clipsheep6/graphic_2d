@@ -194,16 +194,16 @@ bool RSCanvasDrawingRenderNode::IsNeedProcess() const
     return renderDrawable_->GetRenderParams()->IsNeedProcess();
 }
 
-void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
+void RSCanvasDrawingRenderNode::SetNeedProcess()
 {
     auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
     if (stagingCanvasDrawingParams) {
-        stagingCanvasDrawingParams->SetNeedProcess(needProcess);
+        stagingCanvasDrawingParams->SetNeedProcess(true);
         if (stagingRenderParams_->NeedSync()) {
             AddToPendingSyncList();
         }
     }
-    isNeedProcess_ = needProcess;
+    isNeedProcess_ = true;
 }
 
 void RSCanvasDrawingRenderNode::PlaybackInCorrespondThread()
@@ -494,7 +494,7 @@ void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType modifierType)
             }
             drawCmdLists_[type].emplace_back(cmd);
             if (cmd->GetOpItemSize() > 0) {
-                SetNeedProcess(true);
+                SetNeedProcess();
             }
         }
     }
@@ -525,12 +525,10 @@ const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDraw
 
 void RSCanvasDrawingRenderNode::ClearResource()
 {
-    if (renderDrawable_ && renderDrawable_->IsDrawCmdListsVisited()) {
+    if (renderDrawable_ && renderDrawable_->CheckAndSetIsDrawCmdListsVisited()) {
         std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
         drawCmdLists_.clear();
-        renderDrawable_->SetDrawCmdListsVisited(false);
     }
 }
-
 } // namespace Rosen
 } // namespace OHOS

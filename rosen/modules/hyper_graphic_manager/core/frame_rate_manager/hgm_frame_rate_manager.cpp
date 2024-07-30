@@ -732,7 +732,7 @@ void HgmFrameRateManager::CheckPackageInConfigList(std::unordered_map<pid_t,
     std::unordered_map<std::string, std::string> videoConfigFromHgm = rsCommonHook.GetVideoSurfaceConfig();
     if (!videoConfigFromHgm.empty()) {
         for (auto pair: foregroundPidAppMap) {
-            if (videoConfigFromHgm.find(pair.second.second) != videoConfigFromHgm.end()) {
+            if (videoConfigFromHgm.find(pair.second.second) == videoConfigFromHgm.end()) {
                 continue;
             }
             // 1 means crop source tuning

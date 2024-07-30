@@ -23,7 +23,7 @@ pthread_once_t ThreadPrivateDataCtl::onceCtl_ = PTHREAD_ONCE_INIT;
 
 void ThreadPrivateDataCtl::KeyInit()
 {
-    if (pthread_key_create(&key_, nullptr) != 0) {
+    if (pthread_key_create(&key_, ClearPrivateDataWrapper) != 0) {
         WLOGE("Failed to create thread key.");
         return;
     }
@@ -55,6 +55,11 @@ void ThreadPrivateDataCtl::ClearPrivateData()
             delete data;
         }
     }
+}
+
+void ThreadPrivateDataCtl::ClearPrivateDataWrapper(void* data)
+{
+    ClearPrivateData();
 }
 
 #ifdef EGL_ERROR_ENABLE

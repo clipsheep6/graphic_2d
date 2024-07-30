@@ -2169,12 +2169,6 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
     }
 }
 
-void RSRenderNode::RemoveAllModifiers()
-{
-    modifiers_.clear();
-    renderContent_->drawCmdModifiers_.clear();
-}
-
 void RSRenderNode::DumpNodeInfo(DfxString& log)
 {
     // Drawing is not supported

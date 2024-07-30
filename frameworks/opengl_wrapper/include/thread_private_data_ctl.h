@@ -16,16 +16,25 @@
 #ifndef FRAMEWORKS_OPENGL_WRAPPER_THREAD_PRIVATE_DATA_H
 #define FRAMEWORKS_OPENGL_WRAPPER_THREAD_PRIVATE_DATA_H
 
-#include <pthread.h>
 #include <EGL/egl.h>
+#include <pthread.h>
 
 #include "hook.h"
+
 namespace OHOS {
 struct ThreadPrivateData {
-    ThreadPrivateData() : error(EGL_SUCCESS), ctx(nullptr), table(nullptr) {}
-    EGLint      error;
-    EGLContext  ctx;
-    GlHookTable *table;
+    ThreadPrivateData() : error(EGL_SUCCESS), ctx(EGL_NO_CONTEXT), table(nullptr) {}
+    ~ThreadPrivateData()
+    {
+        if (ctx != EGL_NO_CONTEXT) {
+            eglDestroyContext(eglGetDisplay(EGL_DEFAULT_DISPLAY), ctx);
+        }
+        delete table;
+        table = nullptr;
+    }
+    EGLint error;
+    EGLContext ctx;
+    GlHookTable* table;
 };
 
 class ThreadPrivateDataCtl {
@@ -42,6 +51,7 @@ public:
 private:
     static void KeyInit();
     static void ValidateKey();
+    static void ClearPrivateDataWrapper(void* data);
     static pthread_key_t key_;
     static pthread_once_t onceCtl_;
 };

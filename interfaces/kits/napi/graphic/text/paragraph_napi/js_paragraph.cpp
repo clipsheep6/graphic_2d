@@ -792,7 +792,7 @@ napi_value JsParagraph::OnLayoutAsync(napi_env env, napi_callback_info info)
     struct ConcreteContext : public ContextBase {
         double width = 0.0;
     };
-    auto context = std::make_shared<ConcreteContext>();
+    sptr<ConcreteContext> context = new (std::nothrow) ConcreteContext();
     NAPI_CHECK_AND_THROW_ERROR(context != nullptr, TextErrorCode::ERR_NO_MEMORY,
         "JsParagraph::OnLayoutAsync failed, no memory");
 

@@ -68,8 +68,12 @@ public:
         TRADEMARK = 7,
     };
 
+    enum FontTypeStyle {
+        ITALIC = 1 << 0,
+        BOLD = 1 << 1,
+    };
+
     struct FontDescriptor {
-        FontDescriptor();
         std::string path;
         std::string postScriptName;
         std::string fullName;
@@ -85,11 +89,20 @@ public:
         int italic;
         bool monoSpace;
         bool symbolic;
+        double size = 0;
+        int typeStyle = 0;
     };
 
     FontParser();
     std::vector<FontDescriptor> GetVisibilityFonts(const std::string &locale = SIMPLIFIED_CHINESE);
     std::unique_ptr<FontDescriptor> GetVisibilityFontByName(const std::string& fontName,
+        const std::string locale = SIMPLIFIED_CHINESE);
+
+    bool ParserFontDescriptorFromPath(const std::string& path, FontDescriptor& desc,
+         const std::string locale = SIMPLIFIED_CHINESE);
+
+    bool ParserFontDescriptorFromPath(const std::string& path,
+        std::vector<std::shared_ptr<FontDescriptor>>& descriptors,
         const std::string locale = SIMPLIFIED_CHINESE);
 
 private:

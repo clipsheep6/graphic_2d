@@ -158,7 +158,7 @@ RSParallelResourceManager::RSParallelResourceManager()
             RS_LOGD("[%{public}s]: Migrate Collect Tid: [%{public}d]", GetThreadName(), threadTag);
             this->resManager_->Collect(threadTag, res);
         };
-        grctx->registerMigrateCallback(migrateCallback , force);
+        grctx->registerMigrateCallback(migrateCallback, force);
         RS_LOGD("[%{public}s]: Register ReleaseMigrate Done", threadName.c_str());
 #ifdef SUBTREE_PARALLEL_DEBUG
 
@@ -190,7 +190,6 @@ void RSParallelResourceManager::UnRegisterMigrate(Drawing::GPUContext* gpuctx)
 void RSParallelResourceManager::ReleaseResource()
 {
     resManager_->Dispatch();
-
 }
 
 struct RSParallelResourceHolder {
@@ -220,13 +219,14 @@ ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref, C
     auto image = std::make_shared<Drawing::Image>();
     auto holder = new RSParallelResourceHolder(ref);
     if (!image->BuildFromTexture(*newCtx, backendTexture.GetTextureInfo(),
-         origin, format, nullptr, ReleaseResourceHolder, holder)) {
-            return nullptr;
+        origin, format, nullptr, ReleaseResourceHolder, holder)) {
+        return nullptr;
     }
     return image;
 }
 
-struct RSParallelResourceHolder2{
+struct RSParallelResourceHolder2
+{
     RSParallelResourceHolder2(const Drawing::Image& sharedImage)
         : res_(sharedImage) {}
     const Drawing::Image res_;

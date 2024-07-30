@@ -669,7 +669,7 @@ bool RSSystemProperties::GetProxyNodeDebugEnabled()
 bool RSSystemProperties::GetSubtreeParallelEnable()
 {
     static const bool subtreeParallelEnable = std::atoi((system::GetParameter(
-        "persist.sys.graphic.subtreeParallelEnable","1")).c_str()) != 0 ;
+        "persist.sys.graphic.subtreeParallelEnable", "1")).c_str()) != 0 ;
         return subtreeParallelEnable;
 }
 

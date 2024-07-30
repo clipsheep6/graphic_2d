@@ -596,42 +596,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 #ifdef SUBTREE_PARALLEL_ENABLE
-  RS_TRACE_BEGIN("Update draw region for surfaces in advance");
-  bool isSubtreeParallelOff = false;
-  auto& curAllSurfaces = params->GetAllMainAndLeashSurfaceDrawables();
-  bool isuifirsNode = curCanvas_->GetIsParallelCanvas();
-
-  for (int i = curAllSurfaces.size() -1; i >= 0; i--) {
-    auto& renderNodeDrawable  = curAllSurfaces[i];
-    std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable =
-        std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
-    if (!surfaceNodeDrawable->ShouldPaint()) {
-        continue;
-    }
-    auto  surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNodeDrawable->GetRenderParams().get());
-    if (!surfaceParams) {
-        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
-        continue;
-    }
-    auto enableType = surfaceParams->GetUifirstNodeEnableParam();
-    std::string surfaceName = surfaceNodeDrawable->GetName();
-    if (enableType != MultiThreadCacheType::NONE || surfaceName.substr(0, 17) == "ARK_APP_SUBWINDOW") {
-        isSubtreeParallelOff = true;
-    }
-    if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
-        RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
-            surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
-        continue;
-    }
-    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(*uniParam, *surfaceParams,
-        *surfaceNodeDrawable, isuifirsNode);
-    if (!isuifirstNode) {
-        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
-    }
-    surfaceNodeDrawable->SetCurSurfaceDrawRegion(curSurfaceDrawRegion);
-  }
-  RS_TRACE_END();
-  RSParallelManager::Singleton().Reset(curCanvas_);
+    UpdateDrawSurface(*params);
 #endif
 
     ScreenId screenId = curScreenInfo.id;
@@ -755,6 +720,47 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RSPointerRenderManager::GetInstance().SetCacheImgForPointer(nullptr);
     }
 #endif
+}
+
+void RSDisplayRenderNodeDrawable::UpdateDrawSurface(RSDisplayRenderParams* params)
+{
+    RS_TRACE_BEGIN("Update draw region for surfaces in advance");
+    bool isSubtreeParallelOff = false;
+    auto& curAllSurfaces = params->GetAllMainAndLeashSurfaceDrawables();
+    bool isuifirsNode = curCanvas_->GetIsParallelCanvas();
+
+    for (int i = curAllSurfaces.size() -1; i >= 0; i--) {
+        auto& renderNodeDrawable  = curAllSurfaces[i];
+        std::shared_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable =
+        std::static_pointer_cast<RSSurfaceRenderNodeDrawable>(renderNodeDrawable);
+    if (!surfaceNodeDrawable->ShouldPaint()) {
+        continue;
+    }
+    auto  surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNodeDrawable->GetRenderParams().get());
+    if (!surfaceParams) {
+        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
+        continue;
+    }
+    auto enableType = surfaceParams->GetUifirstNodeEnableParam();
+    std::string surfaceName = surfaceNodeDrawable->GetName();
+    if (enableType != MultiThreadCacheType::NONE || surfaceName.substr(0, 17) == "ARK_APP_SUBWINDOW") {
+        isSubtreeParallelOff = true;
+    }
+    if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
+        RS_TRACE_NAME_FMT("RSDisplayRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
+            surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
+        continue;
+    }
+    Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(*uniParam, *surfaceParams,
+        *surfaceNodeDrawable, isuifirsNode);
+    if (!isuifirstNode) {
+        surfaceNodeDrawable->MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
+    }
+    surfaceNodeDrawable->SetCurSurfaceDrawRegion(curSurfaceDrawRegion);
+    }
+    RS_TRACE_END();
+    RSParallelManager::Singleton().Reset(curCanvas_);
+
 }
 
 void RSDisplayRenderNodeDrawable::DrawMirrorScreen(

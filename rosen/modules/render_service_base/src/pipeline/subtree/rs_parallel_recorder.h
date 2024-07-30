@@ -31,15 +31,20 @@ public:
 
     ~RSParallelRecorder() = default;
 
-    inline void Record(const CanvasStatusOp& op) {
+    inline void Record(const CanvasStatusOp& op)
+    {
         recorder_.emplace_back(op);
     }
 
-    inline void Playback(RSPaintFilterCanvasBase* newCanvas) {
-        std::for_each(recorder_.begin(), recorder_.end(), [newCanvas](auto& oop){ op(newCanvas); });
+    inline void Playback(RSPaintFilterCanvasBase* newCanvas)
+    {
+        std::for_each(recorder_.begin(), recorder_.end(), [newCanvas] (auto& oop) {
+            op(newCanvas);
+        });
     }
 
-    inline int Size() const {
+    inline int Size() const
+    {
         return recorder_.size();
     }
 
@@ -90,5 +95,5 @@ static inline void RSParallelPlayback(RSParallelRecorderPtr& recorder, RSPaintFi
     }
 }
 
- }
+}
 #endif

@@ -268,7 +268,8 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         ++getCurSurfaceDrawRegionCount_;
         if (getCurSurfaceDrawRegionCount_ > 1) {
-            RS_LOGE("SurfaceDrawable Name %{public}s, GetCurSurfaceDrawRegionCount_ %{public}d", GetName().c_str, GetCurSurfaceDrawRegionCount_.load());
+            RS_LOGE("SurfaceDrawable Name %{public}s, GetCurSurfaceDrawRegionCount_ %{public}d",
+                GetName().c_str, GetCurSurfaceDrawRegionCount_.load());
         }
         Drawing::Region region;
         region.Clone(curSurfaceDrawRegion_);

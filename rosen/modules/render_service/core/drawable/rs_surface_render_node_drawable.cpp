@@ -287,11 +287,11 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 #ifdef SUBTREE_PARALLEL_ENABLE
-   if (!(rscanvas->GetIsParallelCanvas()) &&
+    if (!(rscanvas->GetIsParallelCanvas()) &&
         RSParallelManager::Singleton().CheckIsParallelFrame() &&
         RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
         return;
-   }
+    }
 #endif
     auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
     if (UNLIKELY(!uniParam)) {
@@ -847,7 +847,8 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(
     return true;
 }
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
-void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams)
+void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas,
+    RSSurfaceRenderParams& surfaceParams)
 {
     auto sizeDebug = surfaceParams.GetCacheSize();
     Drawing::Brush rectBrush;

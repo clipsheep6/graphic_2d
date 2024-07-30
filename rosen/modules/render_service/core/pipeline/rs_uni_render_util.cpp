@@ -847,7 +847,8 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
     }
 }
 #ifdef SUBTREE_PARALLEL_ENABLE
-pid_t RSUniRenderUtil::GetThreadId(RSPaintFilterCanvas* rsCanvas) {
+pid_t RSUniRenderUtil::GetThreadId(RSPaintFilterCanvas* rsCanvas)
+{
     auto threadIndex = rsCanvas->GetParallelThreadIdx();
     if (threadIndex > SUBTREE_PARALLEL_THREAD_INDEX.first && threadIndex < SUBTREE_PARALLEL_THREAD_INDEX.second) {
         return -threadIndex;

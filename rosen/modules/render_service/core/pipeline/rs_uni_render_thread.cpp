@@ -163,13 +163,10 @@ void RSUniRenderThread::Start()
         RS_LOGE("RSUniRenderThread Start runner null");
         return;
     }
-<<<<<<< HEAD
 #ifdef RS_ENABLE_FFRT
-    ffrt::qos_interval_create(8333,5);
+    ffrt::qos_interval_create(8333, 5);
 #endif
-=======
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
->>>>>>> c2d9c0f91c20b0edba9ec702104403f0d62a9136
     runner_->Run();
     auto PostTaskProxy = [](RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority) {

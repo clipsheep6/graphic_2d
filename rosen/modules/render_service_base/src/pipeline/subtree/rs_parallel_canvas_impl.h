@@ -73,8 +73,9 @@ void RSParallelDrawCanvas::DrawImage(const Drawing::Image& image, const Drawing:
     RSPaintFilterCanvas::DrawImage(image, px, py, sampling);
 }
 
-void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
-                                         const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
+void RSParallelDrawCanvas::DrawImageRect(const Drawing::Image& image,
+    const Drawing::Rect& src, const Drawing::Rect& dst,
+    const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint)
 {
     if (canSharedDraw_) {
     auto gpuContext = GetGPUContext();

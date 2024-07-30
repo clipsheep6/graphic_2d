@@ -111,9 +111,9 @@ void RSRenderNodeDrawable::OnDrawParallel(Drawing::Canvas& canvas, const Drawing
                 DrawAll(canvas, bounds);
         }
     static_cast<RSPaintFilterCanvas*>(&canvas)->DecTreeDepth();
-   } else {
+    } else {
         DrawAll(canvas, bounds);
-   }
+    }
 }
 #endif
 

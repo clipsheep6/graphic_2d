@@ -18,6 +18,7 @@
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkFontStyle.h"
+#include "include/core/SkFontMgr.h"
 
 #include "skia_adapter/skia_convert_utils.h"
 #include "skia_adapter/skia_data.h"
@@ -177,6 +178,14 @@ std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[], int inde
     skTypeface->setIsCustomTypeface(true);
     std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
     return std::make_shared<Typeface>(typefaceImpl);
+}
+
+int SkiaTypeface::GetFontCollectionCount(const char path[])
+{
+    auto stream = SkStream::MakeFromFile(path);
+    sk_sp<SkFontMgr> fontMgr = SkFontMgr::RefDefault();
+    sk_sp<SkTypeface> typeface = fontMgr->makeFromStream(std::move(stream));
+    return fontMgr->countFamilies();
 }
 
 std::shared_ptr<Typeface> SkiaTypeface::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)

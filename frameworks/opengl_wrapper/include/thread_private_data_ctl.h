@@ -22,7 +22,17 @@
 #include "hook.h"
 namespace OHOS {
 struct ThreadPrivateData {
-    ThreadPrivateData() : error(EGL_SUCCESS), ctx(nullptr), table(nullptr) {}
+    ThreadPrivateData() : error(EGL_SUCCESS), ctx(EGL_NO_CONTEXT), table(nullptr) {}
+    ~ThreadPrivateData()
+    {
+        if (ctx != EGL_NO_CONTEXT) {
+            eglDestroyContext(eglGetDisplay(EGL_DEFAULT_DISPLAY), ctx);
+        }
+        if (table) {
+            delete table;
+            table = nullptr;
+        }
+    }
     EGLint      error;
     EGLContext  ctx;
     GlHookTable *table;
@@ -42,6 +52,7 @@ public:
 private:
     static void KeyInit();
     static void ValidateKey();
+    static void ClearPrivateDataWrapper(void* data);
     static pthread_key_t key_;
     static pthread_once_t onceCtl_;
 };

@@ -733,15 +733,14 @@ void HgmFrameRateManager::CheckPackageInConfigList(std::unordered_map<pid_t,
     if (!videoConfigFromHgm.empty()) {
         for (auto pair: foregroundPidAppMap) {
             if (videoConfigFromHgm.find(pair.second.second) == videoConfigFromHgm.end()) {
-                continue;
-            }
-            // 1 means crop source tuning
-            if (videoConfigFromHgm[pair.second.second] == "1") {
-                rsCommonHook.SetVideoSurfaceFlag(true);
-            // 2 means skip hardware disabled by hwc node and background alpha
-            } else if (videoConfigFromHgm[pair.second.second] == "2") {
-                rsCommonHook.hardwareDisabledByHwcNodeSkippedFlag_ = true;
-                rsCommonHook.hardwareDisabledByBackgroundAlphaSkippedFlag_ = true;
+                // 1 means crop source tuning
+                if (videoConfigFromHgm[pair.second.second] == "1") {
+                    rsCommonHook.SetVideoSurfaceFlag(true);
+                // 2 means skip hardware disabled by hwc node and background alpha
+                } else if (videoConfigFromHgm[pair.second.second] == "2") {
+                    rsCommonHook.hardwareDisabledByHwcNodeSkippedFlag_ = true;
+                    rsCommonHook.hardwareDisabledByBackgroundAlphaSkippedFlag_ = true;
+                }
             }
         }
     }

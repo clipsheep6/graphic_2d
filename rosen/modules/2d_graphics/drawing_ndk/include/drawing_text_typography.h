@@ -192,6 +192,19 @@ typedef struct {
 } OH_Drawing_PlaceholderSpan;
 
 /**
+ * @brief Type style flag.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum {
+    /** Italic font */
+    ITALIC = 1 << 0,
+    /** Bold font */
+    BOLD = 1 << 1,
+} OH_Drawing_FontTypeStyle;
+
+/**
  * @brief Describes the font information.
  *
  * @since 12
@@ -218,6 +231,10 @@ typedef struct OH_Drawing_FontDescriptor {
     bool monoSpace;
     /** whether symbolic fonts are supported */
     bool symbolic;
+    /** Font size */
+    size_t size;
+    /** Font style flag, from OH_Drawing_FontTypeStyle */
+    int typeStyle;
 } OH_Drawing_FontDescriptor;
 
 /**
@@ -1468,6 +1485,29 @@ OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void);
  * @version 1.0
  */
 void OH_Drawing_DestroyFontDescriptor(OH_Drawing_FontDescriptor*);
+
+/**
+ * @brief Obtain all font descriptors matching the specified font descriptor.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param desc the pointer to the font descriptor object <b>OH_Drawing_FontDescriptor</b>.
+ * @param num Indicates the count of obtained font descriptor.
+ * @return Returns a list of font descriptor.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_FontDescriptor* OH_Drawing_MatchingFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t* num);
+
+/**
+ * @brief Releases the memory occupied by a list of font descriptor.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param desc the pointer to the font descriptor object <b>OH_Drawing_FontDescriptor</b>.
+ * @param num Indicates the count of obtained font descriptor.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_DestroyFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t num);
 
 /**
  * @brief Creates an <b>OH_Drawing_FontParser</b> object.

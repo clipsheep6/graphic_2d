@@ -42,6 +42,7 @@ public:
     static void UnRegisterCallBackFunc(std::function<bool(std::shared_ptr<Typeface>)> func);
     static std::function<bool(std::shared_ptr<Typeface>)>& GetTypefaceRegisterCallBack();
     static std::function<bool(std::shared_ptr<Typeface>)>& GetTypefaceUnRegisterCallBack();
+    static int GetFontCollectionCount(const char path[]);
 
     /**
      * @brief   Get the familyName for this typeface.

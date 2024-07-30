@@ -16,7 +16,7 @@
 #ifndef TEXT_LOG_WRAPPER_H
 #define TEXT_LOG_WRAPPER_H
 
-#ifdef TEXT_OHOS
+#ifdef TEXT_OHOS_ENABLED
 #include "hilog/log.h"
 #endif
 
@@ -26,7 +26,7 @@
 #undef LOG_TAG
 #define LOG_TAG "JsText"
 
-#ifdef TEXT_OHOS
+#ifdef TEXT_OHOS_ENABLED
 #define TEXT_LOGI(format, ...)              \
     HILOG_INFO(LOG_CORE, format, ##__VA_ARGS__)
 #define TEXT_LOGD(format, ...)               \

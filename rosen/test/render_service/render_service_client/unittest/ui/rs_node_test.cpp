@@ -6985,4 +6985,14 @@ HWTEST_F(RSNodeTest, SetWaterRippleParams, TestSize.Level1)
     rsNode->SetWaterRippleParams(rs_water_ripple_param, progress);
     EXPECT_EQ(waveCount, 2.0f);
 }
+
+/**
+ * @tc.name: 
+ * @tc.desc: test results of 
+ * @tc.type: FUNC
+ * @tc.require: issueI9KAZH
+ */
+HWTEST_F(RSNodeTest, , TestSize.Level1)
+{
+}
 } // namespace OHOS::Rosen

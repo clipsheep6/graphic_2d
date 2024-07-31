@@ -27,6 +27,17 @@
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_frame_rate_linker_map.h"
 
+#define MATERIAL_SHORT_FRAME  0
+#define MATERIAL_LONG_FRAME   1
+#define MATERIAL_UILONG_FRAME 2
+#define AIBAR_SHORT_FRAME     0
+#define AIBAR_LONG_FRAME      1
+#define INVALID_FRAME        -1
+
+extern int g_Material_Interval;
+extern int g_Arbar_Interval;
+extern int pre_frameMaterial;
+
 namespace OHOS {
 namespace Rosen {
 enum ClearMemoryMoment : uint32_t {
@@ -155,6 +166,21 @@ public:
     void SetClearMoment(ClearMemoryMoment moment);
     ClearMemoryMoment GetClearMoment() const;
 
+    void SetSceneBoardPid(int pid) {
+        SceneBoardPid_ = pid;
+    }
+    void SetUiLongFrame(bool isLong) {
+        uiLong = isLong;
+    }
+    int GetSceneBoardpid() {
+        return SceneBoardPid_;
+    }
+    bool IsHasFilter(int focus_pid);
+    void AddFilter(int focus_pid, std::shared_ptr<RSFilter> filter);
+    void ClearFilter();
+    int GetMaterialLongOrShortFrame();
+    int GetArbarLongOrShortFrame();
+
 private:
     // This function is used for initialization, should be called once after constructor.
     void Initialize();
@@ -168,6 +194,11 @@ private:
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> curFrameAnimatingNodeList_;
     PurgeType purgeType_ = PurgeType::NONE;
     ClearMemoryMoment clearMoment_ = ClearMemoryMoment::NO_CLEAR;
+
+    // key is filter, value is focus pid
+    std::unordered_map<std::shared_ptr<RSFilter>, int> cacheManagerFilterList_;
+    int SceneBoardPid_ = 0;
+    bool uiLong_ = false;
 
     uint64_t transactionTimestamp_ = 0;
     uint64_t currentTimestamp_ = 0;

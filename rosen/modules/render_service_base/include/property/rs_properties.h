@@ -542,6 +542,10 @@ public:
     void SetHaveEffectRegion(bool hasEffectRegion);
 
     void OnApplyModifiers();
+    const std::weak_ptr<RSRenderNode> GetNodePtr() const
+    {
+        return backref_;
+    }
 
 private:
     void ResetProperty(const std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)>& dirtyTypes);

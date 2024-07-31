@@ -118,6 +118,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     pid_t callingPid = GetCallingPid();
 #ifdef ENABLE_IPC_SECURITY_ACCESS_COUNTER
     auto accessCount = securityUtils_.GetCodeAccessCounter(code);
+    if (RSMainThread::Instance()->GetContext.IsHasFilter(callingPid)) {
+        RSMainThread::Instance()->GetContext.SetUiLongFrame(true);
+    }
     if (!securityManager_.IsAccessTimesRestricted(code, accessCount)) {
         RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest This Function[ID=%{public}u] invoke times:%{public}d"
             "by pid[%{public}d]", code, accessCount, callingPid);

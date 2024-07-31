@@ -15,8 +15,13 @@
 
 #include "pipeline/rs_context.h"
 
+#include "rs_trace.h"
 #include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
+
+int g_Material_Interval =  0;
+int g_Arbar_Interval    =  0;
+int pre_frameMaterial   = -1;
 
 namespace OHOS::Rosen {
 void RSContext::RegisterAnimatingRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr)
@@ -25,6 +30,68 @@ void RSContext::RegisterAnimatingRenderNode(const std::shared_ptr<RSRenderNode>&
     animatingNodeList_.emplace(id, nodePtr);
     nodePtr->ActivateDisplaySync();
     ROSEN_LOGD("RSContext::RegisterAnimatingRenderNode, register node id: %{public}" PRIu64, id);
+}
+
+bool RSContext::IsHasFilter(int focus_pid)
+{
+    for (auto[filter, pid] : cacheManagerFilterList_) {
+        if (pid == focus_pid) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void RSContext::AddFilter(int focus_pid, std::shared_ptr<RSFilter> filter)
+{
+    if (cacheManagerFilterList_.find(filter) == cacheManagerFilterList_.end()) {
+        cacheManagerFilterList_[filter] = focus_pid;
+    }
+}
+
+int RSContext::GetMaterialLongOrShortFrame()
+{
+    if (cacheManagerFilterList_.empty()) {
+        pre_frameMaterial = INVALID_FRAME;
+        return INVALID_FRAME;
+    }
+    if (uiLong_) {
+        pre_frameMaterial = MATERIAL_UILONG_FRAME;
+        return MATERIAL_UILONG_FRAME;
+    }
+    for (auto[filter, pid] : cacheManagerFilterList_) {
+        if (filter->GetFilterType() == RSFilter::MATERIAL && g_Material_Interval == 0) {
+            pre_frameMaterial = MATERIAL_LONG_FRAME;
+            return MATERIAL_LONG_FRAME;
+        }
+    }
+    // The secondary frame is forcibly determined as a long frame
+    if (pre_frameMaterial == INVALID_FRAME) {
+        pre_frameMaterial = MATERIAL_LONG_FRAME;
+        return MATERIAL_LONG_FRAME;
+    }
+    pre_frameMaterial = MATERIAL_SHORT_FRAME;
+    return MATERIAL_SHORT_FRAME;
+}
+
+int RSContext::GetArbarLongOrShortFrame()
+{
+    if (cacheManagerFilterList_.empty()) {
+        return INVALID_FRAME;
+    }
+    for (auto[filter, pid] : cacheManagerFilterList_) {
+        if (filter->GetFilterType() == RSFilter::AIBAR && g_Arbar_Interval == 0) {
+            return AIBAR_LONG_FRAME;
+        }
+    }
+    return AIBAR_SHORT_FRAME;
+}
+
+void RSContext::ClearFilte() {
+    uiLong_ = false;
+    g_Material_Interval = 0;
+    g_Arbar_Interval = 0;
+    cacheManagerFilterList_.clear();
 }
 
 void RSContext::UnregisterAnimatingRenderNode(NodeId id)

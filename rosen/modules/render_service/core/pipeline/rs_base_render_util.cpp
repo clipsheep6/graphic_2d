@@ -1004,6 +1004,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     surfaceBuffer = nullptr;
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if (!renderEngine) {
+        RS_LOGE("RSBaseRenderUtil::ConsumeAndUpdateBuffer renderEngine is false");
         return true;
     }
     renderEngine->RegisterDeleteBufferListener(surfaceHandler);
@@ -1593,6 +1594,7 @@ bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngP
 
 GraphicTransformType RSBaseRenderUtil::GetRotateTransform(GraphicTransformType transform)
 {
+    RS_LOGE("RSBaseRenderUtil::GetRotateTransform start, transform is ${public}d", transform);
     switch (transform) {
         case GraphicTransformType::GRAPHIC_FLIP_H:
         case GraphicTransformType::GRAPHIC_FLIP_V: {
@@ -1682,6 +1684,7 @@ int RSBaseRenderUtil::RotateEnumToInt(GraphicTransformType rotation)
 
 GraphicTransformType RSBaseRenderUtil::RotateEnumToInt(int angle, GraphicTransformType flip)
 {
+    RS_LOGE("RSBaseRenderUtil::RotateEnumToInt start");
     static const std::map<int, GraphicTransformType> intToEnumMap = {
         {0, GraphicTransformType::GRAPHIC_ROTATE_NONE}, {90, GraphicTransformType::GRAPHIC_ROTATE_270},
         {180, GraphicTransformType::GRAPHIC_ROTATE_180}, {270, GraphicTransformType::GRAPHIC_ROTATE_90}};
@@ -1697,9 +1700,11 @@ GraphicTransformType RSBaseRenderUtil::RotateEnumToInt(int angle, GraphicTransfo
     };
 
     if (flip != GraphicTransformType::GRAPHIC_FLIP_H && flip != GraphicTransformType::GRAPHIC_FLIP_V) {
+        RS_LOGE("RSBaseRenderUtil::RotateEnumToInt flip ne GRAPHIC_FLIP_H and GRAPHIC_FLIP_V");
         auto iter = intToEnumMap.find(angle);
         return iter != intToEnumMap.end() ? iter->second : GraphicTransformType::GRAPHIC_ROTATE_NONE;
     } else {
+        RS_LOGE("RSBaseRenderUtil::RotateEnumToInt flip eq GRAPHIC_FLIP_H or GRAPHIC_FLIP_V or other");
         auto iter = pairToEnumMap.find({angle, flip});
         return iter != pairToEnumMap.end() ? iter->second : GraphicTransformType::GRAPHIC_ROTATE_NONE;
     }

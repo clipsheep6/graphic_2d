@@ -120,23 +120,25 @@ RosenError HdiOutput::SetHdiOutputDevice(HdiDevice* device)
 
 void HdiOutput::SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos)
 {
+    HLOGI("HdiOutput::SetLayerInfo start");
     std::unique_lock<std::mutex> lock(surfaceIdMutex_);
     for (auto &layerInfo : layerInfos) {
         if (layerInfo == nullptr || layerInfo->GetSurface() == nullptr) {
-            HLOGE("current layerInfo or layerInfo's cSurface is null");
+            HLOGE("HdiOutput::SetLayerInfo layerInfo or layerInfo's cSurface is null");
             continue;
         }
 
         uint64_t surfaceId = layerInfo->GetSurface()->GetUniqueId();
         auto iter = surfaceIdMap_.find(surfaceId);
         if (iter != surfaceIdMap_.end()) {
+            HLOGE("HdiOutput::SetLayerInfo iter ne surfaceIdMap_'s end");
             const LayerPtr &layer = iter->second;
             layer->UpdateLayerInfo(layerInfo);
             continue;
         }
-
         int32_t ret = CreateLayer(surfaceId, layerInfo);
         if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+            HLOGE("HdiOutput::SetLayerInfo info fail, ret ne GRAPHIC_DISPLAY_SUCCESS");
             return;
         }
     }

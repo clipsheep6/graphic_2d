@@ -55,12 +55,6 @@ void RSJankStats::SetOnVsyncStartTime(int64_t onVsyncStartTime, int64_t onVsyncS
     }
 }
 
-void RSJankStats::SetAccumulatedBufferCount(int accumulatedBufferCount)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    accumulatedBufferCount_ = accumulatedBufferCount;
-}
-
 void RSJankStats::SetStartTime(bool doDirectComposition)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -100,23 +94,19 @@ void RSJankStats::SetEndTime(bool skipJankAnimatorFrame, bool discardJankFrames,
     RecordJankFrame(dynamicRefreshRate);
     for (auto &[animationId, jankFrames] : animateJankFrames_) {
         if (jankFrames.isReportEventResponse_) {
+            SetAnimationTraceBegin(animationId, jankFrames);
             ReportEventResponse(jankFrames);
-            jankFrames.isUpdateJankFrame_ = true;
         }
+        // skip jank frame statistics at the first frame of animation && at the end frame of implicit animation
         if (jankFrames.isUpdateJankFrame_ && !jankFrames.isFirstFrame_ && !(!jankFrames.isDisplayAnimator_ &&
             (jankFrames.isReportEventComplete_ || jankFrames.isReportEventJankFrame_))) {
             UpdateJankFrame(jankFrames, skipJankAnimatorFrame, dynamicRefreshRate);
-        }
-        if (jankFrames.isReportEventResponse_ && !jankFrames.isAnimationEnded_) {
-            SetAnimationTraceBegin(animationId, jankFrames);
         }
         if (jankFrames.isReportEventJankFrame_) {
             RecordAnimationDynamicFrameRate(jankFrames, isReportTaskDelayed);
         }
         if (jankFrames.isReportEventComplete_ || jankFrames.isReportEventJankFrame_) {
             SetAnimationTraceEnd(jankFrames);
-            jankFrames.isUpdateJankFrame_ = false;
-            jankFrames.isAnimationEnded_ = true;
         }
         if (jankFrames.isReportEventComplete_) {
             ReportEventComplete(jankFrames);
@@ -128,8 +118,8 @@ void RSJankStats::SetEndTime(bool skipJankAnimatorFrame, bool discardJankFrames,
         jankFrames.isFirstFrame_ = jankFrames.isFirstFrameTemp_;
         jankFrames.isFirstFrameTemp_ = false;
     }
-    ReportEventFirstFrame();
     CheckAnimationTraceTimeout();
+    ReportEventFirstFrame();
     isLastFrameDoDirectComposition_ = doDirectComposition;
     isFirstSetEnd_ = false;
 }
@@ -246,16 +236,13 @@ size_t RSJankStats::GetJankRangeType(int64_t missedVsync) const
 
 void RSJankStats::UpdateJankFrame(JankFrames& jankFrames, bool skipJankStats, uint32_t dynamicRefreshRate)
 {
+    if (jankFrames.startTime_ == TIMESTAMP_INITIAL) {
+        jankFrames.startTime_ = rsStartTime_;
+    }
     if (skipJankStats) {
         RS_TRACE_NAME("RSJankStats::UpdateJankFrame skip jank animator frame");
         return;
     }
-    if (jankFrames.startTime_ == TIMESTAMP_INITIAL || jankFrames.startTimeSteady_ == TIMESTAMP_INITIAL) {
-        jankFrames.startTime_ = rsStartTime_;
-        jankFrames.startTimeSteady_ = rsStartTimeSteady_;
-    }
-    jankFrames.lastEndTimeSteady_ = jankFrames.endTimeSteady_;
-    jankFrames.endTimeSteady_ = rtEndTimeSteady_;
     jankFrames.lastTotalFrames_ = jankFrames.totalFrames_;
     jankFrames.lastTotalFrameTimeSteady_ = jankFrames.totalFrameTimeSteady_;
     jankFrames.lastTotalMissedFrames_ = jankFrames.totalMissedFrames_;
@@ -289,7 +276,7 @@ void RSJankStats::UpdateJankFrame(JankFrames& jankFrames, bool skipJankStats, ui
 
 void RSJankStats::UpdateHitchTime(JankFrames& jankFrames, float standardFrameTime)
 {
-    jankFrames.lastMaxHitchTime_ = jankFrames.maxHitchTime_;
+    jankFrames.lastMaxHitchTimeSteady_ = jankFrames.maxHitchTimeSteady_;
     jankFrames.lastTotalHitchTimeSteady_ = jankFrames.totalHitchTimeSteady_;
     jankFrames.lastTotalFrameTimeSteadyForHTR_ = jankFrames.totalFrameTimeSteadyForHTR_;
     jankFrames.lastMaxHitchOccurenceTimeSteady_ = jankFrames.maxHitchOccurenceTimeSteady_;
@@ -299,9 +286,9 @@ void RSJankStats::UpdateHitchTime(JankFrames& jankFrames, float standardFrameTim
     const bool isConsiderRsStartTimeForHTR = jankFrames.isFirstFrame_ || isFirstSetEnd_;
     const int64_t frameDurationForHTR = (isConsiderRsStartTimeForHTR ?
         (rtEndTimeSteady_ - rsStartTimeSteady_) : (rtEndTimeSteady_ - rtLastEndTimeSteady_));
-    if (frameHitchTime - jankFrames.maxHitchTime_ > HITCH_TIME_EPSILON) {
+    if (frameHitchTime - jankFrames.maxHitchTimeSteady_ > HITCH_TIME_EPSILON) {
         jankFrames.maxHitchOccurenceTimeSteady_ = rtEndTimeSteady_;
-        jankFrames.maxHitchTime_ = frameHitchTime;
+        jankFrames.maxHitchTimeSteady_ = frameHitchTime;
     }
     jankFrames.totalHitchTimeSteady_ += frameHitchTime;
     jankFrames.totalFrameTimeSteadyForHTR_ += frameDurationForHTR;
@@ -416,8 +403,6 @@ void RSJankStats::HandleImplicitAnimationEndInAdvance(JankFrames& jankFrames, bo
     }
     if (jankFrames.isSetReportEventComplete_ || jankFrames.isSetReportEventJankFrame_) {
         SetAnimationTraceEnd(jankFrames);
-        jankFrames.isUpdateJankFrame_ = false;
-        jankFrames.isAnimationEnded_ = true;
     }
     if (jankFrames.isSetReportEventComplete_) {
         ReportEventComplete(jankFrames);
@@ -448,9 +433,13 @@ void RSJankStats::SetImplicitAnimationEnd(bool isImplicitAnimationEnd)
             continue;
         }
         SetAnimationTraceEnd(jankFrames);
-        jankFrames.isUpdateJankFrame_ = false;
-        jankFrames.isAnimationEnded_ = true;
     }
+}
+
+void RSJankStats::SetAccumulatedBufferCount(int accumulatedBufferCount)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    accumulatedBufferCount_ = accumulatedBufferCount;
 }
 
 void RSJankStats::ReportEventResponse(const JankFrames& jankFrames) const
@@ -459,7 +448,8 @@ void RSJankStats::ReportEventResponse(const JankFrames& jankFrames) const
     const auto &info = jankFrames.info_;
     int64_t inputTime = ConvertTimeToSystime(info.inputTime);
     int64_t beginVsyncTime = ConvertTimeToSystime(info.beginVsyncTime);
-    int64_t responseLatency = rtEndTime_ - inputTime;
+    int64_t responseLatency = ((jankFrames.traceCreateTime_ == TIMESTAMP_INITIAL) ? rtEndTime_ :
+                              jankFrames.traceCreateTime_) - inputTime;
     RS_TRACE_NAME_FMT("RSJankStats::ReportEventResponse responseLatency is %" PRId64 "ms: %s",
                       responseLatency, GetSceneDescription(info).c_str());
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,
@@ -480,7 +470,8 @@ void RSJankStats::ReportEventComplete(const JankFrames& jankFrames) const
     int64_t endVsyncTime = ConvertTimeToSystime(info.endVsyncTime);
     int64_t animationStartLatency = beginVsyncTime - inputTime;
     int64_t animationEndLatency = endVsyncTime - beginVsyncTime;
-    int64_t completedLatency = GetCurrentSystimeMs() - inputTime;
+    int64_t completedLatency = ((jankFrames.traceTerminateTime_ == TIMESTAMP_INITIAL) ? rtEndTime_ :
+                               jankFrames.traceTerminateTime_) - inputTime;
     RS_TRACE_NAME_FMT("RSJankStats::ReportEventComplete e2eLatency is %" PRId64 "ms: %s",
                       completedLatency, GetSceneDescription(info).c_str());
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,
@@ -505,7 +496,7 @@ void RSJankStats::ReportEventJankFrame(const JankFrames& jankFrames, bool isRepo
         auto [maxFrameTimeFromStart, maxHitchTimeFromStart, duration] = GetMaxJankInfo(jankFrames, isReportTaskDelayed);
         RS_TRACE_NAME_FMT(
             "RSJankStats::ReportEventJankFrame maxFrameTime is %" PRId64 "ms, maxHitchTime is %" PRId64 "ms: %s",
-            jankFrames.maxFrameTimeSteady_, static_cast<int64_t>(jankFrames.maxHitchTime_),
+            jankFrames.maxFrameTimeSteady_, static_cast<int64_t>(jankFrames.maxHitchTimeSteady_),
             GetSceneDescription(info).c_str());
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,
             OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "UNIQUE_ID", info.uniqueId, "SCENE_ID", info.sceneId,
@@ -514,7 +505,7 @@ void RSJankStats::ReportEventJankFrame(const JankFrames& jankFrames, bool isRepo
             jankFrames.totalMissedFrames_, "MAX_FRAMETIME", static_cast<uint64_t>(jankFrames.maxFrameTimeSteady_),
             "MAX_FRAMETIME_SINCE_START", static_cast<uint64_t>(maxFrameTimeFromStart), "AVERAGE_FRAMETIME",
             aveFrameTimeSteady, "MAX_SEQ_MISSED_FRAMES", jankFrames.maxSeqMissedFrames_, "IS_FOLD_DISP", IS_FOLD_DISP,
-            "BUNDLE_NAME_EX", info.note, "MAX_HITCH_TIME", static_cast<uint64_t>(jankFrames.maxHitchTime_),
+            "BUNDLE_NAME_EX", info.note, "MAX_HITCH_TIME", static_cast<uint64_t>(jankFrames.maxHitchTimeSteady_),
             "MAX_HITCH_TIME_SINCE_START", static_cast<uint64_t>(maxHitchTimeFromStart),
             "DURATION", static_cast<uint64_t>(duration));
     } else {
@@ -527,7 +518,7 @@ void RSJankStats::ReportEventJankFrame(const JankFrames& jankFrames, bool isRepo
         auto [maxFrameTimeFromStart, maxHitchTimeFromStart, duration] = GetMaxJankInfo(jankFrames, isReportTaskDelayed);
         RS_TRACE_NAME_FMT(
             "RSJankStats::ReportEventJankFrame maxFrameTime is %" PRId64 "ms, maxHitchTime is %" PRId64 "ms: %s",
-            jankFrames.lastMaxFrameTimeSteady_, static_cast<int64_t>(jankFrames.lastMaxHitchTime_),
+            jankFrames.lastMaxFrameTimeSteady_, static_cast<int64_t>(jankFrames.lastMaxHitchTimeSteady_),
             GetSceneDescription(info).c_str());
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,
             OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "UNIQUE_ID", info.uniqueId, "SCENE_ID", info.sceneId,
@@ -537,7 +528,7 @@ void RSJankStats::ReportEventJankFrame(const JankFrames& jankFrames, bool isRepo
             jankFrames.lastMaxFrameTimeSteady_), "MAX_FRAMETIME_SINCE_START", static_cast<uint64_t>(
             maxFrameTimeFromStart), "AVERAGE_FRAMETIME", aveFrameTimeSteady, "MAX_SEQ_MISSED_FRAMES",
             jankFrames.lastMaxSeqMissedFrames_, "IS_FOLD_DISP", IS_FOLD_DISP, "BUNDLE_NAME_EX", info.note,
-            "MAX_HITCH_TIME", static_cast<uint64_t>(jankFrames.lastMaxHitchTime_), "MAX_HITCH_TIME_SINCE_START",
+            "MAX_HITCH_TIME", static_cast<uint64_t>(jankFrames.lastMaxHitchTimeSteady_), "MAX_HITCH_TIME_SINCE_START",
             static_cast<uint64_t>(maxHitchTimeFromStart), "DURATION", static_cast<uint64_t>(duration));
     }
 }
@@ -548,10 +539,8 @@ std::tuple<int64_t, int64_t, int64_t> RSJankStats::GetMaxJankInfo(const JankFram
     int64_t maxFrameTimeFromStart = 0;
     int64_t maxHitchTimeFromStart = 0;
     int64_t duration = 0;
-    const int64_t startTimeSteady = ((jankFrames.traceCreateTimeSteady_ == TIMESTAMP_INITIAL) ?
-        jankFrames.startTimeSteady_ : jankFrames.traceCreateTimeSteady_);
-    const int64_t endTimeSteady = ((jankFrames.traceTerminateTimeSteady_ == TIMESTAMP_INITIAL) ?
-        jankFrames.endTimeSteady_ : jankFrames.traceTerminateTimeSteady_);
+    const int64_t startTimeSteady = jankFrames.traceCreateTimeSteady_;
+    const int64_t endTimeSteady = jankFrames.traceTerminateTimeSteady_;
     if (startTimeSteady == TIMESTAMP_INITIAL || endTimeSteady == TIMESTAMP_INITIAL) {
         return std::make_tuple(maxFrameTimeFromStart, maxHitchTimeFromStart, duration);
     }
@@ -712,6 +701,9 @@ void RSJankStats::RecordAnimationDynamicFrameRate(JankFrames& jankFrames, bool i
 
 void RSJankStats::SetAnimationTraceBegin(std::pair<int64_t, std::string> animationId, JankFrames& jankFrames)
 {
+    if (jankFrames.isAnimationEnded_) {
+        return;
+    }
     const int32_t traceId = jankFrames.traceId_;
     if (traceId == TRACE_ID_INITIAL) {
         ROSEN_LOGE("RSJankStats::SetAnimationTraceBegin traceId not initialized");
@@ -720,6 +712,7 @@ void RSJankStats::SetAnimationTraceBegin(std::pair<int64_t, std::string> animati
     if (animationAsyncTraces_.find(traceId) != animationAsyncTraces_.end()) {
         return;
     }
+    jankFrames.traceCreateTime_ = rtEndTime_;
     jankFrames.traceCreateTimeSteady_ = rtEndTimeSteady_;
     const auto &info = jankFrames.info_;
     const std::string traceName = GetSceneDescription(info);
@@ -734,6 +727,7 @@ void RSJankStats::SetAnimationTraceBegin(std::pair<int64_t, std::string> animati
         implicitAnimationTotal_++;
     }
     RS_ASYNC_TRACE_BEGIN(traceName, traceId);
+    jankFrames.isUpdateJankFrame_ = true;
 }
 
 void RSJankStats::SetAnimationTraceEnd(JankFrames& jankFrames)
@@ -746,6 +740,7 @@ void RSJankStats::SetAnimationTraceEnd(JankFrames& jankFrames)
     if (animationAsyncTraces_.find(traceId) == animationAsyncTraces_.end()) {
         return;
     }
+    jankFrames.traceTerminateTime_ = rtEndTime_;
     jankFrames.traceTerminateTimeSteady_ = rtEndTimeSteady_;
     const bool isDisplayAnimator = animationAsyncTraces_.at(traceId).isDisplayAnimator_;
     RS_ASYNC_TRACE_END(animationAsyncTraces_.at(traceId).traceName_, traceId);
@@ -755,6 +750,8 @@ void RSJankStats::SetAnimationTraceEnd(JankFrames& jankFrames)
     } else {
         implicitAnimationTotal_--;
     }
+    jankFrames.isAnimationEnded_ = true;
+    jankFrames.isUpdateJankFrame_ = false;
 }
 
 void RSJankStats::CheckAnimationTraceTimeout()

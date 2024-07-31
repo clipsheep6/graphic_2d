@@ -204,7 +204,7 @@ std::shared_ptr<Drawing::ImageFilter> RSMaterialFilter::CreateMaterialStyle(
 void RSMaterialFilter::PreProcess(std::shared_ptr<Drawing::Image> imageSnapshot)
 {
     if (colorMode_ == AVERAGE && imageSnapshot != nullptr) {
-        // update maskColor while persevere alpha
+        // update maskColor while persevere alpha , must add RSPropertiesPainter::GpuScaleImage if use .
         auto colorPicker = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
         maskColor_ = RSColor(Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),
             Drawing::Color::ColorQuadGetB(colorPicker), maskColor_.GetAlpha());

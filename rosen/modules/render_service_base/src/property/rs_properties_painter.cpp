@@ -52,6 +52,8 @@ namespace {
 bool g_forceBgAntiAlias = true;
 constexpr int PARAM_DOUBLE = 2;
 constexpr int TRACE_LEVEL_TWO = 2;
+constexpr int SCALE_SIZE_SMALL = 10;
+constexpr int SCALE_SIZE_NORMAL = 100;
 constexpr float MIN_TRANS_RATIO = 0.0f;
 constexpr float MAX_TRANS_RATIO = 0.95f;
 constexpr float MIN_SPOT_RATIO = 1.0f;
@@ -1107,20 +1109,64 @@ void RSPropertiesPainter::DrawPixelStretchImage(const RSProperties& properties, 
 
 Drawing::ColorQuad RSPropertiesPainter::CalcAverageColor(std::shared_ptr<Drawing::Image> imageSnapshot)
 {
-    // create a 1x1 SkPixmap
-    uint32_t pixel[1] = { 0 };
-    Drawing::ImageInfo single_pixel_info(1, 1, Drawing::ColorType::COLORTYPE_RGBA_8888,
-        Drawing::AlphaType::ALPHATYPE_PREMUL);
-    Drawing::Bitmap single_pixel;
-    single_pixel.Build(single_pixel_info, single_pixel_info.GetBytesPerPixel());
-    single_pixel.SetPixels(pixel);
+    Drawing::ColorQuad color = Drawing::Color::COLOR_TRANSPARENT;
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGE("RSPropertiesPainter::PickColorSyn GpuScaleImageids null");
+        return color;
+    }
+    std::shared_ptr<Drawing::Pixmap> dst;
+    const int buffLen = imageSnapshot->GetWidth() * imageSnapshot->GetHeight();
+    auto pixelPtr = std::make_unique<uint32_t[]>(buffLen);
+    auto info = imageSnapshot->GetImageInfo();
+    dst = std::make_shared<Drawing::Pixmap>(info, pixelPtr.get(), info.GetWidth() * info.GetBytesPerPixel());
+    bool flag = imageSnapshot->ReadPixels(*dst, 0, 0);
+    if (!flag) {
+        ROSEN_LOGE("RSPropertiesPainter::PickColorSyn ReadPixel Failed");
+        return color;
+    }
+    uint32_t errorCode = 0;
+    std::shared_ptr<RSColorPicker> colorPicker = RSColorPicker::CreateColorPicker(dst, errorCode);
+    if (errorCode != 0) {
+        return color;
+    }
+    colorPicker->GetAverageColor(color);
+    return color;
+}
 
-    // resize snapshot to 1x1 to calculate average color
-    // kMedium_SkFilterQuality will do bilerp + mipmaps for down-scaling, we can easily get average color
-    imageSnapshot->ScalePixels(single_pixel,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR));
-    // convert color format and return average color
-    return SkColor4f::FromBytes_RGBA(pixel[0]).toSkColor();
+std::shared_ptr<Drawing::Image> RSPropertiesPainter::GpuScaleImage(std::shared_ptr<Drawing::GPUContext> context,
+    const std::shared_ptr<Drawing::Image> image)
+{
+    std::string shaderString(R"(
+        uniform shader imageInput;
+
+        half4 main(float2 xy) {
+            return imageInput.eval(xy);
+        }
+    )");
+
+    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(shaderString);
+    if (!effect) {
+        ROSEN_LOGE("RSPropertyDrawableUtils::GpuScaleImage effect is null");
+        return nullptr;
+    }
+
+    Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    std::shared_ptr<Drawing::RuntimeShaderBuilder> effectBulider =
+        std::make_shared<Drawing::RuntimeShaderBuilder>(effect);
+    Drawing::ImageInfo pcInfo;
+    Drawing::Matrix matrix;
+    if (image->GetWidth() * image->GetHeight() < SCALE_SIZE_SMALL * SCALE_SIZE_SMALL) {
+        pcInfo = Drawing::ImageInfo::MakeN32Premul(SCALE_SIZE_SMALL, SCALE_SIZE_SMALL);
+        matrix.SetScale(SCALE_SIZE_SMALL / image->GetWidth(), SCALE_SIZE_SMALL / image->GetHeight());
+    } else {
+        pcInfo = Drawing::ImageInfo::MakeN32Premul(SCALE_SIZE_NORMAL, SCALE_SIZE_NORMAL);
+        matrix.SetScale(SCALE_SIZE_NORMAL / image->GetWidth(), SCALE_SIZE_NORMAL / image->GetHeight());
+    }
+    effectBulider->SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(
+        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, linear, matrix));
+    std::shared_ptr<Drawing::Image> tmpColorImg = effectBulider->MakeImage(
+        context.get(), nullptr, pcInfo, false);
+    return tmpColorImg;
 }
 
 int RSPropertiesPainter::GetAndResetBlurCnt()

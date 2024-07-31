@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "platform/common/rs_log.h"
 #include "render/rs_maskcolor_shader_filter.h"
 
 namespace OHOS {
@@ -44,34 +45,43 @@ void RSMaskColorShaderFilter::InitColorMod()
     }
 }
 
-Drawing::ColorQuad RSMaskColorShaderFilter::CalcAverageColor(std::shared_ptr<Drawing::Image> image)
+Drawing::ColorQuad RSMaskColorShaderFilter::CalcAverageColor(std::shared_ptr<Drawing::Image> imageSnapshot)
 {
-    // create a 1x1 SkPixmap
-    uint32_t pixel[1] = { 0 };
-    Drawing::ImageInfo single_pixel_info(1, 1, Drawing::ColorType::COLORTYPE_RGBA_8888,
-        Drawing::AlphaType::ALPHATYPE_PREMUL);
-    Drawing::Bitmap single_pixel;
-    single_pixel.Build(single_pixel_info, single_pixel_info.GetBytesPerPixel());
-    single_pixel.SetPixels(pixel);
-
-    // resize snapshot to 1x1 to calculate average color
-    // kMedium_SkFilterQuality will do bilerp + mipmaps for down-scaling, we can easily get average color
-    image->ScalePixels(single_pixel,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR));
-    // convert color format and return average color
-    return SkColor4f::FromBytes_RGBA(pixel[0]).toSkColor();
+    Drawing::ColorQuad color = Drawing::Color::COLOR_TRANSPARENT;
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGE("RSPropertiesPainter::PickColorSyn GpuScaleImageids null");
+        return color;
+    }
+    std::shared_ptr<Drawing::Pixmap> dst;
+    const int buffLen = imageSnapshot->GetWidth() * imageSnapshot->GetHeight();
+    auto pixelPtr = std::make_unique<uint32_t[]>(buffLen);
+    auto info = imageSnapshot->GetImageInfo();
+    dst = std::make_shared<Drawing::Pixmap>(info, pixelPtr.get(), info.GetWidth() * info.GetBytesPerPixel());
+    bool flag = imageSnapshot->ReadPixels(*dst, 0, 0);
+    if (!flag) {
+        ROSEN_LOGE("RSPropertiesPainter::PickColorSyn ReadPixel Failed");
+        return color;
+    }
+    uint32_t errorCode = 0;
+    std::shared_ptr<RSColorPicker> colorPicker = RSColorPicker::CreateColorPicker(dst, errorCode);
+    if (errorCode != 0) {
+        return color;
+    }
+    colorPicker->GetAverageColor(color);
+    return color;
 }
 
-void RSMaskColorShaderFilter::CaclMaskColor(std::shared_ptr<Drawing::Image>& image)
+void RSMaskColorShaderFilter::CaclMaskColor(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image)
 {
-    if (colorMode_ == AVERAGE && image != nullptr) {
+    if (image == nullptr) return;
+    if (colorMode_ == AVERAGE) {
         // update maskColor while persevere alpha
-        auto colorPicker = CalcAverageColor(image);
+        std::shared_ptr<Drawing::Image> scaleImage = RSPropertiesPainter::GpuScaleImage(canvas.GetGPUContext(), image);
+        auto colorPicker = CalcAverageColor(scaleImage);
         maskColor_ = RSColor(Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),
             Drawing::Color::ColorQuadGetB(colorPicker), maskColor_.GetAlpha());
     }
-    if (colorMode_ == FASTAVERAGE && RSColorPickerCacheTask::ColorPickerPartialEnabled &&
-        image != nullptr) {
+    if (colorMode_ == FASTAVERAGE && RSColorPickerCacheTask::ColorPickerPartialEnabled) {
         RSColor color;
         if (colorPickerTask_->GetWaitRelease()) {
             if (colorPickerTask_->GetColor(color) && colorPickerTask_->GetFirstGetColorFinished()) {
@@ -90,7 +100,7 @@ void RSMaskColorShaderFilter::CaclMaskColor(std::shared_ptr<Drawing::Image>& ima
 
 void RSMaskColorShaderFilter::PreProcess(std::shared_ptr<Drawing::Image>& image)
 {
-    CaclMaskColor(image);
+    ROSEN_LOGI("RSPropertiesPainter::PreProcess");
 }
 
 void RSMaskColorShaderFilter::PostProcess(Drawing::Canvas& canvas)

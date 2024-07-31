@@ -1111,6 +1111,7 @@ Color RSPropertyDrawableUtils::GetInvertBackgroundColor(RSPaintFilterCanvas& can
         RS_LOGI("RSPropertyDrawableUtils::GetInvertBackgroundColor imageSnapshot null");
         return Color(0);
     }
+    imageSnapshot = RSPropertiesPainter::GpuScaleImage(canvas.GetGPUContext(), imageSnapshot);
     auto colorPicker = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
     return RSPropertyDrawableUtils::CalculateInvertColor(Color(
         Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),

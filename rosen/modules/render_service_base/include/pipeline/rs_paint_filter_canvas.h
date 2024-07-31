@@ -74,6 +74,8 @@ public:
     void DrawRegion(const Drawing::Region& region) override;
     void DrawPatch(const Drawing::Point cubics[12], const Drawing::ColorQuad colors[4],
         const Drawing::Point texCoords[4], Drawing::BlendMode mode) override;
+    void DrawDoublePatches(const Drawing::Point cubicsUp[12], const Drawing::Point cubicsDown[12],
+        const Drawing::Point texCoords[4], Drawing::BlendMode mode) override;
     void DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode) override;
 
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,

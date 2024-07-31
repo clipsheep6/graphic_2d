@@ -101,6 +101,8 @@ public:
     virtual void DrawRegion(const Region& region, const Paint& paint) = 0;
     virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode, const Paint& paint) = 0;
+    virtual void DrawDoublePatches(const Point cubicsUp[12], const Point cubicsDown[12],
+        const Point texCoords[4], BlendMode mode, const Paint& paint) = 0;
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode, const Paint& paint) = 0;
 
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,

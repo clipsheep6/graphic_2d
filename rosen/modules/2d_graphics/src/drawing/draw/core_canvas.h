@@ -355,6 +355,21 @@ public:
         const Point texCoords[4], BlendMode mode);
 
     /**
+     * @brief Draws two Coons patch: two patches are aligned top to bottom, the interpolation of seven cubics
+     *  with shared corners, associating a texture SkPoint, with each corner. Point array cubics specifies
+     *  six of the seven SkPath cubic starting at the top-left corner, in clockwise order, sharing every fourth point.
+     *  The last SkPath cubic ends at the first point. Two patches share one cubics. If brush contains Shader,
+     *  Point array texCoords maps Shader as texture to corners in top-left, top-right, bottom-right, bottom-left order.
+     * @param cubicsUp   SkPath cubic array, sharing common points, express the upper patch
+     * @param cubicsDown SkPath cubic array, sharing common points, express the lower patch
+     * @param texCoords	 Point array of texture coordinates, mapping Shader to corners
+     * @param mode	     combines patch's colors with Shader if present or brush opaque color if not.
+     *                   Ignored if colors is null.
+     */
+    virtual void DrawDoublePatches(const Point cubicsUp[12], const Point cubicsDown[12],
+        const Point texCoords[4], BlendMode mode);
+
+    /**
      * @brief If brush or pen contains an Shader and vertices does not contain texCoords,
      * the shader is mapped using the vertices' positions. If vertices colors are defined
      * in vertices, and brush/pen contains Shader, BlendMode mode combines vertices colors with Shader.

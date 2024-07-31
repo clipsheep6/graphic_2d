@@ -39,9 +39,6 @@
 namespace OHOS {
 namespace Rosen {
 constexpr int32_t CORNER_SIZE = 4;
-#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-constexpr uint8_t ASTC_HEADER_SIZE = 16;
-#endif
 
 #ifdef RS_ENABLE_VK
 Drawing::ColorType GetColorTypeFromVKFormat(VkFormat vkFormat)
@@ -136,7 +133,9 @@ void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect&
         rsImage_->CanvasDrawImage(canvas, rect, sampling, isBackground);
         return;
     }
+#ifdef RS_ENABLE_GL
     PreProcessPixelMap(canvas, pixelmap, sampling);
+#endif
 #endif
     rsImage_->CanvasDrawImage(canvas, rect, sampling, isBackground);
 }
@@ -158,7 +157,7 @@ RSExtendImageObject *RSExtendImageObject::Unmarshalling(Parcel &parcel)
     return object;
 }
 
-#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 void RSExtendImageObject::PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap,
     const Drawing::SamplingOptions& sampling)
 {
@@ -174,46 +173,6 @@ void RSExtendImageObject::PreProcessPixelMap(Drawing::Canvas& canvas, const std:
             }
         }
 #endif
-#if defined(RS_ENABLE_VK)
-        if (RSSystemProperties::IsUseVukan()) {
-            if (MakeFromTextureForVK(canvas, reinterpret_cast<SurfaceBuffer*>(pixelMap->GetFd()))) {
-                rsImage_->SetDmaImage(image_);
-            }
-        }
-#endif
-        return;
-    }
-
-    if (pixelMap->IsAstc()) {
-        std::shared_ptr<Drawing::Data> fileData = std::make_shared<Drawing::Data>();
-        // After RS is switched to Vulkan, the judgment of GpuApiType can be deleted.
-        if (pixelMap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC &&
-            RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN) {
-            if (!nativeWindowBuffer_) {
-                sptr<SurfaceBuffer> surfaceBuf(reinterpret_cast<SurfaceBuffer *>(pixelMap->GetFd()));
-                nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuf);
-            }
-            OH_NativeBuffer* nativeBuffer = OH_NativeBufferFromNativeWindowBuffer(nativeWindowBuffer_);
-            if (nativeBuffer == nullptr || !fileData->BuildFromOHNativeBuffer(nativeBuffer, pixelMap->GetCapacity())) {
-                LOGE("PreProcessPixelMap data BuildFromOHNativeBuffer fail");
-                return;
-            }
-        } else {
-            const void* data = pixelMap->GetPixels();
-            if (pixelMap->GetCapacity() > ASTC_HEADER_SIZE &&
-                (data == nullptr || !fileData->BuildWithoutCopy((void*)((char*) data + ASTC_HEADER_SIZE),
-                pixelMap->GetCapacity() - ASTC_HEADER_SIZE))) {
-                LOGE("PreProcessPixelMap data BuildWithoutCopy fail");
-                return;
-            }
-        }
-        rsImage_->SetCompressData(fileData);
-        return;
-    }
-
-    if (RSPixelMapUtil::IsYUVFormat(pixelMap)) {
-        rsImage_->MarkYUVImage();
-    }
 }
 #endif
 
@@ -293,52 +252,6 @@ bool RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canv
 }
 #endif
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
-bool RSExtendImageObject::MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceBuffer *surfaceBuffer)
-{
-    if (!RSSystemProperties::IsUseVukan()) {
-        return false;
-    }
-    if (surfaceBuffer == nullptr || surfaceBuffer->GetBufferHandle() == nullptr) {
-        RS_LOGE("MakeFromTextureForVK surfaceBuffer is nullptr or buffer handle is nullptr");
-        return false;
-    }
-    if (nativeWindowBuffer_ == nullptr) {
-        sptr<SurfaceBuffer> sfBuffer(surfaceBuffer);
-        nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&sfBuffer);
-        if (!nativeWindowBuffer_) {
-            RS_LOGE("MakeFromTextureForVK create native window buffer fail");
-            return false;
-        }
-    }
-    bool isProtected = (surfaceBuffer->GetUsage() & BUFFER_USAGE_PROTECTED) != 0;
-    if (!backendTexture_.IsValid() || isProtected) {
-        backendTexture_ = NativeBufferUtils::MakeBackendTextureFromNativeBuffer(nativeWindowBuffer_,
-            surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), isProtected);
-        if (backendTexture_.IsValid()) {
-            auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
-            cleanUpHelper_ = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
-                vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory);
-        } else {
-            return false;
-        }
-        tid_ = gettid();
-    }
-    image_ = std::make_shared<Drawing::Image>();
-    auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
-    Drawing::ColorType colorType = GetColorTypeFromVKFormat(vkTextureInfo->format);
-    Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
-    if (!image_->BuildFromTexture(*canvas.GetGPUContext(), backendTexture_.GetTextureInfo(),
-        Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr,
-        NativeBufferUtils::DeleteVkImage,
-        cleanUpHelper_->Ref())) {
-        RS_LOGE("MakeFromTextureForVK build image failed");
-        return false;
-    }
-    return true;
-}
-#endif
-
 RSExtendImageObject::~RSExtendImageObject()
 {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
@@ -356,19 +269,6 @@ RSExtendImageObject::~RSExtendImageObject()
             if (eglImage != EGL_NO_IMAGE_KHR) {
                 auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
                 eglDestroyImageKHR(disp, eglImage);
-            }
-        });
-    }
-#endif
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
-    if (RSSystemProperties::IsUseVukan()) {
-        RSTaskDispatcher::GetInstance().PostTask(tid_, [nativeWindowBuffer = nativeWindowBuffer_,
-            cleanupHelper = cleanUpHelper_]() {
-            if (nativeWindowBuffer != nullptr) {
-                DestroyNativeWindowBuffer(nativeWindowBuffer);
-            }
-            if (cleanupHelper != nullptr) {
-                NativeBufferUtils::DeleteVkImage(cleanupHelper);
             }
         });
     }

@@ -147,7 +147,6 @@ private:
     static void ProcessImageAfterCreation(RSImage* rsImage, const uint64_t uniqueId, const bool useSkImage,
         const std::shared_ptr<Media::PixelMap>& pixelMap);
 #endif
-    std::shared_ptr<Drawing::Data> compressData_;
     ImageFit imageFit_ = ImageFit::COVER;
     ImageRepeat imageRepeat_ = ImageRepeat::NO_REPEAT;
     std::vector<Drawing::Point> radius_ = std::vector<Drawing::Point>(4);

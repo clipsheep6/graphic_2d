@@ -33,13 +33,18 @@
 #include "sandbox_utils.h"
 #include "rs_profiler.h"
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 #include "native_buffer_inner.h"
 #include "native_window.h"
+#ifdef RS_ENABLE_VK
 #include "platform/ohos/backend/native_buffer_utils.h"
 #include "platform/ohos/backend/rs_vulkan_context.h"
 #endif
+#endif
 namespace OHOS::Rosen {
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+constexpr uint8_t ASTC_HEADER_SIZE = 16;
+#endif
 RSImageBase::~RSImageBase()
 {
     if (pixelMap_) {
@@ -413,6 +418,14 @@ std::shared_ptr<Media::PixelMap> RSImageBase::GetPixelMap() const
     return pixelMap_;
 }
 
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined (RS_ENABLE_VK))
+void RSImage::SetCompressData(const std::shared_ptr<Drawing::Data> compressData)
+{
+    isDrawn_ = false;
+    compressData_ = compressData;
+}
+#endif
+
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
 std::shared_ptr<Drawing::Image> RSImageBase::MakeFromTextureForVK(
     Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer)
@@ -462,7 +475,7 @@ std::shared_ptr<Drawing::Image> RSImageBase::MakeFromTextureForVK(
 
 void RSImageBase::BindPixelMapToDrawingImage(Drawing::Canvas& canvas)
 {
-    if (!image_ && pixelMap_ && !pixelMap_->IsAstc()) {
+    if (pixelMap_ && !pixelMap_->IsAstc()) {
         if (!pixelMap_->IsEditable()) {
             image_ = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_, gettid());
         }
@@ -473,6 +486,57 @@ void RSImageBase::BindPixelMapToDrawingImage(Drawing::Canvas& canvas)
                 RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_, gettid());
             }
         }
+    }
+}
+#endif
+
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined (RS_ENABLE_VK))
+void RSImageBase::PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap,
+        const Drawing::SamplingOptions& sampling)
+{
+    if(!pixelMap) {
+        return;
+    }
+    if(!pixelMap->IsAstc() && RSPixelMapUtil::IsSupportZeroCopy(pixelMap, sampling)) {
+#if defined(RS_ENABLE_VK)
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+            RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+            BindPixelMapToDrawingImage(canvas);
+            SetDmaImage(image_);
+        }
+#endif
+        return;
+    }
+
+    if (pixelMap->IsAstc()) {
+        std::shared_ptr<Drawing::Data> fileData = std::make_shared<Drawing::Data>();
+        // After RS is switched to Vulkan, the judgment of GpuApiType can be deleted.
+        if (pixelMap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC &&
+            RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN) {
+            if (!nativeWindowBuffer_) {
+                sptr<SurfaceBuffer> surfaceBuf(reinterpret_cast<SurfaceBuffer *>(pixelMap->GetFd()));
+                nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuf);
+            }
+            OH_NativeBuffer* nativeBuffer = OH_NativeBufferFromNativeWindowBuffer(nativeWindowBuffer_);
+            if (nativeBuffer == nullptr || !fileData->BuildFromOHNativeBuffer(nativeBuffer, pixelMap->GetCapacity())) {
+                LOGE("PreProcessPixelMap data BuildFromOHNativeBuffer fail");
+                return;
+            }
+        } else {
+            const void* data = pixelMap->GetPixels();
+            if (pixelMap->GetCapacity() > ASTC_HEADER_SIZE &&
+                (data == nullptr || !fileData->BuildWithoutCopy((void*)((char*) data + ASTC_HEADER_SIZE),
+                pixelMap->GetCapacity() - ASTC_HEADER_SIZE))) {
+                LOGE("PreProcessPixelMap data BuildWithoutCopy fail");
+                return;
+            }
+        }
+        SetCompressData(fileData);
+        return;
+    }
+
+    if (RSPixelMapUtil::IsYUVFormat(pixelMap)) {
+        MarkYUVImage();
     }
 }
 #endif

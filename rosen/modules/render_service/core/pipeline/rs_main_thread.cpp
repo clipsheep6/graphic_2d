@@ -286,7 +286,7 @@ static inline void WaitUntilUploadTextureTaskFinished(bool isUniRender)
 #endif
 }
 
-static bool CheckIsHdrSurface(const RSSurfaceRenderNode& surfaceNode)
+bool RSMainThread::CheckIsHdrSurface(const RSSurfaceRenderNode& surfaceNode)
 {
     if (!surfaceNode.IsOnTheTree()) {
         return false;
@@ -1888,8 +1888,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         if (RSSystemProperties::GetQuickPrepareEnabled()) {
             //planning:the QuickPrepare will be replaced by Prepare
             rootNode->QuickPrepare(uniVisitor);
-            SetUniVSyncRateByVisibleLevel(uniVisitor);
             uniVisitor->SurfaceOcclusionCallbackToWMS();
+            SetUniVSyncRateByVisibleLevel(uniVisitor);
         } else {
             rootNode->Prepare(uniVisitor);
         }
@@ -2029,6 +2029,8 @@ void RSMainThread::Render()
         renderThreadParams_->SetPendingConstraintRelativeTime(hgmCore.GetPendingConstraintRelativeTime());
         renderThreadParams_->SetForceCommitLayer(isHardwareEnabledBufferUpdated_ || forceUpdateUniRenderFlag_);
         renderThreadParams_->SetOcclusionEnabled(RSSystemProperties::GetOcclusionEnabled());
+        renderThreadParams_->SetUIFirstCurrentFrameCanSkipFirstWait(
+            RSUifirstManager::Instance().GetCurrentFrameSkipFirstWait());
     }
     if (RSSystemProperties::GetRenderNodeTraceEnabled()) {
         RSPropertyTrace::GetInstance().RefreshNodeTraceInfo();

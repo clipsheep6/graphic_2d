@@ -1248,13 +1248,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             SetCacheEnabledForRotation(isEnabled);
             break;
         }
-        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CHANGE_SYNCHRONIZE_COUNT): {
-            auto syncId = data.ReadUint64();
-            auto parentPid = data.ReadInt32();
-            auto childPid = data.ReadInt32();
-            ChangeSyncCount(syncId, parentPid, childPid);
-            break;
-        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO) : {
             uint64_t tokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
             if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId)) {

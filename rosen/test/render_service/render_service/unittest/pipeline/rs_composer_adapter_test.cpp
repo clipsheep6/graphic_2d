@@ -432,6 +432,8 @@ HWTEST_F(RSComposerAdapterTest, CreateLayersTest010, Function | SmallTest | Leve
  */
 HWTEST_F(RSComposerAdapterTest, CreateLayer, Function | SmallTest | Level2)
 {
+
+    
     uint32_t width = 2160;
     uint32_t height = 1080;
     CreateComposerAdapterWithScreenInfo(

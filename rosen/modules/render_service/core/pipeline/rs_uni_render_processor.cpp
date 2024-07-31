@@ -245,9 +245,21 @@ LayerInfoPtr RSUniRenderProcessor::GetLayerInfo(RSSurfaceRenderParams& params, s
     std::vector<GraphicIRect> dirtyRegions;
     dirtyRegions.emplace_back(layerInfo.srcRect);
     layer->SetDirtyRegions(dirtyRegions);
-
     layer->SetBlendType(layerInfo.blendType);
-    layer->SetCropRect(layerInfo.srcRect);
+    // Because the buffer is mirrored in the horiziontal directions,
+    // srcRect need to be adjusted.
+    auto newSrcRect = layerInfo.srcRect;
+    // 1. Intersect the left border of the screen.
+    //    map_x = (buffer_width - buffer_right_x)
+    if (newSrcRect.x > 0) {
+        newSrcRect.x = 0;
+    // 2. Intersect the right border of the screen.
+    //    map_x = (buffer_width - buffer_right_x)
+    //    Only left side adjustment can be triggered on the narrow screen.
+    } else if (layerInfo.dstRect.x + layerInfo.dstRect.w >= screenInfo_.width) {
+        newSrcRect.x = static_cast<int>(buffer->GetSurfaceBufferWidth()) - newSrcRect.w;
+    }
+    layer->SetCropRect(newSrcRect);
     layer->SetGravity(layerInfo.gravity);
     layer->SetTransform(layerInfo.transformType);
     auto matrix = GraphicMatrix {layerInfo.matrix.Get(Drawing::Matrix::Index::SCALE_X),

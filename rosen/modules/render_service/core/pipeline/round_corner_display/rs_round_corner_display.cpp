@@ -251,19 +251,19 @@ void RoundCornerDisplay::UpdateParameter(std::map<std::string, bool>& updateFlag
     hardInfo_.resourceChanged = false;
     for (auto item = updateFlag.begin(); item != updateFlag.end(); item++) {
         if (item->second == true) {
-            resourceChanged = true;
+            resourceChanged_ = true;
             item->second = false; // reset
         }
     }
-    if (resourceChanged) {
+    if (resourceChanged_) {
         RcdChooseTopResourceType();
         RcdChooseRSResource();
         if (supportHardware_) {
             RcdChooseHardwareResource();
             SetHardwareLayerSize();
         }
-        hardInfo_.resourceChanged = resourceChanged; // output
-        resourceChanged = false; // reset
+        hardInfo_.resourceChanged = resourceChanged_; // output
+        resourceChanged_ = false; // reset
     } else {
         RS_LOGD("[%{public}s] Status is not changed \n", __func__);
     }

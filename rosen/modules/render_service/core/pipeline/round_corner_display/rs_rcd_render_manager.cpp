@@ -59,33 +59,39 @@ bool RSRcdRenderManager::IsRcdProcessInfoValid(const RcdProcessInfo& info)
     return true;
 }
 
-void RSRcdRenderManager::DoProcessRenderTask(const RcdProcessInfo& info)
+bool RSRcdRenderManager::DoProcessRenderTask(const RcdProcessInfo& info)
 {
     RS_TRACE_BEGIN("RSUniRender:DoRCDProcessTask");
     if (!IsRcdProcessInfoValid(info)) {
         RS_LOGE("RCD: RcdProcessInfo is incorrect");
         RS_TRACE_END();
-        return;
+        return false;
     }
     auto visitor = std::make_shared<RSRcdRenderVisitor>();
     visitor->SetUniProcessor(info.uniProcessor);
-    visitor->ProcessRcdSurfaceRenderNode(*bottomSurfaceNode_, info.bottomLayer, info.resourceChanged);
-    visitor->ProcessRcdSurfaceRenderNode(*topSurfaceNode_, info.topLayer, info.resourceChanged);
+    if (!visitor->ProcessRcdSurfaceRenderNode(*bottomSurfaceNode_, info.bottomLayer, info.resourceChanged)) {
+        return false;
+    }
+    if (!visitor->ProcessRcdSurfaceRenderNode(*topSurfaceNode_, info.topLayer, info.resourceChanged)) {
+        return false;
+    }
+    return true;
     RS_TRACE_END();
 }
 
-void RSRcdRenderManager::DoProcessRenderMainThreadTask(const RcdProcessInfo& info)
+bool RSRcdRenderManager::DoProcessRenderMainThreadTask(const RcdProcessInfo& info)
 {
     RS_TRACE_BEGIN("RSUniRender:DoRCDProcessMainThreadTask");
     if (!IsRcdProcessInfoValid(info)) {
         RS_LOGE("RCD: RcdProcessInfo in MainThread is incorrect");
         RS_TRACE_END();
-        return;
+        return false;
     }
     auto visitor = std::make_shared<RSRcdRenderVisitor>();
     visitor->SetUniProcessor(info.uniProcessor);
     visitor->ProcessRcdSurfaceRenderNodeMainThread(*bottomSurfaceNode_, info.resourceChanged);
     visitor->ProcessRcdSurfaceRenderNodeMainThread(*topSurfaceNode_, info.resourceChanged);
+    return true;
     RS_TRACE_END();
 }
 

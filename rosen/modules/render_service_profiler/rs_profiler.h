@@ -276,8 +276,12 @@ private:
     RSB_EXPORT static NodeId PatchPlainNodeId(const Parcel& parcel, NodeId id);
     RSB_EXPORT static pid_t PatchPlainPid(const Parcel& parcel, pid_t pid);
 
-    RSB_EXPORT static int PerfTreeFlatten(
-        const RSRenderNode& node, std::unordered_set<NodeId>& nodeSet, std::unordered_map<NodeId, int>& mapNode2Count);
+    RSB_EXPORT static uint32_t PerfTreeFlatten(
+        std::shared_ptr<RSRenderNode> node, std::vector<std::pair<NodeId, uint32_t>>& nodeSet,
+        std::unordered_map<NodeId, uint32_t>& mapNode2Count, int depth);
+    RSB_EXPORT static uint32_t CalcNodeCmdListCount(RSRenderNode& node);
+    RSB_EXPORT static void CalcPerfNodePrepare(NodeId nodeId, uint32_t timeCount, bool excludeDown);
+    RSB_EXPORT static void CalcPerfNodePrepareLo(const std::shared_ptr<RSRenderNode>& node, bool forceExcludeNode);
 
     static uint64_t RawNowNano();
     static uint64_t NowNano();
@@ -306,6 +310,8 @@ private:
     static std::shared_ptr<RSRenderNode> GetRenderNode(uint64_t id);
     static void ProcessSendingRdc();
 
+    static void BlinkNodeUpdate();
+    static void CalcPerfNodeUpdate();
     static void CalcPerfNodeAllStep();
     static void CalcNodeWeigthOnFrameEnd(uint64_t frameLength);
 
@@ -326,8 +332,13 @@ private:
     static void DumpTreeToJson(const ArgList& args);
     static void DumpSurfaces(const ArgList& args);
     static void DumpNodeSurface(const ArgList& args);
+    static void ClearFilter(const ArgList& args);
+    static void PrintNodeCacheLo(const std::shared_ptr<RSRenderNode>& node);
+    static void PrintNodeCache(const ArgList& args);
+    static void PrintNodeCacheAll(const ArgList& args);
     static void PatchNode(const ArgList& args);
     static void KillNode(const ArgList& args);
+    static void BlinkNode(const ArgList& args);
     static void AttachChild(const ArgList& args);
     static void KillPid(const ArgList& args);
     static void GetRoot(const ArgList& args);

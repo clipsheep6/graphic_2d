@@ -596,7 +596,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 #ifdef SUBTREE_PARALLEL_ENABLE
-    UpdateDrawSurface(*params);
+    UpdateDrawSurface(params);
 #endif
 
     ScreenId screenId = curScreenInfo.id;
@@ -722,6 +722,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 #endif
 }
 
+#ifdef SUBTREE_PARALLEL_ENABLE
 void RSDisplayRenderNodeDrawable::UpdateDrawSurface(RSDisplayRenderParams* params)
 {
     RS_TRACE_BEGIN("Update draw region for surfaces in advance");
@@ -751,6 +752,7 @@ void RSDisplayRenderNodeDrawable::UpdateDrawSurface(RSDisplayRenderParams* param
             surfaceNodeDrawable->GetName().c_str(), surfaceParams->GetId());
         continue;
     }
+    auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
     Drawing::Region curSurfaceDrawRegion = surfaceNodeDrawable->CalculateVisibleRegion(*uniParam, *surfaceParams,
         *surfaceNodeDrawable, isuifirsNode);
     if (!isuifirstNode) {
@@ -760,8 +762,8 @@ void RSDisplayRenderNodeDrawable::UpdateDrawSurface(RSDisplayRenderParams* param
     }
     RS_TRACE_END();
     RSParallelManager::Singleton().Reset(curCanvas_);
-
 }
+#endif
 
 void RSDisplayRenderNodeDrawable::DrawMirrorScreen(
     RSDisplayRenderParams& params, std::shared_ptr<RSProcessor> processor)

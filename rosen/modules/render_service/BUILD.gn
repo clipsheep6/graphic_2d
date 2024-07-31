@@ -175,19 +175,20 @@ ohos_shared_library("librender_service") {
     ]
   }
 
-  if (defined(graphic_2d_feature_subtree_parallel_enable) && graphic_2d_feature_subtree_parallel_enable) {
+  if (defined(graphic_2d_feature_subtree_parallel_enable) &&
+      graphic_2d_feature_subtree_parallel_enable) {
     sources += [
-      "$graphic_2d_ext_root/subtree/rs_parallel_manager.cpp",
       "$graphic_2d_ext_root/subtree/container/rs_parallel_container.cpp",
       "$graphic_2d_ext_root/subtree/container/rs_parallel_data.cpp",
-      "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy_manager.cpp",
-      "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy.cpp",
-      "$graphic_2d_ext_root/subtree/policy/rs_parallel_simple_policy.cpp",
-      "$graphic_2d_ext_root/subtree/executor/rs_parallel_executor_manager.cpp",
-      "$graphic_2d_ext_root/subtree/executor/rs_parallel_executor.cpp",
-      "$graphic_2d_ext_root/subtree/submit/rs_parallel_submit_manager.cpp",
-      "$graphic_2d_ext_root/subtree/executor/drawing_ffrt/rs_parallel_executor_manager_drawing_ffrt.cpp",
       "$graphic_2d_ext_root/subtree/executor/drawing_ffrt/rs_parallel_executor_drawing_ffrt.cpp",
+      "$graphic_2d_ext_root/subtree/executor/drawing_ffrt/rs_parallel_executor_manager_drawing_ffrt.cpp",
+      "$graphic_2d_ext_root/subtree/executor/rs_parallel_executor.cpp",
+      "$graphic_2d_ext_root/subtree/executor/rs_parallel_executor_manager.cpp",
+      "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy.cpp",
+      "$graphic_2d_ext_root/subtree/policy/rs_parallel_policy_manager.cpp",
+      "$graphic_2d_ext_root/subtree/policy/rs_parallel_simple_policy.cpp",
+      "$graphic_2d_ext_root/subtree/rs_parallel_manager.cpp",
+      "$graphic_2d_ext_root/subtree/submit/rs_parallel_submit_manager.cpp",
     ]
   }
 
@@ -228,8 +229,9 @@ ohos_shared_library("librender_service") {
   }
 
   if (graphic_2d_feature_subtree_parallel_enable) {
-    include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/kits" ]
-    include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/inner_api" ]
+    include_dirs += [ "$ffrt_path/interfaces/kits" ]
+    include_dirs +=
+        [ "$ffrt_path/interfaces/inner_api" ]
   }
 
   deps = [
@@ -426,8 +428,9 @@ ohos_executable("render_service") {
   ]
 
   if (graphic_2d_feature_subtree_parallel_enable) {
-    include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/kits" ]
-    include_dirs += ["//foundation/resourceschedule/ffrt/interfaces/inner_api" ]
+    include_dirs += [ "$ffrt_path/interfaces/kits" ]
+    include_dirs +=
+        [ "$ffrt_path/interfaces/inner_api" ]
   }
 
   deps = [
@@ -444,7 +447,7 @@ ohos_executable("render_service") {
     "ipc:ipc_core",
   ]
 
-   if (graphic_2d_feature_subtree_parallel_enable) {
+  if (graphic_2d_feature_subtree_parallel_enable) {
     external_deps += [ "ffrt:libffrt" ]
   }
 

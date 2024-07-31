@@ -407,10 +407,11 @@ void RSUifirstManager::DoPurgePendingPostNodes(std::unordered_map<NodeId,
             node->GetForceUpdateByUifirst() : drawable->IsCurFrameStatic(deviceType);
         if (drawable->HasCachedTexture() && (staticContent || CheckVisibleDirtyRegionIsEmpty(node)) &&
             (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end()) &&
-            !drawable->IsSubThreadSkip()) {
+            !drawable->IsSubThreadSkip() && !node->GetUIFirstUsedSkipRender()) {
             RS_OPTIONAL_TRACE_NAME_FMT("Purge node name %s", surfaceParams->GetName().c_str());
             it = pendingNode.erase(it);
         } else {
+            node->SetUIFirstUsedSkipRender(false);
             ++it;
         }
     }
@@ -509,6 +510,7 @@ void RSUifirstManager::UpdateSkipSyncNode()
         // ArkTSCard
         if (NodeIsInCardWhiteList(*node)) {
             if (surfaceNode->GetLastFrameUifirstFlag() == MultiThreadCacheType::ARKTS_CARD) {
+                surfaceNode->SetUIFirstUsedSkipRender(true);
                 processingCardNodeSkipSync_.insert(it->first);
                 continue;
             }
@@ -1055,7 +1057,8 @@ bool RSUifirstManager::IsArkTsCardCache(RSSurfaceRenderNode& node, bool animatio
     bool flag = ((RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE) &&
         (node.GetSurfaceNodeType() == RSSurfaceNodeType::ABILITY_COMPONENT_NODE) &&
         RSUifirstManager::Instance().NodeIsInCardWhiteList(node) &&
-        (node.ShouldPaint()) && (node.GetName().find(ARKTSCARDNODE_NAME) != std::string::npos));
+        (node.ShouldPaint()) && (node.GetName().find(ARKTSCARDNODE_NAME) != std::string::npos)) ||
+        node.GetUIFirstUsedSkipRender();
     if (flag) { // Planning: mark by arkui or app
         return true;
     }

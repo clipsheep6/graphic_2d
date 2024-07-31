@@ -90,6 +90,13 @@ bool RSLogManager::SetRSLogFlag(std::string& flag)
     return false;
 }
 
+void RSLogManager::CloseRSLogFlag()
+{
+    std::string closeFlag = "0x0";
+    SetRSLogFlag(closeFlag);
+    return;
+}
+
 bool RSLogManager::IsFlagValid(std::string& flag)
 {
     if ((flag.length() > INPUT_FLAG_MIN_LENGTH) && (flag.length() <= INPUT_FLAG_MAX_LENGTH)

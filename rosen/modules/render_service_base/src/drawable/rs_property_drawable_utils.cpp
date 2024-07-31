@@ -200,6 +200,10 @@ bool RSPropertyDrawableUtils::PickColorSyn(Drawing::Canvas* canvas, Drawing::Pat
     }
     uint32_t errorCode = 0;
     std::shared_ptr<RSColorPicker> colorPicker = RSColorPicker::CreateColorPicker(dst, errorCode);
+    if (colorPicker == nullptr) {
+        ROSEN_LOGE("RSPropertyDrawableUtils::PickColorSyn colorPicker is null");
+        return false;
+    }
     if (errorCode != 0) {
         return false;
     }
@@ -323,6 +327,10 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
     }
     if (rsFilter == nullptr) {
         ROSEN_LOGE("RSPropertyDrawableUtils::DrawFilter null filter.");
+        return;
+    }
+    if (canvas == nullptr) {
+        ROSEN_LOGE("RSPropertyDrawableUtils::DrawFilter null canvas.");
         return;
     }
 

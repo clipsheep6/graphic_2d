@@ -90,11 +90,10 @@ bool RSLogManager::SetRSLogFlag(std::string& flag)
     return false;
 }
 
-void RSLogManager::CloseRSLogFlag()
+bool RSLogManager::CloseRSLogFlag()
 {
     std::string closeFlag = "0x0";
-    SetRSLogFlag(closeFlag);
-    return;
+    return SetRSLogFlag(closeFlag);
 }
 
 bool RSLogManager::IsFlagValid(std::string& flag)

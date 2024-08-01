@@ -230,8 +230,7 @@ ohos_shared_library("librender_service") {
 
   if (graphic_2d_feature_subtree_parallel_enable) {
     include_dirs += [ "$ffrt_path/interfaces/kits" ]
-    include_dirs +=
-        [ "$ffrt_path/interfaces/inner_api" ]
+    include_dirs += [ "$ffrt_path/interfaces/inner_api" ]
   }
 
   deps = [
@@ -429,8 +428,7 @@ ohos_executable("render_service") {
 
   if (graphic_2d_feature_subtree_parallel_enable) {
     include_dirs += [ "$ffrt_path/interfaces/kits" ]
-    include_dirs +=
-        [ "$ffrt_path/interfaces/inner_api" ]
+    include_dirs += [ "$ffrt_path/interfaces/inner_api" ]
   }
 
   deps = [

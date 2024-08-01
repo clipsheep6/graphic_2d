@@ -22,12 +22,12 @@
     virtual ~T()
 
 #define DISALLOW_COPY_AND_ASSIGN(T) \
-    T(const T&) = delete;       \
-    T& operator = (const T&) = delete\
+    T(const T&) = delete; \
+    T& operator=(const T&) = delete \
 
 #define DISALLOW_MOVE_AND_ASSIGN(T) \
     T(const T&&) = delete;       \
-    T& operator = (const T&&) = delete
+    T& operator=(const T&&) = delete \
 
 #define SINGLETON_DECLARE(T) \
     DEFAULT_CONSTURCT_(T); \

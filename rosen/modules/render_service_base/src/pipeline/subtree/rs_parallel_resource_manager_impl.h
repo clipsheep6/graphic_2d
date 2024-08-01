@@ -225,8 +225,7 @@ ImagePtr RSParallelResourceManager::BuildFromTextureByRef(const ImagePtr& ref, C
     return image;
 }
 
-struct RSParallelResourceHolder2
-{
+struct RSParallelResourceHolder2 {
     RSParallelResourceHolder2(const Drawing::Image& sharedImage)
         : res_(sharedImage) {}
     const Drawing::Image res_;

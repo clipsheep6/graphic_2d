@@ -45,8 +45,7 @@ namespace {
     constexpr int32_t LAST_TOUCH_CNT = 1;
 
     constexpr uint32_t FIRST_FRAME_TIME_OUT = 50; // 50ms
-    constexpr uint32_t SCENE_BEFORE_XML = 1;
-    constexpr uint32_t SCENE_AFTER_TOUCH = 3;
+    constexpr uint32_t VOTER_SCENE_PRIORITY_BEFORE_PACKAGES = 1;
     constexpr uint64_t ENERGY_ASSURANCE_TASK_DELAY_TIME = 1000; //1s
     constexpr uint64_t UI_ENERGY_ASSURANCE_TASK_DELAY_TIME = 3000; // 3s
     const static std::string ENERGY_ASSURANCE_TASK_ID = "ENERGY_ASSURANCE_TASK_ID";
@@ -1221,31 +1220,26 @@ void HgmFrameRateManager::UpdateVoteRule()
         return;
     }
     auto curSceneConfig = curScreenSceneList[lastScene];
-    uint32_t scenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
+    uint32_t curScenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
     uint32_t min = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].min);
     uint32_t max = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].max);
     HGM_LOGI("UpdateVoteRule: SceneName:%{public}s", lastScene.c_str());
     DeliverRefreshRateVote({"VOTER_SCENE", min, max, (*scenePos).second, lastScene}, ADD_VOTE);
 
-    // restore
     std::lock_guard<std::mutex> lock(voteNameMutex_);
-    voters_ = std::vector<std::string>(std::begin(VOTER_NAME), std::end(VOTER_NAME));
-    std::string srcScene = "VOTER_SCENE";
-    std::string dstScene = (scenePriority == SCENE_BEFORE_XML) ? "VOTER_PACKAGES" : "VOTER_TOUCH";
 
-    // priority 1: VOTER_SCENE > VOTER_PACKAGES
-    // priority 2: VOTER_SCENE > VOTER_TOUCH
-    // priority 3: VOTER_SCENE < VOTER_TOUCH
-    auto srcPos = find(voters_.begin(), voters_.end(), srcScene);
-    auto dstPos = find(voters_.begin(), voters_.end(), dstScene);
-    
-    // resort
-    voters_.erase(srcPos);
-    if (scenePriority == SCENE_AFTER_TOUCH) {
-        voters_.insert(++dstPos, srcScene);
-    } else {
-        voters_.insert(dstPos, srcScene);
+    static uint32_t lastScenePriority = 0xff;
+    if (lastScenePriority == curScenePriority) {
+        return;
     }
+    lastScenePriority = curScenePriority;
+
+    // resort
+    auto srcPos = find(voters_.begin(), voters_.end(), "VOTER_SCENE");
+    voters_.erase(srcPos);
+    auto dstPos = find(voters_.begin(), voters_.end(),
+        curScenePriority == VOTER_SCENE_PRIORITY_BEFORE_PACKAGES ? "VOTER_PACKAGES" : "VOTER_VIDEO");
+    voters_.insert(dstPos, "VOTER_SCENE");
 }
 
 std::string HgmFrameRateManager::GetScreenType(ScreenId screenId)

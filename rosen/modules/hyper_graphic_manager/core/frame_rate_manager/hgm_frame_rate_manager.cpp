@@ -1255,13 +1255,9 @@ void HgmFrameRateManager::UpdateVoteRule()
     HGM_LOGI("UpdateVoteRule: SceneName:%{public}s", lastScene.c_str());
     DeliverRefreshRateVote({"VOTER_SCENE", min, max, (*scenePos).second, lastScene}, ADD_VOTE);
 
+    // restore
     std::lock_guard<std::mutex> lock(voteNameMutex_);
-
-    static uint32_t lastScenePriority = 0xff;
-    if (lastScenePriority == curScenePriority) {
-        return;
-    }
-    lastScenePriority = curScenePriority;
+    voters_ = std::vector<std::string>(std::begin(VOTER_NAME), std::end(VOTER_NAME));
 
     // priority 1: VOTER_SCENE > VOTER_PACKAGES
     // priority 2: VOTER_SCENE < VOTER_LTPO

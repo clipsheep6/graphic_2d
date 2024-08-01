@@ -72,7 +72,7 @@ if (graphic_2d_feature_product == "phone" ||
   graphic_2d_feature_enable_stack_culling = true
 }
 
-if(graphic_2d_feature_product == "phone") {
+if (graphic_2d_feature_product == "phone") {
   graphic_2d_feature_subtree_parallel_enable = true
 }
 
@@ -84,14 +84,13 @@ if (graphic_2d_feature_product == "phone" ||
 gpu_defines = []
 accessibility_defines = []
 
-if(graphic_2d_feature_subtree_parallel_enable){
+if (graphic_2d_feature_subtree_parallel_enable) {
   gpu_defines += [
     "SUBTREE_PARALLEL_ENABLE",
     "SUBTREE_PARALLEL_DEBUG_ENABLE",
-    "RS_ENABLE_FFRT"
+    "RS_ENABLE_FFRT",
   ]
 }
-
 
 if (enable_text_gine) {
   gpu_defines += [ "USE_GRAPHIC_TEXT_GINE" ]

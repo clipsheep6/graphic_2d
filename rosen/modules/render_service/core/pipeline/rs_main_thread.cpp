@@ -1105,22 +1105,6 @@ void RSMainThread::ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& 
     rsTransactionData->Process(*context_);
 }
 
-void RSMainThread::ProcessEmptySyncTransactionCount(uint64_t syncId, int32_t parentPid, int32_t childPid)
-{
-    RS_TRACE_NAME_FMT("RSMainThread::ProcessEmptySyncTransactionCount syncId: %lu parentPid: %d childPid: %d", syncId,
-        parentPid, childPid);
-    ROSEN_LOGI("RSMainThread::ProcessEmptySyncTransactionCount syncId:%{public}" PRIu64 " parentPid:%{public}d "
-        "childPid:%{public}d", syncId, parentPid, childPid);
-    subSyncTransactionCounts_[parentPid]--;
-    if (subSyncTransactionCounts_[parentPid] == 0) {
-        subSyncTransactionCounts_.erase(parentPid);
-    }
-    if (subSyncTransactionCounts_.empty()) {
-        ROSEN_LOGD("SyncTransaction sucess");
-        ProcessAllSyncTransactionData();
-    }
-}
-
 void RSMainThread::StartSyncTransactionFallbackTask(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
     if (handler_) {
@@ -3773,8 +3757,9 @@ void RSMainThread::AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface
 
 void RSMainThread::GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize)
 {
-    PostSyncTask([&cpuMemSize, &gpuMemSize, this]() {
-        gpuMemSize = MemoryManager::GetAppGpuMemoryInMB(GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
+    RSUniRenderThread::Instance().PostSyncTask([&cpuMemSize, &gpuMemSize] {
+        gpuMemSize = MemoryManager::GetAppGpuMemoryInMB(
+            RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
         cpuMemSize = MemoryTrack::Instance().GetAppMemorySizeInMB();
     });
 }

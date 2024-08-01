@@ -207,13 +207,13 @@ private:
 
     uint32_t currRefreshRate_ = 0;
     uint32_t controllerRate_ = 0;
-    std::shared_ptr<uint32_t> pendingRefreshRate_;
+    std::shared_ptr<uint32_t> pendingRefreshRate_ = nullptr;
     uint64_t pendingConstraintRelativeTime_ = 0;
-    std::shared_ptr<HgmVSyncGeneratorController> controller_;
+    std::shared_ptr<HgmVSyncGeneratorController> controller_ = nullptr;
     std::mutex appChangeDataMutex_;
     std::vector<std::pair<FrameRateLinkerId, uint32_t>> appChangeData_;
 
-    std::function<void(bool, bool)> forceUpdateCallback_;
+    std::function<void(bool, bool)> forceUpdateCallback_ = nullptr;
     std::unordered_map<ScreenId, std::shared_ptr<HgmOneShotTimer>> screenTimerMap_;
 
     std::mutex pkgSceneMutex_;

@@ -103,13 +103,21 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
 
     hgmCore.RegisterRefreshRateModeChangeCallback([rsController, appController](int32_t mode) {
         if (HgmCore::Instance().IsLTPOSwitchOn()) {
+            if (rsController) {
             rsController->SetPhaseOffset(0);
+            }
+            if (appController) {
             appController->SetPhaseOffset(0);
+            }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPO);
         } else {
             if (RSUniRenderJudgement::IsUniRender()) {
+                if (rsController) {
                 rsController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                }
+                if (appController) {
                 appController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                }
             }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPS);
         }
@@ -433,11 +441,15 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
     bool frameRateChanged = false;
     bool controllerRateChanged = false;
     auto rsFrameRate = GetDrawingFrameRate(currRefreshRate_, finalRange);
+    if (controller_) {
     controllerRate_ = rsFrameRate > 0 ? rsFrameRate : controller_->GetCurrentRate();
     if (controllerRate_ != controller_->GetCurrentRate()) {
         rsFrameRateLinker->SetFrameRate(controllerRate_);
         controllerRateChanged = true;
         frameRateChanged = true;
+        }
+    } else if (rsFrameRate > 0) {
+        controllerRate_ = rsFrameRate;
     }
 
     auto& hgmCore = HgmCore::Instance();
@@ -447,6 +459,9 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
     RS_TRACE_INT("PreferredFrameRate", static_cast<int>(finalRange.preferred_));
 
     for (auto linker : appFrameRateLinkers) {
+        if (linker.second == nullptr) {
+            continue;
+        }
         const auto& expectedRange = linker.second->GetExpectedRange();
         auto appFrameRate = GetDrawingFrameRate(currRefreshRate_, expectedRange);
         if (touchManager_.GetState() != TouchState::IDLE_STATE) {

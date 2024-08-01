@@ -428,6 +428,18 @@ void VSyncDistributor::WaitForVsyncOrTimeOut(std::unique_lock<std::mutex> &locke
     }
 }
 
+#if defined(RS_ENABLE_DVSYNC)
+void ClearRSDVSyncConnect(int64_t timeStamp)
+{
+    if (isRs_) {
+        std::unique_lock<std::mutex> locker(mutex_);
+        bool waitForVSync = false;
+        std::vector<sptr<VSyncConnection>> conns;
+        CollectConns(waitForVSync, timestamp, conns, false);
+    }
+}
+#endif
+
 void VSyncDistributor::ThreadMain()
 {
     // set thread priorty
@@ -475,6 +487,9 @@ void VSyncDistributor::ThreadMain()
             // IMPORTANT: ScopedDebugTrace here will cause frame loss.
             RS_TRACE_NAME_FMT("%s_SendVsync", name_.c_str());
         }
+#if defined(RS_ENABLE_DVSYNC)
+        ClearRSDVSyncConnect(timeStamp);
+#endif
         PostVSyncEvent(conns, timestamp, true);
     }
 }

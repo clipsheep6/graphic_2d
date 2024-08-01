@@ -41,7 +41,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
 RSCanvasDrawingRenderNode::RSCanvasDrawingRenderNode(
     NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
     : RSCanvasRenderNode(id, context, isTextureExportNode)
@@ -188,17 +187,20 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
 
 bool RSCanvasDrawingRenderNode::IsNeedProcess() const
 {
-    if (!renderDrawable_ || !(renderDrawable_->GetRenderParams())) {
+    if (!renderDrawable_) {
         return false;
     }
-    return renderDrawable_->GetRenderParams()->IsNeedProcess();
+    return renderDrawable_->IsNeedProcess();
 }
 
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
 {
+    if (renderDrawable_) {
+        renderDrawable_->SetNeedProcess(needProcess);
+    }
     auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
     if (stagingCanvasDrawingParams) {
-        stagingCanvasDrawingParams->SetNeedProcess(needProcess);
+        stagingCanvasDrawingParams->SetNeedSync(true);
         if (stagingRenderParams_->NeedSync()) {
             AddToPendingSyncList();
         }
@@ -525,7 +527,7 @@ const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDraw
 
 void RSCanvasDrawingRenderNode::ClearResource()
 {
-    if (renderDrawable_ && renderDrawable_->IsDrawCmdListsVisited()) {
+    if (renderDrawable_ && renderDrawable_->CheckAndSetIsDrawCmdListVisited()) {
         std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
         drawCmdLists_.clear();
         renderDrawable_->SetDrawCmdListsVisited(false);

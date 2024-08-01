@@ -1028,14 +1028,12 @@ void RSMainThread::ProcessCommandForUniRender()
         if (canvasDrawingNode == nullptr) {
             return;
         }
-        if (canvasDrawingNode->IsNeedProcess()) {
-            auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(canvasDrawingNode);
-            if (!drawableNode) {
-                return;
-            }
-            std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(drawableNode)->
-                PlaybackInCorrespondThread();
+        auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(canvasDrawingNode);
+        if (!drawableNode) {
+            return;
         }
+        std::static_pointer_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable>(drawableNode)->
+            PlaybackInCorrespondThread();
     });
     RS_TRACE_NAME("RSMainThread::ProcessCommandUni" + transactionFlags);
     for (auto& rsTransactionElem: *transactionDataEffective) {

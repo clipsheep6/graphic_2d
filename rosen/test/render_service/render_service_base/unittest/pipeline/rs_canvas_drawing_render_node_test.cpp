@@ -589,8 +589,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeTest, SetNeedProcessTest, TestSize.Level1)
     NodeId nodeId = 4;
     auto rsCanvasDrawingRenderNode = std::make_shared<RSCanvasDrawingRenderNode>(nodeId);
     rsCanvasDrawingRenderNode->stagingRenderParams_ = std::make_unique<RSRenderParams>(nodeId);
-    bool needProcess = true;
-    rsCanvasDrawingRenderNode->SetNeedProcess(needProcess);
+    rsCanvasDrawingRenderNode->SetNeedProcess();
     EXPECT_TRUE(rsCanvasDrawingRenderNode->stagingRenderParams_->NeedSync());
     EXPECT_TRUE(rsCanvasDrawingRenderNode->isNeedProcess_);
 }

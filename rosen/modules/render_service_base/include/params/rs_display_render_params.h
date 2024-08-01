@@ -105,13 +105,13 @@ public:
     {
         return isSecurityDisplay_;
     }
-    void SetIsMouseDirty(bool mouseDirty)
+    void SetIsPointWindowDirty(bool pointWindowDirty)
     {
-        isMouseDirty_ = mouseDirty;
+        isPointWindowDirty_ = pointWindowDirty;
     }
-    bool GetIsMouseDirty() const
+    bool GetIsPointWindowDirty() const
     {
-        return isMouseDirty_;
+        return isPointWindowDirty_;
     }
     void SetGlobalZOrder(float zOrder);
     float GetGlobalZOrder() const;
@@ -173,7 +173,7 @@ private:
     bool isRotationChanged_ = false;
     bool hasHdrPresent_ = false;
     bool brightnessRatio_ = 1.0f;
-    bool isMouseDirty_ = false;
+    bool isPointWindowDirty_ = false;
     float zOrder_ = 0.0f;
     friend class RSUniRenderVisitor;
     friend class RSDisplayRenderNode;

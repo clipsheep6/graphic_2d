@@ -84,7 +84,9 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     std::string curScreenName = "screen" + std::to_string(curScreenId_) + "_" + (isLtpo_ ? "LTPO" : "LTPS");
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
+        if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
         curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        }
         idleDetector_.UpdateSupportAppBufferList(configData->appBufferList_);
         if (curScreenStrategyId_.empty()) {
             curScreenStrategyId_ = "LTPO-DEFAULT";
@@ -895,7 +897,9 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
 
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
+        if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
         curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        }
         if (curScreenStrategyId_.empty()) {
             curScreenStrategyId_ = "LTPO-DEFAULT";
         }
@@ -962,7 +966,8 @@ void HgmFrameRateManager::HandleVirtualDisplayEvent(pid_t pid, EventInfo eventIn
     }
 
     auto virtualDisplayConfig = configData->virtualDisplayConfigs_;
-    if (virtualDisplayConfig.count(virtualDisplayName) == 0) {
+    if (virtualDisplayConfig.count(virtualDisplayName) == 0 ||
+        configData->strategyConfigs_.count(virtualDisplayConfig[virtualDisplayName]) == 0) {
         HGM_LOGW("HandleVirtualDisplayEvent:unknow virtual display [%{public}s]", virtualDisplayName.c_str());
         DeliverRefreshRateVote({"VOTER_VIRTUALDISPLAY", OLED_60_HZ, OLED_60_HZ, pid}, eventInfo.eventStatus);
     } else {
@@ -1199,6 +1204,10 @@ void HgmFrameRateManager::UpdateVoteRule()
     if (configData == nullptr) {
         return;
     }
+    if (configData->screenConfigs_.count(curScreenStrategyId_) == 0 ||
+        configData->screenConfigs_[curScreenStrategyId_].count(std::to_string(curRefreshRateMode_)) == 0) {
+        return;
+    }
     auto curScreenSceneList =
         configData->screenConfigs_[curScreenStrategyId_][std::to_string(curRefreshRateMode_)].sceneList;
     if (curScreenSceneList.empty()) {
@@ -1220,6 +1229,11 @@ void HgmFrameRateManager::UpdateVoteRule()
         return;
     }
     auto curSceneConfig = curScreenSceneList[lastScene];
+    if (!XMLParser::IsNumber(curSceneConfig.priority) ||
+        configData->strategyConfigs_.find(curSceneConfig.strategy) == configData->strategyConfigs_.end()) {
+        HGM_LOGW("invalid scene config");
+        return;
+    }
     uint32_t curScenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
     uint32_t min = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].min);
     uint32_t max = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].max);

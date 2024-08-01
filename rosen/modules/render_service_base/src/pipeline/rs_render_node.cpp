@@ -1953,7 +1953,8 @@ inline static bool IsLargeArea(int width, int height)
     return width > threshold && height > threshold;
 }
 
-void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync)
+void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync,
+    std::unordered_map<NodeId>& filterNodes)
 {
     MarkFilterHasEffectChildren();
     if (!RSProperties::FilterCacheEnabled) {
@@ -1964,6 +1965,7 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
     if (properties.GetBackgroundFilter()) {
         auto filterDrawable = GetFilterDrawable(false);
         if (filterDrawable != nullptr) {
+            filterNodes.emplace(GetId());
             MarkFilterCacheFlags(filterDrawable, dirtyManager, needRequestNextVsync);
             CheckFilterCacheAndUpdateDirtySlots(filterDrawable, RSDrawableSlot::BACKGROUND_FILTER);
         }
@@ -1971,12 +1973,34 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
     if (properties.GetFilter()) {
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
+            filterNodes.emplace(GetId());
             MarkFilterCacheFlags(filterDrawable, dirtyManager, needRequestNextVsync);
             CheckFilterCacheAndUpdateDirtySlots(filterDrawable, RSDrawableSlot::COMPOSITING_FILTER);
         }
     }
     OnFilterCacheStateChanged();
     UpdateLastFilterCacheRegion();
+}
+
+void RSRenderNode::UpdateFilterNodeStatus(bool isSkipped)
+{
+    if (!RSProperties::FilterCacheEnabled) {
+        ROSEN_LOGE("RSRenderNode::UpdateFilterNodeStatus filter cache is disabled.");
+        return;
+    }
+    const auto& properties = GetRenderProperties();
+    if (properties.GetBackgroundFilter()) {
+        auto filterDrawable = GetFilterDrawable(false);
+        if (filterDrawable != nullptr) {
+            filterDrawable->MarkNodeIsSkipped(isSkipped);
+        }
+    }
+    if (properties.GetFilter()) {
+        auto filterDrawable = GetFilterDrawable(true);
+        if (filterDrawable != nullptr) {
+            filterDrawable->MarkNodeIsSkipped(isSkipped);
+        }
+    }
 }
 
 void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,

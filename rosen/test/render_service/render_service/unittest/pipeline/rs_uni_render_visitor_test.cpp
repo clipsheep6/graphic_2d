@@ -939,6 +939,38 @@ HWTEST_F(RSUniRenderVisitorTest, IsWatermarkFlagChanged, TestSize.Level1)
     rsUniRenderVisitor->IsWatermarkFlagChanged();
 }
 
+/*
+ * @tc.name: CheckFilterNodesAfterPrepareDisplayNode
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckFilterNodesAfterPrepareDisplayNode test
+ * @tc.type: FUNC
+ * @tc.require: issuesI9V0N7
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckFilterNodesAfterPrepareDisplayNode, TestSize.Level1)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    NodeId id = 0;
+    RSDisplayNodeConfig config;
+    auto displayNode = std::make_shared<RSDisplayRenderNode>(id, config);
+    ASSERT_NE(displayNode, nullptr);
+    rsUniRenderVisitor->curDisplayNode_ = displayNode;
+
+    NodeId id0 = 1;
+    RSSurfaceRenderNodeConfig surfaceConfig;
+    surfaceConfig.id = id0;
+    auto surfaceNode1 = std::make_shared<RSSurfaceRenderNode>(surfaceConfig);
+    ASSERT_NE(surfaceNode1, nullptr);
+    ASSERT_NE(surfaceNode1->renderContent_, nullptr);
+    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(1.0f, 1.0f);
+    ASSERT_NE(filter, nullptr);
+    surfaceNode1->renderContent_->renderProperties_.SetBackgroundFilter(filter);
+    displayNode->curAllSurfaces_.push_back(surfaceNode1);
+    rsUniRenderVisitor->filterNodes_.emplace(id0);
+    auto& nodeMap = RSMainThread::Instance()->GetContext().GetMutableNodeMap();
+    nodeMap.renderNodeMap_[id0] = surfaceNode1;
+    rsUniRenderVisitor->CheckFilterNodesAfterPrepareDisplayNode();
+}
+
 /**
  * @tc.name: CalcDirtyFilterRegion001
  * @tc.desc: Test RSUniRenderVisitorTest.CalcDirtyFilterRegion when disPlayNode or disPlayNode.dirtyManager_ is null

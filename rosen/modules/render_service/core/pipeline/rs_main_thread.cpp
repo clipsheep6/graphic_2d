@@ -2050,6 +2050,8 @@ void RSMainThread::Render()
         renderThreadParams_->SetWatermark(watermarkFlag_, watermarkImg_);
         renderThreadParams_->SetCurtainScreenUsingStatus(isCurtainScreenOn_);
         UniRender(rootNode);
+        renderThreadParams_->SetDirtyFlag(isDirty_);
+        isDirty_ = false;
         frameCount_++;
     } else {
         auto rsVisitor = std::make_shared<RSRenderServiceVisitor>();

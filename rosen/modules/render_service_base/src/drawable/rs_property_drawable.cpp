@@ -129,9 +129,12 @@ bool RSClipToBoundsDrawable::OnUpdate(const RSRenderNode& node)
         canvas.ClipRoundRect(
             RSPropertyDrawableUtils::RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
     } else {
-        // Enable anti-aliasing only on surface nodes to resolve the issue of jagged edges on card compoments
-        // during dragging.
-        bool aa = node.IsInstanceOf<RSSurfaceRenderNode>();
+        bool aa = false;
+        if (auto surfaceNode = node.ReinterpretCastTo<RSSurfaceRenderNode>(); surfaceNode &&
+            surfaceNode->IsAbilityComponent()) {
+            // Enable anti-aliasing only on card node to resolve the issue of jagged edges on card compoments.
+            aa = true;
+        }
         canvas.ClipRect(
             RSPropertyDrawableUtils::Rect2DrawingRect(properties.GetBoundsRect()), Drawing::ClipOp::INTERSECT, aa);
     }

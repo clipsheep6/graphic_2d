@@ -85,7 +85,7 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
         if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
-        curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+            curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
         }
         idleDetector_.UpdateSupportAppBufferList(configData->appBufferList_);
         if (curScreenStrategyId_.empty()) {
@@ -104,19 +104,19 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     hgmCore.RegisterRefreshRateModeChangeCallback([rsController, appController](int32_t mode) {
         if (HgmCore::Instance().IsLTPOSwitchOn()) {
             if (rsController) {
-            rsController->SetPhaseOffset(0);
+                rsController->SetPhaseOffset(0);
             }
             if (appController) {
-            appController->SetPhaseOffset(0);
+                appController->SetPhaseOffset(0);
             }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPO);
         } else {
             if (RSUniRenderJudgement::IsUniRender()) {
                 if (rsController) {
-                rsController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                    rsController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
                 }
                 if (appController) {
-                appController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                    appController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
                 }
             }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPS);
@@ -442,11 +442,11 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
     bool controllerRateChanged = false;
     auto rsFrameRate = GetDrawingFrameRate(currRefreshRate_, finalRange);
     if (controller_) {
-    controllerRate_ = rsFrameRate > 0 ? rsFrameRate : controller_->GetCurrentRate();
-    if (controllerRate_ != controller_->GetCurrentRate()) {
-        rsFrameRateLinker->SetFrameRate(controllerRate_);
-        controllerRateChanged = true;
-        frameRateChanged = true;
+        controllerRate_ = rsFrameRate > 0 ? rsFrameRate : controller_->GetCurrentRate();
+        if (controllerRate_ != controller_->GetCurrentRate()) {
+            rsFrameRateLinker->SetFrameRate(controllerRate_);
+            controllerRateChanged = true;
+            frameRateChanged = true;
         }
     } else if (rsFrameRate > 0) {
         controllerRate_ = rsFrameRate;
@@ -739,7 +739,7 @@ void HgmFrameRateManager::HandleLightFactorStatus(pid_t pid, bool isSafe)
     });
 }
 
-void HgmFrameRateManager::HandlePackageEvent(pid_t pid, uint32_t listSize, const std::vector<std::string>& packageList)
+void HgmFrameRateManager::HandlePackageEvent(pid_t pid, const std::vector<std::string>& packageList)
 {
     if (pid != DEFAULT_PID) {
         std::lock_guard<std::mutex> lock(cleanPidCallbackMutex_);
@@ -913,7 +913,7 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
         if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
-        curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+            curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
         }
         if (curScreenStrategyId_.empty()) {
             curScreenStrategyId_ = "LTPO-DEFAULT";
@@ -1297,7 +1297,7 @@ void HgmFrameRateManager::CleanVote(pid_t pid)
                         HandleLightFactorStatus(DEFAULT_PID, false);
                         break;
                     case CleanPidCallbackType::PACKAGE_EVENT:
-                        HandlePackageEvent(DEFAULT_PID, 0, {}); // handle empty pkg
+                        HandlePackageEvent(DEFAULT_PID, {}); // handle empty pkg
                         break;
                     case CleanPidCallbackType::TOUCH_EVENT:
                         HandleTouchEvent(DEFAULT_PID, TouchStatus::TOUCH_UP, LAST_TOUCH_CNT);

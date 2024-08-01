@@ -119,7 +119,7 @@ public:
     ~HgmFrameRateManager() = default;
 
     void HandleLightFactorStatus(pid_t pid, bool isSafe);
-    void HandlePackageEvent(pid_t pid, uint32_t listSize, const std::vector<std::string>& packageList);
+    void HandlePackageEvent(pid_t pid, const std::vector<std::string>& packageList);
     void HandleRefreshRateEvent(pid_t pid, const EventInfo& eventInfo);
     void HandleTouchEvent(pid_t pid, int32_t touchStatus, int32_t touchCnt);
     void HandleDynamicModeEvent(bool enableDynamicModeEvent);

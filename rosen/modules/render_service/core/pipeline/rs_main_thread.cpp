@@ -1038,6 +1038,7 @@ void RSMainThread::ProcessCommandForUniRender()
         }
     });
     RS_TRACE_NAME("RSMainThread::ProcessCommandUni" + transactionFlags);
+    transactionFlags_ = transactionFlags;
     for (auto& rsTransactionElem: *transactionDataEffective) {
         for (auto& rsTransaction: rsTransactionElem.second) {
             if (rsTransaction) {
@@ -3065,6 +3066,7 @@ void RSMainThread::SendCommands()
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame)
 {
+    dumpString.append("-- [pid, curIdx]: " + transactionFlags_ + "\n");
     dumpString.append("-- current timeStamp: " + std::to_string(timestamp_) + "\n");
     dumpString.append("-- vsyncId: " + std::to_string(vsyncId_) + "\n");
     if (LIKELY(forceDumpSingleFrame)) {

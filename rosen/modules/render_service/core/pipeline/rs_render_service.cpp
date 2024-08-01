@@ -51,7 +51,15 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 5000000;
+constexpr int64_t DUMP_TIME_LIMIT = 100000; // 100 ms
+constexpr int SEC_TO_USEC = 1000 * 1000;
 const std::string BOOTEVENT_RENDER_SERVICE_READY = "bootevent.renderservice.ready";
+static uint64_t SystemTime()
+{
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    return (uint64_t)now.tv_sec * SEC_TO_USEC + (uint64_t)now.tv_usec;
+}
 }
 RSRenderService::RSRenderService() {}
 
@@ -577,9 +585,17 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpRenderServiceTree(dumpString); }).wait();
     }
-    if (argSets.count(arg9) || argSets.count(arg6_1) != 0) {
+    if (argSets.count(arg6_1) != 0) {
+        uint64_t enterTime = SystemTime();
+        while (RSSystemParameters::GetDumpRSTreeCount() != 0) {
+            uint64_t nowTime = SystemTime();
+            if (nowTime - enterTime >= DUMP_TIME_LIMIT) {
+                RS_LOGE("Dump Timeout error, stop waiting");
+                break;
+            }
+        }
         mainThread_->ScheduleTask(
-            [this, &dumpString]() {DumpRenderServiceTree(dumpString, false); }).wait();
+            [this, &dumpString]() { DumpRenderServiceTree(dumpString, false); }).wait();
     }
     if (argSets.count(arg9) ||argSets.count(arg7) != 0) {
         mainThread_->ScheduleTask(

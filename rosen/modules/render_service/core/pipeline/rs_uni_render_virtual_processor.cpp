@@ -179,6 +179,13 @@ void RSUniRenderVirtualProcessor::CanvasInit(RSDisplayRenderNode& node)
 {
     if (node.IsFirstTimeToProcessor() || canvasRotation_) {
         if (node.IsFirstTimeToProcessor()) {
+            // Set RSTreeCount dump val when record sreen in beta version, dump 30 frames
+            std::string betaName = OHOS::system::GetParameter("const.logsystem.versiontype", "");
+            if (betaName.find("beta") != std::string::npos) {
+                RSSystemParameters::SetDumpRSTreeCount(RS_TREE_COUNT);
+            } else {
+                RS_LOGD("Not in beta mode, do not set RS tree count");
+            }
             RS_LOGI("RSUniRenderVirtualProcessor::FirstInit, id: %{public}" PRIu64 ", " \
                 "screen(%{public}f, %{public}f, %{public}f, %{public}f), " \
                 "rotation: %{public}d, correction: %{public}d, needRotation: %{public}d, scaleMode: %{public}d",

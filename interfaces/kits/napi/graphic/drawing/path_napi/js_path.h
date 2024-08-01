@@ -63,6 +63,7 @@ public:
     static napi_value GetMatrix(napi_env env, napi_callback_info info);
     static napi_value BuildFromSvgString(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
+    static napi_value CreateJsPath(napi_env env, Path **path);
     Path* GetPath();
 
 private:

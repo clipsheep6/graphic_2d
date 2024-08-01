@@ -22,6 +22,7 @@
 #include "text/font_metrics.h"
 #include "text/font_types.h"
 #include "text/typeface.h"
+#include "draw/path.h"
 #include "utils/rect.h"
 #include "utils/scalar.h"
 
@@ -67,6 +68,7 @@ public:
     virtual uint16_t UnicharToGlyph(int32_t uni) const = 0;
     virtual int TextToGlyphs(const void* text, size_t byteLength, TextEncoding encoding,
         uint16_t glyphs[], int maxGlyphCount) const = 0;
+    virtual void GetPathForGlyph(Path& path, uint16_t glyph) const = 0;
 
     virtual scalar MeasureText(const void* text, size_t byteLength, TextEncoding encoding,
         Rect* bounds = nullptr) const = 0;

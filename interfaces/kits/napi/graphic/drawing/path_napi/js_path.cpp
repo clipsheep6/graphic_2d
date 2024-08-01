@@ -1101,6 +1101,31 @@ napi_value JsPath::OnIsClosed(napi_env env, napi_callback_info info)
     return CreateJsNumber(env, result);
 }
 
+napi_value JsPath::CreateJsPath(napi_env env, Path **path)
+{
+    napi_value constructor = nullptr;
+    napi_value result = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status == napi_ok) {
+        status = napi_new_instance(env, constructor, 0, nullptr, &result);
+
+        JsPath* nativepath = nullptr;
+        napi_unwrap(env, result, reinterpret_cast<void **>(&nativepath));
+
+        if (nativepath) {
+            *path = nativepath->GetPath();
+        }
+
+        if (status == napi_ok) {
+            return result;
+        } else {
+            ROSEN_LOGE("Drawing_napi: New instance could not be obtained");
+        }
+    }
+
+    return result;
+}
+
 Path* JsPath::GetPath()
 {
     return m_path;

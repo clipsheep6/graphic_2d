@@ -929,6 +929,9 @@ Rect RSBaseRenderUtil::MergeBufferDamages(const std::vector<Rect>& damages)
 bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     RSSurfaceHandler& surfaceHandler, bool isDisplaySurface, uint64_t vsyncTimestamp)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER,
+        "RSBaseRenderUtil::ConsumeUpdateData id:%{public} isDisplaySurface:%{public}d"
+        " vsyncTimestamp:%lld", surfaceHandler.GetNodeId(), isDisplaySurface, vsyncTimestamp);
     if (surfaceHandler.GetAvailableBufferCount() <= 0) {
         // this node has no new buffer, try use cache.
         // if don't have cache, will not update and use old buffer.
@@ -938,6 +941,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     }
     auto consumer = surfaceHandler.GetConsumer();
     if (consumer == nullptr) {
+        RS_LOGE("RSBaseRenderUtil::ConsumeUpdateData is fail, consumer is nullptr");
         return false;
     }
     DropFrameProcess(surfaceHandler);
@@ -1004,6 +1008,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     surfaceBuffer = nullptr;
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     if (!renderEngine) {
+        RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::ConsumeUpdateData renderEngine is false");
         return true;
     }
     renderEngine->RegisterDeleteBufferListener(surfaceHandler);
@@ -1593,6 +1598,7 @@ bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngP
 
 GraphicTransformType RSBaseRenderUtil::GetRotateTransform(GraphicTransformType transform)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::GetTransform start, transform:%{public}d", transform);
     switch (transform) {
         case GraphicTransformType::GRAPHIC_FLIP_H:
         case GraphicTransformType::GRAPHIC_FLIP_V: {
@@ -1682,6 +1688,7 @@ int RSBaseRenderUtil::RotateEnumToInt(GraphicTransformType rotation)
 
 GraphicTransformType RSBaseRenderUtil::RotateEnumToInt(int angle, GraphicTransformType flip)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::EnumToInt start, flip is %{public}d", flip);
     static const std::map<int, GraphicTransformType> intToEnumMap = {
         {0, GraphicTransformType::GRAPHIC_ROTATE_NONE}, {90, GraphicTransformType::GRAPHIC_ROTATE_270},
         {180, GraphicTransformType::GRAPHIC_ROTATE_180}, {270, GraphicTransformType::GRAPHIC_ROTATE_90}};

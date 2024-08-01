@@ -40,11 +40,30 @@ public:
     std::unique_ptr<TextLineBase> GetTextLineBase();
     void SetParagraph(std::shared_ptr<Typography> paragraph);
 
+    static napi_value CreateTruncatedLine(napi_env env, napi_callback_info info);
+    static napi_value CreateJustifiedLine(napi_env env, napi_callback_info info);
+    static napi_value GetTypographicBounds(napi_env env, napi_callback_info info);
+    static napi_value GetImageBounds(napi_env env, napi_callback_info info);
+    static napi_value GetTrailingSpaceWidth(napi_env env, napi_callback_info info);
+    static napi_value GetIndexForCharacterPosition(napi_env env, napi_callback_info info);
+    static napi_value GetOffsetForCharacterIndex(napi_env env, napi_callback_info info);
+    static napi_value TraversalCharacterOffsetAndIndex(napi_env env, napi_callback_info info);
+    static napi_value GetAlignmentOffset(napi_env env, napi_callback_info info);
+
 private:
     napi_value OnGetGlyphCount(napi_env env, napi_callback_info info);
     napi_value OnGetGlyphRuns(napi_env env, napi_callback_info info);
     napi_value OnGetTextRange(napi_env env, napi_callback_info info);
     napi_value OnPaint(napi_env env, napi_callback_info info);
+    napi_value OnCreateTruncatedLine(napi_env env, napi_callback_info info, napi_ref constructor);
+    napi_value OnCreateJustifiedLine(napi_env env, napi_callback_info info, napi_ref constructor);
+    napi_value OnGetTypographicBounds(napi_env env, napi_callback_info info);
+    napi_value OnGetImageBounds(napi_env env, napi_callback_info info);
+    napi_value OnGetTrailingSpaceWidth(napi_env env, napi_callback_info info);
+    napi_value OnGetIndexForCharacterPosition(napi_env env, napi_callback_info info);
+    napi_value OnGetOffsetForCharacterIndex(napi_env env, napi_callback_info info);
+    napi_value OnTraversalCharacterOffsetAndIndex(napi_env env, napi_callback_info info);
+    napi_value OnGetAlignmentOffset(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref constructor_;
     std::unique_ptr<TextLineBase> textLine_ = nullptr;

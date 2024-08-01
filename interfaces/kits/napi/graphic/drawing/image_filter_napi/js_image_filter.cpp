@@ -117,16 +117,25 @@ napi_value JsImageFilter::CreateBlurImageFilter(napi_env env, napi_callback_info
     int32_t tMode = 0;
     GET_ENUM_PARAM(ARGC_TWO, tMode, 0, static_cast<int32_t>(TileMode::DECAL));
 
-    JsImageFilter *jsImageFilter = nullptr;
+    napi_valuetype valueType = napi_undefined;
     if (argc > ARGC_THREE) {
-        napi_unwrap(env, argv[ARGC_THREE], reinterpret_cast<void**>(&jsImageFilter));
+        if ((napi_typeof(env, argv[ARGC_THREE], &valueType) != napi_ok) ||
+            (valueType != napi_null && valueType != napi_object)) {
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect parameter3 type.");
+        }
     }
 
-    std::shared_ptr<ImageFilter> imageFilter = (jsImageFilter == nullptr) ?
-        nullptr : jsImageFilter->GetImageFilter();
+    std::shared_ptr<ImageFilter> drawingImageFilterPtr = nullptr;
+    if (valueType == napi_object) {
+        JsImageFilter *jsImageFilter = nullptr;
+        GET_UNWRAP_PARAM(ARGC_THREE, jsImageFilter);
+        if (jsImageFilter->GetImageFilter() != nullptr) {
+            drawingImageFilterPtr = jsImageFilter->GetImageFilter();
+        }
+    }
 
     std::shared_ptr<ImageFilter> imgFilter = ImageFilter::CreateBlurImageFilter(sigmaX, sigmaY,
-        static_cast<TileMode>(tMode), imageFilter, ImageBlurType::GAUSS);
+        static_cast<TileMode>(tMode), drawingImageFilterPtr, ImageBlurType::GAUSS);
     return JsImageFilter::Create(env, imgFilter);
 }
 
@@ -139,16 +148,27 @@ napi_value JsImageFilter::CreateFromColorFilter(napi_env env, napi_callback_info
     JsColorFilter *jsColorFilter = nullptr;
     GET_UNWRAP_PARAM(ARGC_ZERO, jsColorFilter);
 
-    JsImageFilter *jsImageFilter = nullptr;
+    napi_valuetype valueType = napi_undefined;
     if (argc > ARGC_ONE) {
-        napi_unwrap(env, argv[ARGC_ONE], reinterpret_cast<void**>(&jsImageFilter));
+        if ((napi_typeof(env, argv[ARGC_ONE], &valueType) != napi_ok) ||
+            (valueType != napi_null && valueType != napi_object)) {
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect parameter1 type.");
+        }
+    }
+
+    std::shared_ptr<ImageFilter> drawingImageFilterPtr = nullptr;
+    if (valueType == napi_object) {
+        JsImageFilter *jsImageFilter = nullptr;
+        GET_UNWRAP_PARAM(ARGC_ONE, jsImageFilter);
+        if (jsImageFilter->GetImageFilter() != nullptr) {
+            drawingImageFilterPtr = jsImageFilter->GetImageFilter();
+        }
     }
 
     std::shared_ptr<ColorFilter> colorFilter = jsColorFilter->GetColorFilter();
-    std::shared_ptr<ImageFilter> imageFilter = (jsImageFilter == nullptr) ?
-        nullptr : jsImageFilter->GetImageFilter();
 
-    std::shared_ptr<ImageFilter> imgFilter = ImageFilter::CreateColorFilterImageFilter(*colorFilter, imageFilter);
+    std::shared_ptr<ImageFilter> imgFilter = ImageFilter::CreateColorFilterImageFilter(*colorFilter,
+        drawingImageFilterPtr);
     return JsImageFilter::Create(env, imgFilter);
 }
 

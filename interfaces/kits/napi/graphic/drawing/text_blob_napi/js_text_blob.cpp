@@ -345,6 +345,15 @@ napi_value JsTextBlob::MakeFromPosText(napi_env env, napi_callback_info info)
     if (napi_get_value_string_utf8(env, argv[ARGC_ZERO], buffer, bufferLen + 1, &bufferLen) != napi_ok) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Incorrect Argv[0] type.");
     }
+
+    if (bufferLen == 0) {
+        ROSEN_LOGE("JsTextBlob::MakeFromPosText: string is empty");
+        return nullptr;
+    }
+    if (len != bufferLen) {
+        ROSEN_LOGE("JsTextBlob::MakeFromPosText: string length does not match points array length");
+        return nullptr;
+    }
     return getJsTextBlob(buffer, bufferLen, points, font, env);
 }
 

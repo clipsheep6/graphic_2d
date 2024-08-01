@@ -17,6 +17,7 @@
 
 #include "src/utils/SkUTF.h"
 
+#include "drawing_helper.h"
 #include "drawing_canvas_utils.h"
 #include "image_pixel_map_mdk.h"
 #include "native_pixel_map.h"
@@ -440,6 +441,21 @@ void OH_Drawing_CanvasDrawRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect
         return;
     }
     canvas->DrawRect(CastToRect(*cRect));
+}
+
+void OH_Drawing_CanvasDrawPicture(OH_Drawing_Canvas* cCanvas, OH_Drawing_Picture* cPicture)
+{
+    if (cPicture == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    NativeHandle<Picture>* picture = Helper::CastTo<OH_Drawing_Picture*,NativeHandle<Picture>*>(cPicture);
+    canvas->DrawPicture(picture->value);
 }
 
 void OH_Drawing_CanvasDrawCircle(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Point* cPoint, float radius)

@@ -117,7 +117,6 @@ public:
         SrcRectConstraint constraint, const Paint& paint) override;
     void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling,
         const Paint& paint) override;
-    void DrawPicture(const Picture& picture) override;
 
     void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom) override;
 

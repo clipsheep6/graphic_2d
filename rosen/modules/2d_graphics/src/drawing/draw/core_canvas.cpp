@@ -14,6 +14,7 @@
  */
 
 #include "core_canvas.h"
+#include "draw/canvas.h"
 
 #include "impl_factory.h"
 #include "utils/log.h"
@@ -329,11 +330,6 @@ void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     DRAW_API_WITH_PAINT(DrawImageRect, image, dst, sampling);
 }
 
-void CoreCanvas::DrawPicture(const Picture& picture)
-{
-    impl_->DrawPicture(picture);
-}
-
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     impl_->DrawSVGDOM(svgDom);
@@ -584,6 +580,13 @@ bool CoreCanvas::DrawBlurImage(const Image& image, const HpsBlurParameter& blurP
 std::array<int, 2> CoreCanvas::CalcHpsBluredImageDimension(const Drawing::HpsBlurParameter& blurParams)
 {
     return impl_->CalcHpsBluredImageDimension(blurParams);
+}
+
+void Canvas::DrawPicture(const std::shared_ptr<Picture> picture)
+{
+    this->Save();
+    picture->Playback(this);
+    this->Restore();
 }
 } // namespace Drawing
 } // namespace Rosen

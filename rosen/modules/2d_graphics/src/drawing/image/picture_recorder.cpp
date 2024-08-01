@@ -13,27 +13,38 @@
  * limitations under the License.
  */
 
-#include "image/picture.h"
-#include "recording/draw_cmd_list.h"
-#include "draw/canvas.h"
+
+#include "image/picture_recorder.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Picture::Picture(std::shared_ptr<DrawCmdList> cmdList)
-    : drawCmdList_(cmdList)
-{
+
+PictureRecorder::PictureRecorder() {
 }
 
-Picture::~Picture()
-{
+PictureRecorder::~PictureRecorder() {
 }
 
-void Picture::Playback(Canvas* canvas)
+std::shared_ptr<RecordingCanvas> PictureRecorder::BeginRecording(int32_t width, int32_t height)
 {
-    if (drawCmdList_) {
-        drawCmdList_->Playback(*canvas);
+    record_ = std::make_shared<RecordingCanvas>(width, height);
+    return record_;
+}
+
+std::shared_ptr<Picture> PictureRecorder::FinishingRecording()
+{
+    if (!record_) {
+        std::cout << "FinishingRecording 111" << std::endl;
+        return nullptr;
     }
+    std::cout << "FinishingRecording 222" << std::endl;
+
+    std::shared_ptr<DrawCmdList> cmdList = record_->GetDrawCmdList();
+
+    std::shared_ptr<Picture> picture = std::make_shared<Picture>(cmdList);
+    record_ = nullptr;
+    return picture;
 }
 
 } // namespace Drawing

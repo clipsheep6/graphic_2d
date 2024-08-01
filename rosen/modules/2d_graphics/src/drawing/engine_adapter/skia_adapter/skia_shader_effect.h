@@ -43,9 +43,6 @@ public:
 
     void InitWithImage(const Image& image, TileMode tileX, TileMode tileY, const SamplingOptions& sampling,
         const Matrix& matrix) override;
-    
-    void InitWithPicture(const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode, const Matrix& matrix,
-        const Rect& rect) override;
 
     void InitWithLinearGradient(const Point& startPt, const Point& endPt, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode, const Matrix *matrix) override;

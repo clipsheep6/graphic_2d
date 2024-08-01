@@ -341,6 +341,12 @@ void RecordingCanvas::DrawImageRect(
     AddDrawOpImmediate<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling, constraint);
 }
 
+void RecordingCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
+{
+    std::shared_ptr<DrawCmdList> drawCmdList = picture->GetDrawCmdList();
+    drawCmdList->PlaybackToDrawCmdList(cmdList_);
+}
+
 void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
 {
     if (!addDrawOpImmediate_) {
@@ -353,16 +359,6 @@ void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const S
     Rect src(0, 0, image.GetWidth(), image.GetHeight());
     AddDrawOpImmediate<DrawImageRectOpItem::ConstructorHandle>(
         imageHandle, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
-}
-
-void RecordingCanvas::DrawPicture(const Picture& picture)
-{
-    if (!addDrawOpImmediate_) {
-        cmdList_->AddDrawOp(std::make_shared<DrawPictureOpItem>(picture));
-        return;
-    }
-    auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
-    cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
 }
 
 void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)

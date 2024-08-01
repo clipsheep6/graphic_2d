@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "drawing/draw/core_canvas.h"
+#include "image/picture.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -56,6 +57,8 @@ public:
     virtual void SetUICapture(bool isUICapture);
 
     virtual bool GetUICapture() const;
+
+    virtual void DrawPicture(const std::shared_ptr<Picture> picture);
 protected:
     std::vector<Canvas*> pCanvasList_;
     bool recordingState_ = false;

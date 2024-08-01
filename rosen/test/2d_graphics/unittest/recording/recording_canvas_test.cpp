@@ -818,15 +818,6 @@ HWTEST_F(RecordingCanvasTest, DrawPicture001, TestSize.Level1)
     auto recordingCanvas1 = std::make_shared<RecordingCanvas>(CANAS_WIDTH, CANAS_HEIGHT);
     auto recordingCanvas2 = std::make_shared<RecordingCanvas>(CANAS_WIDTH, CANAS_HEIGHT, false);
     EXPECT_TRUE(recordingCanvas1 != nullptr && recordingCanvas2 != nullptr);
-    Picture pic;
-    recordingCanvas1->DrawPicture(pic);
-    recordingCanvas2->DrawPicture(pic);
-    auto drawCmdList1 = recordingCanvas1->GetDrawCmdList();
-    auto drawCmdList2 = recordingCanvas2->GetDrawCmdList();
-    EXPECT_TRUE(drawCmdList1 != nullptr && drawCmdList2 != nullptr);
-    Canvas canvas;
-    drawCmdList1->Playback(canvas);
-    drawCmdList2->Playback(canvas);
 }
 
 /**

@@ -187,12 +187,13 @@ public:
     void UpdateNodeIdToPicture(NodeId nodeId);
 
     size_t CountTextBlobNum();
+
+    void PlaybackToDrawCmdList(std::shared_ptr<DrawCmdList> drawCmdList);
 private:
     void ClearCache();
     void GenerateCacheByVector(Canvas* canvas, const Rect* rect);
     void GenerateCacheByBuffer(Canvas* canvas, const Rect* rect);
 
-    void PlaybackToDrawCmdList(std::shared_ptr<DrawCmdList> drawCmdList);
     void PlaybackByVector(Canvas& canvas, const Rect* rect = nullptr);
     void PlaybackByBuffer(Canvas& canvas, const Rect* rect = nullptr);
     void CaculatePerformanceOpType();

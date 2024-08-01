@@ -191,7 +191,7 @@ ohos_shared_library("GLESv2") {
     "egl:libEGL",
     "opengles:libGLES",
   ]
-
+  deps = [ ":EGL" ]
   external_deps = [ "hilog:libhilog" ]
 
   output_name = "GLESv2"

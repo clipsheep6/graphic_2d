@@ -109,6 +109,11 @@ static const Font& CastToFont(const OH_Drawing_Font& cFont)
     return reinterpret_cast<const Font&>(cFont);
 }
 
+static const std::shared_ptr<RecordCmd>& CastToRecordCmd(const OH_Drawing_RecordCmd& cRecordCmd)
+{
+    return reinterpret_cast<const std::shared_ptr<RecordCmd>&>(cRecordCmd);
+}
+
 OH_Drawing_Canvas* OH_Drawing_CanvasCreate()
 {
     return (OH_Drawing_Canvas*)new Canvas;
@@ -856,4 +861,14 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint
 
     canvas->DrawColor(color, static_cast<BlendMode>(cBlendMode));
     return OH_DRAWING_SUCCESS;
+}
+
+void OH_Drawing_Drawing_CanvasRecordCmd(OH_Drawing_Canvas* cCanvas, OH_Drawing_RecordCmd* cRecordCmd,
+    OH_Drawing_Matrix* matrix, OH_Drawing_Brush* brush)
+{
+    if (cCanvas == nullptr || cRecordCmd == nullptr || matrix == nullptr || brush == nullptr) {
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    canvas->DrawRecordCmd(CastToRecordCmd(*cRecordCmd), &(CastToMatrix(*matrix)), &(CastToBrush(*brush)));
 }

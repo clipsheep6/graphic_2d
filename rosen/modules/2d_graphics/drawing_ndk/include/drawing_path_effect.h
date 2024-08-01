@@ -56,6 +56,80 @@ extern "C" {
  */
 OH_Drawing_PathEffect* OH_Drawing_CreateDashPathEffect(float* intervals, int count, float phase);
 
+typedef enum {
+    /** Translates the path dashed style */
+    PATH_DASH_STYLE_TRANSLATE,
+    /** Rotates the path dashed style */
+    PATH_DASH_STYLE_ROTATE,
+    /** Morphs the path dashed style */
+    PATH_DASH_STYLE_MORPH,
+} OH_Drawing_PathDashStyle;
+
+/**
+ * @brief Creates a path dash effect <b>OH_Drawing_PathEffect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param path Indicates the path to use.
+ * @param advance Indicates the spacing or progress of each path graph.
+ * @param phase Indicates the offset into intervals array.
+ * @param OH_Drawing_PathDashStyle Indicates the style of the path graph.
+ * @return Returns the pointer to the <b>OH_Drawing_PathEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_PathEffect* OH_Drawing_CreatePathDashEffect(const OH_Drawing_Path* path,
+    float advance, float phase, OH_Drawing_PathDashStyle);
+
+/**
+ * @brief Creates a corner path effect <b>OH_Drawing_PathEffect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param radius Indicates the distance from each corner and greater than 0.
+ * @return Returns the pointer to the <b>OH_Drawing_PathEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_PathEffect* OH_Drawing_CreateCornerPathEffect(float radius);
+
+/**
+ * @brief Creates a discrete path effect <b>OH_Drawing_PathEffect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param segLength Indicates the length of each discrete segment in the path effect.
+ * @param dev Indicates the offset of each discrete segment.
+ * @param seedAssist Indicates the caller-supplied seedAssist. If not supplied it defaults to 0.
+ * @return Returns the pointer to the <b>OH_Drawing_PathEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_PathEffect* OH_Drawing_CreateDiscretePathEffect(float segLength, float dev, uint32_t seedAssist);
+
+/**
+ * @brief Creates a sum path effect <b>OH_Drawing_PathEffect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param cPathEffectOne Indicates the first pathEffect.
+ * @param cPathEffectTwo Indicates the second pathEffect.
+ * @return Returns the pointer to the <b>OH_Drawing_PathEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_PathEffect* OH_Drawing_CreateSumPathEffect(OH_Drawing_PathEffect* cPathEffectOne,
+    OH_Drawing_PathEffect* cPathEffectTwo);
+
+/**
+ * @brief Creates a compose path effect <b>OH_Drawing_PathEffect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param cPathEffectOne Indicates the first pathEffect.
+ * @param cPathEffectTwo Indicates the second pathEffect.
+ * @return Returns the pointer to the <b>OH_Drawing_PathEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_PathEffect* OH_Drawing_CreateComposePathEffect(OH_Drawing_PathEffect* cPathEffectOne,
+    OH_Drawing_PathEffect* cPathEffectTwo);
+
 /**
  * @brief Destroys an <b>OH_Drawing_PathEffect</b> object and reclaims the memory occupied by the object.
  *

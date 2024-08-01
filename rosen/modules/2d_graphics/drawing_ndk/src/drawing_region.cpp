@@ -33,6 +33,11 @@ static Region* CastToRegion(OH_Drawing_Region* cRegion)
     return reinterpret_cast<Region*>(cRegion);
 }
 
+static const Region* CastToRegion(const OH_Drawing_Region* cRegion)
+{
+    return reinterpret_cast<const Region*>(cRegion);
+}
+
 static const Rect* CastToRect(const OH_Drawing_Rect* cRect)
 {
     return reinterpret_cast<const Rect*>(cRect);
@@ -51,6 +56,18 @@ bool OH_Drawing_RegionContains(OH_Drawing_Region* cRegion, int32_t x, int32_t y)
         return false;
     }
     return region->Contains(x, y);
+}
+
+OH_Drawing_ErrorCode OH_Drawing_RegionIsRegionContained(const OH_Drawing_Region* cRegion,
+    const OH_Drawing_Region* cOther, bool* cIsRegionContainded)
+{
+    const Region* region = CastToRegion(cRegion);
+    const Region* other = CastToRegion(cOther);
+    if (region == nullptr || other == nullptr || cIsRegionContainded == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    *cIsRegionContainded = region->IsRegionContained(*other);
+    return OH_DRAWING_SUCCESS;
 }
 
 bool OH_Drawing_RegionOp(OH_Drawing_Region* cRegion, const OH_Drawing_Region* cDst, OH_Drawing_RegionOpMode op)

@@ -818,6 +818,19 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasGetImageInfo(OH_Drawing_Canvas* cCanvas, O
     return OH_DRAWING_SUCCESS;
 }
 
+OH_Drawing_ErrorCode OH_Drawing_CanvasIsClipRect(OH_Drawing_Canvas* cCanvas, bool* isClipRect)
+{
+    if (isClipRect == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    *isClipRect = canvas->IsClipRect();
+    return OH_DRAWING_SUCCESS;
+}
+
 OH_Drawing_ErrorCode OH_Drawing_CanvasClipRegion(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Region* cRegion,
     OH_Drawing_CanvasClipOp op)
 {

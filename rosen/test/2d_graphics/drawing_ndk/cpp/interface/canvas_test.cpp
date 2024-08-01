@@ -134,6 +134,27 @@ void CanvasClipRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_RectDestroy(rect);
 }
 
+void CanvasIsClipRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0.0f, 0.0f, 400.0f, 400.0f);
+    OH_Drawing_CanvasClipRect(canvas, rect, OH_Drawing_CanvasClipOp::INTERSECT, false);
+    bool isClipRect;
+    OH_Drawing_ErrorCode code = OH_DRAWING_ERROR_INVALID_PARAMETER;
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_CanvasIsClipRect(canvas, &isClipRect);
+    }
+    DRAWING_LOGI("CanvasIsClipRect Performance isClipRect is %{public}d", isClipRect);
+    DRAWING_LOGI("CanvasIsClipRect Performance return %{public}d", code);
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_Font* font = OH_Drawing_FontCreate();
+    OH_Drawing_FontSetTextSize(font, 50);
+    OH_Drawing_TextBlob* textBlob =
+        OH_Drawing_TextBlobCreateFromString("IsClipRect", font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
+    OH_Drawing_CanvasDrawTextBlob(canvas, textBlob, 100, 100);
+    OH_Drawing_RectDestroy(rect);
+}
+
 void CanvasClipRoundRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, 100, 100); // 0, 0, 100, 100 创建矩形
@@ -439,6 +460,29 @@ void CanvasDrawRegion::OnTestPerformance(OH_Drawing_Canvas* canvas)
     }
     OH_Drawing_RegionDestroy(region);
     OH_Drawing_RectDestroy(rect);
+}
+
+void CanvasDrawRegionIsRegionContained::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_Region* region = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(20.0f, 20.0f, 200.0f, 200.0f);
+    OH_Drawing_Region* other = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* otherRect = OH_Drawing_RectCreate(30.0f, 30.0f, 60.0f, 60.0f);
+    OH_Drawing_RegionSetRect(region, rect);
+    OH_Drawing_CanvasDrawRegion(canvas, region);
+    OH_Drawing_RegionSetRect(other, otherRect);
+    OH_Drawing_CanvasDrawRegion(canvas, other);
+    bool flag = false;
+    OH_Drawing_ErrorCode code = OH_DRAWING_ERROR_INVALID_PARAMETER;
+    DRAWING_LOGI("DrawRegionIsRegionContained Started:OnTestPerformance");
+    for (int i = 0; i < testCount_; i++) {
+        code = OH_Drawing_RegionIsRegionContained(region, other, &flag);
+    }
+    DRAWING_LOGI("DrawRegionIsRegionContained OnTestPerformance IsContained %{public}d", flag);
+    DRAWING_LOGI("DrawRegionIsRegionContained OnTestPerformance %{public}d", code);
 }
 
 void CanvasDrawPixelMapRect::OnTestPerformance(OH_Drawing_Canvas* canvas)

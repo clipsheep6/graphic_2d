@@ -154,7 +154,7 @@ public:
 private:
     ShaderEffectType type_;
     std::shared_ptr<ShaderEffectImpl> impl_;
-    std::shared_ptr<ExtendObject> object_;
+    std::shared_ptr<ExtendObject> object_ = nullptr;
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -78,4 +78,60 @@ protected:
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
+
+class ImageFilterCreateComposeImageFilter : public TestBase {
+public:
+    explicit ImageFilterCreateComposeImageFilter(int type) : TestBase(type)
+    {
+        fileName_ = "ImageFilterCreateComposeImageFilter";
+    };
+    ~ImageFilterCreateComposeImageFilter() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class ImageGetColorSpace : public TestBase {
+public:
+    explicit ImageGetColorSpace(int type) : TestBase(type)
+    {
+        fileName_ = "ImageGetColorSpace";
+    };
+    ~ImageGetColorSpace() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class ImageGetUniqueID : public TestBase {
+public:
+    explicit ImageGetUniqueID(int type) : TestBase(type)
+    {
+        fileName_ = "ImageGetUniqueID";
+    };
+    ~ImageGetUniqueID() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class ImageScalePixels : public TestBase {
+public:
+    explicit ImageScalePixels(int type) : TestBase(type)
+    {
+        fileName_ = "ImageScalePixels";
+    };
+    ~ImageScalePixels() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
 #endif // INTERFACE_BITMAP_TEST_H

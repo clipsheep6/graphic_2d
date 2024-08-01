@@ -29,6 +29,51 @@ static Bitmap* CastToBitmap(OH_Drawing_Bitmap* cBitmap)
     return reinterpret_cast<Bitmap*>(cBitmap);
 }
 
+static const Bitmap* CastToBitmap(const OH_Drawing_Bitmap* cBitmap)
+{
+    return reinterpret_cast<const Bitmap*>(cBitmap);
+}
+
+static const Bitmap& CastToBitmap(const OH_Drawing_Bitmap& cBitmap)
+{
+    return reinterpret_cast<const Bitmap&>(cBitmap);
+}
+
+static const Rect& CastToRect(const OH_Drawing_Rect& cRect)
+{
+    return reinterpret_cast<const Rect&>(cRect);
+}
+
+static ColorSpace* CastToColorSpace(OH_Drawing_ColorSpace* colorSpace)
+{
+    return reinterpret_cast<ColorSpace*>(colorSpace);
+}
+
+static OH_Drawing_ColorSpaceType ColorSpaceTypeCastToCColorSpaceType(ColorSpace::ColorSpaceType colorSpaceType)
+{
+    OH_Drawing_ColorSpaceType cColorSpaceType = NO_TYPE;
+    switch (colorSpaceType) {
+        case ColorSpace::ColorSpaceType::NO_TYPE:
+            cColorSpaceType = NO_TYPE;
+            break;
+        case ColorSpace::ColorSpaceType::SRGB:
+            cColorSpaceType = SRGB;
+            break;
+        case ColorSpace::ColorSpaceType::SRGB_LINEAR:
+            cColorSpaceType = SRGB_LINEAR;
+            break;
+        case ColorSpace::ColorSpaceType::REF_IMAGE:
+            cColorSpaceType = REF_IMAGE;
+            break;
+        case ColorSpace::ColorSpaceType::RGB:
+            cColorSpaceType = RGB;
+            break;
+        default:
+            break;
+    }
+    return cColorSpaceType;
+}
+
 OH_Drawing_Bitmap* OH_Drawing_BitmapCreate()
 {
     return (OH_Drawing_Bitmap*)new Bitmap;
@@ -147,4 +192,196 @@ bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Im
         static_cast<ColorType>(dstInfo->colorType), static_cast<AlphaType>(dstInfo->alphaType));
 
     return CastToBitmap(cBitmap)->ReadPixels(imageInfo, dstPixels, dstRowBytes, srcX, srcY);
+}
+
+OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromImageInfo(
+    const OH_Drawing_Image_Info* cImageInfo, OH_Drawing_ColorSpace* cColorSpace, int32_t rowBytes)
+{
+    Bitmap* bitmap = new Bitmap;
+    if (bitmap == nullptr || cColorSpace == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height, static_cast<ColorType>(cImageInfo->colorType),
+        static_cast<AlphaType>(cImageInfo->alphaType), std::shared_ptr<ColorSpace>{CastToColorSpace(cColorSpace),
+        [](auto p) {}});
+
+    if (!bitmap->Build(imageInfo, rowBytes)) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        delete bitmap;
+        return nullptr;
+    }
+
+    return (OH_Drawing_Bitmap*)bitmap;
+}
+
+uint32_t OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap* cBitmap)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return 0;
+    }
+    return bitmap->GetRowBytes();
+}
+
+OH_Drawing_ColorSpaceType OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap* cBitmap)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return NO_TYPE;
+    }
+
+    ColorSpace* colorSpace = bitmap->GetColorSpace().get();
+    if (colorSpace == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return NO_TYPE;
+    }
+
+    return ColorSpaceTypeCastToCColorSpaceType(bitmap->GetColorSpace()->GetType());
+}
+
+bool OH_Drawing_BitmapExtractSubset(
+    const OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Bitmap* cDstBitmap, const OH_Drawing_Rect* cSubset)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr || cDstBitmap == nullptr || cSubset == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+
+    Rect rect = CastToRect(*cSubset);
+    Bitmap dstBitmap = CastToBitmap(*cDstBitmap);
+    return bitmap->ExtractSubset(dstBitmap, rect);
+}
+
+void OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap* cBitmap)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    bitmap->SetImmutable();
+}
+
+bool OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap* cBitmap)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+    return bitmap->IsImmutable();
+}
+
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr || cImageInfo == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height, static_cast<ColorType>(cImageInfo->colorType),
+        static_cast<AlphaType>(cImageInfo->alphaType));
+    return bitmap->TryAllocPixels(imageInfo);
+}
+
+OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromImageInfo(
+    const OH_Drawing_Image_Info* cImageInfo, OH_Drawing_ColorSpace* cColorSpace, int32_t rowBytes)
+{
+    Bitmap* bitmap = new Bitmap;
+    if (bitmap == nullptr || cColorSpace == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height, static_cast<ColorType>(cImageInfo->colorType),
+        static_cast<AlphaType>(cImageInfo->alphaType), std::shared_ptr<ColorSpace>{CastToColorSpace(cColorSpace),
+        [](auto p) {}});
+
+    if (!bitmap->Build(imageInfo, rowBytes)) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_PARAMETER_OUT_OF_RANGE;
+        delete bitmap;
+        return nullptr;
+    }
+
+    return (OH_Drawing_Bitmap*)bitmap;
+}
+
+uint32_t OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap* cBitmap)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return 0;
+    }
+    return bitmap->GetRowBytes();
+}
+
+OH_Drawing_ColorSpaceType OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap* cBitmap)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return NO_TYPE;
+    }
+
+    ColorSpace* colorSpace = bitmap->GetColorSpace().get();
+    if (colorSpace == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return NO_TYPE;
+    }
+
+    return ColorSpaceTypeCastToCColorSpaceType(bitmap->GetColorSpace()->GetType());
+}
+
+bool OH_Drawing_BitmapExtractSubset(
+    const OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Bitmap* cDstBitmap, const OH_Drawing_Rect* cSubset)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr || cDstBitmap == nullptr || cSubset == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+
+    Rect rect = CastToRect(*cSubset);
+    Bitmap dstBitmap = CastToBitmap(*cDstBitmap);
+    return bitmap->ExtractSubset(dstBitmap, rect);
+}
+
+void OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap* cBitmap)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    bitmap->SetImmutable();
+}
+
+bool OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap* cBitmap)
+{
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+    return bitmap->IsImmutable();
+}
+
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo)
+{
+    Bitmap* bitmap = CastToBitmap(cBitmap);
+    if (bitmap == nullptr || cImageInfo == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height, static_cast<ColorType>(cImageInfo->colorType),
+        static_cast<AlphaType>(cImageInfo->alphaType));
+    return bitmap->TryAllocPixels(imageInfo);
 }

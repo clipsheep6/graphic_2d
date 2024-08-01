@@ -34,6 +34,11 @@ static ColorFilter& CastToColorFilter(OH_Drawing_ColorFilter& cColorFilter)
     return reinterpret_cast<ColorFilter&>(cColorFilter);
 }
 
+OH_Drawing_ColorFilter* OH_Drawing_ColorFilterCreate()
+{
+    return (OH_Drawing_ColorFilter*)new ColorFilter(ColorFilter::FilterType::NO_TYPE);
+}
+
 OH_Drawing_ColorFilter* OH_Drawing_ColorFilterCreateBlendMode(uint32_t color, OH_Drawing_BlendMode cBlendMode)
 {
     return (OH_Drawing_ColorFilter*)new ColorFilter(ColorFilter::FilterType::BLEND_MODE, color,

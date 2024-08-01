@@ -17,6 +17,7 @@
 #include "drawing_error_code.h"
 #include "drawing_path_effect.h"
 #include "drawing_pen.h"
+#include "drawing_path.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -62,6 +63,38 @@ HWTEST_F(NativeDrawingPathEffectTest, NativeDrawingPathEffectTest_PathEffect001,
     EXPECT_EQ(OH_Drawing_ErrorCodeGet(), OH_DRAWING_ERROR_INVALID_PARAMETER);
     pathEffect = OH_Drawing_CreateDashPathEffect(intervals, -1, 0.0);
     EXPECT_EQ(pathEffect, nullptr);
+}
+
+/*
+ * @tc.name: NativeDrawingPathEffectTest_PathEffect002
+ * @tc.desc: test for PathEffect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */ //OH_Drawing_CreateDashPathEffect
+HWTEST_F(NativeDrawingPathEffectTest, NativeDrawingPathEffectTest_PathEffect002, TestSize.Level1)
+{
+    OH_Drawing_Path *path = OH_Drawing_PathCreate();
+    OH_Drawing_PathEffect *pathEffect =  OH_Drawing_CreatePathDashEffect(path, 500, 20, PATH_DASH_STYLE_MORPH);
+    EXPECT_NE(pathEffect, nullptr);
+    OH_Drawing_PathEffect *pathEffectTwo = OH_Drawing_CreateCornerPathEffect(10);
+    EXPECT_NE(pathEffectTwo, nullptr);
+    OH_Drawing_PathEffect *pathEffectThree = OH_Drawing_CreateDiscretePathEffect(100, -50, 10);
+    EXPECT_NE(pathEffectThree, nullptr);
+    float vals[2] = {10, 50};
+    OH_Drawing_PathEffect *pathEffectOne = OH_Drawing_CreateDashPathEffect(vals, 2, 100);
+    float valf[2] = {100, 50};
+    OH_Drawing_PathEffect *pathEffectSix = OH_Drawing_CreateDashPathEffect(valf, 2, 0);
+    OH_Drawing_PathEffect *pathEffectFour = OH_Drawing_CreateSumPathEffect(pathEffectOne, pathEffectSix);
+    EXPECT_NE(pathEffectFour, nullptr);
+    OH_Drawing_PathEffect *pathEffectFive = OH_Drawing_CreateComposePathEffect(pathEffect, pathEffectSix);
+    EXPECT_NE(pathEffectFive, nullptr);
+    OH_Drawing_PathEffectDestroy(pathEffect);
+    OH_Drawing_PathEffectDestroy(pathEffectOne);
+    OH_Drawing_PathEffectDestroy(pathEffectTwo);
+    OH_Drawing_PathEffectDestroy(pathEffectThree);
+    OH_Drawing_PathEffectDestroy(pathEffectFour);
+    OH_Drawing_PathEffectDestroy(pathEffectFive);
+    OH_Drawing_PathEffectDestroy(pathEffectSix);
 }
 } // namespace Drawing
 } // namespace Rosen

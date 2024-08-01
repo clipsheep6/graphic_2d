@@ -14,6 +14,8 @@
  */
 
 #include "drawing_brush.h"
+#include "drawing_path_effect.h"
+#include "effect/path_effect.h"
 
 #include "drawing_canvas_utils.h"
 #include "drawing_helper.h"
@@ -138,6 +140,25 @@ void OH_Drawing_BrushSetShaderEffect(OH_Drawing_Brush* cBrush, OH_Drawing_Shader
         return;
     }
     brush->SetShaderEffect(std::shared_ptr<ShaderEffect>{CastToShaderEffect(cShaderEffect), [](auto p) {}});
+}
+
+OH_Drawing_ErrorCode OH_Drawing_BrushGetShaderEffect(OH_Drawing_Brush* cBrush, OH_Drawing_ShaderEffect* cShaderEffect)
+{
+    Brush* brush = CastToBrush(cBrush);
+    if (brush == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    ShaderEffect* shaderEffect = CastToShaderEffect(cShaderEffect);
+    if (shaderEffect == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    std::shared_ptr<ShaderEffect> shaderEffectPtr = brush->GetShaderEffect();
+    if (shaderEffectPtr == nullptr) {
+        *shaderEffect = ShaderEffect(ShaderEffect::ShaderEffectType::NO_TYPE);
+        return OH_DRAWING_SUCCESS;
+    }
+    *shaderEffect = *(shaderEffectPtr.get());
+    return OH_DRAWING_SUCCESS;
 }
 
 void OH_Drawing_BrushSetShadowLayer(OH_Drawing_Brush* cBrush, OH_Drawing_ShadowLayer* cShadowLayer)

@@ -53,7 +53,7 @@ public:
     size_t ComputeByteSize() const override;
     const SkBitmap& ExportSkiaBitmap() const;
     void CopyPixels(Bitmap& dst, int srcLeft, int srcTop) const override;
-    bool IsImmutable() override;
+    bool IsImmutable() const override;
     void SetImmutable() override;
     void ClearWithColor(const ColorQuad& color) const override;
     ColorQuad GetColor(int x, int y) const override;
@@ -70,6 +70,7 @@ public:
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
     ImageInfo GetImageInfo() override;
+    std::shared_ptr<ColorSpace> GetColorSpace() override;
 private:
     SkBitmap skiaBitmap_;
 };

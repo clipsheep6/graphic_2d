@@ -21,6 +21,7 @@
 #include "drawing_filter.h"
 #include "drawing_mask_filter.h"
 #include "drawing_rect.h"
+#include "drawing_shader_effect.h"
 #include "drawing_shadow_layer.h"
 #include "drawing_color_filter.h"
 #include "effect/color_filter.h"
@@ -215,6 +216,29 @@ HWTEST_F(NativeDrawingBrushTest, NativeDrawingBrushTest_brushCopy007, TestSize.L
     EXPECT_EQ(brush_copy == nullptr, false);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_BrushDestroy(brush_copy);
+}
+
+/*
+ * @tc.name: NativeDrawingBrushTest_brushGetShaderEffect008
+ * @tc.desc: test for the set methods of brush.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingBrushTest, NativeDrawingBrushTest_brushGetShaderEffect008, TestSize.Level1)
+{
+    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+    OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateColorShader(0xFFFF0000);
+    EXPECT_NE(shaderEffect, nullptr);
+    OH_Drawing_ErrorCode code = OH_DRAWING_SUCCESS;
+    code = OH_Drawing_BrushGetShaderEffect(nullptr, shaderEffect);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_BrushGetShaderEffect(brush, nullptr);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+    code = OH_Drawing_BrushGetShaderEffect(brush, shaderEffect);
+    EXPECT_EQ(code, OH_DRAWING_SUCCESS);
+    OH_Drawing_BrushDestroy(brush);
+    OH_Drawing_ShaderEffectDestroy(shaderEffect);
 }
 } // namespace Drawing
 } // namespace Rosen

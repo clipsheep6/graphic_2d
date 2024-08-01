@@ -18,10 +18,15 @@
 #include "drawing_canvas_utils.h"
 
 #include "effect/shader_effect.h"
+#include <unordered_map>
+#include "pixel_map.h"
+#include "render/rs_pixel_map_shader.h"
 
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
+
+static std::unordered_map<void*, std::shared_ptr<ShaderEffect>> g_ShaderEffectMap;
 
 static const Point* CastToPoint(const OH_Drawing_Point* cPoint)
 {
@@ -51,6 +56,16 @@ static const Matrix* CastToMatrix(const OH_Drawing_Matrix* cMatrix)
 static ShaderEffect* CastToShaderEffect(OH_Drawing_ShaderEffect* cShaderEffect)
 {
     return reinterpret_cast<ShaderEffect*>(cShaderEffect);
+}
+
+static std::shared_ptr<Media::PixelMap> CastToPixelMap(OH_Drawing_PixelMap* cPixelMap)
+{
+    return std::shared_ptr<Media::PixelMap>{reinterpret_cast<Media::PixelMap*>(cPixelMap), [](auto p) {}};
+}
+
+OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreate()
+{
+    return (OH_Drawing_ShaderEffect*)new ShaderEffect();
 }
 
 OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateColorShader(const uint32_t color)
@@ -157,6 +172,22 @@ OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateRadialGradientWithLocalMat
     return (OH_Drawing_ShaderEffect*)new ShaderEffect(
         ShaderEffect::ShaderEffectType::RADIAL_GRADIENT, *CastToPoint(centerPt), radius, colorsVector, posVector,
         static_cast<TileMode>(cTileMode), cMatrix ? CastToMatrix(cMatrix) : nullptr);
+}
+
+OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreatePixelMapShader(OH_Drawing_PixelMap* cPixelMap,
+    OH_Drawing_TileMode cTileX, OH_Drawing_TileMode cTileY, const OH_Drawing_SamplingOptions* cSampling,
+    const OH_Drawing_Matrix* cMatrix)
+{
+    if (cPixelMap == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+    std::shared_ptr<ExtendObject> cObject = std::make_shared<RSPixelMapShader>(CastToPixelMap(cPixelMap),
+        static_cast<TileMode>(cTileX), static_cast<TileMode>(cTileY), CastToSamplingOptions(*cSampling),
+        *CastToMatrix(cMatrix));
+    std::shared_ptr<ShaderEffect> shaderEffect = ShaderEffect::CreateExtendShader(cObject);
+    g_ShaderEffectMap.insert({shaderEffect.get(), shaderEffect});
+    return (OH_Drawing_ShaderEffect*)shaderEffect.get();
 }
 
 OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateSweepGradient(const OH_Drawing_Point* cCenterPt,

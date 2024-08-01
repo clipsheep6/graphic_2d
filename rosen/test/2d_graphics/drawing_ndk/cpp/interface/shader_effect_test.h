@@ -74,4 +74,32 @@ protected:
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
+
+class ShaderEffectCreatePixelMapShader : public TestBase {
+public:
+    explicit ShaderEffectCreatePixelMapShader(int type) : TestBase(type)
+    {
+        fileName_ = "ShaderEffectCreatePixelMapShader";
+    }
+    ~ShaderEffectCreatePixelMapShader() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
+class ShaderEffectCreate : public TestBase {
+public:
+    explicit ShaderEffectCreate(int type) : TestBase(type)
+    {
+        fileName_ = "ShaderEffectCreate";
+    }
+    ~ShaderEffectCreate() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
 #endif // INTERFACE_SHADER_EFFECT_TEST_H

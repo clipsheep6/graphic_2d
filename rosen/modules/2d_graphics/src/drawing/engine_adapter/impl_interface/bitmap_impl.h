@@ -51,7 +51,7 @@ public:
                                ReleaseProc releaseProc, void* context) = 0;
     virtual bool PeekPixels(Pixmap& pixmap) const = 0;
     virtual size_t ComputeByteSize() const = 0;
-    virtual bool IsImmutable() = 0;
+    virtual bool IsImmutable() const = 0;
     virtual void SetImmutable() = 0;
     virtual void ClearWithColor(const ColorQuad& color) const = 0;
     virtual ColorQuad GetColor(int x, int y) const = 0;
@@ -65,6 +65,7 @@ public:
     virtual std::shared_ptr<Data> Serialize() const = 0;
     virtual bool Deserialize(std::shared_ptr<Data> data) = 0;
     virtual ImageInfo GetImageInfo() = 0;
+    virtual std::shared_ptr<ColorSpace> GetColorSpace() = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

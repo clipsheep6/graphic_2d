@@ -44,6 +44,16 @@ extern "C" {
 #endif
 
 /**
+ * @brief Creates an <b>OH_Drawing_ColorFilter</b>  object and no filter type.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @return Returns the pointer to the <b>OH_Drawing_ColorFilter</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ColorFilter* OH_Drawing_ColorFilterCreate();
+
+/**
  * @brief Creates an <b>OH_Drawing_ColorFilter</b> with a blend mode.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

@@ -70,6 +70,16 @@ typedef enum {
 } OH_Drawing_TileMode;
 
 /**
+ * @brief Creates an <b>OH_Drawing_ShaderEffect</b> that generates a extend shader.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @return Returns the pointer to the <b>OH_Drawing_ShaderEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreate();
+
+/**
  * @brief Creates an <b>OH_Drawing_ShaderEffect</b> that generates a shader with single color.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -189,6 +199,22 @@ OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateSweepGradient(const OH_Dra
  */
 OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateImageShader(OH_Drawing_Image*,
     OH_Drawing_TileMode tileX, OH_Drawing_TileMode tileY, const OH_Drawing_SamplingOptions*, const OH_Drawing_Matrix*);
+
+/**
+ * @brief Creates an <b>OH_Drawing_ShaderEffect</b> that generates a extend shader.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_PixelMap Indicates the pointer to an <b>OH_Drawing_PixelMap</b> object.
+ * @param tileX Indicates the tileX.
+ * @param tileY Indicates the tileY.
+ * @param OH_Drawing_SamplingOptions Indicates the pointer to an <b>OH_Drawing_SamplingOptions</b> object.
+ * @param OH_Drawing_Matrix Indicates the pointer to an <b>OH_Drawing_Matrix</b> object.
+ * @return Returns the pointer to the <b>OH_Drawing_ShaderEffect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreatePixelMapShader(OH_Drawing_PixelMap*, OH_Drawing_TileMode tileX,
+    OH_Drawing_TileMode tileY, const OH_Drawing_SamplingOptions*, const OH_Drawing_Matrix*);
 
 /**
  * @brief Creates an <b>OH_Drawing_ShaderEffect</b> that generates a conical gradient given two circles.

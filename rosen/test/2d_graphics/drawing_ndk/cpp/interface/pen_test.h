@@ -39,4 +39,16 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class PenGetShaderEffect : public TestBase {
+public:
+    explicit PenGetShaderEffect(int type) : TestBase(type)
+    {
+        fileName_ = "PenGetShaderEffect";
+    };
+    ~PenGetShaderEffect() override {};
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
 #endif // INTERFACE_PEN_TEST_H

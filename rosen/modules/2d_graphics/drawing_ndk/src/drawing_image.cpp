@@ -17,6 +17,8 @@
 
 #include "drawing_canvas_utils.h"
 
+#include "effect/color_space.h"
+#include "image/bitmap.h"
 #include "image/image.h"
 #include "utils/data.h"
 
@@ -29,9 +31,24 @@ static Image* CastToImage(OH_Drawing_Image* cImage)
     return reinterpret_cast<Image*>(cImage);
 }
 
+static const Image* CastToImage(const OH_Drawing_Image* cImage)
+{
+    return reinterpret_cast<const Image*>(cImage);
+}
+
 static Bitmap& CastToBitmap(OH_Drawing_Bitmap& cBitmap)
 {
     return reinterpret_cast<Bitmap&>(cBitmap);
+}
+
+static const Bitmap* CastToBitmap(const OH_Drawing_Bitmap* cBitmap)
+{
+    return reinterpret_cast<const Bitmap*>(cBitmap);
+}
+
+static const SamplingOptions* CastToSamplingOptions(const OH_Drawing_SamplingOptions* cSamplingOptions)
+{
+    return reinterpret_cast<const SamplingOptions*>(cSamplingOptions);
 }
 
 OH_Drawing_Image* OH_Drawing_ImageCreate()
@@ -51,6 +68,22 @@ bool OH_Drawing_ImageBuildFromBitmap(OH_Drawing_Image* cImage, OH_Drawing_Bitmap
         return false;
     }
     return CastToImage(cImage)->BuildFromBitmap(CastToBitmap(*cBitmap));
+}
+
+OH_Drawing_ColorSpace* OH_Drawing_ImageGetColorSpace(const OH_Drawing_Image* cImage)
+{
+    const Image* image = CastToImage(cImage);
+    if (image == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+    std::shared_ptr<ColorSpace> colorSpacePtr = image->GetColorSpace();
+
+    if (colorSpacePtr == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+    return (OH_Drawing_ColorSpace*)colorSpacePtr.get();
 }
 
 int32_t OH_Drawing_ImageGetWidth(OH_Drawing_Image* cImage)
@@ -83,4 +116,37 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image* cImage, OH_Drawing_Image_Inf
     cImageInfo->height = imageInfo.GetHeight();
     cImageInfo->colorType = static_cast<OH_Drawing_ColorFormat>(imageInfo.GetColorType());
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
+}
+
+OH_Drawing_ErrorCode OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image* cImage, uint32_t* cUnique)
+{
+    const Image* image = CastToImage(cImage);
+    if (image == nullptr || cUnique == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    *cUnique = image->GetUniqueID();
+    return OH_DRAWING_SUCCESS;
+}
+
+bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image* cImage)
+{
+    const Image* image = CastToImage(cImage);
+    if (image == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return false;
+    }
+    return image->IsOpaque();
+}
+
+OH_Drawing_ErrorCode OH_Drawing_ImageScalePixels(const OH_Drawing_Image* cImage, const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_SamplingOptions* cSampling, bool isAllowCachingHint, bool* isScaled)
+{
+    const Image* image = CastToImage(cImage);
+    const Bitmap* bitmap = CastToBitmap(cBitmap);
+    const SamplingOptions* sampling = CastToSamplingOptions(cSampling);
+    if (image == nullptr || bitmap == nullptr || sampling == nullptr || isScaled == nullptr) {
+        return OH_DRAWING_ERROR_INVALID_PARAMETER;
+    }
+    *isScaled = image->ScalePixels(*bitmap, *sampling, isAllowCachingHint);
+    return OH_DRAWING_SUCCESS;
 }

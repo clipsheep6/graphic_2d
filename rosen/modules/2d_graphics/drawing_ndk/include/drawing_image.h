@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -107,6 +108,61 @@ int32_t OH_Drawing_ImageGetHeight(OH_Drawing_Image*);
  * @version 1.0
  */
 void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image*, OH_Drawing_Image_Info*);
+
+/**
+ * @brief Gets an <b>OH_Drawing_ColorSpace</b> object from an <b>OH_Drawing_Image</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ColorSpace* OH_Drawing_ImageGetColorSpace(const OH_Drawing_Image*);
+
+/**
+ * @brief Gets the unique id of image.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param cImage Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @param cUnique Indicates the unique id of image.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cImage or cUnique is nullptr.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ErrorCode OH_Drawing_ImageGetUniqueID(const OH_Drawing_Image* cImage, uint32_t* cUnique);
+
+/**
+ * @brief Gets whether the image is opaque.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns <b>true</b> if the image is opaque; returns <b>false</b> otherwise.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image*);
+
+/**
+ * @brief Gets whether the image is scaled to fit the bitmap.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_SamplingOptions Indicates the pointer to an <b>OH_Drawing_SamplingOptions</b> object.
+ * @param isAllowCachingHint Indicates whether the image will be cached locally.
+ * @param isScaled Indicates whether the image is scaled to fit the bitmap.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if any of cImage, cBitmap,
+ *                 cSampling or isScaled is nullptr.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_ErrorCode OH_Drawing_ImageScalePixels(const OH_Drawing_Image* cImage, const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_SamplingOptions* cSampling, bool isAllowCachingHint, bool* isScaled);
 
 #ifdef __cplusplus
 }

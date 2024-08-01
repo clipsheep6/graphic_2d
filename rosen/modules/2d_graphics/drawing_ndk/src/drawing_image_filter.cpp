@@ -19,9 +19,13 @@
 
 #include "effect/image_filter.h"
 
+#include <unordered_map>
+
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
+
+static std::unordered_map<void*, std::shared_ptr<ImageFilter>> g_imageFilterMap;
 
 static ColorFilter* CastToColorFilter(OH_Drawing_ColorFilter* cColorFilter)
 {
@@ -49,6 +53,19 @@ OH_Drawing_ImageFilter* OH_Drawing_ImageFilterCreateFromColorFilter(
     }
     return (OH_Drawing_ImageFilter*)new ImageFilter(
         ImageFilter::FilterType::COLOR_FILTER, *CastToColorFilter(cf), CastToImageFilter(input));
+}
+
+OH_Drawing_ImageFilter* OH_Drawing_ImageFilterCreateComposeImageFilter(OH_Drawing_ImageFilter* ImageFilterOne,
+    OH_Drawing_ImageFilter* ImageFilterTwo)
+{
+    if (ImageFilterOne == nullptr || ImageFilterTwo == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+    std::shared_ptr<ImageFilter> imageFilter = ImageFilter::CreateComposeImageFilter(
+        CastToImageFilter(ImageFilterOne), CastToImageFilter(ImageFilterTwo));
+    g_imageFilterMap.insert({imageFilter.get(), imageFilter});
+    return (OH_Drawing_ImageFilter*)imageFilter.get();
 }
 
 void OH_Drawing_ImageFilterDestroy(OH_Drawing_ImageFilter* cImageFilter)

@@ -143,6 +143,59 @@ HWTEST_F(NativeDrawingRegionTest, NativeDrawingSetPathTest_region005, TestSize.L
     OH_Drawing_PathDestroy(path);
     OH_Drawing_RectDestroy(rect);
 }
+
+/*
+ * @tc.name: NativeDrawingRegionIsRegionContained_region006
+ * @tc.desc: test the other region is in the region.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingRegionTest, NativeDrawingRegionIsRegionContained_region006, TestSize.Level1)
+{
+    OH_Drawing_Region* region = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* rect=OH_Drawing_RectCreate(10.0f, 10.0f, 200.0f, 200.0f);
+    OH_Drawing_RegionSetRect(region, rect);
+
+    OH_Drawing_Region* otherOne = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* otherRectOne=OH_Drawing_RectCreate(0.0f, 0.0f, 20.0f, 20.0f);
+    OH_Drawing_ErrorCode code = OH_DRAWING_SUCCESS;
+    bool flag = true;
+    code = OH_Drawing_RegionIsRegionContained(region, nullptr, &flag);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_RegionIsRegionContained(nullptr, otherOne, &flag);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    code = OH_Drawing_RegionIsRegionContained(region, otherOne, nullptr);
+    EXPECT_EQ(code, OH_DRAWING_ERROR_INVALID_PARAMETER);
+    OH_Drawing_RegionIsRegionContained(region, otherOne, &flag);
+    EXPECT_EQ(flag, false);
+    OH_Drawing_RegionSetRect(otherOne, otherRectOne);
+    OH_Drawing_RegionIsRegionContained(region, otherOne, &flag);
+    EXPECT_EQ(flag, false);
+
+    flag = false;
+    OH_Drawing_Region* otherTwo = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* otherRectTwo=OH_Drawing_RectCreate(10.0f, 10.0f, 20.0f, 20.0f);
+    OH_Drawing_RegionSetRect(otherTwo, otherRectTwo);
+    OH_Drawing_RegionIsRegionContained(region, otherTwo, &flag);
+    EXPECT_EQ(flag, true);
+
+    flag = true;
+    OH_Drawing_Region* otherThree = OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* otherRectThree=OH_Drawing_RectCreate(10.0f, 10.0f, 201.0f, 201.0f);
+    OH_Drawing_RegionSetRect(otherThree, otherRectThree);
+    OH_Drawing_RegionIsRegionContained(region, otherThree, &flag);
+    EXPECT_EQ(flag, false);
+
+    OH_Drawing_RegionDestroy(region);
+    OH_Drawing_RegionDestroy(otherOne);
+    OH_Drawing_RegionDestroy(otherTwo);
+    OH_Drawing_RegionDestroy(otherThree);
+
+    OH_Drawing_RectDestroy(rect);
+    OH_Drawing_RectDestroy(otherRectOne);
+    OH_Drawing_RectDestroy(otherRectTwo);
+    OH_Drawing_RectDestroy(otherRectThree);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

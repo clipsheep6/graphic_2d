@@ -254,6 +254,40 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
+class PathEffectCreatePathDashEffect : public TestBase {
+public:
+    explicit PathEffectCreatePathDashEffect(int type) : TestBase(type) {};
+    ~PathEffectCreatePathDashEffect() override {};
+
+protected:
+    int rectWidth_ = 0;  // 0 矩形宽度
+    int rectHeight_ = 0; // 0 矩形高度
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+
+class PathEffectCreateCornerPathEffect : public TestBase {
+public:
+    explicit PathEffectCreateCornerPathEffect(int type) : TestBase(type) {};
+    ~PathEffectCreateCornerPathEffect() override {};
+
+protected:
+    int rectWidth_ = 0;  // 0 矩形宽度
+    int rectHeight_ = 0; // 0 矩形高度
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class PathEffectCreateDisCreatePathEffect : public TestBase {
+public:
+    explicit PathEffectCreateDisCreatePathEffect(int type) : TestBase(type) {};
+    ~PathEffectCreateDisCreatePathEffect() override {};
+
+protected:
+    int rectWidth_ = 0;  // 0 矩形宽度
+    int rectHeight_ = 0; // 0 矩形高度
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
 class PathCreate : public TestBase {
 public:
     explicit PathCreate(int type) : TestBase(type) {};

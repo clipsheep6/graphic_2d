@@ -208,6 +208,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         } },
     { "canvas_drawcliprect",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClipRect>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_iscliprect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasIsClipRect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
     { "canvas_drawcliproundrect",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasClipRoundRect>(TestBase::DRAW_STYLE_COMPLEX);
@@ -235,6 +239,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     { "canvas_drawregion",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawRegion>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "canvas_drawregionisregioncontained",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<CanvasDrawRegionIsRegionContained>(TestBase::DRAW_STYLE_COMPLEX);
         } },
     { "canvas_restoretocount",
         []() -> std::shared_ptr<TestBase> {
@@ -279,6 +287,18 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     { "path_effectcreatedashpatheffect",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<PathEffectCreateDashPathEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_effectcreatepathdasheffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathEffectCreatePathDashEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_effectcreatecornerpatheffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathEffectCreateCornerPathEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "path_effectcreatediscreatepatheffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PathEffectCreateDisCreatePathEffect>(TestBase::DRAW_STYLE_COMPLEX);
         } },
     { "path_addovalwithinitialpoint",
         []() -> std::shared_ptr<TestBase> {
@@ -395,6 +415,14 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<ShaderEffectCreateSweepGradient>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "shader_effectcreatepixelmapshader",
+        []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<ShaderEffectCreatePixelMapShader>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "shader_effectcreate",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ShaderEffectCreate>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // typeface
     { "typeface_createdefault",
@@ -471,6 +499,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<ColorSpaceCreateSrgbLinear>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "color_filtercreate",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ColorFilterCreate>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // bitmap and image
     { "bitmap_readpixels",
@@ -488,6 +520,22 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<BitmapCreateFromPixels>(TestBase::DRAW_STYLE_COMPLEX);
         } },
+    { "image_filtercreatecomposeimagefilter",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageFilterCreateComposeImageFilter>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_getcolorspace",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageGetColorSpace>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_getuniqueid",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageGetUniqueID>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
+    { "image_scalepixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<ImageScalePixels>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // textblob
     { "textblob_builderallocrunpos",
@@ -498,6 +546,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // pen
     { "pen_reset",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PenReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "pen_getshadereffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PenGetShaderEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 
     // sampling_option
     { "sampling_options_create",
@@ -523,6 +575,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // brush
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "brushgetshadereffect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<BrushGetShaderEffect>(TestBase::DRAW_STYLE_COMPLEX);
+        } },
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> StabilityCpuMap = {

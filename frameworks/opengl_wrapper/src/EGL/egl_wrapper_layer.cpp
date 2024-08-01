@@ -317,6 +317,7 @@ bool EglWrapperLayer::LoadLayerFuncs(std::string realLayerPath)
     LayerInitFunc initFunc = (LayerInitFunc)dlsym(dlhandle, DEBUG_LAYER_INIT_FUNC);
     if (initFunc == nullptr) {
         WLOGE("can't find %{public}s in debug layer library.", DEBUG_LAYER_INIT_FUNC);
+        dlclose(dlhandle);
         return false;
     }
     layerInit_.push_back(initFunc);
@@ -324,6 +325,7 @@ bool EglWrapperLayer::LoadLayerFuncs(std::string realLayerPath)
     LayerSetupFunc setupFunc = (LayerSetupFunc)dlsym(dlhandle, DEBUG_LAYER_GET_PROC_ADDR_FUNC);
     if (setupFunc == nullptr) {
         WLOGE("can't find %{public}s in debug layer library.", DEBUG_LAYER_GET_PROC_ADDR_FUNC);
+        dlclose(dlhandle);
         return false;
     }
     layerSetup_.push_back(setupFunc);

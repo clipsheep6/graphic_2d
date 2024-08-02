@@ -32,7 +32,7 @@ constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_MAX = 10;
 constexpr int32_t ERR_NOT_OK = -1;
 constexpr int32_t ERR_OK = 0;
-constexpr int32_t ERR_NOT_SYSTEM_APP = 222;
+constexpr int32_t ERR_NOT_SYSTEM_APP = 202;
 
 napi_value RSWindowAnimationManager::Init(napi_env env, napi_value exportObj)
 {

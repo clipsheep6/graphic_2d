@@ -286,5 +286,104 @@ HWTEST_F(CacheDataTest, clean_data_test_002, TestSize.Level1)
     delete[] tempBuffer;
 #endif
 }
+
+/**
+ * @tc.name: CacheDataInit
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, CacheDataInitTest, TestSize.Level1)
+{
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, "TestDir");
+    EXPECT_NE(nullptr, cacheData.get());
+}
+
+/**
+ * @tc.name: SerializedSize
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, SerializedSizeTest, TestSize.Level1)
+{
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, "TestDir");
+    struct tempHeader {
+        size_t numShaders_;
+    };
+    size_t serSize = cacheData->SerializedSize();
+    EXPECT_EQ(sizeof(tempHeader), serSize);
+}
+
+/**
+ * @tc.name: CacheData
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, CacheDataTest, TestSize.Level1)
+{
+    std::string testFileDir = "test file dir for cachedata";
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    auto [errorCode, sizeGet] = cacheData->Get(nullptr, 1, nullptr, 1);
+    EXPECT_EQ(0, sizeGet);
+}
+
+/**
+ * @tc.name: SerializeTest001
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, SerializeTest001, TestSize.Level1)
+{
+    std::string testFileDir = "test file dir for cachedata";
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    uint8_t *tempBuffer = new uint8_t[sizeof(size_t)]();
+    int retSerialized = cacheData->Serialize(tempBuffer, sizeof(size_t));
+    EXPECT_NE(retSerialized, -EINVAL);
+    delete[] tempBuffer;
+}
+
+/**
+ * @tc.name: DeSerializeTest001
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, DeSerializeTest001, TestSize.Level1)
+{
+    std::string testFileDir = "test file dir for cachedata";
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    uint8_t *tempBuffer = new uint8_t[sizeof(size_t)]();
+    int retDeserialized = cacheData->DeSerialize(tempBuffer, sizeof(size_t));
+    EXPECT_NE(retDeserialized, -EINVAL);
+    delete[] tempBuffer;
+}
+
+/**
+ * @tc.name: RewriteTest001
+ * @tc.desc: Imporve Coverage
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+ HWTEST_F(CacheDataTest, RewriteTest001, TestSize.Level1)
+{
+    std::string testFileDir = "test file dir for cachedata";
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(4, 4, 6, testFileDir);
+    uint8_t *tempBuffer = new uint8_t[4]();
+    const char *testKey1 = "Key1";
+    const char *testValue = "aVal";
+    cacheData->Rewrite(testKey1, 4, testValue, 4);
+    auto [errorCode, sizeGet] = cacheData->Get(testKey1, 4, tempBuffer, 4);
+    EXPECT_EQ(0, sizeGet);
+    delete[] tempBuffer;
+}
 } // namespace Rosen
 } // namespace OHOS

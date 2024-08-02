@@ -206,51 +206,51 @@ HWTEST_F(RSPropertyDrawableTest, RSFilterDrawableTest006, TestSize.Level1)
 }
 
 /**
- * @tc.name: ClearCacheIfNeededTest007
- * @tc.desc: class RSFilterDrawable ClearCacheIfNeeded test
+ * @tc.name: MarkNeedClearFilterCacheTest007
+ * @tc.desc: class RSFilterDrawable MarkNeedClearFilterCache test
  * @tc.type:FUNC
  * @tc.require: issueI9VSPU
  */
-HWTEST_F(RSPropertyDrawableTest, ClearCacheIfNeededTest007, TestSize.Level1)
+HWTEST_F(RSPropertyDrawableTest, MarkNeedClearFilterCacheTest007, TestSize.Level1)
 {
     std::shared_ptr<DrawableV2::RSFilterDrawable> filterDrawable = std::make_shared<DrawableV2::RSFilterDrawable>();
     EXPECT_NE(filterDrawable, nullptr);
     filterDrawable->cacheManager_ = nullptr;
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->MarkNeedClearFilterCache();
     std::unique_ptr<RSFilterCacheManager> cacheManager = std::make_unique<RSFilterCacheManager>();
     EXPECT_NE(cacheManager, nullptr);
     filterDrawable->cacheManager_ = std::move(cacheManager);
     filterDrawable->isFilterCacheValid_ = true;
-    filterDrawable->forceClearCacheForLastFrame_ = true;
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->stagingForceClearCacheForLastFrame_ = true;
+    filterDrawable->MarkNeedClearFilterCache();
     EXPECT_FALSE(filterDrawable->isFilterCacheValid_);
-    filterDrawable->forceClearCacheForLastFrame_ = false;
+    filterDrawable->stagingForceClearCacheForLastFrame_ = false;
     filterDrawable->lastCacheType_ = FilterCacheType::NONE;
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->MarkNeedClearFilterCache();
     filterDrawable->lastCacheType_ = FilterCacheType::SNAPSHOT;
-    filterDrawable->forceUseCache_ = true;
-    filterDrawable->ClearCacheIfNeeded();
-    filterDrawable->forceUseCache_ = false;
-    filterDrawable->forceClearCache_ = true;
-    filterDrawable->ClearCacheIfNeeded();
-    filterDrawable->forceClearCache_ = false;
-    filterDrawable->filterRegionChanged_ = true;
-    filterDrawable->rotationChanged_ = false;
-    filterDrawable->ClearCacheIfNeeded();
-    filterDrawable->filterRegionChanged_ = false;
-    filterDrawable->filterInteractWithDirty_ = false;
+    filterDrawable->stagingForceUseCache_ = true;
+    filterDrawable->MarkNeedClearFilterCache();
+    filterDrawable->stagingForceUseCache_ = false;
+    filterDrawable->stagingForceClearCache_ = true;
+    filterDrawable->MarkNeedClearFilterCache();
+    filterDrawable->stagingForceClearCache_ = false;
+    filterDrawable->stagingFilterRegionChanged_ = true;
+    filterDrawable->stagingRotationChanged_ = false;
+    filterDrawable->MarkNeedClearFilterCache();
+    filterDrawable->stagingFilterRegionChanged_ = false;
+    filterDrawable->stagingFilterInteractWithDirty_ = false;
     filterDrawable->pendingPurge_ = true;
-    filterDrawable->ClearCacheIfNeeded();
-    filterDrawable->filterInteractWithDirty_ = true;
+    filterDrawable->MarkNeedClearFilterCache();
+    filterDrawable->stagingFilterInteractWithDirty_ = true;
     filterDrawable->cacheUpdateInterval_ = 0;
-    filterDrawable->ClearCacheIfNeeded();
-    filterDrawable->filterInteractWithDirty_ = false;
+    filterDrawable->MarkNeedClearFilterCache();
+    filterDrawable->stagingFilterInteractWithDirty_ = false;
     filterDrawable->pendingPurge_ = false;
-    filterDrawable->rotationChanged_ = true;
+    filterDrawable->stagingRotationChanged_ = true;
     filterDrawable->cacheUpdateInterval_ = 0;
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->MarkNeedClearFilterCache();
     filterDrawable->cacheUpdateInterval_ = 1;
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->MarkNeedClearFilterCache();
 }
 
 /**
@@ -279,15 +279,15 @@ HWTEST_F(RSPropertyDrawableTest, RecordFilterInfosTest008, TestSize.Level1)
     filterDrawable->pendingPurge_ = true;
     filterDrawable->UpdateFlags(FilterCacheType::NONE, false);
     EXPECT_FALSE(filterDrawable->pendingPurge_);
-    filterDrawable->filterInteractWithDirty_ = true;
+    filterDrawable->stagingFilterInteractWithDirty_ = true;
     filterDrawable->cacheUpdateInterval_ = 3;
     filterDrawable->UpdateFlags(FilterCacheType::NONE, true);
     EXPECT_EQ(filterDrawable->cacheUpdateInterval_, 2);
-    filterDrawable->filterInteractWithDirty_ = false;
-    filterDrawable->rotationChanged_ = true;
+    filterDrawable->stagingFilterInteractWithDirty_ = false;
+    filterDrawable->stagingRotationChanged_ = true;
     filterDrawable->UpdateFlags(FilterCacheType::NONE, true);
     EXPECT_EQ(filterDrawable->cacheUpdateInterval_, 1);
-    filterDrawable->rotationChanged_ = false;
+    filterDrawable->stagingRotationChanged_ = false;
     filterDrawable->filterType_ = RSFilter::AIBAR;
     filterDrawable->UpdateFlags(FilterCacheType::NONE, true);
     EXPECT_EQ(filterDrawable->cacheUpdateInterval_, 1);
@@ -308,9 +308,9 @@ HWTEST_F(RSPropertyDrawableTest, IsAIBarCacheValidTest009, TestSize.Level1)
     filterDrawable->filterType_ = RSFilter::AIBAR;
     EXPECT_FALSE(filterDrawable->IsAIBarCacheValid());
     filterDrawable->cacheUpdateInterval_ = 1;
-    filterDrawable->forceClearCacheForLastFrame_ = true;
+    filterDrawable->stagingForceClearCacheForLastFrame_ = true;
     EXPECT_FALSE(filterDrawable->IsAIBarCacheValid());
-    filterDrawable->forceClearCacheForLastFrame_ = false;
+    filterDrawable->stagingForceClearCacheForLastFrame_ = false;
     EXPECT_TRUE(filterDrawable->IsAIBarCacheValid());
 }
 } // namespace OHOS::Rosen

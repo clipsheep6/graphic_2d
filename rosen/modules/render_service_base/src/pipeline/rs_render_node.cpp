@@ -2001,17 +2001,17 @@ void RSRenderNode::CheckFilterCacheAndUpdateDirtySlots(
     if (filterDrawable == nullptr) {
         return;
     }
-    filterDrawable->ClearCacheIfNeeded();
+    filterDrawable->MarkNeedClearFilterCache();
     UpdateDirtySlotsAndPendingNodes(slot);
 }
 
-void RSRenderNode::MarkForceClearFilterCacheWhenWithInvisible()
+void RSRenderNode::MarkForceClearFilterCacheWithInvisible()
 {
     if (GetRenderProperties().GetBackgroundFilter()) {
         auto filterDrawable = GetFilterDrawable(false);
         if (filterDrawable != nullptr) {
             filterDrawable->MarkFilterForceClearCache();
-            filterDrawable->ClearCacheIfNeeded();
+            filterDrawable->MarkNeedClearFilterCache();
             UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::BACKGROUND_FILTER);
         }
     }
@@ -2019,7 +2019,7 @@ void RSRenderNode::MarkForceClearFilterCacheWhenWithInvisible()
         auto filterDrawable = GetFilterDrawable(true);
         if (filterDrawable != nullptr) {
             filterDrawable->MarkFilterForceClearCache();
-            filterDrawable->ClearCacheIfNeeded();
+            filterDrawable->MarkNeedClearFilterCache();
             UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::COMPOSITING_FILTER);
         }
     }
@@ -2570,7 +2570,7 @@ void RSRenderNode::UpdateShouldPaint()
                    (GetRenderProperties().GetVisible() || HasDisappearingTransition(false));
     if (!shouldPaint_ && HasBlurFilter()) { // force clear blur cache
         RS_OPTIONAL_TRACE_NAME_FMT("node[%llu] is invisible", GetId());
-        MarkForceClearFilterCacheWhenWithInvisible();
+        MarkForceClearFilterCacheWithInvisible();
     }
 }
 
@@ -3233,7 +3233,7 @@ void RSRenderNode::OnTreeStateChanged()
     }
     if (!isOnTheTree_ && HasBlurFilter()) { // force clear blur cache
         RS_OPTIONAL_TRACE_NAME_FMT("node[%llu] off the tree", GetId());
-        MarkForceClearFilterCacheWhenWithInvisible();
+        MarkForceClearFilterCacheWithInvisible();
     }
 }
 

@@ -62,7 +62,7 @@ public:
     {
         drawCmdListsVisited_ = flag;
     }
-    void CheckAndSetIsDrawCmdListsVisited() override
+    bool CheckAndSetIsDrawCmdListsVisited() override
     {
         bool expected = true;
         bool success = drawCmdListsVisited_.compare_exchange_weak(expected, false);

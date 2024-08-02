@@ -1834,6 +1834,9 @@ void RSUniRenderVisitor::UpdateHwcNodeInfoForAppNode(RSSurfaceRenderNode& node)
         }
         node.SetHardwareForcedDisabledByVisibility(false);
         node.SetForceHardware(displayNodeRotationChanged_ || isScreenRotationAnimating_);
+        if (node.GetProtectedLayer()) {
+            node.SetForceClient(displayNodeRotationChanged_ || isScreenRotationAnimating_);
+        }
         if ((!node.GetForceHardware() && !IsHardwareComposerEnabled()) ||
             curSurfaceNode_->GetVisibleRegion().IsEmpty() || !node.GetBuffer()) {
             RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by param/invisible/no buffer",
@@ -1891,6 +1894,9 @@ void RSUniRenderVisitor::UpdateHwcNodeByTransform(RSSurfaceRenderNode& node)
         return;
     }
     node.SetForceHardware(displayNodeRotationChanged_ || isScreenRotationAnimating_);
+    if (node.GetProtectedLayer()) {
+        node.SetForceClient(displayNodeRotationChanged_ || isScreenRotationAnimating_);
+    }
     RSUniRenderUtil::DealWithNodeGravity(node, screenInfo_);
     RSUniRenderUtil::LayerRotate(node, screenInfo_);
     RSUniRenderUtil::LayerCrop(node, screenInfo_);

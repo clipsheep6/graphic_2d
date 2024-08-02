@@ -518,9 +518,12 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
                                  GetMainColorExecute,
                                  GetMainColorComplete,
                                  asyncContext, asyncContext->work);
-    IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                         nullptr,
-                         EFFECT_LOG_E("fail to create async work"));
+    if(status != napi_ok) {
+        napi_delete_reference(env, asyncContext->callbackRef);
+        EFFECT_LOG_E("fail to create async work")
+        return nullptr;
+    }
+
     return result;
 }
 

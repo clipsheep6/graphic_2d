@@ -25,6 +25,24 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+class RecordCmd;
+
+class AutoCanvasMatrixBrush {
+public:
+    AutoCanvasMatrixBrush(Canvas* canvas,
+        const Matrix* matrix, const Brush* brush, const Rect& bounds);
+    ~AutoCanvasMatrixBrush();
+
+    AutoCanvasMatrixBrush(AutoCanvasMatrixBrush&&) = delete;
+    AutoCanvasMatrixBrush(const AutoCanvasMatrixBrush&) = delete;
+    AutoCanvasMatrixBrush& operator=(AutoCanvasMatrixBrush&&) = delete;
+    AutoCanvasMatrixBrush& operator=(const AutoCanvasMatrixBrush&) = delete;
+
+private:
+    Canvas* canvas_;
+    uint32_t saveCount_;
+};
+
 class DRAWING_API Canvas : public CoreCanvas {
 public:
     Canvas() {}
@@ -44,6 +62,9 @@ public:
      * @param count  Depth of state stack to restore.
      */
     void RestoreToCount(uint32_t count);
+
+    virtual void DrawRecordCmd(const std::shared_ptr<RecordCmd>& recordCmd,
+        const Matrix* matrix = nullptr, const Brush* brush = nullptr);
 
     virtual bool GetRecordingState() const;
 

@@ -499,6 +499,22 @@ typedef struct OH_Drawing_FontMgr OH_Drawing_FontMgr;
  */
 typedef struct OH_Drawing_FontStyleSet OH_Drawing_FontStyleSet;
 
+/**
+ * @brief Define OH_Drawing_RecordCmd, which is used to replay drawing commands.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_RecordCmdUtils OH_Drawing_RecordCmdUtils;
+
+/**
+ * @brief Define OH_Drawing_RecordCmd, which is used to replay drawing commands.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_RecordCmd OH_Drawing_RecordCmd;
+
 #ifdef __cplusplus
 }
 #endif

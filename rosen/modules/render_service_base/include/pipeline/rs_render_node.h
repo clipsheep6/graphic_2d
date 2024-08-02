@@ -720,6 +720,7 @@ public:
 
     // DFX
     void DumpDrawableTree(int32_t depth, std::string& out) const;
+    void DumpDrawCmdModifiers(std::string& out) const;
 
 protected:
     virtual void OnApplyModifiers() {}
@@ -739,7 +740,6 @@ protected:
     static void DumpNodeType(RSRenderNodeType nodeType, std::string& out);
 
     void DumpSubClassNode(std::string& out) const;
-    void DumpDrawCmdModifiers(std::string& out) const;
     void DumpModifiers(std::string& out) const;
 
     virtual void OnTreeStateChanged();

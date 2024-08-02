@@ -2064,6 +2064,7 @@ HWTEST_F(RSRenderNodeTest, UpdateRenderingTest021, TestSize.Level1)
 HWTEST_F(RSRenderNodeTest, ManageRenderingResourcesTest022, TestSize.Level1)
 {
     std::shared_ptr<RSRenderNode> nodeTest = std::make_shared<RSRenderNode>(0);
+    nodeTest->InitRenderParams();
     EXPECT_NE(nodeTest, nullptr);
 
     // SetGlobalAlpha test
@@ -2295,6 +2296,7 @@ HWTEST_F(RSRenderNodeTest, GetCompletedImageTest026, TestSize.Level1)
 HWTEST_F(RSRenderNodeTest, ManageCachingTest027, TestSize.Level1)
 {
     std::shared_ptr<RSRenderNode> nodeTest = std::make_shared<RSRenderNode>(0);
+    nodeTest->InitRenderParams();
     EXPECT_NE(nodeTest, nullptr);
     // GetCompletedCacheSurface test
     nodeTest->cacheCompletedSurface_ = nullptr;

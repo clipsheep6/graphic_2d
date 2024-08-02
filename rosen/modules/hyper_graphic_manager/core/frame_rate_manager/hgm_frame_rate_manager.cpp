@@ -45,8 +45,7 @@ namespace {
     constexpr int32_t LAST_TOUCH_CNT = 1;
 
     constexpr uint32_t FIRST_FRAME_TIME_OUT = 50; // 50ms
-    constexpr uint32_t SCENE_BEFORE_XML = 1;
-    constexpr uint32_t SCENE_AFTER_TOUCH = 3;
+    constexpr uint32_t VOTER_SCENE_PRIORITY_BEFORE_PACKAGES = 1;
     constexpr uint64_t ENERGY_ASSURANCE_TASK_DELAY_TIME = 1000; //1s
     constexpr uint64_t UI_ENERGY_ASSURANCE_TASK_DELAY_TIME = 3000; // 3s
     const static std::string ENERGY_ASSURANCE_TASK_ID = "ENERGY_ASSURANCE_TASK_ID";
@@ -85,7 +84,9 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     std::string curScreenName = "screen" + std::to_string(curScreenId_) + "_" + (isLtpo_ ? "LTPO" : "LTPS");
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
-        curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
+            curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        }
         idleDetector_.UpdateSupportAppBufferList(configData->appBufferList_);
         if (curScreenStrategyId_.empty()) {
             curScreenStrategyId_ = "LTPO-DEFAULT";
@@ -102,13 +103,21 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
 
     hgmCore.RegisterRefreshRateModeChangeCallback([rsController, appController](int32_t mode) {
         if (HgmCore::Instance().IsLTPOSwitchOn()) {
-            rsController->SetPhaseOffset(0);
-            appController->SetPhaseOffset(0);
+            if (rsController) {
+                rsController->SetPhaseOffset(0);
+            }
+            if (appController) {
+                appController->SetPhaseOffset(0);
+            }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPO);
         } else {
             if (RSUniRenderJudgement::IsUniRender()) {
-                rsController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
-                appController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                if (rsController) {
+                    rsController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                }
+                if (appController) {
+                    appController->SetPhaseOffset(UNI_RENDER_VSYNC_OFFSET);
+                }
             }
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPS);
         }
@@ -432,11 +441,15 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
     bool frameRateChanged = false;
     bool controllerRateChanged = false;
     auto rsFrameRate = GetDrawingFrameRate(currRefreshRate_, finalRange);
-    controllerRate_ = rsFrameRate > 0 ? rsFrameRate : controller_->GetCurrentRate();
-    if (controllerRate_ != controller_->GetCurrentRate()) {
-        rsFrameRateLinker->SetFrameRate(controllerRate_);
-        controllerRateChanged = true;
-        frameRateChanged = true;
+    if (controller_) {
+        controllerRate_ = rsFrameRate > 0 ? rsFrameRate : controller_->GetCurrentRate();
+        if (controllerRate_ != controller_->GetCurrentRate()) {
+            rsFrameRateLinker->SetFrameRate(controllerRate_);
+            controllerRateChanged = true;
+            frameRateChanged = true;
+        }
+    } else if (rsFrameRate > 0) {
+        controllerRate_ = rsFrameRate;
     }
 
     auto& hgmCore = HgmCore::Instance();
@@ -446,6 +459,9 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
     RS_TRACE_INT("PreferredFrameRate", static_cast<int>(finalRange.preferred_));
 
     for (auto linker : appFrameRateLinkers) {
+        if (linker.second == nullptr) {
+            continue;
+        }
         const auto& expectedRange = linker.second->GetExpectedRange();
         auto appFrameRate = GetDrawingFrameRate(currRefreshRate_, expectedRange);
         if (touchManager_.GetState() != TouchState::IDLE_STATE) {
@@ -723,7 +739,7 @@ void HgmFrameRateManager::HandleLightFactorStatus(pid_t pid, bool isSafe)
     });
 }
 
-void HgmFrameRateManager::HandlePackageEvent(pid_t pid, uint32_t listSize, const std::vector<std::string>& packageList)
+void HgmFrameRateManager::HandlePackageEvent(pid_t pid, const std::vector<std::string>& packageList)
 {
     if (pid != DEFAULT_PID) {
         std::lock_guard<std::mutex> lock(cleanPidCallbackMutex_);
@@ -896,7 +912,9 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
 
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
-        curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        if (configData->screenStrategyConfigs_.find(curScreenName) != configData->screenStrategyConfigs_.end()) {
+            curScreenStrategyId_ = configData->screenStrategyConfigs_[curScreenName];
+        }
         if (curScreenStrategyId_.empty()) {
             curScreenStrategyId_ = "LTPO-DEFAULT";
         }
@@ -963,7 +981,8 @@ void HgmFrameRateManager::HandleVirtualDisplayEvent(pid_t pid, EventInfo eventIn
     }
 
     auto virtualDisplayConfig = configData->virtualDisplayConfigs_;
-    if (virtualDisplayConfig.count(virtualDisplayName) == 0) {
+    if (virtualDisplayConfig.count(virtualDisplayName) == 0 ||
+        configData->strategyConfigs_.count(virtualDisplayConfig[virtualDisplayName]) == 0) {
         HGM_LOGW("HandleVirtualDisplayEvent:unknow virtual display [%{public}s]", virtualDisplayName.c_str());
         DeliverRefreshRateVote({"VOTER_VIRTUALDISPLAY", OLED_60_HZ, OLED_60_HZ, pid}, eventInfo.eventStatus);
     } else {
@@ -1196,6 +1215,10 @@ void HgmFrameRateManager::UpdateVoteRule()
     if (configData == nullptr) {
         return;
     }
+    if (configData->screenConfigs_.count(curScreenStrategyId_) == 0 ||
+        configData->screenConfigs_[curScreenStrategyId_].count(std::to_string(curRefreshRateMode_)) == 0) {
+        return;
+    }
     auto curScreenSceneList =
         configData->screenConfigs_[curScreenStrategyId_][std::to_string(curRefreshRateMode_)].sceneList;
     if (curScreenSceneList.empty()) {
@@ -1217,7 +1240,12 @@ void HgmFrameRateManager::UpdateVoteRule()
         return;
     }
     auto curSceneConfig = curScreenSceneList[lastScene];
-    uint32_t scenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
+    if (!XMLParser::IsNumber(curSceneConfig.priority) ||
+        configData->strategyConfigs_.find(curSceneConfig.strategy) == configData->strategyConfigs_.end()) {
+        HGM_LOGW("invalid scene config");
+        return;
+    }
+    uint32_t curScenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
     uint32_t min = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].min);
     uint32_t max = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].max);
     HGM_LOGI("UpdateVoteRule: SceneName:%{public}s", lastScene.c_str());
@@ -1227,21 +1255,15 @@ void HgmFrameRateManager::UpdateVoteRule()
     std::lock_guard<std::mutex> lock(voteNameMutex_);
     voters_ = std::vector<std::string>(std::begin(VOTER_NAME), std::end(VOTER_NAME));
     std::string srcScene = "VOTER_SCENE";
-    std::string dstScene = (scenePriority == SCENE_BEFORE_XML) ? "VOTER_PACKAGES" : "VOTER_TOUCH";
+    std::string dstScene =
+        (curScenePriority == VOTER_SCENE_PRIORITY_BEFORE_PACKAGES) ? "VOTER_PACKAGES" : "VOTER_VIDEO";
 
     // priority 1: VOTER_SCENE > VOTER_PACKAGES
-    // priority 2: VOTER_SCENE > VOTER_TOUCH
-    // priority 3: VOTER_SCENE < VOTER_TOUCH
+    // priority 2: VOTER_SCENE < VOTER_LTPO
     auto srcPos = find(voters_.begin(), voters_.end(), srcScene);
-    auto dstPos = find(voters_.begin(), voters_.end(), dstScene);
-    
-    // resort
     voters_.erase(srcPos);
-    if (scenePriority == SCENE_AFTER_TOUCH) {
-        voters_.insert(++dstPos, srcScene);
-    } else {
-        voters_.insert(dstPos, srcScene);
-    }
+    auto dstPos = find(voters_.begin(), voters_.end(), dstScene);
+    voters_.insert(dstPos, srcScene);
 }
 
 std::string HgmFrameRateManager::GetScreenType(ScreenId screenId)
@@ -1265,7 +1287,7 @@ void HgmFrameRateManager::CleanVote(pid_t pid)
                         HandleLightFactorStatus(DEFAULT_PID, false);
                         break;
                     case CleanPidCallbackType::PACKAGE_EVENT:
-                        HandlePackageEvent(DEFAULT_PID, 0, {}); // handle empty pkg
+                        HandlePackageEvent(DEFAULT_PID, {}); // handle empty pkg
                         break;
                     case CleanPidCallbackType::TOUCH_EVENT:
                         HandleTouchEvent(DEFAULT_PID, TouchStatus::TOUCH_UP, LAST_TOUCH_CNT);

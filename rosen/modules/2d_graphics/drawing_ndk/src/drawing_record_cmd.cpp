@@ -18,11 +18,17 @@
 #include "drawing_helper.h"
 #include "utils/log.h"
 #include "recording/record_cmd.h"
+#include "drawing_canvas_utils.h"
 #include "pipeline/rs_record_cmd_utils.h"
 
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
+
+static RSRecordCmdUtils* CastToCmdUtils(OH_Drawing_RecordCmdUtils* cRecordCmdUtils)
+{
+    return reinterpret_cast<RSRecordCmdUtils*>(cRecordCmdUtils);
+}
 
 OH_Drawing_RecordCmdUtils* OH_Drawing_RecordCmdUtilsCreate()
 {
@@ -36,31 +42,32 @@ void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils* recordCmdUtils)
 OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils ,OH_Drawing_Rect* cBounds)
 {
     if(cRecordCmdUtils == nullptr || cBounds == nullptr){
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
-    RSRecordCmdUtils* recordCmdUtils = reinterpret_cast<RSRecordCmdUtils*>(cRecordCmdUtils);
+    RSRecordCmdUtils* recordCmdUtils = CastToCmdUtils(cRecordCmdUtils);
     Drawing::Rect& bounds = reinterpret_cast<Drawing::Rect&>(cBounds);
     Drawing::Canvas* canvasPtr = recordCmdUtils->BeginRecording(bounds);
-    std::shared_ptr<Canvas> canvas(canvasPtr, [](Canvas* p) { delete p; });
-    return (OH_Drawing_Canvas*) (canvas.get());
+    return (OH_Drawing_Canvas*) (canvasPtr);
 } 
 
 OH_Drawing_RecordCmd* OH_Drawing_RecordCmdUtilsFinishingRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils)
 {
     if(cRecordCmdUtils == nullptr){
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
-    RSRecordCmdUtils* recordCmdUtils = reinterpret_cast<RSRecordCmdUtils*>(cRecordCmdUtils);
-    NativeHandle<RecordCmd>* blurDrawLooperHandle = new NativeHandle<RecordCmd>;
-    if (blurDrawLooperHandle == nullptr) {
+    RSRecordCmdUtils* recordCmdUtils = CastToCmdUtils(cRecordCmdUtils);
+    NativeHandle<RecordCmd>* recordCmdHandle = new(std::nothrow) NativeHandle<RecordCmd>;
+    if (recordCmdHandle == nullptr) {
         return nullptr;
     }
-    blurDrawLooperHandle->value = recordCmdUtils->FinishRecording();
-    if (blurDrawLooperHandle->value == nullptr) {
-        delete blurDrawLooperHandle;
+    recordCmdHandle->value = recordCmdUtils->FinishRecording();
+    if (recordCmdHandle->value == nullptr) {
+        delete recordCmdHandle;
         return nullptr;
     }
-    return Helper::CastTo<NativeHandle<RecordCmd>*, OH_Drawing_RecordCmd*>(blurDrawLooperHandle);
+    return Helper::CastTo<NativeHandle<RecordCmd>*, OH_Drawing_RecordCmd*>(recordCmdHandle);
 }
 
 void OH_Drawing_RecordCmdDestroy(OH_Drawing_RecordCmd* recordCmd){

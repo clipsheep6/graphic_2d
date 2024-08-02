@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef C_INCLUDE_DRAWING_PICTURE_RECORDER_H
-#define C_INCLUDE_DRAWING_PICTURE_RECORDER_H
+#ifndef C_INCLUDE_DRAWING_RECORDER_CMD_H
+#define C_INCLUDE_DRAWING_RECORDER_CMD_H
 
 /**
  * @addtogroup Drawing

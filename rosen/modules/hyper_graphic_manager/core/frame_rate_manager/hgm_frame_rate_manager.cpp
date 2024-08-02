@@ -1258,18 +1258,16 @@ void HgmFrameRateManager::UpdateVoteRule()
     // restore
     std::lock_guard<std::mutex> lock(voteNameMutex_);
     voters_ = std::vector<std::string>(std::begin(VOTER_NAME), std::end(VOTER_NAME));
+    std::string srcScene = "VOTER_SCENE";
+    std::string dstScene =
+        (curScenePriority == VOTER_SCENE_PRIORITY_BEFORE_PACKAGES) ? "VOTER_PACKAGES" : "VOTER_VIDEO";
 
     // priority 1: VOTER_SCENE > VOTER_PACKAGES
     // priority 2: VOTER_SCENE < VOTER_LTPO
-    auto srcPos = find(voters_.begin(), voters_.end(), "VOTER_SCENE");
+    auto srcPos = find(voters_.begin(), voters_.end(), srcScene);
     voters_.erase(srcPos);
-    if (curScenePriority == VOTER_SCENE_PRIORITY_BEFORE_PACKAGES) {
-        auto dstPos = find(voters_.begin(), voters_.end(), "VOTER_PACKAGES");
-        voters_.insert(dstPos, "VOTER_SCENE");
-    } else {
-        auto dstPos = find(voters_.begin(), voters_.end(), "VOTER_LTPO");
-        voters_.insert(++dstPos, "VOTER_SCENE");
-    }
+    auto dstPos = find(voters_.begin(), voters_.end(), dstScene);
+    voters_.insert(dstPos, srcScene);
 }
 
 std::string HgmFrameRateManager::GetScreenType(ScreenId screenId)

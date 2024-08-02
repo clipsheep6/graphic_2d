@@ -28,6 +28,7 @@
 #include "rosen_text/typography_create.h"
 #include "unicode/putil.h"
 #endif
+#include "fontdescriptor_mgr.h"
 #include "font_config.h"
 #include "font_parser.h"
 #include <codecvt>
@@ -1252,19 +1253,83 @@ void OH_Drawing_TextStyleGetBackgroundPen(OH_Drawing_TextStyle* style, OH_Drawin
 
 OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void)
 {
-    auto fontDescriptor = new TextEngine::FontParser::FontDescriptor;
-    if (fontDescriptor == nullptr) {
-        return nullptr;
-    }
-    return (OH_Drawing_FontDescriptor*)fontDescriptor;
+    return new (std::nothrow) OH_Drawing_FontDescriptor;
 }
 
 void OH_Drawing_DestroyFontDescriptor(OH_Drawing_FontDescriptor* descriptor)
 {
-    if (descriptor) {
-        delete ConvertToOriginalText<TextEngine::FontParser::FontDescriptor>(descriptor);
-        descriptor = nullptr;
+    if (descriptor != nullptr) {
+        delete descriptor;
     }
+}
+
+OH_Drawing_FontDescriptor* OH_Drawing_MatchingFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t* num)
+{
+    if (desc == nullptr || num == nullptr) {
+        LOGE("desc or num is null");
+        return nullptr;
+    }
+    using namespace OHOS::Rosen::TextEngine;
+    std::shared_ptr<FontParser::FontDescriptor> condition = std::make_shared<FontParser::FontDescriptor>();
+    condition->postScriptName = desc->postScriptName == nullptr ? "" : desc->postScriptName;
+    condition->fullName = desc->fullName == nullptr ? "" : desc->fullName;
+    condition->fontFamily = desc->fontFamily == nullptr ? "" : desc->fontFamily;
+    condition->fontSubfamily = desc->fontSubfamily == nullptr ? "" : desc->fontSubfamily;
+    condition->weight = desc->weight;
+    condition->width = desc->width;
+    condition->italic = desc->italic;
+    condition->monoSpace = desc->monoSpace;
+    condition->symbolic = desc->symbolic;
+    condition->typeStyle = desc->typeStyle;
+
+    std::set<std::shared_ptr<FontParser::FontDescriptor>> result;
+    FontDescriptorMgrIns->MatchingFontDescriptors(condition, result);
+    if (result.empty()) {
+        *num = 0;
+        return nullptr;
+    }
+
+    *num = result.size();
+    OH_Drawing_FontDescriptor* descriptors = new (std::nothrow) OH_Drawing_FontDescriptor[*num];
+    if (descriptors == nullptr) {
+        *num = 0;
+        return nullptr;
+    }
+    int i = 0;
+    for (const auto& item : result) {
+        descriptors[i].path = strdup(item->path.c_str());
+        descriptors[i].postScriptName = strdup(item->postScriptName.c_str());
+        descriptors[i].fullName = strdup(item->fullName.c_str());
+        descriptors[i].fontFamily = strdup(item->fontFamily.c_str());
+        descriptors[i].fontSubfamily = strdup(item->fontSubfamily.c_str());
+        descriptors[i].weight = item->weight;
+        descriptors[i].width = item->width;
+        descriptors[i].italic = item->italic;
+        descriptors[i].monoSpace = item->monoSpace;
+        descriptors[i].symbolic = item->symbolic;
+        descriptors[i].size = item->size;
+        descriptors[i].typeStyle = item->typeStyle;
+        ++i;
+    }
+    return descriptors;
+}
+
+void OH_Drawing_DestroyFontDescriptors(OH_Drawing_FontDescriptor* descriptors, size_t num)
+{
+    if (descriptors == nullptr || num == 0) {
+        return;
+    }
+
+    for (size_t i = 0; i < num; ++i) {
+        free(descriptors[i].path);
+        free(descriptors[i].postScriptName);
+        free(descriptors[i].fullName);
+        free(descriptors[i].fontFamily);
+        free(descriptors[i].fontSubfamily);
+    }
+
+    delete[] descriptors;
+    descriptors = nullptr;
 }
 
 OH_Drawing_FontParser* OH_Drawing_CreateFontParser(void)

@@ -65,7 +65,6 @@ public:
     bool MarshallingPathAndBrush(Parcel& parcel) const;
     void SetSvgDom(const sk_sp<SkSVGDOM>& svgDom);
     sk_sp<SkSVGDOM> GetSvgDom() const;
-    std::shared_ptr<Drawing::Picture> GetSvgPicture() const;
     void SetPixelMap(const std::shared_ptr<Media::PixelMap> pixelMap);
     std::shared_ptr<Media::PixelMap> GetPixelMap() const;
     std::shared_ptr<Drawing::Image> GetImage() const;
@@ -93,7 +92,6 @@ private:
     double scaleX_ = 1.0f;
     double scaleY_ = 1.0f;
     sk_sp<SkSVGDOM> svgDom_;
-    std::shared_ptr<Drawing::Picture> svgPicture_;
     Drawing::Pen maskPen_;
     Drawing::Brush maskBrush_;
     std::shared_ptr<Drawing::Path> maskPath_;

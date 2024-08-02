@@ -188,14 +188,6 @@ void RSListenedCanvas::DrawImageRect(const Image& image, const Rect& dst, const 
     }
 }
 
-void RSListenedCanvas::DrawPicture(const Picture& picture)
-{
-    RSPaintFilterCanvas::DrawPicture(picture);
-    if (listener_ != nullptr) {
-        listener_->DrawPicture(picture);
-    }
-}
-
 void RSListenedCanvas::Clear(Drawing::ColorQuad color)
 {
     RSPaintFilterCanvas::Clear(color);

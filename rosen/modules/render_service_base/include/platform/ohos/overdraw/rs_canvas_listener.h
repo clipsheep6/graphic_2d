@@ -65,7 +65,6 @@ public:
         Drawing::SrcRectConstraint constraint = Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT) {};
     virtual void DrawImageRect(const Drawing::Image& image,
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling) {};
-    virtual void DrawPicture(const Drawing::Picture& picture) {};
 
     virtual void Clear(Drawing::ColorQuad color) {};
 

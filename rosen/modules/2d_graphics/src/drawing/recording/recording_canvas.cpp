@@ -355,16 +355,6 @@ void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const S
         imageHandle, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
 }
 
-void RecordingCanvas::DrawPicture(const Picture& picture)
-{
-    if (!addDrawOpImmediate_) {
-        cmdList_->AddDrawOp(std::make_shared<DrawPictureOpItem>(picture));
-        return;
-    }
-    auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
-    cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
-}
-
 void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)
 {
     static uint64_t shiftedPid = static_cast<uint64_t>(GetRealPid()) << 32; // 32 for 64-bit unsignd number shift

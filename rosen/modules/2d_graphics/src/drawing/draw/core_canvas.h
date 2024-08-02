@@ -22,6 +22,7 @@
 #include "drawing/engine_adapter/impl_interface/core_canvas_impl.h"
 #include "utils/drawing_macros.h"
 #include "utils/rect.h"
+#include "image/picture.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -446,7 +447,7 @@ public:
      * draw commands for later playback.
      * @param picture recorded drawing commands to play
      */
-    virtual void DrawPicture(const Picture& picture);
+    virtual void DrawPicture(const std::shared_ptr<Picture> picture);
 
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom);

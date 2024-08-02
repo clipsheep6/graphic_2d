@@ -33,7 +33,6 @@
 #include "image/gpu_context.h"
 #endif
 #include "image/image.h"
-#include "image/picture.h"
 #include "text/hm_symbol.h"
 #include "text/text.h"
 #include "text/text_blob.h"
@@ -125,7 +124,6 @@ public:
         SrcRectConstraint constraint, const Paint& paint) = 0;
     virtual void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling,
         const Paint& paint) = 0;
-    virtual void DrawPicture(const Picture& picture) = 0;
 
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom) = 0;

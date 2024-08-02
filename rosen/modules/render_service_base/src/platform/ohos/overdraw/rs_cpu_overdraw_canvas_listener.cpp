@@ -181,11 +181,6 @@ void RSCPUOverdrawCanvasListener::DrawImageRect(
     DrawRect(dst);
 }
 
-void RSCPUOverdrawCanvasListener::DrawPicture(const Drawing::Picture& picture)
-{
-    // need know picture rect region
-}
-
 void RSCPUOverdrawCanvasListener::Clear(Drawing::ColorQuad color)
 {
     // need know canvas rect region

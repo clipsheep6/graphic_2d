@@ -329,9 +329,11 @@ void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     DRAW_API_WITH_PAINT(DrawImageRect, image, dst, sampling);
 }
 
-void CoreCanvas::DrawPicture(const Picture& picture)
+void CoreCanvas::DrawPicture(const std::shared_ptr<Picture> picture)
 {
-    impl_->DrawPicture(picture);
+    // this->Save();
+    // picture->Playback(this);
+    // this->Restore();
 }
 
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)

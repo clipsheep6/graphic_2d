@@ -22,7 +22,6 @@
 
 #include "draw/blend_mode.h"
 #include "draw/color.h"
-#include "image/picture.h"
 #include "utils/matrix.h"
 #include "utils/point.h"
 #include "utils/point3.h"
@@ -50,9 +49,6 @@ public:
 
     virtual void InitWithImage(const Image& image, TileMode tileX, TileMode tileY,
         const SamplingOptions& sampling, const Matrix& matrix) = 0;
-
-    virtual void InitWithPicture(const Picture& picture, TileMode tileX, TileMode tileY, FilterMode mode,
-        const Matrix& matrix, const Rect& rect) = 0;
 
     virtual void InitWithLinearGradient(const Point& startPt, const Point& endPt, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode, const Matrix *matrix) = 0;

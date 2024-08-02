@@ -863,6 +863,7 @@ void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas* cCanvas, OH_Drawi
     OH_Drawing_Matrix* matrix, OH_Drawing_Brush* brush)
 {
     if (cCanvas == nullptr || cRecordCmd == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
     Canvas* canvas = CastToCanvas(cCanvas);

@@ -24,7 +24,7 @@
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
- * @since 8
+ * @since 12
  * @version 1.0
  */
 

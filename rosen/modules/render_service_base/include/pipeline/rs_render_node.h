@@ -672,6 +672,18 @@ public:
         lastFrameUifirstFlag_ = b;
     }
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+    uint32_t GetWeight() const
+    {
+        return weight_;
+    }
+
+    void SetWeight(uint32_t weight)
+    {
+        weight_ = weight;
+    }
+#endif
+
     void SkipSync()
     {
         lastFrameSynced_ = false;
@@ -852,7 +864,7 @@ private:
     RectI oldChildrenRect_;
     RectI oldClipRect_;
     Drawing::Matrix oldAbsMatrix_;
-    
+
     // aim to record children rect in abs coords, without considering clip
     RectI absChildrenRect_;
     // aim to record current frame clipped children dirty region, in abs coords
@@ -884,6 +896,9 @@ private:
     void UpdateShouldPaint(); // update node should paint state in apply modifier stage
     bool shouldPaint_ = true;
     bool isSubTreeDirty_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+    uint32_t weight_ = 1;
+#endif
 
     bool isDirtyRegionUpdated_ = false;
     bool isContainBootAnimation_ = false;

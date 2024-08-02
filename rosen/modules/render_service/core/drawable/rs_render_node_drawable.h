@@ -50,6 +50,9 @@ public:
     virtual void OnDraw(Drawing::Canvas& canvas);
     virtual void OnCapture(Drawing::Canvas& canvas);
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+  virtual void OnDrawParallel(Drawing::Canvas& canvas, const  Drawing::Rect& bounds);
+#endif
     // deprecated
     inline std::shared_ptr<const RSRenderNode> GetRenderNode()
     {

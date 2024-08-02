@@ -28,6 +28,9 @@
 #ifdef RES_SCHED_ENABLE
 #include "vsync_system_ability_listener.h"
 #endif
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "ffrt_inner.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -201,6 +204,9 @@ private:
     int imageReleaseCount_ = 0;
 
     sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
+#ifdef SUBTREE_PARALLEL_ENABLE
+    std::shared_ptr<ffrt::queue> queue_ = nullptr;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

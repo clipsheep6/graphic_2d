@@ -23,6 +23,9 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 namespace OHOS::Rosen::DrawableV2 {
 #ifdef RS_ENABLE_VK
@@ -74,9 +77,45 @@ void RSRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
     RSRenderNodeDrawable::TotalProcessedNodeCountInc();
     Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+  OnDrawParallel(canvas, bounds);
+#else
     DrawAll(canvas, bounds);
+#endif
 }
+#ifdef SUBTREE_PARALLEL_ENABLE
+void RSRenderNodeDrawable::OnDrawParallel(Drawing::Canvas& canvas, const Drawing::Rect& bounds)
+{
+    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+    if (!(paintFilterCanvas->GetIsParallelCanvas()) && RSParallelManager::Singleton().CheckIsParallelFrame()) {
+        ParallelDrawType drawType = RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this);
+        switch (drawType) {
+            case ParallelDrawType::DrawAll:
+                DrawAll (canvas, bounds);
+                break;
+            case ParallelDrawType::DrawBackgroundAndContentAndChildren:
+                DrawBackground(canvas, bounds);
+                DrawContent(canvas, bounds);
+                DrawChildren(canvas, bounds);
+                break;
+            case ParallelDrawType::DrawChildren:
+                DrawChildren(canvas, bounds);
+                break;
+            case ParallelDrawType::DrawChildrenAndForeground:
+                DrawChildren(canvas, bounds);
+                DrawForeground(canvas, bounds);
+                break;
+            case ParallelDrawType::Skip:
+                break;
+            default:
+                DrawAll(canvas, bounds);
+        }
+    static_cast<RSPaintFilterCanvas*>(&canvas)->DecTreeDepth();
+    } else {
+        DrawAll(canvas, bounds);
+    }
+}
+#endif
 
 /*
  * This function will be called recursively many times, and the logic should be as concise as possible.
@@ -564,7 +603,11 @@ bool RSRenderNodeDrawable::CheckIfNeedUpdateCache(RSRenderParams& params, int32_
 void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params)
 {
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    pid_t threadId = RSUniRenderUtil::GetThreadId(curCanvas);
+#else
     pid_t threadId = gettid();
+#endif
     auto cacheSurface = GetCachedSurface(threadId);
     if (cacheSurface == nullptr) {
         RS_TRACE_NAME_FMT("InitCachedSurface size:[%.2f, %.2f]", params.GetCacheSize().x_, params.GetCacheSize().y_);

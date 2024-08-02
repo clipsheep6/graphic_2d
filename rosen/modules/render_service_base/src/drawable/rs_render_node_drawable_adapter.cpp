@@ -210,7 +210,7 @@ void RSRenderNodeDrawableAdapter::DrawImpl(Drawing::Canvas& canvas, const Drawin
             return;
         }
     }
-    
+
     drawCmdList_[index](&canvas, &rect);
 }
 
@@ -231,6 +231,14 @@ void RSRenderNodeDrawableAdapter::DrawContent(Drawing::Canvas& canvas, const Dra
     }
     drawCmdList_[index](&canvas, &rect);
 }
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+void RSRenderNodeDrawableAdapter::DrawChildrenOnly(Drawing::Canvas& canvas)
+{
+    Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
+    DrawChildren(canvas, bounds);
+}
+#endif
 
 void RSRenderNodeDrawableAdapter::DrawChildren(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
 {

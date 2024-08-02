@@ -53,12 +53,17 @@
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/rs_uifirst_manager.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 #include "system/rs_system_parameters.h"
-
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
 #endif
 
+#ifdef RS_ENABLE_FFRT
+#include "ffrt_inner.h"
+#endif
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -159,6 +164,9 @@ void RSUniRenderThread::Start()
         RS_LOGE("RSUniRenderThread Start runner null");
         return;
     }
+#ifdef RS_ENABLE_FFRT
+    ffrt::qos_interval_create(8333, 5);
+#endif
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     runner_->Run();
     auto PostTaskProxy = [](RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
@@ -697,6 +705,9 @@ void RSUniRenderThread::PostClearMemoryTask(ClearMemoryMoment moment, bool deepl
             this->clearMemoryFinished_ = true;
         }
         RSUifirstManager::Instance().TryReleaseTextureForIdleThread();
+#ifdef SUBTREE_PARALLEL_ENABLE
+        RSParallelManager::Singleton().TryReleaseTextureForSubtreeParallel();
+#endif
         this->exitedPidSet_.clear();
         this->clearMemDeeply_ = false;
         this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);

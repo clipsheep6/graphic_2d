@@ -53,6 +53,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+constexpr std::pair<uint32_t, uint32_t> SUBTREE_PARALLEL_THREAD_INDEX = {10, 100};
 constexpr int32_t FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN = -90;
 constexpr const char* CAPTURE_WINDOW_NAME = "CapsuleWindow";
 }
@@ -851,6 +852,45 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
         return node->QuerySubAssignable(isDisplayRotation);
     }
 }
+#ifdef SUBTREE_PARALLEL_ENABLE
+pid_t RSUniRenderUtil::GetThreadId(RSPaintFilterCanvas* rsCanvas)
+{
+    auto threadIndex = rsCanvas->GetParallelThreadIdx();
+    if (threadIndex > SUBTREE_PARALLEL_THREAD_INDEX.first && threadIndex < SUBTREE_PARALLEL_THREAD_INDEX.second) {
+        return -threadIndex;
+    } else {
+        return gettid();
+    }
+}
+
+bool RSUniRenderUtil::IsDrawableWindowScene(RSSurfaceRenderParams* surfaceParams)
+{
+    std::string surfaceName = surfaceParams->GetName();
+    return (surfaceParams->IsLeashWindow() && (surfaceName.substr(0, 11) == "WindowScene"))
+         || (surfaceName.substr(0, 10) == "SCBDesktop");
+}
+
+bool RSUniRenderUtil::IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node)
+{
+    auto deviceType = RSMainThread::Instance()->GetDeviceType();
+    std::string surfaceName = node->GetName();
+
+    if (node->IsSelfDrawingType()) {
+        return false;
+    }
+    auto children = node->GetSortedChildren();
+
+    return node->IsLeashWindow() && (surfaceName.substr(0, 11) == "WindowScene")
+           && children->size() == 1 && ((*children)[0]->GetType() == RSRenderNodeType::SURFACE_NODE);
+}
+
+bool RSUniRenderUtil::IsNodeSCBDesktop(std::shared_ptr<RSSurfaceRenderNode> node)
+{
+    std::string surfaceName  = node->GetName();
+    return (surfaceName.substr(0, 10) == "SCBDesktop") || (surfaceName.substr(0, 17) == "SCBNegativeScreen")
+           || (surfaceName.substr(0, 15) == "SCBGlobalSearch");
+}
+#endif
 
 void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
@@ -867,7 +907,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
     } else {
         curAllSurfaces = *displayNode->GetSortedChildren();
     }
-   
+
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
@@ -1321,7 +1361,7 @@ RectI RSUniRenderUtil::SrcRectRotateTransform(RSSurfaceRenderNode& node)
     }
     return srcRect;
 }
- 
+
 void RSUniRenderUtil::UpdateRealSrcRect(RSSurfaceRenderNode& node, const RectI& absRect)
 {
     auto surfaceHandler = node.GetRSSurfaceHandler();
@@ -1378,7 +1418,7 @@ void RSUniRenderUtil::UpdateRealSrcRect(RSSurfaceRenderNode& node, const RectI& 
     RectI newSrcRect = srcRect.IntersectRect(bufferRect);
     node.SetSrcRect(newSrcRect);
 }
- 
+
 void RSUniRenderUtil::DealWithNodeGravity(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
     if (!node.GetRSSurfaceHandler()->GetBuffer()) {
@@ -1397,7 +1437,7 @@ void RSUniRenderUtil::DealWithNodeGravity(RSSurfaceRenderNode& node, const Scree
         (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
     }
- 
+
     // get current node's translate matrix and calculate gravity matrix.
     auto translateMatrix = Drawing::Matrix();
     translateMatrix.Translate(node.GetTotalMatrix().Get(Drawing::Matrix::Index::TRANS_X),
@@ -1412,7 +1452,7 @@ void RSUniRenderUtil::DealWithNodeGravity(RSSurfaceRenderNode& node, const Scree
     if (screenRotation == ScreenRotation::ROTATION_90 || screenRotation == ScreenRotation::ROTATION_270) {
         std::swap(screenWidth, screenHeight);
     }
- 
+
     auto canvas = std::make_unique<Drawing::Canvas>(screenWidth, screenHeight);
     canvas->ConcatMatrix(translateMatrix);
     canvas->ConcatMatrix(gravityMatrix);
@@ -1430,7 +1470,7 @@ void RSUniRenderUtil::DealWithNodeGravity(RSSurfaceRenderNode& node, const Scree
     int top = std::clamp<int>(localRect.GetTop(), 0, frameHeight);
     int width = std::clamp<int>(localRect.GetWidth(), 0, frameWidth - left);
     int height = std::clamp<int>(localRect.GetHeight(), 0, frameHeight - top);
- 
+
     node.SetDstRect({newDstRect.GetLeft(), newDstRect.GetTop(), newDstRect.GetWidth(), newDstRect.GetHeight()});
     node.SetSrcRect({left, top, width, height});
 }
@@ -1452,7 +1492,7 @@ void RSUniRenderUtil::CheckForceHardwareAndUpdateDstRect(RSSurfaceRenderNode& no
     dstRect.height_ = originalDstRect.height_;
     node.SetDstRect(dstRect);
 }
- 
+
 void RSUniRenderUtil::LayerRotate(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
     const auto screenWidth = static_cast<int32_t>(screenInfo.width);
@@ -1478,7 +1518,7 @@ void RSUniRenderUtil::LayerRotate(RSSurfaceRenderNode& node, const ScreenInfo& s
         }
     }
 }
- 
+
 GraphicTransformType RSUniRenderUtil::GetLayerTransform(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
     auto surfaceHandler = node.GetRSSurfaceHandler();
@@ -1505,13 +1545,13 @@ GraphicTransformType RSUniRenderUtil::GetLayerTransform(RSSurfaceRenderNode& nod
     GraphicTransformType rotateEnum = RSBaseRenderUtil::RotateEnumToInt(totalRotation, consumerFlip);
     return rotateEnum;
 }
- 
+
 void RSUniRenderUtil::LayerCrop(RSSurfaceRenderNode& node, const ScreenInfo& screenInfo)
 {
     auto dstRect = node.GetDstRect();
     auto srcRect = node.GetSrcRect();
     auto originSrcRect = srcRect;
- 
+
     RectI dstRectI(dstRect.left_, dstRect.top_, dstRect.width_, dstRect.height_);
     int32_t screenWidth = static_cast<int32_t>(screenInfo.phyWidth);
     int32_t screenHeight = static_cast<int32_t>(screenInfo.phyHeight);
@@ -1534,7 +1574,7 @@ void RSUniRenderUtil::LayerCrop(RSSurfaceRenderNode& node, const ScreenInfo& scr
     node.SetDstRect(dstRect);
     node.SetSrcRect(srcRect);
 }
- 
+
 void RSUniRenderUtil::LayerScaleDown(RSSurfaceRenderNode& node)
 {
     const auto& buffer = node.GetRSSurfaceHandler()->GetBuffer();
@@ -1614,7 +1654,7 @@ void RSUniRenderUtil::LayerScaleFit(RSSurfaceRenderNode& node)
     uint32_t newHeight = static_cast<uint32_t>(srcRect.height_);
     uint32_t dstWidth = static_cast<uint32_t>(dstRect.width_);
     uint32_t dstHeight = static_cast<uint32_t>(dstRect.height_);
-    
+
     uint32_t newWidthDstHeight = newWidth * dstHeight;
     uint32_t newHeightDstWidth = newHeight * dstWidth;
 

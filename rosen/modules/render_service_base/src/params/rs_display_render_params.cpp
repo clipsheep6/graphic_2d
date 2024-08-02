@@ -153,6 +153,9 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
         allMainAndLeashSurfaceDrawables_.push_back(ptr);
     }
     targetDisplayParams->allMainAndLeashSurfaceDrawables_ = allMainAndLeashSurfaceDrawables_;
+#ifdef SUBTREE_PARALLEL_ENABLE
+    targetDisplayParams->allMainAndLeashSurfaces_ = allMainAndLeashSurfaces_;
+#endif
     targetDisplayParams->displayHasSecSurface_ = displayHasSecSurface_;
     targetDisplayParams->displayHasSkipSurface_ = displayHasSkipSurface_;
     targetDisplayParams->displayHasProtectedSurface_ = displayHasProtectedSurface_;

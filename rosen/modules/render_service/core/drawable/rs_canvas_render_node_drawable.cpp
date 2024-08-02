@@ -24,6 +24,9 @@
 #include "platform/common/rs_log.h"
 #include "utils/rect.h"
 #include "utils/region.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 namespace OHOS::Rosen::DrawableV2 {
 RSCanvasRenderNodeDrawable::Registrar RSCanvasRenderNodeDrawable::instance_;
@@ -42,6 +45,13 @@ RSRenderNodeDrawable::Ptr RSCanvasRenderNodeDrawable::OnGenerate(std::shared_ptr
  */
 void RSCanvasRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
+#ifdef SUBTREE_PARALLEL_ENABLE
+    if (!(paintFilterCanvas->GetIsParallelCanvas()) &&
+        RSParallelManager::Singleton().CheckIsParallelFrame() &&
+        RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
+        return;
+    }
+#endif
     if (!ShouldPaint()) {
         return;
     }

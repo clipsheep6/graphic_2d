@@ -74,6 +74,9 @@
 
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/round_corner_display/rs_message_bus.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 #include "rs_profiler.h"
 #ifdef RS_PROFILER_ENABLED
@@ -1337,6 +1340,9 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
     screenRenderParams.hasCaptureWindow = std::move(hasCaptureWindow_);
     curDisplayNode_->UpdateScreenRenderParams(screenRenderParams);
     curDisplayNode_->UpdateOffscreenRenderParams(curDisplayNode_->IsRotationChanged());
+#ifdef  SUBTREE_PARALLEL_ENABLE
+    RSParallelManager::Singleton().OnPrepareChildren(node);
+#endif
     HandleColorGamuts(node, screenManager_);
     HandlePixelFormat(node, screenManager_);
     if (UNLIKELY(!SharedTransitionParam::unpairedShareTransitions_.empty())) {
@@ -1761,6 +1767,25 @@ void RSUniRenderVisitor::QuickPrepareChildren(RSRenderNode& node)
     node.ResetChildRelevantFlags();
     node.ResetChildUifirstSupportFlag();
     auto children = node.GetSortedChildren();
+#ifdef SUBTREE_PARALLEL_ENABLE
+    uint32_t childrenWeights = 0;
+    if (NeedPrepareChindrenInReverseOrder(node)) {
+        std::for_each((*children).rbegin(), (*children).rend(), [this, &childrenWeights]
+            (const std::shared_ptr<RSRenderNode>& node) {
+            curDirty_ = node->IsDirty();
+            node->QuickPrepare(shared_from_this());
+            childrenWeights += node->GetWeight();
+        });
+    } else {
+        std::for_each((*children).begin(), (*children).end(), [this, &childrenWeights]
+            (const std::shared_ptr<RSRenderNode>& node) {
+            curDirty_ = node->IsDirty();
+            node->QuickPrepare(shared_from_this());
+            childrenWeights += node->GetWeight();
+        });
+    }
+    node.SetWeight(childrenWeights + 1);
+#else
     if (NeedPrepareChindrenInReverseOrder(node)) {
         std::for_each((*children).rbegin(), (*children).rend(), [this](const std::shared_ptr<RSRenderNode>& node) {
             curDirty_ = node->IsDirty();
@@ -1773,6 +1798,7 @@ void RSUniRenderVisitor::QuickPrepareChildren(RSRenderNode& node)
             node->QuickPrepare(shared_from_this());
         });
     }
+#endif
     ancestorNodeHasAnimation_ = animationBackup;
     node.ResetGeoUpdateDelay();
 }
@@ -2911,7 +2937,7 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
     if (RS_PROFILER_SHOULD_BLOCK_HWCNODE()) {
         return;
     }
-    
+
     if (!curSurfaceNode_) {
         return;
     }

@@ -27,6 +27,9 @@
 #include "render/rs_drawing_filter.h"
 #include "render/rs_magnifier_shader_filter.h"
 #include "render/rs_skia_filter.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "pipeline/subtree/rs_parallel_resource_manager.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -155,6 +158,25 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     if (src.IsEmpty() || dst.IsEmpty()) {
         return;
     }
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+   auto gpuContext = canvas.GetGPUContext();
+   if (cachedSnapshot_ != nullptr && cachedSnapshot_->cachedImage_ != nullptr &&
+       !cachedSnapshot_->cachedImage_->IsValid(gpuContext.get())) {
+           Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+           auto backendTexture = cachedSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
+           cachedSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
+           BuildFromTextureByRef(cachedSnapshot_->cachedImage_, gpuContext, backendTexture);
+    }
+    if (cachedFilteredSnapshot_ != nullptr && cachedFilteredSnapshot_->cachedImage_ != nullptr &&
+        !cachedFilteredSnapshot_->cachedImage_->IsValid(gpuContext.get())) {
+            Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+            auto backendTexture = cachedFilteredSnapshot_->cachedImage_->GetBackendTexture(false, &origin);
+            cachedFilteredSnapshot_->cachedImage_ = RSParallelResourceManager::Singleton().
+            BuildFromTextureByRef(cachedFilteredSnapshot_->cachedImage_, gpuContext, backendTexture);
+    }
+#endif
+
     RS_TRACE_NAME_FMT("RSFilterCacheManager::DrawFilter status: %s", GetCacheState());
     if (!IsCacheValid()) {
         TakeSnapshot(canvas, filter, src);

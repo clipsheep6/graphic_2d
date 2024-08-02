@@ -103,6 +103,12 @@ public:
     static void CacheSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& oldSubThreadNodes,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     static bool IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    static bool IsNodeWindowScene(std::shared_ptr<RSSurfaceRenderNode> node);
+    static bool IsNodeSCBDesktop(std::shared_ptr<RSSurfaceRenderNode> node);
+    static bool IsDrawableWindowScene(RSSurfaceRenderParams* surfaceParams);
+    static pid_t GetThreadId(RSPaintFilterCanvas* rsCanvas);
+#endif
 #ifdef RS_ENABLE_VK
     static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     static void SetVkImageInfo(std::shared_ptr<OHOS::Rosen::Drawing::VKTextureInfo> vkImageInfo,

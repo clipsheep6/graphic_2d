@@ -49,6 +49,9 @@
 #include "platform/ohos/backend/native_buffer_utils.h"
 #include "platform/ohos/backend/rs_vulkan_context.h"
 #endif
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 #include "luminance/rs_luminance_control.h"
 #ifdef USE_VIDEO_PROCESSING_ENGINE
@@ -56,6 +59,9 @@
 #endif
 namespace {
 constexpr int32_t CORNER_SIZE = 4;
+constexpr int THREADID_YELLOW = 11;
+constexpr int THREADID_ORANGE = 12;
+constexpr int THREADID_PURPLE = 13;
 }
 namespace OHOS::Rosen::DrawableV2 {
 RSSurfaceRenderNodeDrawable::Registrar RSSurfaceRenderNodeDrawable::instance_;
@@ -280,6 +286,13 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw, rscanvas us nullptr");
         return;
     }
+#ifdef SUBTREE_PARALLEL_ENABLE
+    if (!(rscanvas->GetIsParallelCanvas()) &&
+        RSParallelManager::Singleton().CheckIsParallelFrame() &&
+        RSParallelManager::Singleton().GetCurDrawPolicy(&canvas, this) == ParallelDrawType::Skip) {
+        return;
+    }
+#endif
     auto& uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams();
     if (UNLIKELY(!uniParam)) {
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw uniParam is nullptr");
@@ -311,7 +324,18 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
             surfaceParams->GetGlobalAlpha(), surfaceParams->GetId());
         return;
     }
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+    Drawing::Region curSurfaceDrawRegion;
+    if (isUiFirstNode || !(surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow())) {
+        curSurfaceDrawRegion = CalculateVisibleRegion(*uniParam, *surfaceParams, *this, isUiFirstNode);
+    } else {
+        curSurfaceDrawRegion = GetCurSurfaceDrawRegion()
+    }
+#else
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(*uniParam, *surfaceParams, *this, isUiFirstNode);
+#endif
+
     // when surfacenode named "CapsuleWindow", cache the current canvas as SkImage for screen recording
     auto ancestorDrawableTmp =
         std::static_pointer_cast<RSDisplayRenderNodeDrawable>(surfaceParams->GetAncestorDisplayDrawable().lock());
@@ -326,9 +350,11 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         uniParam->SetRootIdOfCaptureWindow(surfaceParams->GetRootIdOfCaptureWindow());
     }
 
+#ifndef SUBTREE_PARALLEL_ENABLE
     if (!isUiFirstNode) {
         MergeDirtyRegionBelowCurSurface(*uniParam, curSurfaceDrawRegion);
     }
+#endif
 
     if (!isUiFirstNode && uniParam->IsOpDropped() && surfaceParams->IsVisibleRegionEmpty(curSurfaceDrawRegion)) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s %sAlpha: %f, NodeId:"
@@ -405,7 +431,12 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 
     OnGeneralProcess(*curCanvas_, *surfaceParams, isSelfDrawingSurface);
-
+#ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
+   if (RSSystemProperties::GetSubtreeParallelDebugEnabled() && RSParallelManager::Singleton().CheckIsParallelFrame()
+        && RSUniRenderUtil::IsDrawableWindowScene(surfaceParams)) {
+        DrawSubtreeParallelDfx(*rscanvas, *surfaceParams);
+        }
+#endif
     if (needOffscreen) {
         Drawing::AutoCanvasRestore acr(*canvasBackup_, true);
         if (surfaceParams->HasSandBox()) {
@@ -812,6 +843,30 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(
     }
     return true;
 }
+#ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
+void RSSurfaceRenderNodeDrawable::DrawSubtreeParallelDfx(RSPaintFilterCanvas& canvas,
+    RSSurfaceRenderParams& surfaceParams)
+{
+    auto sizeDebug = surfaceParams.GetCacheSize();
+    Drawing::Brush rectBrush;
+    auto threadId = canvas.GetParallelThreadIdx();
+    if (threadId == THREADID_YELLOW) {
+        //yellow
+        rectBrush.SetColor(Drawing::Color(255, 192, 128, 128));
+    } else if (threadId == THREADID_ORANGE) {
+        //orange
+        rectBrush.SetColor(Drawing::Color(255, 128, 0, 128));
+    } else if (threadId == THREADID_PURPLE) {
+        //purple
+        rectBrush.SetColor(Drawing::Color(192, 0, 128, 128));
+    } else {
+        rectBrush.SetColor(Drawing::Color(192, 0, 0, 128));
+    }
+    canvas.AttachBrush(rectBrush);
+    canvas.DrawRect(Drawing::Rect(0, 0, sizeDebug.x_, sizeDebug.y_));
+    canvas.DetachBrush();
+}
+#endif
 
 void RSSurfaceRenderNodeDrawable::DrawUIFirstDfx(RSPaintFilterCanvas& canvas, MultiThreadCacheType enableType,
     RSSurfaceRenderParams& surfaceParams, bool drawCacheSuccess)

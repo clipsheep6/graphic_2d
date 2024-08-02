@@ -40,10 +40,18 @@ void BootSoundPlayer::Play()
         return;
     }
 
-    while ((mediaPlayer_ = Media::PlayerFactory::CreatePlayer()) == nullptr) {
+    while ((mediaPlayer_ = Media::PlayerFactory::CreatePlayer()) == nullptr
+        && waitMediaCreateTime_ < MAX_WAIT_MEDIA_CREATE_TIME) {
         LOGI("mediaPlayer is nullptr, try create again");
         usleep(SLEEP_TIME_US);
+        waitMediaCreateTime_ += SLEEP_TIME_US;
     }
+
+    if (mediaPlayer_ == nullptr) {
+        LOGI("mediaPlayer_ create fail");
+        return;
+    }
+
     std::string path = GetResPath(TYPE_SOUND);
     LOGI("sound res path: %{public}s", path.c_str());
     mediaPlayer_->SetSource(path);

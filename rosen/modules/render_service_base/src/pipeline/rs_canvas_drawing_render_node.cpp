@@ -527,10 +527,9 @@ const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDraw
 
 void RSCanvasDrawingRenderNode::ClearResource()
 {
-    if (renderDrawable_ && renderDrawable_->CheckAndSetIsDrawCmdListVisited()) {
+    if (renderDrawable_ && renderDrawable_->CheckAndSetIsDrawCmdListsVisited()) {
         std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
         drawCmdLists_.clear();
-        renderDrawable_->SetDrawCmdListsVisited(false);
     }
 }
 

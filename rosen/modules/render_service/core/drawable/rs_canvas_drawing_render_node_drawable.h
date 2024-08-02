@@ -62,6 +62,22 @@ public:
     {
         drawCmdListsVisited_ = flag;
     }
+    void CheckAndSetIsDrawCmdListsVisited() override
+    {
+        bool expected = true;
+        bool success = drawCmdListsVisited_.compare_exchange_weak(expected, false);
+        return expected && success;
+    }
+
+    virtual bool IsNeedProcess() const override
+    {
+        return needProcess_;
+    }
+    virtual void SetNeedProcess(bool flag) override
+    {
+        needProcess_ = flag;
+    }
+
 
 private:
     explicit RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
@@ -105,6 +121,7 @@ private:
 
     // setted in render thread, used and resetted in main thread
     std::atomic<bool> drawCmdListsVisited_ = false;
+    std::atomic<bool> needProcess_ = false;
 };
 
 } // namespace OHOS::Rosen::DrawableV2

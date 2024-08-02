@@ -113,7 +113,8 @@ public:
 
     // dfx
     static void DrawDfxForCacheInfo(RSPaintFilterCanvas& canvas);
-
+    void DumpDrawableTree(std::string& out) const override;
+    
 protected:
     explicit RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::RS_NODE, OnGenerate>;

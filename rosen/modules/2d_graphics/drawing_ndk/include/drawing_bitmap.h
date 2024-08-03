@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "drawing_error_code.h"
 #include "drawing_types.h"
 
 #ifdef __cplusplus
@@ -228,70 +229,73 @@ OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromImageInfo(const OH_Drawing_Image_I
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @return Returns the row bytes of the <b>OH_Drawing_Bitmap</b> bject.
+ * @param rowBytes the row bytes of the <b>OH_Drawing_Bitmap</b> bject.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or rowBytes is nullptr.
  * @since 12
  * @version 1.0
  */
-uint32_t OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapGetRowBytes(const OH_Drawing_Bitmap* cBitmap, uint32_t* rowBytes);
 
 /**
  * @brief Gets the color space type of the <b>OH_Drawing_Bitmap</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @return Returns bitmap color space type.
+ * @param colorSpaceType bitmap color space type.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or colorSpaceType is nullptr.
  * @since 12
  * @version 1.0
  */
-OH_Drawing_ColorSpaceType OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapGetColorSpaceType(OH_Drawing_Bitmap* cBitmap,
+    OH_Drawing_ColorSpaceType* colorSpaceType);
 
 /**
  * @brief Gets a subset of this bitmap.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @param dstBitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param cDstBitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
  * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
- * @return Returns <b>true</b> if the subset was retrieved, <b>false</b> otherwise.
+ * @param retrieved <b>true</b> if the subset was retrieved, <b>false</b> otherwise.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or cDstBitmap or cSubset or retrieved is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_BitmapExtractSubset(const OH_Drawing_Bitmap* bitmap, const OH_Drawing_Bitmap* dstBitmap,
-    const OH_Drawing_Rect* subset);
+OH_Drawing_ErrorCode OH_Drawing_BitmapExtractSubset(const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_Bitmap* cDstBitmap, const OH_Drawing_Rect* cSubset, bool* retrieved);
 
 /**
  * @brief Gets whether the content of the <b>OH_Drawing_Bitmap</b> object is immutable.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @return Returns <b>true</b> if it is immutable, <b>false</b> otherwise.
+ * @param immutable <b>true</b> if it is immutable, <b>false</b> otherwise.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap or immutable is nullptr.
  * @since 12
  * @version 1.0
  */
-bool OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapIsImmutable(const OH_Drawing_Bitmap* cBitmap, bool* immutable);
 
 /**
  * @brief Sets the <b>OH_Drawing_Bitmap</b> object as immutable.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns the error code.
+ *         Returns {@link OH_DRAWING_SUCCESS} if the operation is successful.
+ *         Returns {@link OH_DRAWING_ERROR_INVALID_PARAMETER} if cBitmap is nullptr.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap*);
-
-/**
- * @brief Allocates the memory for the <b>OH_Drawing_Bitmap</b> object using the specified
- * <b>OH_Drawing_Image_Info</b> object.
- *
- * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
- * @return Returns <b>true</b> if the allocation was successful, <b>false</b> otherwise.
- * @since 12
- * @version 1.0
- */
-bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*);
+OH_Drawing_ErrorCode OH_Drawing_BitmapSetImmutable(OH_Drawing_Bitmap* cBitmap);
 #ifdef __cplusplus
 }
 #endif

@@ -78,4 +78,88 @@ protected:
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
+
+class BitmapCreateFromImageInfo : public TestBase {
+public:
+    explicit BitmapCreateFromImageInfo(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapCreateFromImageInfo";
+    };
+    ~BitmapCreateFromImageInfo() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapGetRowBytes : public TestBase {
+public:
+    explicit BitmapGetRowBytes(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapGetRowBytes";
+    };
+    ~BitmapGetRowBytes() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapGetColorSpaceType : public TestBase {
+public:
+    explicit BitmapGetColorSpaceType(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapGetColorSpaceType";
+    };
+    ~BitmapGetColorSpaceType() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapExtractSubset : public TestBase {
+public:
+    explicit BitmapExtractSubset(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapExtractSubset";
+    };
+    ~BitmapExtractSubset() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapIsImmutable : public TestBase {
+public:
+    explicit BitmapIsImmutable(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapIsImmutable";
+    };
+    ~BitmapIsImmutable() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+
+class BitmapSetImmutable : public TestBase {
+public:
+    explicit BitmapSetImmutable(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapSetImmutable";
+    };
+    ~BitmapSetImmutable() override {};
+
+protected:
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
 #endif // INTERFACE_BITMAP_TEST_H

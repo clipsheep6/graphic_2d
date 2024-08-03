@@ -52,7 +52,7 @@ public:
 private:
     bool IsOutOfScreenRegion(const ComposeInfo& info) const;
     static RectI SrcRectRotateTransform(RSSurfaceRenderNode& node);
-    static RectI SrcRectRotateTransform(DrawableV2::RSSurfaceRenderNodeDrawable& node);
+    static RectI SrcRectRotateTransform(DrawableV2::RSSurfaceRenderNodeDrawable& surfaceDrawable);
 
     ComposeInfo BuildComposeInfo(DrawableV2::RSDisplayRenderNodeDrawable& displayDrawable);
     ComposeInfo BuildComposeInfo(RSSurfaceRenderNode& node) const;
@@ -65,11 +65,11 @@ private:
         const sptr<IConsumerSurface>& surface) const;
     static void SetBufferColorSpace(DrawableV2::RSDisplayRenderNodeDrawable& displayDrawable);
     void LayerRotate(const LayerInfoPtr& layer, RSSurfaceRenderNode& node) const;
-    void LayerRotate(const LayerInfoPtr& layer, DrawableV2::RSRenderNodeDrawableAdapter& node) const;
+    void LayerRotate(const LayerInfoPtr& layer, DrawableV2::RSRenderNodeDrawableAdapter& drawable) const;
     void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
     void DealWithNodeGravity(const DrawableV2::RSSurfaceRenderNodeDrawable& surfaceDrawable, ComposeInfo& info) const;
     LayerInfoPtr CreateBufferLayer(RSSurfaceRenderNode& node) const;
-    LayerInfoPtr CreateBufferLayer(DrawableV2::RSSurfaceRenderNodeDrawable& node) const;
+    LayerInfoPtr CreateBufferLayer(DrawableV2::RSSurfaceRenderNodeDrawable& surfaceDrawable) const;
 
     void LayerCrop(const LayerInfoPtr& layer) const;
     static void LayerScaleDown(const LayerInfoPtr& layer, RSSurfaceRenderNode& node);

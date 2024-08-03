@@ -165,7 +165,7 @@ public:
     void OnCanvasDrawingSurfaceChange(const std::unique_ptr<RSRenderParams>& target);
     bool GetCanvasDrawingSurfaceChanged() const;
     void SetCanvasDrawingSurfaceChanged(bool changeFlag);
-    SurfaceParam GetCanvasDrawingSurfaceParams();
+    const SurfaceParam& GetCanvasDrawingSurfaceParams() const;
     void SetCanvasDrawingSurfaceParams(int width, int height);
 
     void SetStartingWindowFlag(bool b)

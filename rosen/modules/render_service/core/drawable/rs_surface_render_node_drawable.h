@@ -279,7 +279,6 @@ private:
         RSSurfaceRenderNodeDrawable& surfaceDrawable, bool isOffscreen) const;
     bool HasCornerRadius(const RSSurfaceRenderParams& surfaceParams) const;
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::SURFACE_NODE, OnGenerate>;
-    static Registrar instance_;
 
     bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas, bool canSkipWait);
     bool DrawUIFirstCacheWithStarting(RSPaintFilterCanvas& rscanvas, NodeId id);
@@ -303,6 +302,7 @@ private:
     void DrawSelfDrawingNodeBuffer(RSPaintFilterCanvas& canvas,
         const RSSurfaceRenderParams& surfaceParams, BufferDrawParam& params);
 
+    static Registrar instance_;
     std::string name_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
 

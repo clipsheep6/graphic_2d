@@ -22,8 +22,6 @@
 #include "impl_interface/region_impl.h"
 #include "memory/rs_tag_tracker.h"
 #include "params/rs_display_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
-#include "pipeline/parallel_render/rs_ui_first_render_listener.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_surface_handler.h"
@@ -58,9 +56,6 @@ bool RSSurfaceRenderNodeDrawable::CreateSurface()
     } else {
         RS_LOGE("RSSurfaceRenderNodeDrawable::CreateSurface cannot get cachesize");
         return false;
-    }
-    if (consumerListener_ == nullptr) {
-        consumerListener_ = new RSUIFirstRenderListener(surfaceHandlerUiFirst_);
     }
     consumer = IConsumerSurface::Create(name_);
     if (consumer == nullptr) {
@@ -148,10 +143,6 @@ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCacheWithDma(
     RS_TRACE_NAME("DrawUIFirstCacheWithDma");
     if (surfaceParams.GetHardwareEnabled()) {
         return true;
-    }
-    if (!surfaceHandlerUiFirst_->GetBuffer() && surfaceHandlerUiFirst_->GetAvailableBufferCount() <= 0) {
-        RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", surfaceParams.GetId());
-        RSSubThreadManager::Instance()->WaitNodeTask(surfaceParams.GetId());
     }
     // ConsumeAndUpdateBuffer may set buffer, must be before !GetBuffer()
     if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(*surfaceHandlerUiFirst_, true) ||

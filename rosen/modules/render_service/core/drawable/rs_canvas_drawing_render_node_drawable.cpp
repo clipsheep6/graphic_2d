@@ -24,7 +24,6 @@
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/sk_resource_manager.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen::DrawableV2 {
@@ -87,8 +86,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         // The second param is null, 0 is an invalid value.
         RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, idx, 0);
     };
-    auto threadId = paintFilterCanvas->GetIsParallelCanvas() ?
-        RSSubThreadManager::Instance()->GetReThreadIndexMap()[threadIdx] : RSUniRenderThread::Instance().GetTid();
+    auto threadId = RSUniRenderThread::Instance().GetTid();
     SetSurfaceClearFunc({ threadIdx, clearFunc }, threadId);
 
     auto& bounds = params->GetBounds();
@@ -655,14 +653,7 @@ bool RSCanvasDrawingRenderNodeDrawable::GetCurrentContextAndImage(std::shared_pt
         auto realTid = gettid();
         if (realTid == RSUniRenderThread::Instance().GetTid()) {
             grContext = RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetSharedDrGPUContext();
-        } else {
-            if (!RSSubThreadManager::Instance()->GetGrContextFromSubThread(realTid)) {
-                RS_LOGE("RSCanvasDrawingRenderNodeDrawable::GetCurrentContextAndImage get grGrContext failed");
-                return false;
-            }
-            grContext = RSSubThreadManager::Instance()->GetGrContextFromSubThread(realTid);
         }
-
         if (!grContext || !backendTexture_.IsValid()) {
             return false;
         }

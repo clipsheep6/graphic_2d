@@ -29,7 +29,6 @@
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_rcd_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #ifdef USE_VIDEO_PROCESSING_ENGINE
@@ -186,10 +185,6 @@ void RSUniRenderProcessor::CreateUIFirstLayer(DrawableV2::RSSurfaceRenderNodeDra
 {
     auto surfaceHandler = drawable.GetMutableRSSurfaceHandlerUiFirstOnDraw();
     auto buffer = surfaceHandler->GetBuffer();
-    if (buffer == nullptr && surfaceHandler->GetAvailableBufferCount() <= 0) {
-        RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", params.GetId());
-        RSSubThreadManager::Instance()->WaitNodeTask(params.GetId());
-    }
     if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(*surfaceHandler, true) || !surfaceHandler->GetBuffer()) {
         RS_LOGE("CreateUIFirstLayer ConsumeAndUpdateBuffer or GetBuffer return  false");
         return;

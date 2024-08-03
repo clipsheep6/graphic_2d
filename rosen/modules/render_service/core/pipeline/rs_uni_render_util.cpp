@@ -31,7 +31,6 @@
 #include "info_collection/rs_gpu_dirty_region_collection.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_node.h"
@@ -698,7 +697,6 @@ bool RSUniRenderUtil::HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilt
     if (!node.HasCachedTexture()) {
         RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", node.GetId());
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-        RSSubThreadManager::Instance()->WaitNodeTask(node.GetId());
         node.UpdateCompletedCacheSurface();
 #endif
     }
@@ -728,11 +726,6 @@ bool RSUniRenderUtil::HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas&
     if (curNode->IsOnTheTree()) {
         return HandleSubThreadNode(*curNode, canvas);
     } else {
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-        if (curNode->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
-            RSSubThreadManager::Instance()->WaitNodeTask(curNode->GetId());
-        }
-#endif
         return false;
     }
     return false;
@@ -1128,12 +1121,6 @@ void RSUniRenderUtil::PostReleaseSurfaceTask(std::shared_ptr<Drawing::Surface>&&
                 instance->ReleaseSurface();
             });
         }
-    } else {
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-        auto instance = RSSubThreadManager::Instance();
-        instance->AddToReleaseQueue(std::move(surface), threadIndex);
-        instance->ReleaseSurface(threadIndex);
-#endif
     }
 }
 

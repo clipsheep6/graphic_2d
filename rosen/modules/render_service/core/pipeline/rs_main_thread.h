@@ -446,7 +446,6 @@ private:
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
     void ProcessScreenHotPlugEvents();
-    void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
     void SubScribeSystemAbility();
 #endif
@@ -518,14 +517,6 @@ private:
     std::condition_variable surfaceCapProcTaskCond_;
     std::mutex surfaceCapProcMutex_;
     bool surfaceCapProcFinished_ = true;
-
-#if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
-    RSTaskMessage::RSTask uploadTextureBarrierTask_;
-    std::condition_variable uploadTextureTaskCond_;
-    std::mutex uploadTextureMutex_;
-    int32_t uploadTextureFinishedCount_ = 0;
-    EGLSyncKHR uploadTextureFence;
-#endif
 
     mutable std::mutex uniRenderMutex_;
     bool uniRenderFinished_ = false;

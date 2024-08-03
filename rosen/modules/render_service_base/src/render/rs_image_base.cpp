@@ -18,9 +18,6 @@
 #include <unistd.h>
 #include "image/image.h"
 #include "common/rs_background_thread.h"
-#ifdef RS_ENABLE_PARALLEL_UPLOAD
-#include "render/rs_resource_manager.h"
-#endif
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_task_dispatcher.h"
@@ -369,10 +366,6 @@ void RSImageBase::ConvertPixelMapToDrawingImage(bool paraUpload)
                 RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_);
 #endif
             }
-#ifdef RS_ENABLE_PARALLEL_UPLOAD
-            RSResourceManager::Instance().UploadTexture(paraUpload && renderServiceImage_, image_,
-                pixelMap_, uniqueId_);
-#endif
         }
     }
 }

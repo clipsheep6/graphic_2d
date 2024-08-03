@@ -33,7 +33,6 @@
 #include "vsync_generator.h"
 
 #include "common/rs_singleton.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_message_bus.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/rs_hardware_thread.h"

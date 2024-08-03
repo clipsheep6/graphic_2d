@@ -135,7 +135,7 @@ void HdiOutput::SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos)
             continue;
         }
 
-        int32_t ret = CreateLayer(surfaceId, layerInfo);
+        int32_t ret = CreateLayerLocked(surfaceId, layerInfo);
         if (ret != GRAPHIC_DISPLAY_SUCCESS) {
             return;
         }

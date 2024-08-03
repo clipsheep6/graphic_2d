@@ -166,6 +166,7 @@ std::shared_ptr<Drawing::Surface> RSSurfaceRenderNodeDrawable::GetCacheSurface(u
 {
     {
         if (releaseAfterGet) {
+            isCacheSurfaceValid_.store(false);
             return std::move(cacheSurface_);
         }
         if (!needCheckThread || cacheSurfaceThreadIndex_ == threadIndex || !cacheSurface_) {
@@ -356,9 +357,11 @@ void RSSurfaceRenderNodeDrawable::InitCacheSurface(Drawing::GPUContext* gpuConte
             func(std::move(cacheSurface_), nullptr,
                 cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
             cacheSurface_ = nullptr;
+            isCacheSurfaceValid_.store(false);
         }
     } else {
         cacheSurface_ = nullptr;
+        isCacheSurfaceValid_.store(false);
     }
 
     float width = 0.0f;
@@ -418,6 +421,7 @@ void RSSurfaceRenderNodeDrawable::InitCacheSurface(Drawing::GPUContext* gpuConte
 #else
     cacheSurface_ = Drawing::Surface::MakeRasterN32Premul(width, height);
 #endif
+    isCacheSurfaceValid_.store(true);
 }
 bool RSSurfaceRenderNodeDrawable::HasCachedTexture() const
 {
@@ -426,6 +430,11 @@ bool RSSurfaceRenderNodeDrawable::HasCachedTexture() const
 #else
     return true;
 #endif
+}
+
+bool RSSurfaceRenderNodeDrawable::HasCacheSurface() const
+{
+    return isCacheSurfaceValid_.load() || GetBuffer() != nullptr;
 }
 
 bool RSSurfaceRenderNodeDrawable::NeedInitCacheSurface()
@@ -477,6 +486,9 @@ void RSSurfaceRenderNodeDrawable::UpdateCompletedCacheSurface()
     SetTextureValidFlag(true);
     SetCacheSurfaceNeedUpdated(false);
 #endif
+    if (cacheSurface_ == nullptr) {
+        isCacheSurfaceValid_.store(false);
+    }
     RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(cacheSurface_, "cacheSurface_");
     RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(cacheCompletedSurface_, "cacheCompletedSurface_");
 }
@@ -489,6 +501,7 @@ void RSSurfaceRenderNodeDrawable::SetTextureValidFlag(bool isValid)
 void RSSurfaceRenderNodeDrawable::ClearCacheSurface(bool isClearCompletedCacheSurface)
 {
     cacheSurface_ = nullptr;
+    isCacheSurfaceValid_.store(false);
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {

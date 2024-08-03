@@ -130,6 +130,7 @@ public:
     Vector2f GetGravityTranslate(float imgWidth, float imgHeight);
 
     bool HasCachedTexture() const;
+    bool HasCacheSurface() const;
 
     void SetTextureValidFlag(bool isValid);
     void SetCacheSurfaceNeedUpdated(bool isCacheSurfaceNeedUpdate)
@@ -330,6 +331,7 @@ private:
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
 #endif
     std::atomic<bool> isTextureValid_ = false;
+    std::atomic<bool> isCacheSurfaceValid_ = false;
     pid_t lastFrameUsedThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
     bool hasHdrPresent_ = false;

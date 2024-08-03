@@ -433,6 +433,9 @@ void RSSubThreadManager::ScheduleReleaseCacheSurfaceOnly(
     if (!nodeDrawable) {
         return;
     }
+    if (!nodeDrawable->HasCacheSurface()) {
+        return;
+    }
     auto& param = nodeDrawable->GetRenderParams();
     if (!param) {
         return;

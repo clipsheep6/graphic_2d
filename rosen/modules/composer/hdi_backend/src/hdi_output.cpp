@@ -748,7 +748,7 @@ void HdiOutput::Dump(std::string &result) const
     std::vector<LayerDumpInfo> dumpLayerInfos;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        ReorderLayerInfo(dumpLayerInfos);
+        ReorderLayerInfoLocked(dumpLayerInfos);
     }
 
     result.append("\n");
@@ -781,7 +781,7 @@ void HdiOutput::DumpFps(std::string &result, const std::string &arg) const
     std::vector<LayerDumpInfo> dumpLayerInfos;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        ReorderLayerInfo(dumpLayerInfos);
+        ReorderLayerInfoLocked(dumpLayerInfos);
         result.append("\n");
         if (arg == "composer") {
             result += "The fps of screen [Id:" + std::to_string(screenId_) + "] is:\n";
@@ -825,7 +825,7 @@ void HdiOutput::DumpHitchs(std::string &result, const std::string &arg) const
     std::vector<LayerDumpInfo> dumpLayerInfos;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        ReorderLayerInfo(dumpLayerInfos);
+        ReorderLayerInfoLocked(dumpLayerInfos);
     }
     result.append("\n");
     for (const LayerDumpInfo &layerInfo : dumpLayerInfos) {
@@ -842,7 +842,7 @@ void HdiOutput::ClearFpsDump(std::string &result, const std::string &arg)
     std::vector<LayerDumpInfo> dumpLayerInfos;
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        ReorderLayerInfo(dumpLayerInfos);
+        ReorderLayerInfoLocked(dumpLayerInfos);
 
         result.append("\n");
         if (arg == "composer") {
@@ -868,7 +868,7 @@ static inline bool Cmp(const LayerDumpInfo &layer1, const LayerDumpInfo &layer2)
     return layer1.layer->GetLayerInfo()->GetZorder() < layer2.layer->GetLayerInfo()->GetZorder();
 }
 
-void HdiOutput::ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const
+void HdiOutput::ReorderLayerInfoLocked(std::vector<LayerDumpInfo> &dumpLayerInfos) const
 {
     for (auto iter = surfaceIdMap_.begin(); iter != surfaceIdMap_.end(); ++iter) {
         struct LayerDumpInfo layerInfo = {

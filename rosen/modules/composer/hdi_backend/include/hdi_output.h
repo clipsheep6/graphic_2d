@@ -121,8 +121,7 @@ private:
 
     std::vector<sptr<SurfaceBuffer> > bufferCache_;
     uint32_t bufferCacheCountMax_ = 0;
-    mutable std::mutex layerMutex_;
-    mutable std::mutex surfaceIdMutex_;
+    mutable std::mutex mutex_;
 
     std::vector<uint32_t> layersId_;
     std::vector<sptr<SyncFence>> fences_;
@@ -133,7 +132,7 @@ private:
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
     void DeletePrevLayers();
     void ResetLayerStatus();
-    void ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
+    void ReorderLayerInfoLocked(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
     void UpdatePrevLayerInfo();
     void ReleaseSurfaceBuffer(sptr<SyncFence>& releaseFence);
     void RecordCompositionTime(int64_t timeStamp);
@@ -145,6 +144,7 @@ private:
     bool CheckIfDoArsrPre(const LayerInfoPtr &layerInfo);
 
     void ClearBufferCache();
+    std::map<LayerInfoPtr, sptr<SyncFence>> GetLayersReleaseFenceLocked();
 };
 } // namespace Rosen
 } // namespace OHOS

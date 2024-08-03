@@ -703,6 +703,10 @@ napi_value JsCanvas::OnDrawImage(napi_env env, napi_callback_info info)
         if (m_canvas->GetDrawingType() == Drawing::DrawingType::RECORDING) {
             ExtendRecordingCanvas* canvas_ = reinterpret_cast<ExtendRecordingCanvas*>(m_canvas);
             auto pixel = pixelMapNapi->GetPixelNapiInner();
+            if (!pixel) {
+                ROSEN_LOGE("Drawing_napi::pixelMap fail");
+                return nullptr;
+            }
             Drawing::Rect src(0, 0, pixel->GetWidth(), pixel->GetHeight());
             Drawing::Rect dst(px, py, px + pixel->GetWidth(), py + pixel->GetHeight());
             canvas_->DrawPixelMapRect(pixel, src, dst, Drawing::SamplingOptions());
@@ -726,6 +730,10 @@ napi_value JsCanvas::OnDrawImage(napi_env env, napi_callback_info info)
         if (m_canvas->GetDrawingType() == Drawing::DrawingType::RECORDING) {
             ExtendRecordingCanvas* canvas_ = reinterpret_cast<ExtendRecordingCanvas*>(m_canvas);
             auto pixel = pixelMapNapi->GetPixelNapiInner();
+            if (!pixel) {
+                ROSEN_LOGE("Drawing_napi::pixelMap fail");
+                return nullptr;
+            }
             Drawing::Rect src(0, 0, pixel->GetWidth(), pixel->GetHeight());
             Drawing::Rect dst(px, py, px + pixel->GetWidth(), py + pixel->GetHeight());
             canvas_->DrawPixelMapRect(pixel, src, dst, *samplingOptions.get());

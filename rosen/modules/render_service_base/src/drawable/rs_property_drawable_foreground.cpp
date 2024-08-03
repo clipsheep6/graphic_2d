@@ -331,6 +331,10 @@ bool RSPixelStretchDrawable::OnUpdate(const RSRenderNode& node)
     if (!pixelStretch.has_value()) {
         return false;
     }
+    auto& rsFilter = node.GetRenderProperties().GetBackgroundFilter();
+    if (rsFilter && RSSystemProperties::GetBlurStretchEnabled()) {
+        return false;
+    }
     needSync_ = true;
     stagingPixelStretch_ = pixelStretch;
     const auto& boundsGeo = node.GetRenderProperties().GetBoundsGeometry();

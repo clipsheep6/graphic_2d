@@ -16,10 +16,12 @@
 #include "drawable/rs_property_drawable_utils.h"
 
 #include "common/rs_optional_trace.h"
+#include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_drawing_filter.h"
 #include "render/rs_kawase_blur_shader_filter.h"
+#include "render/rs_mesa_blur_shader_filter.h"
 #include "render/rs_linear_gradient_blur_shader_filter.h"
 #include "render/rs_magnifier_shader_filter.h"
 #include "render/rs_material_filter.h"
@@ -1242,6 +1244,38 @@ bool RSPropertyDrawableUtils::GetGravityMatrix(const Gravity& gravity, const Dra
             return false;
         }
     }
+}
+
+void RSPropertyDrawableUtils::RSFilterSetPixelStretch(const RSProperties& property,
+    const std::shared_ptr<RSFilter>& filter)
+{
+    if (!filter || !RSSystemProperties::GetBlurStretchEnabled()) {
+        return;
+    }
+    auto drawingFilter = std::static_pointer_cast<RSDrawingFilter>(filter);
+    std::shared_ptr<RSShaderFilter> mesaShaderFilter =
+        drawingFilter->GetShaderFilterWithType(RSShaderFilter::MESA);
+    if (!mesaShaderFilter) {
+        return;
+    }
+
+    auto& pixelStretch = property.GetPixelStretch();
+    if (!pixelStretch.has_value()) {
+        return;
+    }
+
+    ROSEN_LOGD("RSPropertyDrawableUtils::DrawPixelStretch fuzed with MESABlur.");
+    const auto& boundsRect = property.GetBoundsRect();
+    auto tileMode = property.GetPixelStretchTileMode();
+    auto pixelStretchParams = std::make_shared<RSPixelStretchParams>(std::abs(pixelStretch->x_),
+                                                                     std::abs(pixelStretch->y_),
+                                                                     std::abs(pixelStretch->z_),
+                                                                     std::abs(pixelStretch->w_),
+                                                                     tileMode,
+                                                                     boundsRect.width_, boundsRect.height_);
+    auto mesaBlurFilter = std::static_pointer_cast<RSMESABlurShaderFilter>(mesaShaderFilter);
+    mesaBlurFilter->SetPixelStretchParams(pixelStretchParams);
+    return;
 }
 } // namespace Rosen
 } // namespace OHOS

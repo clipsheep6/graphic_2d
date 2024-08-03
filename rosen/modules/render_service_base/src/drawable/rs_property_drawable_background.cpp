@@ -609,6 +609,7 @@ bool RSBackgroundFilterDrawable::OnUpdate(const RSRenderNode& node)
     RecordFilterInfos(rsFilter);
     needSync_ = true;
     stagingFilter_ = rsFilter;
+    RSPropertyDrawableUtils::RSFilterSetPixelStretch(node.GetRenderProperties(), stagingFilter_);
     return true;
 }
 

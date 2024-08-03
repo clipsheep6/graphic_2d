@@ -59,6 +59,9 @@ HWTEST_F(GEVisualEffectImplTest, GetFilterType001, TestSize.Level1)
     Drawing::GEVisualEffectImpl geVisualEffectImpl4(Drawing::GE_FILTER_LINEAR_GRADIENT_BLUR);
     EXPECT_EQ(geVisualEffectImpl4.GetFilterType(), Drawing::GEVisualEffectImpl::FilterType::LINEAR_GRADIENT_BLUR);
 
+    Drawing::GEVisualEffectImpl geVisualEffectImpl5(Drawing::GE_FILTER_MESA_BLUR);
+    EXPECT_EQ(geVisualEffectImpl5.GetFilterType(), Drawing::GEVisualEffectImpl::FilterType::MESA_BLUR);
+
     Drawing::GEVisualEffectImpl geVisualEffectImpl(Drawing::GE_FILTER_WATER_RIPPLE);
     EXPECT_EQ(geVisualEffectImpl.GetFilterType(), Drawing::GEVisualEffectImpl::FilterType::WATER_RIPPLE);
 }
@@ -323,7 +326,38 @@ HWTEST_F(GEVisualEffectImplTest, SetParam011, TestSize.Level1)
     ASSERT_NE(geVisualEffectImplKawaseBulr.GetKawaseParams(), nullptr);
     EXPECT_NE(geVisualEffectImplKawaseBulr.GetKawaseParams()->radius, paramUint32);
 }
- 
+
+/**
+ * @tc.name: SetParam012
+ * @tc.desc: Verify function SetParam
+ * @tc.type:FUNC
+ */
+HWTEST_F(GEVisualEffectImplTest, SetParam012, TestSize.Level1)
+{
+    Drawing::GEVisualEffectImpl geVisualEffectImpl(Drawing::GE_FILTER_MESA_BLUR);
+    // 0.0f, 1, 1.0f: mesa blur params
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_RADIUS, 1);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_GREY_COEF_1, 1.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_GREY_COEF_2, 1.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_OFFSET_X, 0.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_OFFSET_Y, 0.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_OFFSET_Z, 0.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_OFFSET_W, 0.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_TILE_MODE, 0);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_WIDTH, 0.0f);
+    geVisualEffectImpl.SetParam(Drawing::GE_FILTER_MESA_BLUR_STRETCH_HEIGHT, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->radius, 1);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->greyCoef1, 1.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->greyCoef1, 1.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->offsetX, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->offsetY, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->offsetZ, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->offsetW, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->tileMode, 0);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->width, 0.0f);
+    EXPECT_EQ(geVisualEffectImpl.GetMESAParams()->height, 0.0f);
+}
+
 /**
  * @tc.name: SetWaterRippleParams001
  * @tc.desc: Verify function SetWaterRippleParams is invalid

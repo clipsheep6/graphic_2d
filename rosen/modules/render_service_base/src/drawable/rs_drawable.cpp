@@ -541,6 +541,16 @@ std::unordered_set<RSDrawableSlot> RSDrawable::CalculateDirtySlots(
     if (dirtySlots.count(RSDrawableSlot::FOREGROUND_FILTER)) {
         dirtySlots.emplace(RSDrawableSlot::RESTORE_FOREGROUND_FILTER);
     }
+
+    // fuse pixel stretch with background filter
+    if (dirtySlots.count(RSDrawableSlot::PIXEL_STRETCH) &&
+        drawableVec[static_cast<size_t>(RSDrawableSlot::BACKGROUND_FILTER)]) {
+        dirtySlots.emplace(RSDrawableSlot::BACKGROUND_FILTER);
+    }
+    if (dirtySlots.count(RSDrawableSlot::BACKGROUND_FILTER)) {
+        dirtySlots.emplace(RSDrawableSlot::PIXEL_STRETCH);
+    }
+
     return dirtySlots;
 }
 

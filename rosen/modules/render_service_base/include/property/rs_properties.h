@@ -566,11 +566,14 @@ private:
     void GenerateForegroundBlurFilter();
     void GenerateBackgroundMaterialBlurFilter();
     void GenerateForegroundMaterialBlurFilter();
+    void GenerateBackgroundMaterialFuzedBlurFilter();
+    void GenerateForegroundMaterialFuzedBlurFilter();
     std::shared_ptr<Drawing::ColorFilter> GetMaterialColorFilter(float sat, float brightness);
     void GenerateAIBarFilter();
     void GenerateWaterRippleFilter();
     void GenerateLinearGradientBlurFilter();
     void GenerateMagnifierFilter();
+    bool NeedBlurFuzed();
 
     bool NeedClip() const;
 

@@ -527,4 +527,33 @@ HWTEST_F(RSPropertyDrawableUtilsTest, GetShadowRegionImageTest018, testing::ext:
     auto resultTest2 = rsPropertyDrawableUtilsTest->GetShadowRegionImage(&paintFilterCanvas, drPath, matrix);
     EXPECT_EQ(resultTest2, nullptr);
 }
+
+/**
+ * @tc.name: RSFilterSetPixelStretchTest019
+ * @tc.desc: RSFilterSetPixelStretch test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSPropertyDrawableUtilsTest, RSFilterSetPixelStretchTest019, testing::ext::TestSize.Level1)
+{
+    std::shared_ptr<RSPropertyDrawableUtils> rsPropertyDrawableUtils = std::make_shared<RSPropertyDrawableUtils>();
+    EXPECT_NE(rsPropertyDrawableUtils, nullptr);
+
+    RSProperties properties;
+    std::shared_ptr<RSFilter> rsFilter = nullptr;
+    rsPropertyDrawableUtils->RSFilterSetPixelStretch(properties, rsFilter);
+
+    std::shared_ptr<RSShaderFilter> rsFilterTest = std::make_shared<RSShaderFilter>();
+    std::shared_ptr<RSDrawingFilter> filter = std::make_shared<RSDrawingFilter>(rsFilterTest);
+    rsPropertyDrawableUtils->RSFilterSetPixelStretch(properties, filter);
+
+    std::shared_ptr<RSShaderFilter> rsFilterTest2 = std::make_shared<RSShaderFilter>();
+    rsFilterTest2->type_ = RSShaderFilter::MESA;
+    std::shared_ptr<RSDrawingFilter> filter2 = std::make_shared<RSDrawingFilter>(rsFilterTest2);
+    rsPropertyDrawableUtils->RSFilterSetPixelStretch(properties, filter2);
+
+    Vector4f pixelStretchTest(0.0f, 0.0f, 0.0f, 1.0f);
+    properties.pixelStretch_ = pixelStretchTest;
+    rsPropertyDrawableUtils->RSFilterSetPixelStretch(properties, filter2);
+}
 } // namespace OHOS::Rosen

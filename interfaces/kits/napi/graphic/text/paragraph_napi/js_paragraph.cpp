@@ -34,27 +34,28 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argCount, argv, nullptr, nullptr);
-    if (status != napi_ok || argCount != 1) {
+    if (status != napi_ok || argCount != ARGC_ONE) {
         TEXT_LOGE("JsParagraph::Constructor failed to napi_get_cb_info");
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        return nullptr;
     }
     if (argv[0] == nullptr) {
         TEXT_LOGE("JsParagraph::OnPaint Argv is invalid");
-        return NapiGetUndefined(env);
+        return nullptr;
     }
-    std::unique_ptr<Typography>* typography;
+    Typography* typography = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void **>(&typography));
     if (!typography) {
         TEXT_LOGE("JsParagraph::Constructor typography is nullptr");
-        return NapiGetUndefined(env);
+        return nullptr;
     }
 
-    JsParagraph *jsParagraph = new(std::nothrow) JsParagraph(std::move(*typography));
+    std::shared_ptr<Typography> tempTypography{typography}
+    JsParagraph *jsParagraph = new(std::nothrow) JsParagraph(tempTypography);
     delete typography;
 
     if (jsParagraph == nullptr) {
         TEXT_LOGE("JsParagraph::Constructor faild to move typography");
-        return NapiGetUndefined(env);
+        return nullptr;
     }
 
     status = napi_wrap(env, jsThis, jsParagraph,
@@ -62,7 +63,7 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
     if (status != napi_ok) {
         delete jsParagraph;
         TEXT_LOGE("JsParagraph::Constructor failed to wrap native instance");
-        return NapiGetUndefined(env);
+        return nullptr;
     }
     return jsThis;
 }
@@ -755,10 +756,10 @@ napi_value JsParagraph::CreateJsTypography(napi_env env, std::unique_ptr<Typogra
         Typography* tempValue = typography.release();
         napi_value jsThis = nullptr;
         status = napi_wrap(env, jsThis, tempValue,
-        JsParagraph::Destructor, nullptr, nullptr);
+            JsParagraph::Destructor, nullptr, nullptr);
         if (status == napi_ok) {
-            napi_value argv;
-            napi_create_array(env, &argv);
+            napi_value argv = nullptr;
+            NAPI_CALL(env, napi_create_array(env, &argv));
             napi_set_element(env, argv, 0, jsThis);
             status = napi_new_instance(env, constructor, 1, &argv, &result);
             if (status == napi_ok) {

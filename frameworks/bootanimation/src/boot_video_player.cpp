@@ -41,9 +41,16 @@ void BootVideoPlayer::Play()
 {
 #ifdef PLAYER_FRAMEWORK_ENABLE
     LOGI("PlayVideo begin");
-    while ((mediaPlayer_ = Media::PlayerFactory::CreatePlayer()) == nullptr) {
+    while ((mediaPlayer_ = Media::PlayerFactory::CreatePlayer()) == nullptr
+        && waitMediaCreateTime_ < MAX_WAIT_MEDIA_CREATE_TIME) {
         LOGI("mediaPlayer is nullptr, try create again");
         usleep(SLEEP_TIME_US);
+        waitMediaCreateTime_ += SLEEP_TIME_US;
+    }
+
+    if (mediaPlayer_ == nullptr) {
+        LOGI("mediaPlayer_ create fail");
+        return;
     }
 
     std::shared_ptr<VideoPlayerCallback> cb = std::make_shared<VideoPlayerCallback>(shared_from_this());

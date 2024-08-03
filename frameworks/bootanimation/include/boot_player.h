@@ -23,6 +23,8 @@
 #include "util.h"
 
 namespace OHOS {
+static const int MAX_WAIT_MEDIA_CREATE_TIME = 5000000; // 5S
+
 class BootPlayer {
 public:
     virtual ~BootPlayer() {};
@@ -41,6 +43,7 @@ public:
     std::string resPath_;
     bool isSoundEnabled_ = false;
     std::shared_ptr<Media::Player> mediaPlayer_;
+    int32_t waitMediaCreateTime_ = 0;
 };
 } // namespace OHOS
 

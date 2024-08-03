@@ -132,7 +132,7 @@ private:
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
     void DeletePrevLayers();
     void ResetLayerStatus();
-    void ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
+    void ReorderLayerInfoLocked(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
     void UpdatePrevLayerInfo();
     void ReleaseSurfaceBuffer(sptr<SyncFence>& releaseFence);
     void RecordCompositionTime(int64_t timeStamp);

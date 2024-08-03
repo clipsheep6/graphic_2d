@@ -897,6 +897,16 @@ public:
         return submittedSubThreadIndex_;
     }
 
+    bool IsWaitUifrstFirstFrame() const
+    {
+        return isWaitUifrstFirstFrame_;
+    }
+
+    void SetWaitUifrstFirstFrame(bool state)
+    {
+        isWaitUifrstFirstFrame_ = state;
+    }
+
     void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus);
     CacheProcessStatus GetCacheSurfaceProcessedStatus() const;
 
@@ -1425,6 +1435,7 @@ private:
 #endif
     bool isForeground_ = false;
     bool UIFirstIsPurge_ = false;
+    bool isWaitUifrstFirstFrame_ = false;
 
     TreeStateChangeCallback treeStateChangeCallback_;
     RSBaseRenderNode::WeakPtr ancestorDisplayNode_;

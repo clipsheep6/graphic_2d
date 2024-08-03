@@ -46,6 +46,7 @@ enum class DirtyRegionDebugType {
     CANVAS_NODE_SKIP_RECT,
     OUTLINE_RECT,
     SUBTREE_SKIP_RECT, // dirty region of the subtree if subtree is skipped in preparation.
+    SUBTREE_SKIP_OUT_OF_PARENT_RECT, // dirty region of the subtree when subtree is out of parent
 };
 
 enum class SurfaceRegionDebugType {
@@ -55,11 +56,12 @@ enum class SurfaceRegionDebugType {
 };
 
 enum class PartialRenderType {
-    DISABLED = 0,                               // 0, disable partial render
+    SET_DAMAGE_DISABLED = -1,                   // -1, drop nothing and disable set damage region
+    DISABLED = 0,                               // 0, disable partial render, set full screen dirty region
     SET_DAMAGE,                                 // 1, set damageregion, without draw_op dropping
     SET_DAMAGE_AND_DROP_OP,                     // 2, drop draw_op if node is not in dirty region
     SET_DAMAGE_AND_DROP_OP_OCCLUSION,           // 3, drop draw_op if node is not in visible region (unirender)
-    SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY     // 4, drop draw_op if node is not in visible dirty region (unirender)
+    SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY,    // 4, drop draw_op if node is not in visible dirty region (unirender)
 };
 
 enum class DumpSurfaceType {

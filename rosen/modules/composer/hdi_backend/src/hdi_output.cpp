@@ -248,7 +248,7 @@ void HdiOutput::GetLayerInfos(std::vector<LayerInfoPtr>& layerInfos)
     }
 }
 
-void HdiOutput::UpdatePrevLayerInfo()
+void HdiOutput::UpdatePrevLayerInfoLocked()
 {
     for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); iter++) {
         LayerPtr layer = iter->second;
@@ -556,7 +556,7 @@ int32_t HdiOutput::CommitAndGetReleaseFence(
 int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    UpdatePrevLayerInfo();
+    UpdatePrevLayerInfoLocked();
 
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();

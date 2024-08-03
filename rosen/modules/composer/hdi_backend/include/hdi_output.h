@@ -135,7 +135,7 @@ private:
     void ResetLayerStatus();
     void ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
     void UpdatePrevLayerInfo();
-    void ReleaseSurfaceBuffer(sptr<SyncFence>& releaseFence);
+    void ReleaseSurfaceBuffer(sptr<SyncFence> releaseFence);
     void RecordCompositionTime(int64_t timeStamp);
     inline bool CheckFbSurface();
     bool CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index);

@@ -621,7 +621,7 @@ int32_t HdiOutput::ReleaseFramebuffer(const sptr<SyncFence>& releaseFence)
     return ret;
 }
 
-void HdiOutput::ReleaseSurfaceBuffer(sptr<SyncFence>& releaseFence)
+void HdiOutput::ReleaseSurfaceBuffer(sptr<SyncFence> releaseFence)
 {
     auto releaseBuffer = [](sptr<SurfaceBuffer> buffer, sptr<SyncFence> releaseFence,
         sptr<IConsumerSurface> cSurface) -> void {

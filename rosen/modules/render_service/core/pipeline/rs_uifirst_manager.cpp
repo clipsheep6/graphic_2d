@@ -22,7 +22,6 @@
 #include "common/rs_optional_trace.h"
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "params/rs_display_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -440,10 +439,6 @@ void RSUifirstManager::PostSubTask(NodeId id)
     if (drawable) {
         // ref drawable
         subthreadProcessingNode_[id] = drawable;
-        // post task
-        RS_OPTIONAL_TRACE_NAME_FMT("Post_SubTask_s %lld", id);
-        RSSubThreadManager::Instance()->ScheduleRenderNodeDrawable(
-            std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable));
     }
 }
 
@@ -452,7 +447,6 @@ void RSUifirstManager::TryReleaseTextureForIdleThread()
     if (noUifirstNodeFrameCount_.load() <= CLEAR_RES_THRESHOLD) {
         return;
     }
-    RSSubThreadManager::Instance()->TryReleaseTextureForIdleThread();
 }
 
 void RSUifirstManager::PostReleaseCacheSurfaceSubTasks()
@@ -470,15 +464,6 @@ void RSUifirstManager::PostReleaseCacheSurfaceSubTask(NodeId id)
         RS_TRACE_NAME_FMT("node %lx is doning", id);
         RS_LOGE("RSUifirstManager ERROR: try to clean running node");
         return;
-    }
-
-    // 1.find in cache list(done to dele) 2.find in global list
-    auto drawable = DrawableV2::RSRenderNodeDrawableAdapter::GetDrawableById(id);
-    if (drawable) {
-        // post task
-        RS_OPTIONAL_TRACE_NAME_FMT("Post_SubTask_s %lx", id);
-        RSSubThreadManager::Instance()->ScheduleReleaseCacheSurfaceOnly(
-            std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(drawable));
     }
 }
 
@@ -629,7 +614,6 @@ void RSUifirstManager::ClearSubthreadRes()
         pendingSyncForSkipBefore_.size() == 0) {
         noUifirstNodeFrameCount_.fetch_add(1);
         if (noUifirstNodeFrameCount_.load() == CLEAR_RES_THRESHOLD) {
-            RSSubThreadManager::Instance()->ResetSubThreadGrContext();
             PostReleaseCacheSurfaceSubTasks();
         }
     } else {
@@ -641,7 +625,6 @@ void RSUifirstManager::ClearSubthreadRes()
 void RSUifirstManager::ForceClearSubthreadRes()
 {
     noUifirstNodeFrameCount_.store(0);
-    RSSubThreadManager::Instance()->ReleaseTexture();
 }
 
 void RSUifirstManager::SetNodePriorty(std::list<NodeId>& result,

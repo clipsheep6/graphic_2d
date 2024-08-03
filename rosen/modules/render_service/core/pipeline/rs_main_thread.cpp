@@ -55,7 +55,6 @@
 #include "memory/rs_memory_track.h"
 #include "metadata_helper.h"
 #include "params/rs_surface_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/rs_base_render_node.h"
@@ -99,10 +98,6 @@
 #include "GLES3/gl3.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
-#endif
-
-#ifdef RS_ENABLE_PARALLEL_UPLOAD
-#include "rs_upload_resource_thread.h"
 #endif
 
 #ifdef NEW_RENDER_CONTEXT
@@ -274,17 +269,6 @@ public:
     }
 };
 #endif
-static inline void WaitUntilUploadTextureTaskFinished(bool isUniRender)
-{
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    if (isUniRender) {
-        RSUploadResourceThread::Instance().OnProcessBegin();
-    }
-    return;
-#endif
-#endif
-}
 
 bool RSMainThread::CheckIsHdrSurface(const RSSurfaceRenderNode& surfaceNode)
 {
@@ -392,9 +376,6 @@ void RSMainThread::Init()
         SKResourceManager::Instance().ReleaseResource();
         // release node memory
         RSRenderNodeGC::Instance().ReleaseNodeMemory();
-#ifdef RS_ENABLE_PARALLEL_UPLOAD
-        RSUploadResourceThread::Instance().OnRenderEnd();
-#endif
         RSTypefaceCache::Instance().HandleDelayDestroyQueue();
 #if defined(RS_ENABLE_CHIPSET_VSYNC)
         ConnectChipsetVsyncSer();
@@ -517,14 +498,6 @@ void RSMainThread::Init()
 #if defined (RS_ENABLE_GL) && defined (RS_ENABLE_EGLIMAGE)
     RSPointerRenderManager::InitInstance(GetRenderEngine()->GetEglImageManager());
 #endif
-#endif
-
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-    if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-#if defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        RSUploadResourceThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
-#endif
-    }
 #endif
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -822,9 +795,6 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
     cacheCmdSkippedNodes_.clear();
     if (subThreadNodes_.empty() &&
         (deviceType_ != DeviceType::PC || (leashWindowCount_ > 0 && isUiFirstOn_ == false))) {
-        if (!isUniRender_) {
-            RSSubThreadManager::Instance()->ResetSubThreadGrContext(); // planning: move to prepare
-        }
         return false;
     }
     for (auto& node : subThreadNodes_) {
@@ -1771,13 +1741,6 @@ void RSMainThread::ColorPickerRequestVsyncIfNeed()
     }
 }
 
-void RSMainThread::WaitUntilUploadTextureTaskFinishedForGL()
-{
-    if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-        WaitUntilUploadTextureTaskFinished(isUniRender_);
-    }
-}
-
 void RSMainThread::AddUiCaptureTask(NodeId id, std::function<void()> task)
 {
     pendingUiCaptureTasks_.emplace_back(id, task);
@@ -1862,7 +1825,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                     node->MarkCurrentFrameHardwareEnabled();
                 }
             }
-            WaitUntilUploadTextureTaskFinishedForGL();
             return;
         }
     }
@@ -1898,9 +1860,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         if (!RSSystemProperties::GetQuickPrepareEnabled()) {
             CalcOcclusion();
         }
-        if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-            WaitUntilUploadTextureTaskFinished(isUniRender_);
-        }
         if (false) { // planning: move to prepare
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetFirstChild());
@@ -1916,8 +1875,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         isRegionDebugEnabledOfLastFrame_ = uniVisitor->GetIsRegionDebugEnabled();
         // set params used in render thread
         uniVisitor->SetUniRenderThreadParam(renderThreadParams_);
-    } else if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-        WaitUntilUploadTextureTaskFinished(isUniRender_);
     }
     PrepareUiCaptureTasks(uniVisitor);
     screenPowerOnChanged_ = false;
@@ -2010,9 +1967,6 @@ void RSMainThread::Render()
     }
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
-        if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-            WaitUntilUploadTextureTaskFinished(isUniRender_);
-        }
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
     }
@@ -3221,12 +3175,6 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
         });
     } else {
         MemoryManager::DumpMemoryUsage(log, type);
-    }
-    if (type.empty() || type == MEM_GPU_TYPE) {
-        auto subThreadManager = RSSubThreadManager::Instance();
-        if (subThreadManager) {
-            subThreadManager->DumpMem(log);
-        }
     }
     dumpString.append("dumpMem: " + type + "\n");
     dumpString.append(log.GetString());

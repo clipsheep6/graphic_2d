@@ -165,16 +165,6 @@ ohos_shared_library("librender_service") {
     sources += [ "core/pipeline/rs_vk_image_manager.cpp" ]
   }
 
-  if (rs_enable_parallel_render && rs_enable_gpu) {
-    sources += [
-      "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_render_task.cpp",
-      "core/pipeline/parallel_render/rs_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
-      "core/pipeline/parallel_render/rs_ui_first_render_listener.cpp",
-    ]
-  }
-
   if (use_memmgr_plugin || use_memmgr) {
     sources += [ "core/memory/rs_app_state_listener.cpp" ]
   }
@@ -253,22 +243,6 @@ ohos_shared_library("librender_service") {
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
     defines += [ "NEW_RENDER_CONTEXT" ]
-  }
-
-  if (defined(rs_enable_parallel_upload) && rs_enable_parallel_upload) {
-    sources += [
-      "core/pipeline/parallel_render/resource/rs_upload_resource_thread.cpp",
-    ]
-    include_dirs += [ "$graphic_2d_root/rosen/modules/render_service/core/pipeline/parallel_render/resource" ]
-    if (defined(use_rosen_drawing) && use_rosen_drawing) {
-      sources += [
-        "core/pipeline/parallel_render/resource/rs_resource_helper_drawing.cpp",
-      ]
-    } else {
-      sources += [
-        "core/pipeline/parallel_render/resource/rs_resource_helper_skia.cpp",
-      ]
-    }
   }
 
   if (rs_enable_gpu) {

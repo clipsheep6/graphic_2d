@@ -25,6 +25,14 @@
 
 namespace OHOS {
 namespace Rosen {
+
+#ifndef TOPIC_RCD_DISPLAY
+#define TOPIC_RCD_DISPLAY
+constexpr char TOPIC_RCD_DISPLAY_SIZE[] = "RCD_UPDATE_DISPLAY_SIZE";
+constexpr char TOPIC_RCD_DISPLAY_ROTATION[] = "RCD_UPDATE_DISPLAY_ROTATION";
+constexpr char TOPIC_RCD_DISPLAY_NOTCH[] = "RCD_UPDATE_DISPLAY_NOTCH";
+#endif
+
 class RSMainThread;
 class RSRenderServiceConnection;
 

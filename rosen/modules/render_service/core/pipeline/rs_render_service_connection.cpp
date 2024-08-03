@@ -30,7 +30,6 @@
 #include "common/rs_background_thread.h"
 #include "drawable/rs_canvas_drawing_render_node_drawable.h"
 #include "include/gpu/GrDirectContext.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #ifdef OHOS_BUILD_ENABLE_MAGICCURSOR
 #include "pipeline/pointer_render/rs_pointer_render_manager.h"
@@ -884,7 +883,6 @@ RSScreenModeInfo RSRenderServiceConnection::GetScreenActiveMode(ScreenId id)
 bool RSRenderServiceConnection::GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize)
 {
     RSMainThread::Instance()->GetAppMemoryInMB(cpuMemSize, gpuMemSize);
-    gpuMemSize += RSSubThreadManager::Instance()->GetAppGpuMemoryInMB();
     return true;
 }
 
@@ -1416,9 +1414,6 @@ bool RSRenderServiceConnection::GetPixelmap(NodeId id, const std::shared_ptr<Med
             result.set_value(node->GetPixelmap(pixelmap, rect, tid, drawCmdList));
         } else if (tid == UNI_RENDER_THREAD_INDEX) {
             renderThread->PostTask(getDrawablePixelmapTask);
-        } else {
-            RSTaskDispatcher::GetInstance().PostTask(
-                RSSubThreadManager::Instance()->GetReThreadIndexMap()[tid], getDrawablePixelmapTask, false);
         }
     };
     mainThread_->PostTask(getPixelMapTask);

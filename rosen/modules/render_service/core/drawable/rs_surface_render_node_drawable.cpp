@@ -42,7 +42,6 @@
 #include "utils/region.h"
 
 #include "pipeline/rs_uifirst_manager.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_main_thread.h"
 #ifdef RS_ENABLE_VK
 #include "include/gpu/GrBackendSurface.h"

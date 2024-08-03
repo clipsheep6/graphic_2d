@@ -37,7 +37,6 @@
 #include "luminance/rs_luminance_control.h"
 #include "memory/rs_tag_tracker.h"
 #include "params/rs_display_render_params.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
@@ -210,12 +209,6 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     if (RSRcdRenderManager::GetInstance().GetRcdRenderEnabled()) {
         rcdInfo_ = std::make_unique<RcdInfo>();
     }
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-    if (renderEngine_ && renderEngine_->GetRenderContext()) {
-        auto subThreadManager = RSSubThreadManager::Instance();
-        subThreadManager->Start(renderEngine_->GetRenderContext().get());
-    }
-#endif
     isUIFirst_ = RSMainThread::Instance()->IsUIFirstOn();
     isUIFirstDebugEnable_ = RSSystemProperties::GetUIFirstDebugEnabled();
     isPhone_ = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;

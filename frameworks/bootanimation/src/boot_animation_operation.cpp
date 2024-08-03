@@ -29,6 +29,7 @@ static const int DELAY_TIME_MS = 1000;
 
 BootAnimationOperation::~BootAnimationOperation()
 {
+    LOGI("Release RsNode");
     if (rsSurfaceNode_) {
         rsSurfaceNode_->DetachToDisplay(currentScreenId_);
     }
@@ -114,7 +115,7 @@ bool BootAnimationOperation::InitRsSurfaceNode(int32_t degree)
     struct Rosen::RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName =
         currentScreenId_ == 0 ? "BootAnimationNode" : "BootAnimationNodeExtra";
-    rsSurfaceNodeConfig.isSync = true;
+    rsSurfaceNodeConfig.isSync = false;
     Rosen::RSSurfaceNodeType rsSurfaceNodeType = Rosen::RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     rsSurfaceNode_ = Rosen::RSSurfaceNode::Create(rsSurfaceNodeConfig, rsSurfaceNodeType);
     if (!rsSurfaceNode_) {
@@ -231,10 +232,6 @@ bool BootAnimationOperation::IsBootVideoEnabled(const BootAnimationConfig& confi
     if (config.videoDefaultPath.empty() && !config.picZipPath.empty()) {
         LOGI("video path is empty and picture path is not empty");
         return false;
-    }
-
-    if (!IsFileExisted(config.videoDefaultPath)) {
-        LOGE("video file not found");
     }
     return true;
 }

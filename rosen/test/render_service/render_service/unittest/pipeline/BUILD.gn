@@ -26,7 +26,9 @@ group("unittest") {
     ":RSDividedRenderUtilTest",
     ":RSDropFrameProcessorTest",
     ":RSHardwareThreadTest",
-    ":RSMainThreadTest",
+    ":RSMainThreadIPCTest",
+    ":RSMainThreadPipelineTest",
+    ":RSMainThreadUtilTest",
     ":RSPhysicalScreenProcessorTest",
     ":RSProcessorFactoryTest",
     ":RSRealtimeRefreshRateManagerTest",
@@ -42,7 +44,9 @@ group("unittest") {
     ":RSUniRenderJudgementTest",
     ":RSUniRenderProcessorTest",
     ":RSUniRenderThreadTest",
-    ":RSUniRenderUtilTest",
+    ":RSUniRenderUtilBaseTest",
+    ":RSUniRenderUtilDirtyRegionTest",
+    ":RSUniRenderUtilSecUIExtensionTest",
     ":RSUniRenderVirtualProcessorTest",
     ":RSUniRenderVisitorTest",
     ":RSUniUiCaptureTest",
@@ -453,10 +457,10 @@ ohos_unittest("RSUniRenderComposerAdapterTest") {
   }
 }
 
-## Build RSUniRenderUtilTest
-ohos_unittest("RSUniRenderUtilTest") {
+## Build RSUniRenderUtilBaseTest
+ohos_unittest("RSUniRenderUtilBaseTest") {
   module_out_path = module_output_path
-  sources = [ "rs_uni_render_util_test.cpp" ]
+  sources = [ "rs_uni_render_util_base_test.cpp" ]
   deps = [ ":rs_test_common" ]
   external_deps = [
     "c_utils:utils",
@@ -476,6 +480,34 @@ ohos_unittest("RSUniRenderUtilTest") {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
     external_deps +=
         [ "drivers_interface_display:libdisplay_commontype_proxy_1.0" ]
+  }
+}
+
+## Build RSUniRenderUtilDirtyRegionTest
+ohos_unittest("RSUniRenderUtilDirtyRegionTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_uni_render_util_dirty_region_test.cpp" ]
+  deps = [ ":rs_test_common" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
+}
+
+## Build RSUniRenderUtilSecUIExtensionTest
+ohos_unittest("RSUniRenderUtilSecUIExtensionTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_uni_render_util_sec_uiextension_test.cpp" ]
+  deps = [ ":rs_test_common" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
   }
 }
 
@@ -574,10 +606,76 @@ ohos_unittest("RSHardwareThreadTest") {
   }
 }
 
-## Build RSMainThreadTest
-ohos_unittest("RSMainThreadTest") {
+## Build RSMainThreadIPCTest
+ohos_unittest("RSMainThreadIPCTest") {
   module_out_path = module_output_path
-  sources = [ "rs_main_thread_test.cpp" ]
+  sources = [ "rs_main_thread_ipc_test.cpp" ]
+  deps = [
+    ":rs_test_common",
+    "../../../../../modules/render_service_base/src/platform:platform",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
+  defines = []
+  defines += gpu_defines
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+  }
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+    external_deps += [ "accessibility:accessibilityconfig" ]
+    external_deps += [ "accessibility:accessibility_common" ]
+    defines += [ "ACCESSIBILITY_ENABLE" ]
+  }
+  if (defined(use_video_processing_engine) && use_video_processing_engine) {
+    include_dirs = []
+    defines += [ "USE_VIDEO_PROCESSING_ENGINE" ]
+    include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
+    external_deps +=
+        [ "drivers_interface_display:libdisplay_commontype_proxy_1.0" ]
+  }
+}
+
+## Build RSMainThreadPipelineTest
+ohos_unittest("RSMainThreadPipelineTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_main_thread_pipeline_test.cpp" ]
+  deps = [
+    ":rs_test_common",
+    "../../../../../modules/render_service_base/src/platform:platform",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
+  defines = []
+  defines += gpu_defines
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+  }
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+    external_deps += [ "accessibility:accessibilityconfig" ]
+    external_deps += [ "accessibility:accessibility_common" ]
+    defines += [ "ACCESSIBILITY_ENABLE" ]
+  }
+  if (defined(use_video_processing_engine) && use_video_processing_engine) {
+    include_dirs = []
+    defines += [ "USE_VIDEO_PROCESSING_ENGINE" ]
+    include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
+    external_deps +=
+        [ "drivers_interface_display:libdisplay_commontype_proxy_1.0" ]
+  }
+}
+
+## Build RSMainThreadUtilTest
+ohos_unittest("RSMainThreadUtilTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_main_thread_util_test.cpp" ]
   deps = [
     ":rs_test_common",
     "../../../../../modules/render_service_base/src/platform:platform",

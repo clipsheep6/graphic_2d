@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,7 @@ using namespace testing::ext;
 using namespace OHOS::Rosen::DrawableV2;
 
 namespace OHOS::Rosen {
-class RSUniRenderUtilTest : public testing::Test {
+class RSUniRenderUtilBaseTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -55,224 +55,13 @@ std::shared_ptr<Drawing::Image> CreateSkImage()
     return surface->GetImageSnapshot();
 }
 
-void RSUniRenderUtilTest::SetUpTestCase() {}
-void RSUniRenderUtilTest::TearDownTestCase() {}
-void RSUniRenderUtilTest::SetUp() {}
-void RSUniRenderUtilTest::TearDown() {}
-
-/*
- * @tc.name: MergeDirtyHistory
- * @tc.desc: default value
- * @tc.type: FUNC
- * @tc.require:
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeDirtyHistory, Function | SmallTest | Level2)
+void RSUniRenderUtilSecUIExtensionTest::SetUpTestCase()
 {
-    NodeId id = 0;
-    RSDisplayNodeConfig config;
-    auto node = std::make_shared<RSDisplayRenderNode>(id, config);
-    auto rsRenderNode = std::make_shared<RSRenderNode>(id);
-    node->renderDrawable_ = std::make_shared<DrawableV2::RSRenderNodeDrawable>(rsRenderNode);
-    node->renderDrawable_->renderParams_ = std::make_unique<RSRenderParams>(id);
-    int32_t bufferAge = 0;
-    RSUniRenderUtil::MergeDirtyHistory(node, bufferAge);
+    RSTestUtil::InitRenderNodeGC();
 }
-
-/*
- * @tc.name: MergeDirtyHistoryInVirtual001
- * @tc.desc: Verify function MergeDirtyHistoryInVirtual while displayNode has no param
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeDirtyHistoryInVirtual001, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    auto node = std::make_shared<RSRenderNode>(nodeId);
-    DrawableV2::RSDisplayRenderNodeDrawable drawable(node);
-    RSUniRenderUtil::MergeDirtyHistoryInVirtual(drawable, 0);
-    ASSERT_EQ(drawable.renderParams_, nullptr);
-}
-
-/*
- * @tc.name: MergeDirtyHistoryInVirtual002
- * @tc.desc: Verify function MergeDirtyHistoryInVirtual while drawable is App Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeDirtyHistoryInVirtual002, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    auto topNode = std::make_shared<RSRenderNode>(nodeId++);
-    DrawableV2::RSDisplayRenderNodeDrawable displayNodeDrawable(topNode);
-    auto displayNodeDrawableParam = std::make_unique<RSDisplayRenderParams>(displayNodeDrawable.nodeId_);
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId++);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto drawableParam = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    drawableParam->isMainWindowType_ = false;
-    drawableParam->isLeashWindow_ = false;
-    drawableParam->isAppWindow_ = true;
-    drawable->renderParams_ = std::move(drawableParam);
-    displayNodeDrawableParam->allMainAndLeashSurfaceDrawables_.push_back(nullptr);
-    displayNodeDrawableParam->allMainAndLeashSurfaceDrawables_.push_back(drawable);
-    displayNodeDrawable.renderParams_ = std::move(displayNodeDrawableParam);
-    RSUniRenderUtil::MergeDirtyHistoryInVirtual(displayNodeDrawable, 0);
-    ASSERT_NE(displayNodeDrawable.renderParams_, nullptr);
-}
-
-/*
- * @tc.name: MergeDirtyHistoryInVirtual003
- * @tc.desc: Verify function MergeDirtyHistoryInVirtual while drawable is not App Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeDirtyHistoryInVirtual003, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    auto topNode = std::make_shared<RSRenderNode>(nodeId++);
-    DrawableV2::RSDisplayRenderNodeDrawable displayNodeDrawable(topNode);
-    auto displayNodeDrawableParam = std::make_unique<RSDisplayRenderParams>(displayNodeDrawable.nodeId_);
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId++);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto drawableParam = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    drawableParam->isMainWindowType_ = false;
-    drawableParam->isLeashWindow_ = false;
-    drawableParam->isAppWindow_ = false;
-    drawable->renderParams_ = std::move(drawableParam);
-    displayNodeDrawableParam->allMainAndLeashSurfaceDrawables_.push_back(drawable);
-    displayNodeDrawable.renderParams_ = std::move(displayNodeDrawableParam);
-    RSUniRenderUtil::MergeDirtyHistoryInVirtual(displayNodeDrawable, 0);
-    ASSERT_NE(displayNodeDrawable.renderParams_, nullptr);
-}
-
-/*
- * @tc.name: MergeVisibleDirtyRegionInVirtualTest001
- * @tc.desc: Verify function MergeVisibleDirtyRegionInVirtual while drawable is not App Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionInVirtualTest001, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto param = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    param->isMainWindowType_ = false;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = true;
-    drawable->renderParams_ = std::move(param);
-    allSurfaceNodeDrawables.push_back(nullptr);
-    allSurfaceNodeDrawables.push_back(drawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    ASSERT_NE(drawable->renderParams_, nullptr);
-}
-
-/*
- * @tc.name: MergeVisibleDirtyRegionInVirtualTest002
- * @tc.desc: Verify function MergeVisibleDirtyRegionInVirtual while drawable is not App Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionInVirtualTest002, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto param = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    param->isMainWindowType_ = false;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = false;
-    drawable->renderParams_ = std::move(param);
-    allSurfaceNodeDrawables.push_back(drawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    ASSERT_NE(drawable->renderParams_, nullptr);
-}
-
-/*
- * @tc.name: MergeVisibleDirtyRegionInVirtualTest003
- * @tc.desc: Verify function MergeVisibleDirtyRegionInVirtual while drawable has no param
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionInVirtualTest003, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    allSurfaceNodeDrawables.push_back(drawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    RSUniRenderUtil::MergeVisibleDirtyRegionInVirtual(allSurfaceNodeDrawables);
-    ASSERT_EQ(drawable->renderParams_, nullptr);
-}
-
-/*
- * @tc.name: SetAllSurfaceDrawableGlobalDityRegionTest001
- * @tc.desc: Verify function SetAllSurfaceDrawableGlobalDityRegion while drawable is not Main Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, SetAllSurfaceDrawableGlobalDityRegionTest001, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceDrawables;
-    RectI globalDirtyRegion;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto param = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    param->isMainWindowType_ = false;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = false;
-    drawable->renderParams_ = std::move(param);
-    allSurfaceDrawables.push_back(drawable);
-    RSUniRenderUtil::SetAllSurfaceDrawableGlobalDityRegion(allSurfaceDrawables, globalDirtyRegion);
-    ASSERT_NE(drawable->renderParams_, nullptr);
-}
-
-/*
- * @tc.name: SetAllSurfaceDrawableGlobalDityRegionTest002
- * @tc.desc: Verify function SetAllSurfaceDrawableGlobalDityRegion while drawable is Main Window
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, SetAllSurfaceDrawableGlobalDityRegionTest002, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceDrawables;
-    RectI globalDirtyRegion;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    auto param = std::make_unique<RSSurfaceRenderParams>(drawable->nodeId_);
-    param->isMainWindowType_ = true;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = false;
-    drawable->renderParams_ = std::move(param);
-    allSurfaceDrawables.push_back(nullptr);
-    allSurfaceDrawables.push_back(drawable);
-    RSUniRenderUtil::SetAllSurfaceDrawableGlobalDityRegion(allSurfaceDrawables, globalDirtyRegion);
-    ASSERT_NE(drawable->renderParams_, nullptr);
-}
-
-/*
- * @tc.name: SetAllSurfaceDrawableGlobalDityRegionTest003
- * @tc.desc: Verify function SetAllSurfaceDrawableGlobalDityRegion while drawable has no param
- * @tc.type: FUNC
- * @tc.require: issueIAE6P0
-*/
-HWTEST_F(RSUniRenderUtilTest, SetAllSurfaceDrawableGlobalDityRegionTest003, Function | SmallTest | Level2)
-{
-    NodeId nodeId = 1;
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceDrawables;
-    RectI globalDirtyRegion;
-    auto node = std::make_shared<RSSurfaceRenderNode>(nodeId);
-    auto drawable = std::make_shared<DrawableV2::RSSurfaceRenderNodeDrawable>(node);
-    allSurfaceDrawables.push_back(drawable);
-    RSUniRenderUtil::SetAllSurfaceDrawableGlobalDityRegion(allSurfaceDrawables, globalDirtyRegion);
-    ASSERT_EQ(drawable->renderParams_, nullptr);
-}
+void RSUniRenderUtilBaseTest::TearDownTestCase() {}
+void RSUniRenderUtilBaseTest::SetUp() {}
+void RSUniRenderUtilBaseTest::TearDown() {}
 
 /*
  * @tc.name: SrcRectScaleDown_001
@@ -280,7 +69,7 @@ HWTEST_F(RSUniRenderUtilTest, SetAllSurfaceDrawableGlobalDityRegionTest003, Func
  * @tc.type: FUNC
  * @tc.require:
 */
-HWTEST_F(RSUniRenderUtilTest, SrcRectScaleDown_001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, SrcRectScaleDown_001, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -297,7 +86,7 @@ HWTEST_F(RSUniRenderUtilTest, SrcRectScaleDown_001, Function | SmallTest | Level
  * @tc.type: FUNC
  * @tc.require:
 */
-HWTEST_F(RSUniRenderUtilTest, SrcRectScaleDown_002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, SrcRectScaleDown_002, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -314,7 +103,7 @@ HWTEST_F(RSUniRenderUtilTest, SrcRectScaleDown_002, Function | SmallTest | Level
  * @tc.type: FUNC
  * @tc.require:
 */
-HWTEST_F(RSUniRenderUtilTest, SrcRectScaleFit_001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, SrcRectScaleFit_001, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -331,7 +120,7 @@ HWTEST_F(RSUniRenderUtilTest, SrcRectScaleFit_001, Function | SmallTest | Level2
  * @tc.type: FUNC
  * @tc.require:
 */
-HWTEST_F(RSUniRenderUtilTest, SrcRectScaleFit_002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, SrcRectScaleFit_002, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -348,7 +137,7 @@ HWTEST_F(RSUniRenderUtilTest, SrcRectScaleFit_002, Function | SmallTest | Level2
  * @tc.type: FUNC
  * @tc.require: #I9E60C
  */
-HWTEST_F(RSUniRenderUtilTest, GetMatrixOfBufferToRelRect_001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, GetMatrixOfBufferToRelRect_001, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -362,7 +151,7 @@ HWTEST_F(RSUniRenderUtilTest, GetMatrixOfBufferToRelRect_001, Function | SmallTe
  * @tc.type: FUNC
  * @tc.require: #I9E60C
  */
-HWTEST_F(RSUniRenderUtilTest, GetMatrixOfBufferToRelRect_002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, GetMatrixOfBufferToRelRect_002, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -371,31 +160,12 @@ HWTEST_F(RSUniRenderUtilTest, GetMatrixOfBufferToRelRect_002, Function | SmallTe
 }
 
 /*
- * @tc.name: CreateBufferDrawParam_002
- * @tc.desc:
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RSUniRenderUtilTest, CreateBufferDrawParam_002, Function | SmallTest | Level2)
-{
-    NodeId id = 0;
-    bool forceCPU = false;
-    RSDisplayNodeConfig config;
-    RSDisplayRenderNode node(id, config);
-    auto displayDrawable =
-        std::static_pointer_cast<DrawableV2::RSDisplayRenderNodeDrawable>(node.GetRenderDrawable());
-    auto surfaceHandler = displayDrawable->GetRSSurfaceHandlerOnDraw();
-    surfaceHandler->buffer_.buffer = OHOS::SurfaceBuffer::Create();
-    EXPECT_TRUE(RSUniRenderUtil::CreateBufferDrawParam(node, forceCPU).buffer);
-}
-
-/*
  * @tc.name: CreateLayerBufferDrawParam_001
  * @tc.desc:
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, CreateLayerBufferDrawParam_001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, CreateLayerBufferDrawParam_001, Function | SmallTest | Level2)
 {
     bool forceCPU = false;
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
@@ -408,7 +178,7 @@ HWTEST_F(RSUniRenderUtilTest, CreateLayerBufferDrawParam_001, Function | SmallTe
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, CreateLayerBufferDrawParam_002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, CreateLayerBufferDrawParam_002, Function | SmallTest | Level2)
 {
     bool forceCPU = false;
     auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
@@ -420,46 +190,12 @@ HWTEST_F(RSUniRenderUtilTest, CreateLayerBufferDrawParam_002, Function | SmallTe
 }
 
 /*
- * @tc.name: AlignedDirtyRegion_001
- * @tc.desc:
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RSUniRenderUtilTest, AlignedDirtyRegion_001, Function | SmallTest | Level2)
-{
-    Occlusion::Region dirtyRegion;
-    int32_t alignedBits = 0;
-    Occlusion::Region alignedRegion = RSUniRenderUtil::AlignedDirtyRegion(dirtyRegion, alignedBits);
-    ASSERT_EQ(dirtyRegion.GetSize(), alignedRegion.GetSize());
-    for (size_t i = 0; i < dirtyRegion.GetSize(); i++) {
-        ASSERT_TRUE(dirtyRegion.GetRegionRects()[i] == alignedRegion.GetRegionRects()[i]);
-    }
-}
-
-/*
- * @tc.name: AlignedDirtyRegion_002
- * @tc.desc:
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RSUniRenderUtilTest, AlignedDirtyRegion_002, Function | SmallTest | Level2)
-{
-    Occlusion::Region dirtyRegion;
-    int32_t alignedBits = 2;
-    Occlusion::Region alignedRegion = RSUniRenderUtil::AlignedDirtyRegion(dirtyRegion, alignedBits);
-    ASSERT_EQ(dirtyRegion.GetSize(), alignedRegion.GetSize());
-    for (size_t i = 0; i < dirtyRegion.GetSize(); i++) {
-        ASSERT_TRUE(dirtyRegion.GetRegionRects()[i] != alignedRegion.GetRegionRects()[i]);
-    }
-}
-
-/*
  * @tc.name: GetRotationFromMatrix
  * @tc.desc:
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, GetRotationFromMatrix, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, GetRotationFromMatrix, Function | SmallTest | Level2)
 {
     int angle;
     Drawing::Matrix matrix = Drawing::Matrix();
@@ -474,7 +210,7 @@ HWTEST_F(RSUniRenderUtilTest, GetRotationFromMatrix, Function | SmallTest | Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, GetRotationDegreeFromMatrix, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, GetRotationDegreeFromMatrix, Function | SmallTest | Level2)
 {
     int angle;
     Drawing::Matrix matrix = Drawing::Matrix();
@@ -489,7 +225,7 @@ HWTEST_F(RSUniRenderUtilTest, GetRotationDegreeFromMatrix, Function | SmallTest 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, Is3DRotation_001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, Is3DRotation_001, Function | SmallTest | Level2)
 {
     bool is3DRotation;
     Drawing::Matrix matrix = Drawing::Matrix();
@@ -504,7 +240,7 @@ HWTEST_F(RSUniRenderUtilTest, Is3DRotation_001, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, Is3DRotation_002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, Is3DRotation_002, Function | SmallTest | Level2)
 {
     bool is3DRotation;
     Drawing::Matrix matrix = Drawing::Matrix();
@@ -519,7 +255,7 @@ HWTEST_F(RSUniRenderUtilTest, Is3DRotation_002, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, AssignWindowNodes, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, AssignWindowNodes, Function | SmallTest | Level2)
 {
     std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
@@ -536,7 +272,7 @@ HWTEST_F(RSUniRenderUtilTest, AssignWindowNodes, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, ClearSurfaceIfNeed, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, ClearSurfaceIfNeed, Function | SmallTest | Level2)
 {
     RSRenderNodeMap map;
     std::set<std::shared_ptr<RSBaseRenderNode>> oldChildren;
@@ -553,7 +289,7 @@ HWTEST_F(RSUniRenderUtilTest, ClearSurfaceIfNeed, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, ClearCacheSurface, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, ClearCacheSurface, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
     RSSurfaceRenderNode& node = static_cast<RSSurfaceRenderNode&>(*(rsSurfaceRenderNode.get()));
@@ -567,7 +303,7 @@ HWTEST_F(RSUniRenderUtilTest, ClearCacheSurface, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, ClearNodeCacheSurface, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, ClearNodeCacheSurface, Function | SmallTest | Level2)
 {
     uint32_t threadIndex = 1;
     RSUniRenderUtil::ClearNodeCacheSurface(nullptr, nullptr, threadIndex, 0);
@@ -590,7 +326,7 @@ HWTEST_F(RSUniRenderUtilTest, ClearNodeCacheSurface, Function | SmallTest | Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RSUniRenderUtilTest, HandleCaptureNode, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, HandleCaptureNode, Function | SmallTest | Level2)
 {
     Drawing::Canvas drawingCanvas;
     RSPaintFilterCanvas canvas(&drawingCanvas);
@@ -601,11 +337,11 @@ HWTEST_F(RSUniRenderUtilTest, HandleCaptureNode, Function | SmallTest | Level2)
 
 /*
  * @tc.name: AssignMainThreadNode
- * @tc.desc:Test RSUniRenderUtilTest.AssignMainThreadNode
+ * @tc.desc:Test RSUniRenderUtilBaseTest.AssignMainThreadNode
  * @tc.type: FUNC
  * @tc.require:issueI7KK3I
  */
-HWTEST_F(RSUniRenderUtilTest, AssignMainThreadNode, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, AssignMainThreadNode, Function | SmallTest | Level2)
 {
     std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
     RSUniRenderUtil::AssignMainThreadNode(mainThreadNodes, nullptr);
@@ -617,11 +353,11 @@ HWTEST_F(RSUniRenderUtilTest, AssignMainThreadNode, Function | SmallTest | Level
 
 /*
  * @tc.name: AssignSubThreadNode
- * @tc.desc:Test RSUniRenderUtilTest.AssignSubThreadNode
+ * @tc.desc:Test RSUniRenderUtilBaseTest.AssignSubThreadNode
  * @tc.type: FUNC
  * @tc.require:issueI7KK3I
  */
-HWTEST_F(RSUniRenderUtilTest, AssignSubThreadNode, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, AssignSubThreadNode, Function | SmallTest | Level2)
 {
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
     RSUniRenderUtil::AssignSubThreadNode(subThreadNodes, nullptr);
@@ -637,7 +373,7 @@ HWTEST_F(RSUniRenderUtilTest, AssignSubThreadNode, Function | SmallTest | Level2
  * @tc.type: FUNC
  * @tc.require: issueI904G4
  */
-HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread001, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNodeAssignSubThread001, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSDisplayNodeConfig config;
@@ -660,7 +396,7 @@ HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread001, Function | SmallTest | L
  * @tc.type: FUNC
  * @tc.require: issueI904G4
  */
-HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread002, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNodeAssignSubThread002, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSDisplayNodeConfig config;
@@ -685,7 +421,7 @@ HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread002, Function | SmallTest | L
  * @tc.type: FUNC
  * @tc.require: issueI904G4
  */
-HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread003, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNodeAssignSubThread003, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSDisplayNodeConfig config;
@@ -711,7 +447,7 @@ HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread003, Function | SmallTest | L
  * @tc.type: FUNC
  * @tc.require: issueI98VTC
  */
-HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread004, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNodeAssignSubThread004, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSDisplayNodeConfig config;
@@ -736,7 +472,7 @@ HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread004, Function | SmallTest | L
  * @tc.type: FUNC
  * @tc.require: issueI98VTC
  */
-HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread005, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNodeAssignSubThread005, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSDisplayNodeConfig config;
@@ -751,141 +487,12 @@ HWTEST_F(RSUniRenderUtilTest, IsNodeAssignSubThread005, Function | SmallTest | L
 }
 
 /**
- * @tc.name: MergeVisibleDirtyRegionTest
- * @tc.desc: Verify function MergeVisibleDirtyRegion
- * @tc.type:FUNC
- * @tc.require:issuesI9KRF1
- */
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionTest, Function | SmallTest | Level2)
-{
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceDrawawble;
-    std::vector<NodeId> hasVisibleDirtyRegionSurfaceVec;
-    NodeId id = 1;
-    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(id);
-    auto drawable = RSSurfaceRenderNodeDrawable::OnGenerate(surfaceNode);
-    ASSERT_NE(drawable, nullptr);
-    drawable->renderParams_ = std::make_unique<RSSurfaceRenderParams>(id);
-    auto surfaceDrawable =
-        std::shared_ptr<RSSurfaceRenderNodeDrawable>(static_cast<RSSurfaceRenderNodeDrawable*>(drawable));
-    ASSERT_NE(surfaceDrawable, nullptr);
-    surfaceDrawable->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
-
-    allSurfaceDrawawble.emplace_back(nullptr);
-    allSurfaceDrawawble.emplace_back(surfaceDrawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceDrawawble, hasVisibleDirtyRegionSurfaceVec, false);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceDrawawble, hasVisibleDirtyRegionSurfaceVec, true);
-    EXPECT_TRUE(surfaceDrawable->renderParams_);
-}
-
-/**
- * @tc.name: MergeVisibleDirtyRegionTest001
- * @tc.desc: Verify function MergeVisibleDirtyRegion while node is App Window
- * @tc.type:FUNC
- * @tc.require:issuesI9KRF1
- */
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionTest001, Function | SmallTest | Level2)
-{
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    std::vector<NodeId> hasVisibleDirtyRegionSurfaceVec;
-
-    NodeId id = 1;
-    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(id);
-    auto drawable = RSSurfaceRenderNodeDrawable::OnGenerate(surfaceNode);
-    ASSERT_NE(drawable, nullptr);
-    auto param = std::make_unique<RSSurfaceRenderParams>(id);
-    ASSERT_NE(param, nullptr);
-    param->isMainWindowType_ = false;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = true;
-    drawable->renderParams_ = std::move(param);
-
-    auto surfaceDrawable =
-        std::shared_ptr<RSSurfaceRenderNodeDrawable>(static_cast<RSSurfaceRenderNodeDrawable*>(drawable));
-    ASSERT_NE(surfaceDrawable, nullptr);
-    surfaceDrawable->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
-    allSurfaceNodeDrawables.push_back(nullptr);
-    allSurfaceNodeDrawables.push_back(surfaceDrawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, false);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, true);
-    ASSERT_TRUE(drawable->renderParams_);
-}
-
-/**
- * @tc.name: MergeVisibleDirtyRegionTest002
- * @tc.desc: Verify function MergeVisibleDirtyRegion while node has no param
- * @tc.type:FUNC
- * @tc.require:issuesI9KRF1
- */
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionTest002, Function | SmallTest | Level2)
-{
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    std::vector<NodeId> hasVisibleDirtyRegionSurfaceVec;
-    NodeId id = 1;
-    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(id);
-    auto drawable = RSSurfaceRenderNodeDrawable::OnGenerate(surfaceNode);
-    ASSERT_NE(drawable, nullptr);
-    auto surfaceDrawable =
-        std::shared_ptr<RSSurfaceRenderNodeDrawable>(static_cast<RSSurfaceRenderNodeDrawable*>(drawable));
-    ASSERT_NE(surfaceDrawable, nullptr);
-    surfaceDrawable->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
-    allSurfaceNodeDrawables.push_back(surfaceDrawable);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, false);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, true);
-    ASSERT_FALSE(drawable->renderParams_);
-}
-
-/**
- * @tc.name: MergeVisibleDirtyRegionTest003
- * @tc.desc: Verify function MergeVisibleDirtyRegion while node is not App Window
- * @tc.type:FUNC
- * @tc.require:issuesI9KRF1
- */
-HWTEST_F(RSUniRenderUtilTest, MergeVisibleDirtyRegionTest003, Function | SmallTest | Level2)
-{
-    std::vector<DrawableV2::RSRenderNodeDrawableAdapter::SharedPtr> allSurfaceNodeDrawables;
-    std::vector<NodeId> hasVisibleDirtyRegionSurfaceVec;
-    NodeId id = 1;
-    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(id);
-    auto drawable = RSSurfaceRenderNodeDrawable::OnGenerate(surfaceNode);
-    ASSERT_NE(drawable, nullptr);
-    auto param = std::make_unique<RSSurfaceRenderParams>(id);
-    ASSERT_NE(param, nullptr);
-    param->isMainWindowType_ = false;
-    param->isLeashWindow_ = false;
-    param->isAppWindow_ = false;
-    drawable->renderParams_ = std::move(param);
-
-    auto surfaceDrawable =
-        std::shared_ptr<RSSurfaceRenderNodeDrawable>(static_cast<RSSurfaceRenderNodeDrawable*>(drawable));
-    ASSERT_NE(surfaceDrawable, nullptr);
-    surfaceDrawable->syncDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
-    allSurfaceNodeDrawables.push_back(surfaceDrawable);
-
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, false);
-    RSUniRenderUtil::MergeVisibleDirtyRegion(allSurfaceNodeDrawables, hasVisibleDirtyRegionSurfaceVec, true);
-    ASSERT_TRUE(drawable->renderParams_);
-}
-
-/**
- * @tc.name: ScreenIntersectDirtyRectsTest
- * @tc.desc: Verify function ScreenIntersectDirtyRects
- * @tc.type:FUNC
- * @tc.require:issuesI9KRF1
- */
-HWTEST_F(RSUniRenderUtilTest, ScreenIntersectDirtyRectsTest, Function | SmallTest | Level2)
-{
-    Occlusion::Region region;
-    ScreenInfo screenInfo;
-    EXPECT_TRUE(RSUniRenderUtil::ScreenIntersectDirtyRects(region, screenInfo).empty());
-}
-
-/**
  * @tc.name: IsNeedClientsTest
  * @tc.desc: Verify function IsNeedClient
  * @tc.type:FUNC
  * @tc.require:issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, IsNeedClientsTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, IsNeedClientsTest, Function | SmallTest | Level2)
 {
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(rsSurfaceRenderNode, nullptr);
@@ -900,7 +507,7 @@ HWTEST_F(RSUniRenderUtilTest, IsNeedClientsTest, Function | SmallTest | Level2)
  * @tc.type:FUNC
  * @tc.require:issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, ReleaseColorPickerResourceTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, ReleaseColorPickerResourceTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     std::shared_ptr<RSRenderNode> node = nullptr;
@@ -917,7 +524,7 @@ HWTEST_F(RSUniRenderUtilTest, ReleaseColorPickerResourceTest, Function | SmallTe
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, DrawRectForDfxTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, DrawRectForDfxTest, Function | SmallTest | Level2)
 {
     Drawing::Canvas canvas;
     RSPaintFilterCanvas filterCanvas(&canvas);
@@ -940,7 +547,7 @@ HWTEST_F(RSUniRenderUtilTest, DrawRectForDfxTest, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, DealWithNodeGravityTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, DealWithNodeGravityTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -968,7 +575,7 @@ HWTEST_F(RSUniRenderUtilTest, DealWithNodeGravityTest, Function | SmallTest | Le
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, LayerRotateTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerRotateTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -993,7 +600,7 @@ HWTEST_F(RSUniRenderUtilTest, LayerRotateTest, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, LayerCropTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerCropTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -1012,7 +619,7 @@ HWTEST_F(RSUniRenderUtilTest, LayerCropTest, Function | SmallTest | Level2)
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, GetLayerTransformTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, GetLayerTransformTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -1030,7 +637,7 @@ HWTEST_F(RSUniRenderUtilTest, GetLayerTransformTest, Function | SmallTest | Leve
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, SrcRectRotateTransformTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, SrcRectRotateTransformTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -1047,7 +654,7 @@ HWTEST_F(RSUniRenderUtilTest, SrcRectRotateTransformTest, Function | SmallTest |
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, HandleHardwareNodeTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, HandleHardwareNodeTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     auto node = std::make_shared<RSSurfaceRenderNode>(id);
@@ -1066,7 +673,7 @@ HWTEST_F(RSUniRenderUtilTest, HandleHardwareNodeTest, Function | SmallTest | Lev
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, UpdateRealSrcRectTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, UpdateRealSrcRectTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -1086,7 +693,7 @@ HWTEST_F(RSUniRenderUtilTest, UpdateRealSrcRectTest, Function | SmallTest | Leve
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, CheckForceHardwareAndUpdateDstRectTest, Function | SmallTest | Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, CheckForceHardwareAndUpdateDstRectTest, Function | SmallTest | Level2)
 {
     NodeId id = 0;
     RSSurfaceRenderNode node(id);
@@ -1103,7 +710,7 @@ HWTEST_F(RSUniRenderUtilTest, CheckForceHardwareAndUpdateDstRectTest, Function |
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, SortSubThreadNodesTest, TestSize.Level1)
+HWTEST_F(RSUniRenderUtilBaseTest, SortSubThreadNodesTest, TestSize.Level1)
 {
     RSUniRenderUtil rsUniRenderUtil;
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
@@ -1146,7 +753,7 @@ HWTEST_F(RSUniRenderUtilTest, SortSubThreadNodesTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, CacheSubThreadNodesTest, TestSize.Level1)
+HWTEST_F(RSUniRenderUtilBaseTest, CacheSubThreadNodesTest, TestSize.Level1)
 {
     RSUniRenderUtil rsUniRenderUtil;
 
@@ -1179,7 +786,7 @@ HWTEST_F(RSUniRenderUtilTest, CacheSubThreadNodesTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issuesI9KRF1
  */
-HWTEST_F(RSUniRenderUtilTest, LayerScaleDownTest, TestSize.Level1)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerScaleDownTest, TestSize.Level1)
 {
     RSUniRenderUtil rsUniRenderUtil;
     RSSurfaceRenderNode nodesTest1(0);
@@ -1198,7 +805,7 @@ HWTEST_F(RSUniRenderUtilTest, LayerScaleDownTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: issueI9SDDH
  */
-HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest01, TestSize.Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerScaleFitTest01, TestSize.Level2)
 {
     RSUniRenderUtil rsUniRenderUtil;
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
@@ -1225,7 +832,7 @@ HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest01, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require: issueI9SDDH
  */
-HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest02, TestSize.Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerScaleFitTest02, TestSize.Level2)
 {
     RSUniRenderUtil rsUniRenderUtil;
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
@@ -1252,7 +859,7 @@ HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest02, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require: issueI9SDDH
  */
-HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest03, TestSize.Level2)
+HWTEST_F(RSUniRenderUtilBaseTest, LayerScaleFitTest03, TestSize.Level2)
 {
     RSUniRenderUtil rsUniRenderUtil;
     auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
@@ -1271,128 +878,5 @@ HWTEST_F(RSUniRenderUtilTest, LayerScaleFitTest03, TestSize.Level2)
     rsUniRenderUtil.LayerScaleFit(node);
     ASSERT_EQ(node.GetDstRect().width_, retWidth);
     ASSERT_EQ(node.GetDstRect().height_, retHeight);
-}
-
-/*
- * @tc.name: UIExtensionFindAndTraverseAncestor_001
- * @tc.desc: test when node map is empty or host node is not surface node, expect empty callback data
- * @tc.type: FUNC
- * @tc.require: issueI9SDDH
- */
-HWTEST_F(RSUniRenderUtilTest, UIExtensionFindAndTraverseAncestor_001, TestSize.Level2)
-{
-    RSRenderNodeMap nodeMap;
-    UIExtensionCallbackData callbackData;
-    NodeId uiExtensionNodeId = 0;
-    NodeId hostNodeId = 1;
-    RSSurfaceRenderNode::secUIExtensionNodes_.insert(std::pair<NodeId, NodeId>(uiExtensionNodeId, hostNodeId));
-    // empty nodeMap
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_TRUE(callbackData.empty());
-    // hostnode is not surface node
-    auto canvasNode = std::make_shared<RSRenderNode>(hostNodeId);
-    nodeMap.renderNodeMap_.insert(std::pair(hostNodeId, canvasNode));
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_TRUE(callbackData.empty());
-}
-
-/*
- * @tc.name: UIExtensionFindAndTraverseAncestor_002
- * @tc.desc: test when host node is surface node and one uiextension child, callback data is not empty
- * @tc.type: FUNC
- * @tc.require: issueI9SDDH
- */
-HWTEST_F(RSUniRenderUtilTest, UIExtensionFindAndTraverseAncestor_002, TestSize.Level2)
-{
-    RSRenderNodeMap nodeMap;
-    UIExtensionCallbackData callbackData;
-    NodeId uiExtensionNodeId = 0;
-    NodeId hostNodeId = 1;
-    // hostnode is surface node
-    auto hostNode = std::make_shared<RSSurfaceRenderNode>(hostNodeId);
-    auto uiExtensionNode = std::make_shared<RSSurfaceRenderNode>(uiExtensionNodeId);
-    uiExtensionNode->SetSurfaceNodeType(RSSurfaceNodeType::UI_EXTENSION_NODE);
-    hostNode->AddChild(uiExtensionNode);
-    hostNode->GenerateFullChildrenList();
-    uiExtensionNode->SetIsOnTheTree(true, hostNodeId, INVALID_NODEID, INVALID_NODEID);
-    nodeMap.renderNodeMap_.insert(std::pair(hostNodeId, hostNode));
-
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_FALSE(callbackData.empty());
-}
-
-/*
- * @tc.name: TraverseAndCollectUIExtensionInfo_001
- * @tc.desc: test when host node is nullptr, callback data is empty
- * @tc.type: FUNC
- * @tc.require: issueI9SDDH
- */
-HWTEST_F(RSUniRenderUtilTest, TraverseAndCollectUIExtensionInfo_001, TestSize.Level2)
-{
-    RSRenderNodeMap nodeMap;
-    UIExtensionCallbackData callbackData;
-    NodeId hostNodeId = 0;
-    // hostnode is surface node
-    auto hostNode = std::make_shared<RSSurfaceRenderNode>(hostNodeId);
-    hostNode->AddChild(nullptr);
-    hostNode->GenerateFullChildrenList();
-    nodeMap.renderNodeMap_.insert(std::pair(hostNodeId, hostNode));
-
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_TRUE(callbackData.empty());
-}
-
-/*
- * @tc.name: TraverseAndCollectUIExtensionInfo_002
- * @tc.desc: test when the node does not need to be collected, callback data is empty
- * @tc.type: FUNC
- * @tc.require: issueI9SDDH
- */
-HWTEST_F(RSUniRenderUtilTest, TraverseAndCollectUIExtensionInfo_002, TestSize.Level2)
-{
-    RSRenderNodeMap nodeMap;
-    UIExtensionCallbackData callbackData;
-    NodeId hostNodeId = 0;
-    NodeId childNodeId = 1;
-    // hostnode is surface node
-    auto hostNode = std::make_shared<RSSurfaceRenderNode>(hostNodeId);
-    auto childNode = std::make_shared<RSRenderNode>(childNodeId);
-    hostNode->AddChild(childNode);
-    hostNode->GenerateFullChildrenList();
-    nodeMap.renderNodeMap_.insert(std::pair(hostNodeId, hostNode));
-
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_TRUE(callbackData.empty());
-}
-
-/*
- * @tc.name: TraverseAndCollectUIExtensionInfo_003
- * @tc.desc: test when the node collected after UIExtension, callback data is not empty
- * @tc.type: FUNC
- * @tc.require: issueI9SDDH
- */
-HWTEST_F(RSUniRenderUtilTest, TraverseAndCollectUIExtensionInfo_003, TestSize.Level2)
-{
-    RSRenderNodeMap nodeMap;
-    UIExtensionCallbackData callbackData;
-    NodeId uiExtensionNodeId = 0;
-    NodeId hostNodeId = 1;
-    // hostnode is surface node
-    auto hostNode = std::make_shared<RSSurfaceRenderNode>(hostNodeId);
-    auto uiExtensionNode = std::make_shared<RSSurfaceRenderNode>(uiExtensionNodeId);
-    uiExtensionNode->SetSurfaceNodeType(RSSurfaceNodeType::UI_EXTENSION_NODE);
-    hostNode->AddChild(uiExtensionNode);
-    NodeId canvasNodeId = 2;
-    auto upperNode = std::make_shared<RSRenderNode>(canvasNodeId);
-    hostNode->AddChild(upperNode);
-
-    hostNode->GenerateFullChildrenList();
-    uiExtensionNode->SetIsOnTheTree(true, hostNodeId, INVALID_NODEID, INVALID_NODEID);
-    nodeMap.renderNodeMap_.insert(std::pair(hostNodeId, hostNode));
-
-    RSUniRenderUtil::UIExtensionFindAndTraverseAncestor(nodeMap, callbackData);
-    ASSERT_FALSE(callbackData.empty());
-    ASSERT_FALSE(callbackData[hostNodeId].empty());
-    ASSERT_FALSE(callbackData[hostNodeId][0].upperNodes.empty());
 }
 } // namespace OHOS::Rosen

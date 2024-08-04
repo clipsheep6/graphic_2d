@@ -16,29 +16,491 @@ import("//foundation/graphic/graphic_2d/ace_platforms.gni")
 
 module_output_path = "graphic/rosen_engine/render_service_client/ui"
 
-##############################  RSRenderServiceClientTest  ##################################
-ohos_unittest("RSRenderServiceClientUITest") {
+##############################  RSRenderServiceClientUITest1  ##################################
+ohos_unittest("RSRenderServiceClientUITest1") {
   module_out_path = module_output_path
 
-  sources = [
-    "rs_canvas_drawing_node_test.cpp",
-    "rs_canvas_node_test.cpp",
-    "rs_display_node_test.cpp",
-    "rs_effect_node_test.cpp",
-    "rs_ext_node_operation_test.cpp",
-    "rs_frame_rate_linker_test.cpp",
-    "rs_frame_rate_policy_test.cpp",
-    "rs_hdr_manager_test.cpp",
-    "rs_node_test.cpp",
-    "rs_proxy_node_test.cpp",
-    "rs_root_node_test.cpp",
-    "rs_surface_extractor_test.cpp",
-    "rs_surface_node_test.cpp",
-    "rs_texture_export_test.cpp",
-    "rs_ui_director_test.cpp",
-    "rs_ui_display_soloist_test.cpp",
-    "rs_ui_share_context_test.cpp",
+  sources = [ "rs_canvas_drawing_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
   ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest2  ##################################
+ohos_unittest("RSRenderServiceClientUITest2") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_canvas_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest3  ##################################
+ohos_unittest("RSRenderServiceClientUITest3") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_display_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest4  ##################################
+ohos_unittest("RSRenderServiceClientUITest4") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_effect_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest5  ##################################
+ohos_unittest("RSRenderServiceClientUITest5") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_ext_node_operation_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest6  ##################################
+ohos_unittest("RSRenderServiceClientUITest6") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_frame_rate_linker_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest7  ##################################
+ohos_unittest("RSRenderServiceClientUITest7") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_frame_rate_policy_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest8  ##################################
+ohos_unittest("RSRenderServiceClientUITest8") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_hdr_manager_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest9  ##################################
+ohos_unittest("RSRenderServiceClientUITest9") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest10  ##################################
+ohos_unittest("RSRenderServiceClientUITest10") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_proxy_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest11  ##################################
+ohos_unittest("RSRenderServiceClientUITest11") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_root_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest12  ##################################
+ohos_unittest("RSRenderServiceClientUITest12") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_surface_extractor_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest13  ##################################
+ohos_unittest("RSRenderServiceClientUITest13") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_surface_node_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest14  ##################################
+ohos_unittest("RSRenderServiceClientUITest14") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_texture_export_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest15  ##################################
+ohos_unittest("RSRenderServiceClientUITest15") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_ui_director_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest16  ##################################
+ohos_unittest("RSRenderServiceClientUITest16") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_ui_display_soloist_test.cpp" ]
+
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
+
+  configs = [
+    ":ui_test",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  subsystem_name = "graphic"
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+##############################  RSRenderServiceClientUITest17  ##################################
+ohos_unittest("RSRenderServiceClientUITest17") {
+  module_out_path = module_output_path
+
+  sources = [ "rs_ui_share_context_test.cpp" ]
 
   include_dirs = [ "//foundation/graphic/graphic_2d/rosen/test/include" ]
 
@@ -76,5 +538,23 @@ config("ui_test") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":RSRenderServiceClientUITest" ]
+  deps = [
+    ":RSRenderServiceClientUITest1",
+    ":RSRenderServiceClientUITest10",
+    ":RSRenderServiceClientUITest11",
+    ":RSRenderServiceClientUITest12",
+    ":RSRenderServiceClientUITest13",
+    ":RSRenderServiceClientUITest14",
+    ":RSRenderServiceClientUITest15",
+    ":RSRenderServiceClientUITest16",
+    ":RSRenderServiceClientUITest17",
+    ":RSRenderServiceClientUITest2",
+    ":RSRenderServiceClientUITest3",
+    ":RSRenderServiceClientUITest4",
+    ":RSRenderServiceClientUITest5",
+    ":RSRenderServiceClientUITest6",
+    ":RSRenderServiceClientUITest7",
+    ":RSRenderServiceClientUITest8",
+    ":RSRenderServiceClientUITest9",
+  ]
 }

@@ -926,14 +926,9 @@ Rect RSBaseRenderUtil::MergeBufferDamages(const std::vector<Rect>& damages)
     return {damage.left_, damage.top_, damage.width_, damage.height_};
 }
 
-bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
-    RSSurfaceHandler& surfaceHandler, bool isDisplaySurface, uint64_t vsyncTimestamp)
+bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, uint64_t presentWhen)
 {
     if (surfaceHandler.GetAvailableBufferCount() <= 0) {
-        // this node has no new buffer, try use cache.
-        // if don't have cache, will not update and use old buffer.
-        // display surface don't have cache, always use old buffer.
-        surfaceHandler.ConsumeAndUpdateBuffer(surfaceHandler.GetBufferFromCache(vsyncTimestamp));
         return true;
     }
     auto consumer = surfaceHandler.GetConsumer();
@@ -946,13 +941,20 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
         std::vector<Rect> damages;
         surfaceBuffer = std::make_shared<RSSurfaceHandler::SurfaceBufferEntry>();
         int32_t ret = consumer->AcquireBuffer(surfaceBuffer->buffer, surfaceBuffer->acquireFence,
-            surfaceBuffer->timestamp, damages);
+            surfaceBuffer->timestamp, damage, static_cast<int64_t>(presentWhen));
+        RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success, "
+            "presentWhen = %{public}" PRIu64 ", buffer timestamp = %{public}" PRId64 " .",
+            surfaceHandler.GetNodeId(), presentWhen, surfaceBuffer->timestamp);
+        RS_TRACE_NAME_FMT("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer success, "
+            "presentWhen = %" PRIu64 ", buffer timestamp = %" PRId64 " .",
+            surfaceHandler.GetNodeId(), presentWhen, surfaceBuffer->timestamp);
         if (surfaceBuffer->buffer == nullptr || ret != SURFACE_ERROR_OK) {
             RS_LOGE("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer failed(ret: %{public}d)!",
                 surfaceHandler.GetNodeId(), ret);
             surfaceBuffer = nullptr;
             return false;
         }
+        surfaceHandler.ReduceAvailableBuffer();
         // The damages of buffer will be merged here, only single damage is supported so far
         Rect damageAfterMerge = MergeBufferDamages(damages);
         if (damageAfterMerge.h <= 0 || damageAfterMerge.w <= 0) {
@@ -983,22 +985,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
         RS_LOGE("RsDebug surfaceHandler(id: %{public}" PRIu64 ") no buffer to consume", surfaceHandler.GetNodeId());
         return false;
     }
-    if (isDisplaySurface || !RSUniRenderJudgement::IsUniRender() ||
-        !RSSystemParameters::GetControlBufferConsumeEnabled()) {
-        RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success(buffer control disable), "
-            "buffer timestamp = %{public}" PRId64 " .", surfaceHandler.GetNodeId(), surfaceBuffer->timestamp);
-        surfaceHandler.ConsumeAndUpdateBuffer(*(surfaceBuffer.get()));
-    } else {
-        RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success(buffer control enable), "
-            "vysnc timestamp = %{public}" PRIu64 ", buffer timestamp = %{public}" PRId64 " .",
-            surfaceHandler.GetNodeId(), vsyncTimestamp, surfaceBuffer->timestamp);
-        RS_TRACE_NAME_FMT("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer success(buffer control enable), "
-            "vysnc timestamp = %" PRIu64 ", buffer timestamp = %" PRId64 " .",
-            surfaceHandler.GetNodeId(), vsyncTimestamp, surfaceBuffer->timestamp);
-        surfaceHandler.CacheBuffer(*(surfaceBuffer.get()));
-        surfaceHandler.ConsumeAndUpdateBuffer(surfaceHandler.GetBufferFromCache(vsyncTimestamp));
-    }
-    surfaceHandler.ReduceAvailableBuffer();
+    surfaceHandler.ConsumeAndUpdateBuffer(*surfaceBuffer);
     DelayedSingleton<RSFrameRateVote>::GetInstance()->VideoFrameRateVote(surfaceHandler.GetNodeId(),
         consumer->GetSurfaceSourceType(), surfaceBuffer->buffer);
     surfaceBuffer = nullptr;

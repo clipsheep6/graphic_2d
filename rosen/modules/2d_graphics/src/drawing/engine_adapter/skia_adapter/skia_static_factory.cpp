@@ -151,14 +151,19 @@ const Rect& SkiaStaticFactory::ComputeFastBounds(const Brush& brush, const Rect&
     return SkiaPaint::ComputeFastBounds(brush, orig, storage);
 }
 
+std::shared_ptr<Data> SkiaStaticFactory::MakeDataFromFileName(const char path[])
+{
+    return SkiaData::MakeFromFileName(path);
+}
+
 bool SkiaStaticFactory::AsBlendMode(const Brush& brush)
 {
     return SkiaPaint::AsBlendMode(brush);
 }
 
-std::shared_ptr<Data> SkiaStaticFactory::MakeDataFromFileName(const char path[])
+FontStyleSet* SkiaStaticFactory::CreateEmptyFontStyleSet()
 {
-    return SkiaData::MakeFromFileName(path);
+    return SkiaFontStyleSet::CreateEmpty();
 }
 
 void SkiaStaticFactory::PathOutlineDecompose(const Path& path, std::vector<Path>& paths)

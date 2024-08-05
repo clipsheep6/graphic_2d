@@ -72,6 +72,7 @@ public:
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
     static bool AsBlendMode(const Brush& brush);
     static std::shared_ptr<Data> MakeDataFromFileName(const char path[]);
+    static FontStyleSet* CreateEmptyFontStyleSet();
     static void PathOutlineDecompose(const Path& path, std::vector<Path>& paths);
     static void MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
         const std::vector<Path>& paths, std::vector<Path>& multPaths);

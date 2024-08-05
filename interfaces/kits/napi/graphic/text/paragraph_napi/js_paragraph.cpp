@@ -509,7 +509,7 @@ napi_value JsParagraph::OnGetLineHeight(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
     if (lineNumber < 0) {
-        TEXT_LOGE("JsParagraph::line number is invalid, line number:%d", lineNumber);
+        TEXT_LOGE("JsParagraph::line number is invalid, line number:%{public}d", lineNumber);
         return NapiGetUndefined(env);
     }
     double lineHeight = paragraph_->GetLineHeight(lineNumber);
@@ -541,7 +541,7 @@ napi_value JsParagraph::OnGetLineWidth(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
     if (lineNumber < 0) {
-        TEXT_LOGE("JsParagraph::line number is invalid, line number:%d", lineNumber);
+        TEXT_LOGE("JsParagraph::line number is invalid, line number:%{public}d", lineNumber);
         return NapiGetUndefined(env);
     }
     double lineWidth = paragraph_->GetLineWidth(lineNumber);
@@ -762,7 +762,7 @@ napi_value JsParagraph::CreateJsTypography(napi_env env, std::unique_ptr<Typogra
         napi_value argv = nullptr;
         NAPI_CALL(env, napi_create_array(env, &argv));
         NAPI_CALL(env, napi_set_element(env, argv, 0, jsThis));
-        status = NAPI_CALL(env, napi_new_instance(env, constructor, 1, &argv, &result));
+        status = napi_new_instance(env, constructor, 1, &argv, &result);
         if (status == napi_ok) {
             return result;
         } else {

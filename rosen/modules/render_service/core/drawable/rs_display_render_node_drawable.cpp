@@ -57,6 +57,11 @@
 #include "drawable/dfx/rs_skp_capture_dfx.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "utils/performanceCaculate.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "pipeline/subtree/rs_parallel_canvas.h"
+#include "rs_parallel_manager.h"
+#endif
+
 namespace OHOS::Rosen::DrawableV2 {
 namespace {
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
@@ -546,7 +551,9 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (isHdrOn) {
         params->SetNewPixelFormat(GRAPHIC_PIXEL_FMT_RGBA_1010102);
     }
+    RS_TRACE_BEGIN("WaitUntilDisplayNodeBufferReleased");
     RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(*this);
+    RS_TRACE_END();
     // displayNodeSp to get  rsSurface witch only used in renderThread
     auto renderFrame = RequestFrame(*params, processor);
     if (!renderFrame) {
@@ -574,11 +581,18 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+    curCanvas_ = std::make_shared<RSParallelDrawCanvas>(drSurface.get());
+#else
     curCanvas_ = std::make_shared<RSPaintFilterCanvas>(drSurface.get());
+#endif
     if (!curCanvas_) {
         RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw failed to create canvas");
         return;
     }
+#ifdef SUBTREE_PARALLEL_ENABLE
+    RSParallelManager::Singleton().UpdateSurfaceDrawRegion(curCanvas_, params);
+#endif
 
     ScreenId screenId = curScreenInfo.id;
     curCanvas_->SetTargetColorGamut(params->GetNewColorSpace());
@@ -618,7 +632,20 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
             }
 
             SetHighContrastIfEnabled(*curCanvas_);
+#ifdef SUBTREE_PARALLEL_ENABLE
+            curCanvas_->SetIsSubtreeParallel(true);
+			if (needOffscreen) {
+			    RSParallelManager::Singletion().SetSubtreeParallelDisabled();
+			}
+            if (RSParallelManager::Singleton().OnProcessChildren(this)!=0) {
+                curCanvas_->SetIsSubtreeParallel(false);
+                RSParallelManager::Singleton().ClearSubtreeParallelRes();
+                RSRenderNodeDrawable::OnDraw(*curCanvas_);
+            }
+            curCanvas_->SetIsSubtreeParallel(false);
+#else
             RSRenderNodeDrawable::OnDraw(*curCanvas_);
+#endif
             DrawCurtainScreen();
             if (needOffscreen) {
                 if (canvasBackup_ != nullptr) {
@@ -1473,7 +1500,7 @@ void RSDisplayRenderNodeDrawable::PrepareOffscreenRender(const RSDisplayRenderNo
     } else {
         offscreenSurface_ = curCanvas_->GetSurface()->MakeSurface(offscreenWidth, offscreenHeight);
     }
-    
+
     if (offscreenSurface_ == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::PrepareOffscreenRender, offscreenSurface is nullptr");
         curCanvas_->ClipRect(Drawing::Rect(0, 0, offscreenWidth, offscreenHeight), Drawing::ClipOp::INTERSECT, false);

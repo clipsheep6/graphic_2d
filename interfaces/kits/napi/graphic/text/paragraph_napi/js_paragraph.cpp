@@ -62,7 +62,7 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
         JsParagraph::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsParagraph;
-        TEXT_LOGE("JsParagraph::Constructor failed to wrap native instance");
+        TEXT_LOGE("JsParagraph::Constructor failed to wrap native instance, status value is %{public}d", status);
         return nullptr;
     }
     return jsThis;
@@ -100,19 +100,19 @@ napi_value JsParagraph::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        TEXT_LOGE("Failed to define Paragraph class");
+        TEXT_LOGE("Failed to define Paragraph class, status value is %{public}d", status);
         return nullptr;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        TEXT_LOGE("Failed to create reference of result");
+        TEXT_LOGE("Failed to create reference of result, status value is %{public}d", status);
         return nullptr;
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        TEXT_LOGE("Failed to set result");
+        TEXT_LOGE("Failed to set result, status value is %{public}d", status);
         return nullptr;
     }
     return exportObj;
@@ -765,10 +765,10 @@ napi_value JsParagraph::CreateJsTypography(napi_env env, std::unique_ptr<Typogra
             if (status == napi_ok) {
                 return result;
             } else {
-                TEXT_LOGE("CreateJsTypography: New instance could not be obtained");
+                TEXT_LOGE("CreateJsTypography: New instance could not be obtained, status value is %{public}d", status);
             }
         } else {
-            TEXT_LOGE("CreateJsTypography: wrap typography error");
+            TEXT_LOGE("CreateJsTypography: wrap typography error, status value is %{public}d", status);
         }
     }
     return result;

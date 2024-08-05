@@ -938,6 +938,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     }
     auto consumer = surfaceHandler.GetConsumer();
     if (consumer == nullptr) {
+        RS_LOGE("Consume and update buffer fail for consumer is nullptr");
         return false;
     }
     DropFrameProcess(surfaceHandler);
@@ -1557,6 +1558,7 @@ bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngP
     }
     png_infop pngInfo = png_create_info_struct(pngStruct);
     if (pngInfo == nullptr) {
+        RS_LOGE("RSBaseRenderUtil::WriteDataPng fail, pngInfo is nullptr");
         png_destroy_write_struct(&pngStruct, nullptr);
         return false;
     }
@@ -1593,6 +1595,7 @@ bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngP
 
 GraphicTransformType RSBaseRenderUtil::GetRotateTransform(GraphicTransformType transform)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::RotateDataTransform transform is %{public}d", transform);
     switch (transform) {
         case GraphicTransformType::GRAPHIC_FLIP_H:
         case GraphicTransformType::GRAPHIC_FLIP_V: {
@@ -1618,6 +1621,7 @@ GraphicTransformType RSBaseRenderUtil::GetRotateTransform(GraphicTransformType t
 
 GraphicTransformType RSBaseRenderUtil::GetFlipTransform(GraphicTransformType transform)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::FlipTransformEnum transform is %{public}d", transform);
     switch (transform) {
         case GraphicTransformType::GRAPHIC_FLIP_H_ROT90:
         case GraphicTransformType::GRAPHIC_FLIP_H_ROT180:
@@ -1637,6 +1641,7 @@ GraphicTransformType RSBaseRenderUtil::GetFlipTransform(GraphicTransformType tra
 
 GraphicTransformType RSBaseRenderUtil::ClockwiseToAntiClockwiseTransform(GraphicTransformType transform)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::ClockwiseTransformEnum transform is %{public}d", transform);
     switch (transform) {
         case GraphicTransformType::GRAPHIC_ROTATE_90: {
             return GraphicTransformType::GRAPHIC_ROTATE_270;
@@ -1664,6 +1669,7 @@ GraphicTransformType RSBaseRenderUtil::ClockwiseToAntiClockwiseTransform(Graphic
 
 int RSBaseRenderUtil::RotateEnumToInt(ScreenRotation rotation)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::RotateEnumInit rotation is %{public}d", rotation);
     static const std::map<ScreenRotation, int> screenRotationEnumToIntMap = {
         {ScreenRotation::ROTATION_0, 0}, {ScreenRotation::ROTATION_90, 90},
         {ScreenRotation::ROTATION_180, 180}, {ScreenRotation::ROTATION_270, 270}};
@@ -1673,6 +1679,7 @@ int RSBaseRenderUtil::RotateEnumToInt(ScreenRotation rotation)
 
 int RSBaseRenderUtil::RotateEnumToInt(GraphicTransformType rotation)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::RotateEnumInit rotation is %{public}d", rotation);
     static const std::map<GraphicTransformType, int> transformTypeEnumToIntMap = {
         {GraphicTransformType::GRAPHIC_ROTATE_NONE, 0}, {GraphicTransformType::GRAPHIC_ROTATE_90, 90},
         {GraphicTransformType::GRAPHIC_ROTATE_180, 180}, {GraphicTransformType::GRAPHIC_ROTATE_270, 270}};
@@ -1682,6 +1689,7 @@ int RSBaseRenderUtil::RotateEnumToInt(GraphicTransformType rotation)
 
 GraphicTransformType RSBaseRenderUtil::RotateEnumToInt(int angle, GraphicTransformType flip)
 {
+    RS_LOGI_IF(DEBUG_COMPOSER, "RSBaseRenderUtil::RotateEnumDataInit flip is %{public}d", flip);
     static const std::map<int, GraphicTransformType> intToEnumMap = {
         {0, GraphicTransformType::GRAPHIC_ROTATE_NONE}, {90, GraphicTransformType::GRAPHIC_ROTATE_270},
         {180, GraphicTransformType::GRAPHIC_ROTATE_180}, {270, GraphicTransformType::GRAPHIC_ROTATE_90}};

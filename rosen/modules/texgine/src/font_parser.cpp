@@ -29,6 +29,7 @@
 
 #include "font_config.h"
 #include "texgine/utils/exlog.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -42,13 +43,6 @@ namespace TextEngine {
 #define SYS_PROD_FONT_PATH "/sys_prod/fonts/"
 
 #define HALF(a) ((a) / 2)
-
-// "weight" and "italic" will assigned value 0 and 1, -1 used to exclude unassigned
-FontParser::FontDescriptor::FontDescriptor(): path(""), postScriptName(""), fullName(""),
-    fontFamily(""), fontSubfamily(""), postScriptNameLid(0), fullNameLid(0), fontFamilyLid(0),
-    fontSubfamilyLid(0), requestedLid(0), weight(-1), width(0), italic(-1), monoSpace(0), symbolic(0)
-{
-}
 
 FontParser::FontParser()
 {
@@ -395,6 +389,30 @@ private:
 
     std::shared_ptr<std::vector<std::string>> systemFontSet_;
 };
+
+std::vector<std::shared_ptr<FontParser::FontDescriptor>> FontParser::GetSystemFonts(const std::string locale)
+{
+    std::vector<std::shared_ptr<Drawing::Typeface>> typefaces = Drawing::Typeface::GetSystemFonts();
+    if (typefaces.empty()) {
+        return {};
+    }
+
+    std::vector<std::shared_ptr<FontDescriptor>> descriptors;
+    descriptors.reserve(typefaces.size());
+    for (auto& item : typefaces) {
+        FontDescriptor desc;
+        desc.requestedLid = GetLanguageId(locale);
+        desc.path = item->GetFontPath();
+        auto fontStyle = item->GetFontStyle();
+        desc.weight = fontStyle.GetWeight();
+        desc.width = fontStyle.GetWidth();
+        if (ParseTable(item, desc) !=  SUCCESSED) {
+            continue;
+        }
+        descriptors.emplace_back(std::make_shared<FontDescriptor>(desc));
+    }
+    return descriptors;
+}
 
 std::unique_ptr<FontParser::FontDescriptor> FontParser::ParseFontDescriptor(const std::string& fontName,
     const unsigned int languageId)

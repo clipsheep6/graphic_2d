@@ -522,5 +522,17 @@ void SetRectStyleFromJS(napi_env env, napi_value argValue, RectStyle& rectStyle)
 
 napi_value GetFontMetricsAndConvertToJsValue(napi_env env, Drawing::FontMetrics* metrics);
 
+inline napi_value GetTypographicBoundsAndConvertToJsValue(napi_env env, float ascent, float descent, float leading, float width)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        napi_set_named_property(env, objValue, "ascent", CreateJsNumber(env, ascent));
+        napi_set_named_property(env, objValue, "descent", CreateJsNumber(env, descent));
+        napi_set_named_property(env, objValue, "leading", CreateJsNumber(env, leading));
+        napi_set_named_property(env, objValue, "width", CreateJsNumber(env, width));
+    }
+    return objValue;
+}
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

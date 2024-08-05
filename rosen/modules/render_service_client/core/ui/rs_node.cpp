@@ -2552,6 +2552,7 @@ void RSNode::RemoveChild(SharedPtr child)
     }
     // construct command using child's GetHierarchyCommandNodeId(), not GetId()
     childId = child->GetHierarchyCommandNodeId();
+    RS_TRACE_NAME_FMT("RSNode::ClearChildren, Node: %" PRIu64 ", Child: %" PRIu64, GetId(), childId);
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
     if (child->GetType() == RSUINodeType::SURFACE_NODE) {
@@ -2656,6 +2657,7 @@ void RSNode::RemoveFromTree()
     }
     // construct command using own GetHierarchyCommandNodeId(), not GetId()
     auto nodeId = GetHierarchyCommandNodeId();
+    RS_TRACE_NAME_FMT("RSNode::RemoveFromTree, Node: %" PRIu64, nodeId);
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(nodeId);
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), nodeId);
 }
@@ -2676,6 +2678,7 @@ void RSNode::ClearChildren()
     }
     // construct command using own GetHierarchyCommandNodeId(), not GetId()
     auto nodeId = GetHierarchyCommandNodeId();
+    RS_TRACE_NAME_FMT("RSNode::ClearChildren, Node: %" PRIu64, nodeId);
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(nodeId);
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), nodeId);
 }

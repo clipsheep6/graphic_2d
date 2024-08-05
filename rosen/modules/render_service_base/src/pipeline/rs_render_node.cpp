@@ -302,6 +302,7 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
         uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
     } else {
+        RS_TRACE_NAME_FMT("RSRenderNode::RemoveChild, Node: %" PRIu64 ", Child: %" PRIu64, GetId(), child->GetId());
         child->ResetParent();
     }
     children_.erase(it);
@@ -323,10 +324,12 @@ void RSRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId f
     isNewOnTree_ = flag && !isOnTheTree_;
     isOnTheTree_ = flag;
     if (isOnTheTree_) {
+        RS_TRACE_NAME_FMT("RSRenderNode::SetIsOnTheTree, Node: %" PRIu64 ", flag: %d", GetId(), (int)flag);
         instanceRootNodeId_ = instanceRootNodeId;
         firstLevelNodeId_ = firstLevelNodeId;
         OnTreeStateChanged();
     } else {
+        RS_TRACE_NAME_FMT("RSRenderNode::SetIsOnTheTree, Node: %" PRIu64 ", flag: %d", GetId(), (int)flag);
         OnTreeStateChanged();
         instanceRootNodeId_ = instanceRootNodeId;
         firstLevelNodeId_ = firstLevelNodeId;
@@ -461,6 +464,7 @@ void RSRenderNode::RemoveFromTree(bool skipTransition)
     // force remove child from disappearingChildren_ and clean sortChildren_ cache
     parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     parentPtr->isFullChildrenListValid_ = false;
+    RS_TRACE_NAME_FMT("RSRenderNode::ClearChildren, Node: %" PRIu64 ", Child: %" PRIu64, GetId(), child->GetId());
     child->ResetParent();
 }
 
@@ -484,6 +488,7 @@ void RSRenderNode::ClearChildren()
             // keep shared_ptr alive for transition
             disappearingChildren_.emplace_back(child, pos);
         } else {
+            RS_TRACE_NAME_FMT("RSRenderNode::ClearChildren, Node: %" PRIu64 ", Child: %" PRIu64, GetId(), child->GetId());
             child->ResetParent();
         }
         ++pos;
@@ -505,6 +510,7 @@ void RSRenderNode::SetParent(WeakPtr parent)
 
 void RSRenderNode::ResetParent()
 {
+    RS_TRACE_NAME_FMT("RSRenderNode::ResetParent, Node: %" PRIu64, GetId());
     if (auto parentNode = parent_.lock()) {
         if (isSubSurfaceEnabled_) {
             auto it = std::find_if(parentNode->disappearingChildren_.begin(), parentNode->disappearingChildren_.end(),

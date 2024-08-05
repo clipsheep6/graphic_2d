@@ -550,9 +550,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode RSBaseNodeClearChild, Node: %" PRIu64, thisSurfaceNodeId);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
             SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
+            RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode RSBaseNodeAddChild, Node: %" PRIu64, thisSurfaceNodeId);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
     }
@@ -914,9 +916,11 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto thisSurfaceNodeId = node.GetId();
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
+        RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode RSBaseNodeClearChild, Node: %" PRIu64, thisSurfaceNodeId);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
             SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
+            RS_TRACE_NAME_FMT("RSRenderThreadVisitor::ProcessSurfaceRenderNode RSBaseNodeAddChild, Node: %" PRIu64, childSurfaceNodeId);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
     }

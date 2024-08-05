@@ -500,7 +500,7 @@ typedef struct OH_Drawing_FontMgr OH_Drawing_FontMgr;
 typedef struct OH_Drawing_FontStyleSet OH_Drawing_FontStyleSet;
 
 /**
- * @brief Define OH_Drawing_RecordCmd, which is used to replay drawing commands.
+ * @brief Define OH_Drawing_RecordCmdUtils, which is used to replay drawing commands.
  *
  * @since 12
  * @version 1.0

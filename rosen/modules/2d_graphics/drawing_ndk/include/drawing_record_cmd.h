@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef C_INCLUDE_DRAWING_RECORDER_CMD_H
-#define C_INCLUDE_DRAWING_RECORDER_CMD_H
+#ifndef C_INCLUDE_DRAWING_RECORD_CMD_H
+#define C_INCLUDE_DRAWING_RECORD_CMD_H
 
 /**
  * @addtogroup Drawing
@@ -29,9 +29,9 @@
  */
 
 /**
- * @file drawing_record.h
+ * @file drawing_record_cmd.h
  *
- * @brief Declares functions related to the <b>ShadowLayer</b> object in the drawing module.
+ * @brief Declares functions related to the <b>RecordCmd</b> object in the drawing module.
  *
  * @library libnative_drawing.so
  * @since 12
@@ -45,27 +45,27 @@ extern "C" {
 #endif
 
 /**
- * @brief Creates an <b>OH_Drawing_RecordCmd</b> object.
+ * @brief Creates an <b>OH_Drawing_RecordCmdUtils</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @return Returns the pointer to the <b>OH_Drawing_RecordCmd</b> object created.
+ * @return Returns the pointer to the <b>OH_Drawing_RecordCmdUtils</b> object created.
  * @since 12
  * @version 1.0
  */
 OH_Drawing_RecordCmdUtils* OH_Drawing_RecordCmdUtilsCreate(void);
 
 /**
- * @brief Destroy an <b>OH_Drawing_RecordCmd</b> object.
+ * @brief Destroy an <b>OH_Drawing_RecordCmdUtils</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_RecordCmd Indicates the pointer to an <b>OH_Drawing_RecordCmd</b> object.
+ * @param OH_Drawing_RecordCmd Indicates the pointer to an <b>OH_Drawing_RecordCmdUtils</b> object.
  * @since 12
  * @version 1.0
  */
 void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils*);
 
 /**
- * @brief Begins the recording process for a drawing operation on a specified canvas.
+ * @brief  Returns the canvas that records the drawing commands.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_RecordCmdUtils Indicates the pointer to an <b>OH_Drawing_RecordCmdUtils</b> object.

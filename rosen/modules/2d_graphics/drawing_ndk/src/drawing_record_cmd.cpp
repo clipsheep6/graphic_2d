@@ -15,11 +15,11 @@
 
 #include "drawing_record_cmd.h"
 
-#include "drawing_helper.h"
-#include "utils/log.h"
-#include "recording/record_cmd.h"
 #include "drawing_canvas_utils.h"
+#include "drawing_helper.h"
 #include "pipeline/rs_record_cmd_utils.h"
+#include "recording/record_cmd.h"
+#include "utils/log.h"
 
 using namespace OHOS;
 using namespace Rosen;
@@ -32,28 +32,30 @@ static RSRecordCmdUtils* CastToCmdUtils(OH_Drawing_RecordCmdUtils* cRecordCmdUti
 
 OH_Drawing_RecordCmdUtils* OH_Drawing_RecordCmdUtilsCreate()
 {
-    return (OH_Drawing_RecordCmdUtils*)new RSRecordCmdUtils();
+    return (OH_Drawing_RecordCmdUtils*)new(std::nothrow) RSRecordCmdUtils();
 }
 
-void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils* recordCmdUtils){
+void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils* recordCmdUtils)
+{
     delete reinterpret_cast<RSRecordCmdUtils*>(recordCmdUtils);
 }
 
-OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils ,OH_Drawing_Rect* cBounds)
+OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils,
+    OH_Drawing_Rect* cBounds)
 {
-    if(cRecordCmdUtils == nullptr || cBounds == nullptr){
+    if (cRecordCmdUtils == nullptr || cBounds == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
     RSRecordCmdUtils* recordCmdUtils = CastToCmdUtils(cRecordCmdUtils);
-    Drawing::Rect& bounds = reinterpret_cast<Drawing::Rect&>(cBounds);
-    Drawing::Canvas* canvasPtr = recordCmdUtils->BeginRecording(bounds);
+    Drawing::Rect* bounds = reinterpret_cast<Drawing::Rect*>(cBounds);
+    Drawing::Canvas* canvasPtr = recordCmdUtils->BeginRecording(*bounds);
     return (OH_Drawing_Canvas*) (canvasPtr);
-} 
+}
 
 OH_Drawing_RecordCmd* OH_Drawing_RecordCmdUtilsFinishingRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils)
 {
-    if(cRecordCmdUtils == nullptr){
+    if (cRecordCmdUtils == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
@@ -70,6 +72,7 @@ OH_Drawing_RecordCmd* OH_Drawing_RecordCmdUtilsFinishingRecording(OH_Drawing_Rec
     return Helper::CastTo<NativeHandle<RecordCmd>*, OH_Drawing_RecordCmd*>(recordCmdHandle);
 }
 
-void OH_Drawing_RecordCmdDestroy(OH_Drawing_RecordCmd* recordCmd){
+void OH_Drawing_RecordCmdDestroy(OH_Drawing_RecordCmd* recordCmd)
+{
     delete reinterpret_cast<RecordCmd*>(recordCmd);
 }

@@ -868,6 +868,10 @@ void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas* cCanvas, OH_Drawi
     }
     Canvas* canvas = CastToCanvas(cCanvas);
     auto recordCmdHandle = Helper::CastTo<OH_Drawing_RecordCmd*, NativeHandle<RecordCmd>*>(cRecordCmd);
+    if (recordCmdHandle->value == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
     canvas->DrawRecordCmd(recordCmdHandle->value, reinterpret_cast<const Matrix*>(matrix),
         reinterpret_cast<const Brush*>(brush));
 }

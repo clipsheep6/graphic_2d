@@ -24,6 +24,7 @@ RSSurfaceHandler::~RSSurfaceHandler() noexcept
 #ifndef ROSEN_CROSS_PLATFORM
 void RSSurfaceHandler::SetConsumer(sptr<IConsumerSurface> consumer)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     consumer_ = consumer;
 }
 #endif

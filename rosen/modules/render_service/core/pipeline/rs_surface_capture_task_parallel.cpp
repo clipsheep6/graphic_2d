@@ -110,6 +110,9 @@ void RSSurfaceCaptureTaskParallel::Capture(NodeId id,
 
 bool RSSurfaceCaptureTaskParallel::CreateResources()
 {
+    RS_LOGD("RSSurfaceCaptureTaskParallel::create resources scaleX:%{public}d scaleY:%{public}d"
+        " useCurWindow:%{public}d", captureConfig_.scaleX, captureConfig_.scaleY,
+        captureConfig_.useCurWindow);
     RS_LOGD("RSSurfaceCaptureTaskParallel capture nodeId:[%{public}" PRIu64 "]", nodeId_);
     if (ROSEN_EQ(captureConfig_.scaleX, 0.f) || ROSEN_EQ(captureConfig_.scaleY, 0.f) ||
         captureConfig_.scaleX < 0.f || captureConfig_.scaleY < 0.f) {

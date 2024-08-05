@@ -77,8 +77,6 @@ public:
     {
         needProcess_ = flag;
     }
-
-
 private:
     explicit RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::CANVAS_DRAWING_NODE, OnGenerate>;
@@ -87,6 +85,9 @@ private:
     void DrawRenderContent(Drawing::Canvas& canvas, const Drawing::Rect& rect);
     bool ResetSurfaceForGL(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
     bool ResetSurfaceForVK(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
+#ifdef RS_ENABLE_VK
+    bool ResetSurfaceForVKContextNotEmpty() const;
+#endif
     bool IsNeedResetSurface() const;
     void FlushForGL(float width, float height, std::shared_ptr<RSContext> context,
         NodeId nodeId, RSPaintFilterCanvas& rscanvas);
@@ -96,6 +97,8 @@ private:
     void ClearBackendTexture();
     bool GetCurrentContext(std::shared_ptr<Drawing::GPUContext>& grContext);
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+    bool CheckBackendTexture(int width, int height, std::shared_ptr<Drawing::Surface> preSurface,
+        std::shared_ptr<RSPaintFilterCanvas> canvas);
     bool ResetSurfaceWithTexture(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
     bool ReuseBackendTexture(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
     void ClearPreSurface(std::shared_ptr<Drawing::Surface>& surface);

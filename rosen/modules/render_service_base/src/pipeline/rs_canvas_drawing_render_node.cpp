@@ -198,16 +198,13 @@ bool RSCanvasDrawingRenderNode::IsNeedProcess() const
 
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
 {
-    if (renderDrawable_) {
-        renderDrawable_->SetNeedProcess(needProcess);
+    if (!renderDrawable_ || !stagingRenderParams_) {
+        return;
     }
-    auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
-    if (stagingCanvasDrawingParams) {
-        stagingCanvasDrawingParams->SetNeedSync(true);
-        if (stagingRenderParams_->NeedSync()) {
-            AddToPendingSyncList();
-        }
-    }
+
+    renderDrawable_->SetNeedProcess(needProcess);
+    stagingRenderParams_->SetNeedSync(true);
+    AddToPendingSyncList();
     isNeedProcess_ = needProcess;
 }
 

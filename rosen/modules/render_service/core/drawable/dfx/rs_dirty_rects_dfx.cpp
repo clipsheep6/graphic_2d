@@ -141,16 +141,16 @@ bool RSDirtyRectsDfx::RefreshRateRotationProcess(ScreenRotation rotation, uint64
         case ScreenRotation::ROTATION_0:
             break;
         case ScreenRotation::ROTATION_90:
-            curCanvas_->Rotate(90, 0, 0); // 90 is the rotate angle
-            curCanvas_->Translate(0, -mainHeight);
+            canvas_->Rotate(90, 0, 0); // 90 is the rotate angle
+            canvas_->Translate(0, -mainHeight);
             break;
         case ScreenRotation::ROTATION_180:
             // 180 is the rotate angle, calculate half width and half height requires divide by 2
-            curCanvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
+            canvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
             break;
         case ScreenRotation::ROTATION_270:
-            curCanvas_->Rotate(270, 0, 0); // 270 is the rotate angle
-            curCanvas_->Translate(-mainWidth, 0);
+            canvas_->Rotate(270, 0, 0); // 270 is the rotate angle
+            canvas_->Translate(-mainWidth, 0);
             break;
         default:
             return false;

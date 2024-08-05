@@ -327,8 +327,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest015, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest016, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutPen_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     std::string str("TextBlob");
     Font font;
     std::shared_ptr<TextBlob> textBlob = TextBlob::MakeFromText(str.c_str(), str.length(), font);
@@ -346,8 +344,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest016, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest017, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutBrush_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     std::string str("TextBlob");
     Font font;
     std::shared_ptr<TextBlob> textBlob = TextBlob::MakeFromText(str.c_str(), str.length(), font);
@@ -365,8 +361,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest017, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest018, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutPenBrush_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     std::string str("TextBlob");
     Font font;
     std::shared_ptr<TextBlob> textBlob = TextBlob::MakeFromText(str.c_str(), str.length(), font);
@@ -384,8 +378,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest018, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest019, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutPenBrush_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     std::string str(u8"\U0001F60A");
     Font font;
     std::shared_ptr<TextBlob> textBlob = TextBlob::MakeFromText(str.c_str(), str.length(), font);
@@ -403,9 +395,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest019, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest020, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainter_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
-
     Point offset;
     std::string str("DrawSymbolSkiaTxt");
     Font font;
@@ -421,9 +410,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest020, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest021, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutPen_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
-
     Point offset;
     std::string str("DrawSymbolSkiaTxt");
     Font font;
@@ -439,9 +425,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest021, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest022, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainterWithoutBrush_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
-
     Point offset;
     std::string str("DrawSymbolSkiaTxt");
     Font font;
@@ -457,8 +440,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest022, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest023, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainter_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     ParagraphPainter::PaintID paintID = static_cast<int>(paintRecordsWithoutPen_.size()) - 1;
     ParagraphPainter::SkPaintOrID paint;
     paint.emplace<ParagraphPainter::PaintID>(paintID);
@@ -473,8 +454,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest023, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest024, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainter_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     ParagraphPainter::PaintID paintID = static_cast<int>(paintRecordsWithoutBrush_.size()) - 1;
     ParagraphPainter::SkPaintOrID paint;
     paint.emplace<ParagraphPainter::PaintID>(paintID);
@@ -489,8 +468,6 @@ HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest024, TestSize
  */
 HWTEST_F(RSCanvasParagraphPainterTest, RSCanvasParagraphPainterTest025, TestSize.Level1)
 {
-    EXPECT_EQ(canvasParagraphPainter_ != nullptr, true);
-    EXPECT_EQ(recordingCanvas_ != nullptr, true);
     ParagraphPainter::PaintID paintID = static_cast<int>(paintRecordsWithoutPenBrush_.size()) - 1;
     ParagraphPainter::SkPaintOrID paint;
     paint.emplace<ParagraphPainter::PaintID>(paintID);

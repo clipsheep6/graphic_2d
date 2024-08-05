@@ -39,22 +39,21 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (argv[0] == nullptr) {
-        TEXT_LOGE("JsParagraph::OnPaint Argv is invalid");
+        TEXT_LOGE("JsParagraph::Argv is invalid");
         return nullptr;
     }
     Typography* typography = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void **>(&typography));
     if (!typography) {
-        TEXT_LOGE("JsParagraph::Constructor typography is nullptr");
+        TEXT_LOGE("JsParagraph::typography is nullptr");
         return nullptr;
     }
 
-    std::shared_ptr<Typography> tempTypography{typography}
+    std::shared_ptr<Typography> tempTypography{typography};
     JsParagraph *jsParagraph = new(std::nothrow) JsParagraph(tempTypography);
-    delete typography;
 
     if (jsParagraph == nullptr) {
-        TEXT_LOGE("JsParagraph::Constructor faild to move typography");
+        TEXT_LOGE("JsParagraph::faild to move typography");
         return nullptr;
     }
 
@@ -62,7 +61,7 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
         JsParagraph::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsParagraph;
-        TEXT_LOGE("JsParagraph::Constructor failed to wrap native instance, status value is %{public}d", status);
+        TEXT_LOGE("JsParagraph::failed to wrap native instance, status value is %{public}d", status);
         return nullptr;
     }
     return jsThis;
@@ -381,7 +380,7 @@ napi_value JsParagraph::OnGetRectsForRange(napi_env env, napi_callback_info info
     for (int index = 0; index < num; ++index) {
         napi_value tempValue2 = CreateTextRectJsValue(env, rectsForRange[index]);
         if (tempValue2 == nullptr) {
-            TEXT_LOGE("JsParagraph::OnGetRectsForRange, create text rect js value failed");
+            TEXT_LOGE("JsParagraph::create text rect js value failed");
             return NapiGetUndefined(env);
         }
         NAPI_CALL(env, napi_set_element(env, returnrectsForRange, index, tempValue2));
@@ -510,7 +509,7 @@ napi_value JsParagraph::OnGetLineHeight(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
     if (lineNumber < 0) {
-        TEXT_LOGE("JsParagraph::OnGetLineHeight line number is less than zero");
+        TEXT_LOGE("JsParagraph::line number is invalid, line number:%d", lineNumber);
         return NapiGetUndefined(env);
     }
     double lineHeight = paragraph_->GetLineHeight(lineNumber);
@@ -542,7 +541,7 @@ napi_value JsParagraph::OnGetLineWidth(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
     if (lineNumber < 0) {
-        TEXT_LOGE("JsParagraph::OnGetLineWidth line number is less than zero");
+        TEXT_LOGE("JsParagraph::line number is invalid, line number:%d", lineNumber);
         return NapiGetUndefined(env);
     }
     double lineWidth = paragraph_->GetLineWidth(lineNumber);
@@ -621,14 +620,14 @@ napi_value JsParagraph::OnGetLineMetrics(napi_env env, napi_callback_info info)
     napi_value returnLineMetrics = nullptr;
     NAPI_CALL(env, napi_create_array(env, &returnLineMetrics));
     if (returnLineMetrics == nullptr) {
-        TEXT_LOGE("JsParagraph::OnGetLineMetrics returnLineMetrics is nullptr");
+        TEXT_LOGE("JsParagraph::returnLineMetrics is nullptr");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     int num = static_cast<int>(vectorLineMetrics.size());
     for (int index = 0; index < num; ++index) {
         napi_value tempValue = CreateLineMetricsJsValue(env, vectorLineMetrics[index]);
         if (tempValue == nullptr) {
-            TEXT_LOGE("JsParagraph::OnGetLineMetrics line metrics is nullptr");
+            TEXT_LOGE("JsParagraph::line metrics is nullptr");
             return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
         }
         napi_set_element(env, returnLineMetrics, index, tempValue);
@@ -757,18 +756,17 @@ napi_value JsParagraph::CreateJsTypography(napi_env env, std::unique_ptr<Typogra
         napi_value jsThis = nullptr;
         status = napi_wrap(env, jsThis, tempValue,
             JsParagraph::Destructor, nullptr, nullptr);
-        if (status == napi_ok) {
-            napi_value argv = nullptr;
-            NAPI_CALL(env, napi_create_array(env, &argv));
-            napi_set_element(env, argv, 0, jsThis);
-            status = napi_new_instance(env, constructor, 1, &argv, &result);
-            if (status == napi_ok) {
-                return result;
-            } else {
-                TEXT_LOGE("CreateJsTypography: New instance could not be obtained, status value is %{public}d", status);
-            }
-        } else {
+        if (status != napi_ok) {
             TEXT_LOGE("CreateJsTypography: wrap typography error, status value is %{public}d", status);
+        }
+        napi_value argv = nullptr;
+        NAPI_CALL(env, napi_create_array(env, &argv));
+        NAPI_CALL(env, napi_set_element(env, argv, 0, jsThis));
+        status = NAPI_CALL(env, napi_new_instance(env, constructor, 1, &argv, &result));
+        if (status == napi_ok) {
+            return result;
+        } else {
+            TEXT_LOGE("CreateJsTypography: New instance could not be obtained, status value is %{public}d", status);
         }
     }
     return result;

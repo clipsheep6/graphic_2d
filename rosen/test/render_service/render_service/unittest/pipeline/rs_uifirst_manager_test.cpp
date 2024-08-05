@@ -1386,4 +1386,44 @@ HWTEST_F(RSUifirstManagerTest, DoPurgePendingPostNodes001, TestSize.Level1)
     uifirstManager_.DoPurgePendingPostNodes(pendingNode);
     EXPECT_FALSE(pendingNode.empty());
 }
+
+/**
+ * @tc.name: ResetCurrentFrameDeletedCardNodes
+ * @tc.desc: Test ResetCurrentFrameDeletedCardNodes
+ * @tc.type: FUNC
+ * @tc.require: issueIAFXNU
+ */
+HWTEST_F(RSUifirstManagerTest, ResetCurrentFrameDeletedCardNodes001, TestSize.Level1)
+{
+    uifirstManager_.isCurrentFrameHasCardNodeReCreate_ = true;
+    uifirstManager_.currentFrameDeletedCardNodes_.push_back(1);
+    uifirstManager_.currentFrameDeletedCardNodes_.push_back(2);
+    uifirstManager_.currentFrameDeletedCardNodes_.push_back(3);
+    uifirstManager_.ResetCurrentFrameDeletedCardNodes();
+    EXPECT_FALSE(uifirstManager_.isCurrentFrameHasCardNodeReCreate_);
+    EXPECT_TRUE(uifirstManager_.currentFrameDeletedCardNodes_.empty());
+}
+
+/**
+ * @tc.name: CheckCurrentFrameHasCardNodeReCreate
+ * @tc.desc: Test CheckCurrentFrameHasCardNodeReCreate
+ * @tc.type: FUNC
+ * @tc.require: issueIAFXNU
+ */
+HWTEST_F(RSUifirstManagerTest, CheckCurrentFrameHasCardNodeReCreate, TestSize.Level1)
+{
+    RSSurfaceRenderNode node(0);
+    node.nodeType_ = RSSurfaceNodeType::LEASH_WINDOW_NODE;
+    uifirstManager_.CheckCurrentFrameHasCardNodeReCreate(node);
+
+    node.nodeType_ = RSSurfaceNodeType::ABILITY_COMPONENT_NODE;
+    node.name_ = "ArkTSCardNode";
+
+    node.SetIsOnTheTree(false);
+    uifirstManager_.CheckCurrentFrameHasCardNodeReCreate(node);
+    EXPECT_FALSE(uifirstManager_.isCurrentFrameHasCardNodeReCreate_);
+    node.SetIsOnTheTree(true);
+    uifirstManager_.CheckCurrentFrameHasCardNodeReCreate(node);
+    EXPECT_TRUE(uifirstManager_.isCurrentFrameHasCardNodeReCreate_);
+}
 }

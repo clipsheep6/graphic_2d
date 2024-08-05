@@ -55,13 +55,6 @@ public:
     }
 
 private:
-    Occlusion::Region dirtyRegion_;
-    std::vector<RectI> virtualDirtyRects_;
-    ScreenInfo screenInfo_;
-    const DrawableV2::RSDisplayRenderNodeDrawable& targetDrawable_;
-    std::shared_ptr<RSPaintFilterCanvas> canvas_;
-    const std::unique_ptr<RSRenderParams>& displayParams_;
-
     bool RefreshRateRotationProcess(ScreenRotation rotation, uint64_t screenId);
     void DrawCurrentRefreshRate();
     void DrawDirtyRectForDFX(RectI dirtyRect, const Drawing::Color color, const RSPaintStyle fillType,
@@ -81,9 +74,16 @@ private:
     // dfx check if surface name is in dfx target list
     inline bool CheckIfSurfaceTargetedForDFX(std::string nodeName) const
     {
-        auto surfaceName = RSUniRenderThread::Instance().GetRSRenderThreadParams()->dfxTargetSurfaceNames_;
-        return (std::find(surfaceName.begin(), surfaceName.end(), nodeName) != surfaceName.end());
+        auto& targetSurfaceNames = RSUniRenderThread::Instance().GetRSRenderThreadParams()->dfxTargetSurfaceNames_;
+        return (std::find(targetSurfaceNames.begin(), targetSurfaceNames.end(), nodeName) != targetSurfaceNames.end());
     }
+
+    const DrawableV2::RSDisplayRenderNodeDrawable& targetDrawable_;
+    std::shared_ptr<RSPaintFilterCanvas> canvas_;
+    const std::unique_ptr<RSRenderParams>& displayParams_;
+    Occlusion::Region dirtyRegion_;
+    std::vector<RectI> virtualDirtyRects_;
+    ScreenInfo screenInfo_;
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_DRAWABLE_DFX_RS_DIRTY_RECTS_DFX_H

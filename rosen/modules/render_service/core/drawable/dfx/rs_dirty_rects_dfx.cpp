@@ -133,22 +133,27 @@ void RSDirtyRectsDfx::DrawDirtyRegionInVirtual() const
 
 bool RSDirtyRectsDfx::RefreshRateRotationProcess(ScreenRotation rotation, uint64_t screenId)
 {
-    if (rotation != ScreenRotation::ROTATION_0) {
-        auto screenManager = CreateOrGetScreenManager();
-        auto mainScreenInfo = screenManager->QueryScreenInfo(screenId);
-        if (rotation == ScreenRotation::ROTATION_90) {
-            canvas_->Rotate(-90, 0, 0); // 90 degree for text draw
-            canvas_->Translate(-(static_cast<float>(mainScreenInfo.height)), 0);
-        } else if (rotation == ScreenRotation::ROTATION_180) {
-            // 180 degree for text draw
-            canvas_->Rotate(-180, static_cast<float>(mainScreenInfo.width) / 2, // 2 half of screen width
-                static_cast<float>(mainScreenInfo.height) / 2);                 // 2 half of screen height
-        } else if (rotation == ScreenRotation::ROTATION_270) {
-            canvas_->Rotate(-270, 0, 0); // 270 degree for text draw
-            canvas_->Translate(0, -(static_cast<float>(mainScreenInfo.width)));
-        } else {
+    auto screenManager = CreateOrGetScreenManager();
+    auto mainScreenInfo = screenManager->QueryScreenInfo(screenId);
+    auto mainWidth = static_cast<float>(mainScreenInfo.width);
+    auto mainHeight = static_cast<float>(mainScreenInfo.height);
+    switch (rotation) {
+        case ScreenRotation::ROTATION_0:
+            break;
+        case ScreenRotation::ROTATION_90:
+            canvas_->Rotate(90, 0, 0); // 90 is the rotate angle
+            canvas_->Translate(0, -mainHeight);
+            break;
+        case ScreenRotation::ROTATION_180:
+            // 180 is the rotate angle, calculate half width and half height requires divide by 2
+            canvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
+            break;
+        case ScreenRotation::ROTATION_270:
+            canvas_->Rotate(270, 0, 0); // 270 is the rotate angle
+            canvas_->Translate(-mainWidth, 0);
+            break;
+        default:
             return false;
-        }
     }
     return true;
 }

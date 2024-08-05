@@ -971,11 +971,13 @@ bool RSRenderNode::IsUifirstArkTsCardNode()
 void RSRenderNode::UpdateDrawingCacheInfoBeforeChildren(bool isScreenRotation)
 {
     if (!ShouldPaint() || isScreenRotation) {
+        RS_LOGE("RSRenderNode::UpdateDrawingCacheInfoBC fail, ShouldPaint or isScreenRotation is false");
         SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
         return;
     }
     CheckDrawingCacheType();
     if (GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
+        RS_LOGE("RSRenderNode::UpdateDrawingCacheInfoBC fail, drawingCacheType is %{public}d", GetDrawingCacheType());
         return;
     }
     RS_OPTIONAL_TRACE_NAME_FMT("DrawingCacheInfo id:%llu contentDirty:%d subTreeDirty:%d nodeGroupType:%d",

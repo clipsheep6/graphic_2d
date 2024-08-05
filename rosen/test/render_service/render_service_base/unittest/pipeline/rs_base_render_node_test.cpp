@@ -448,6 +448,7 @@ HWTEST_F(RSBaseRenderNodeTest, SetSharedTransitionParam, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, SetGlobalAlpha, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    node->InitRenderParams();
     float alpha = 1.0f;
     node->SetGlobalAlpha(alpha);
 
@@ -656,6 +657,7 @@ HWTEST_F(RSBaseRenderNodeTest, CheckGroupableAnimation, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, MarkNodeGroup, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    node->InitRenderParams();
 
     RSRenderNode::NodeGroupType type = RSRenderNode::NodeGroupType::GROUP_TYPE_BUTT;
     bool isNodeGroup = false;

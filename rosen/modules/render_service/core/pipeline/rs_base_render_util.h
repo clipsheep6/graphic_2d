@@ -57,6 +57,7 @@ class RSTransactionData;
 #ifdef USE_VIDEO_PROCESSING_ENGINE
 constexpr float DEFAULT_SCREEN_LIGHT_NITS = 500;
 #endif
+constexpr uint32_t CONSUME_DIRECTLY = 0;
 struct BufferDrawParam {
     sptr<OHOS::SurfaceBuffer> buffer;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
@@ -127,8 +128,7 @@ public:
 
     static GSError DropFrameProcess(RSSurfaceHandler& node);
     static Rect MergeBufferDamages(const std::vector<Rect>& damages);
-    static bool ConsumeAndUpdateBuffer(
-        RSSurfaceHandler& surfaceHandler, bool isDisplaySurface, uint64_t vsyncTimestamp = 0);
+    static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, uint64_t presentWhen = CONSUME_DIRECTLY);
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
 
     static std::unique_ptr<RSTransactionData> ParseTransactionData(MessageParcel& parcel);

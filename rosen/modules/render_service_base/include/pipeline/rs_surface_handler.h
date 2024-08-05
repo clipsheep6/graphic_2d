@@ -255,12 +255,7 @@ public:
             preBuffer_.RegisterDeleteBufferListener(bufferDeleteCb);
         }
     }
-    void ReleaseBuffer(SurfaceBufferEntry& buffer);
     void ConsumeAndUpdateBuffer(SurfaceBufferEntry buffer);
-    void CacheBuffer(SurfaceBufferEntry buffer);
-    RSSurfaceHandler::SurfaceBufferEntry GetBufferFromCache(uint64_t vsyncTimestamp);
-    bool HasBufferCache() const;
-    void ClearBufferCache();
 #endif
 
 protected:
@@ -280,7 +275,6 @@ private:
     float globalZOrder_ = 0.0f;
     std::atomic<int> bufferAvailableCount_ = 0;
     bool bufferSizeChanged_ = false;
-    std::map<uint64_t, SurfaceBufferEntry> bufferCache_;
     std::shared_ptr<SurfaceBufferEntry> holdBuffer_ = nullptr;
 };
 }

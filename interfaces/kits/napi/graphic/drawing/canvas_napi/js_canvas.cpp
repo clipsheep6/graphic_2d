@@ -168,8 +168,8 @@ bool ExtracetDrawingBitmap(std::shared_ptr<Media::PixelMap> pixelMap, Drawing::B
     return true;
 }
 
-void DrawingPixelMapMesh(std::shared_ptr<Media::PixelMap> pixelMap, int column, int row, float* vertices,
-    uint32_t* colors, Drawing::Canvas* m_canvas)
+void DrawingPixelMapMesh(std::shared_ptr<Media::PixelMap> pixelMap, int column, int row,
+    float* vertices, uint32_t* colors, Drawing::Canvas* m_canvas)
 {
     const int vertCounts = (column + 1) * (row + 1);
     int32_t size = 6; // triangle * 2
@@ -179,8 +179,8 @@ void DrawingPixelMapMesh(std::shared_ptr<Media::PixelMap> pixelMap, int column, 
         flags |= Drawing::BuilderFlags::HAS_COLORS_BUILDER_FLAG;
     }
     Drawing::Vertices::Builder builder(Drawing::VertexMode::TRIANGLES_VERTEXMODE, vertCounts, indexCount, flags);
-    if (memcpy_s(builder.Positions(), vertCounts * sizeof(Drawing::Point), vertices,
-            vertCounts * sizeof(Drawing::Point)) != 0) {
+    if (memcpy_s(builder.Positions(), vertCounts * sizeof(Drawing::Point),
+        vertices, vertCounts * sizeof(Drawing::Point)) != 0) {
         ROSEN_LOGE("Drawing_napi::DrawingPixelMapMesh memcpy points failed");
         return;
     }
@@ -246,8 +246,8 @@ void DrawingPixelMapMesh(std::shared_ptr<Media::PixelMap> pixelMap, int column, 
             ROSEN_LOGE("Drawing_napi::DrawingPixelMapMesh image is nullptr");
             return;
         }
-        auto shader = Drawing::ShaderEffect::CreateImageShader(
-            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, Drawing::SamplingOptions(), Drawing::Matrix());
+        auto shader = Drawing::ShaderEffect::CreateImageShader(*image,
+            Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, Drawing::SamplingOptions(), Drawing::Matrix());
         m_canvas->GetMutableBrush().SetShaderEffect(shader);
     } else {
         auto shader = Drawing::ShaderEffect::CreateExtendShader(std::make_shared<RSPixelMapShader>(pixelMap,
@@ -255,9 +255,10 @@ void DrawingPixelMapMesh(std::shared_ptr<Media::PixelMap> pixelMap, int column, 
         m_canvas->GetMutableBrush().SetShaderEffect(shader);
     }
 
-    JS_CALL_DRAWING_FUNC(m_canvas->DrawVertices(*builder.Detach(), Drawing::BlendMode::MODULATE));
+    JS_CALL_DRAWING_FUNC(
+        m_canvas->DrawVertices(*builder.Detach(), Drawing::BlendMode::MODULATE));
 }
-} // namespace
+}
 #endif
 
 namespace Drawing {

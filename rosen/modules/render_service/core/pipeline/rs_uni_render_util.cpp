@@ -619,9 +619,17 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
 
     auto layerMatrix = layer->GetMatrix();
     params.matrix = Drawing::Matrix();
-    params.matrix.SetMatrix(layerMatrix.scaleX, layerMatrix.skewX, layerMatrix.transX, layerMatrix.skewY,
-        layerMatrix.scaleY, layerMatrix.transY, layerMatrix.pers0, layerMatrix.pers1, layerMatrix.pers2);
-    int nodeRotation = RSUniRenderUtil::GetRotationFromMatrix(params.matrix); // rotation degree anti-clockwise
+    bool rotationFixed = layer->GetRotationFixed();
+    auto dstRect = layer->GetLayerSize();
+    if (rotationFixed) {
+        // if rotation fixed, not use [total matrix + bounds] to draw buffer, use [src + dst + transform]
+        params.matrix.PreTranslate(static_cast<float>(dstRect.x), static_cast<float>(dstRect.y));
+    } else {
+        params.matrix.SetMatrix(layerMatrix.scaleX, layerMatrix.skewX, layerMatrix.transX, layerMatrix.skewY,
+            layerMatrix.scaleY, layerMatrix.transY, layerMatrix.pers0, layerMatrix.pers1, layerMatrix.pers2);
+    }
+    // rotation degree anti-clockwise
+    int nodeRotation = rotationFixed ? 0 : RSUniRenderUtil::GetRotationFromMatrix(params.matrix);
     auto layerTransform = layer->GetTransformType();
     // calculate clockwise rotation degree excluded rotation in total matrix
     int realRotation = (nodeRotation +
@@ -630,10 +638,16 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     // calculate transform in anti-clockwise
     auto transform = RSBaseRenderUtil::RotateEnumToInt(realRotation, flip);
 
-    RectF localBounds = { 0.0f, 0.0f, static_cast<float>(boundRect.w), static_cast<float>(boundRect.h) };
+    RectF localBounds = { 0.0f, 0.0f,
+        rotationFixed ? static_cast<float>(dstRect.w) : static_cast<float>(boundRect.w),
+        rotationFixed ? static_cast<float>(dstRect.h) : static_cast<float>(boundRect.h) };
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, static_cast<Gravity>(layer->GetGravity()),
         localBounds, params);
     RSBaseRenderUtil::FlipMatrix(transform, params);
+    if (rotationFixed) {
+        // if rotation fixed, no need to calculate scaling mode, it is contained in dstRect
+        return params;
+    }
     ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
     const auto& surface = layer->GetSurface();
     if (surface == nullptr) {

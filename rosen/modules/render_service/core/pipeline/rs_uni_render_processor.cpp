@@ -221,6 +221,7 @@ LayerInfoPtr RSUniRenderProcessor::GetLayerInfo(RSSurfaceRenderParams& params, s
     params.SetPreBuffer(nullptr);
     layer->SetZorder(layerInfo.zOrder);
     layer->SetType(layerInfo.layerType);
+    layer->SetRotationFixed(params.GetForceHardwareByUser());
 
     GraphicLayerAlpha alpha;
     alpha.enGlobalAlpha = true;

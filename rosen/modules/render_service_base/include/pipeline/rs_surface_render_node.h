@@ -1202,6 +1202,7 @@ public:
 protected:
     void OnSync() override;
     void OnSkipSync() override;
+    void RotateCorner(int rotationDegree, Vector4<int>& cornerRadius) const;
 
 private:
     explicit RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {},

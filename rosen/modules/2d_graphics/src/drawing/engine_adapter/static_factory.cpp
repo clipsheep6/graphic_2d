@@ -274,6 +274,16 @@ std::shared_ptr<Data> StaticFactory::MakeDataFromFileName(const char path[])
     return EngineStaticFactory::MakeDataFromFileName(path);
 }
 
+FontStyleSet* StaticFactory::CreateEmptyFontStyleSet()
+{
+    #ifdef ENABLE_DDGR_OPTIMIZE
+    if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return DDGRStaticFactory::CreateEmptyFontStyleSet();
+    }
+#endif
+    return EngineStaticFactory::CreateEmptyFontStyleSet();
+}
+
 void StaticFactory::PathOutlineDecompose(const Path& path, std::vector<Path>& paths)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE

@@ -52,6 +52,9 @@
 #define RS_PROFILER_ON_PARALLEL_RENDER_BEGIN() RSProfiler::OnParallelRenderBegin()
 #define RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber) RSProfiler::OnParallelRenderEnd(renderFrameNumber)
 #define RS_PROFILER_SHOULD_BLOCK_HWCNODE() RSProfiler::ShouldBlockHWCNode()
+#define RS_PROFILER_ANIME_SET_START_TIME(id, time) RSProfiler::AnimeSetStartTime(id, time)
+#define RS_PROFILER_REPLAY_FIX_TRINDEX(curIndex, lastIndex) RSProfiler::ReplayFixTrIndex(curIndex, lastIndex)
+#define RS_PROFILER_PATCH_TYPEFACE_ID(parcel, val) RSProfiler::PatchTypefaceId(parcel, val)
 #else
 #define RS_PROFILER_INIT(renderSevice)
 #define RS_PROFILER_ON_FRAME_BEGIN()
@@ -79,6 +82,9 @@
 #define RS_PROFILER_ON_PARALLEL_RENDER_BEGIN()
 #define RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber)
 #define RS_PROFILER_SHOULD_BLOCK_HWCNODE() false
+#define RS_PROFILER_ANIME_SET_START_TIME(id, time) time
+#define RS_PROFILER_REPLAY_FIX_TRINDEX(curIndex, lastIndex)
+#define RS_PROFILER_PATCH_TYPEFACE_ID(parcel, val) 
 #endif
 
 #ifdef RS_PROFILER_ENABLED
@@ -143,6 +149,8 @@ public:
     RSB_EXPORT static uint64_t PatchTime(uint64_t time);
     RSB_EXPORT static uint64_t PatchTransactionTime(const Parcel& parcel, uint64_t timeAtRecordProcess);
 
+    static void PatchTypefaceId(const Parcel& parcel, std::shared_ptr<Drawing::DrawCmdList>& val);
+
     template<typename T>
     static T PatchNodeId(const Parcel& parcel, T id)
     {
@@ -168,6 +176,12 @@ public:
 
     RSB_EXPORT static uint32_t GetFrameNumber();
     RSB_EXPORT static bool ShouldBlockHWCNode();
+
+    RSB_EXPORT static std::unordered_map<AnimationId, std::vector<int64_t>> &AnimeGetStartTimes();
+    RSB_EXPORT static int64_t AnimeSetStartTime(AnimationId id, int64_t nanoTime);
+    RSB_EXPORT static std::string GendMessageBase();
+    RSB_EXPORT static void SendMessageBase(const std::string msg);
+    RSB_EXPORT static void ReplayFixTrIndex(uint64_t curIndex, uint64_t& lastIndex);
 
 public:
     RSB_EXPORT static bool IsParcelMock(const Parcel& parcel);
@@ -232,17 +246,17 @@ private:
     RSB_EXPORT static size_t GetRenderNodeCount(const RSContext& context);
     RSB_EXPORT static NodeId GetRandomSurfaceNode(const RSContext& context);
 
-    RSB_EXPORT static void MarshalNodes(const RSContext& context, std::stringstream& data);
-    RSB_EXPORT static void MarshalTree(const RSRenderNode* node, std::stringstream& data);
-    RSB_EXPORT static void MarshalNode(const RSRenderNode* node, std::stringstream& data);
-    RSB_EXPORT static void MarshalNode(const RSRenderNode& node, std::stringstream& data);
+    RSB_EXPORT static void MarshalNodes(const RSContext& context, std::stringstream& data, uint32_t fileVersion);
+    RSB_EXPORT static void MarshalTree(const RSRenderNode* node, std::stringstream& data, uint32_t fileVersion);
+    RSB_EXPORT static void MarshalNode(const RSRenderNode* node, std::stringstream& data, uint32_t fileVersion);
+    RSB_EXPORT static void MarshalNodeLo(const RSRenderNode& node, std::stringstream& data, uint32_t fileVersion);
 
     RSB_EXPORT static void UnmarshalNodes(RSContext& context, std::stringstream& data, uint32_t fileVersion);
     RSB_EXPORT static void UnmarshalTree(RSContext& context, std::stringstream& data, uint32_t fileVersion);
     RSB_EXPORT static void UnmarshalNode(RSContext& context, std::stringstream& data, uint32_t fileVersion);
     RSB_EXPORT static void UnmarshalNode(
         RSContext& context, std::stringstream& data, NodeId nodeId, uint32_t fileVersion);
-    RSB_EXPORT static void UnmarshalNode(RSRenderNode& node, std::stringstream& data, uint32_t fileVersion);
+    RSB_EXPORT static void UnmarshalNodeLo(RSRenderNode& node, std::stringstream& data, uint32_t fileVersion);
 
     // RSRenderNode
     RSB_EXPORT static std::string DumpRenderProperties(const RSRenderNode& node);
@@ -287,7 +301,7 @@ private:
     static bool IsPlaying();
 
     static bool IsLoadSaveFirstScreenInProgress();
-    static std::string FirstFrameMarshalling();
+    static std::string FirstFrameMarshalling(uint32_t fileVersion);
     static void FirstFrameUnmarshalling(const std::string& data, uint32_t fileVersion);
     static void HiddenSpaceTurnOff();
     static void HiddenSpaceTurnOn();
@@ -310,6 +324,9 @@ private:
     static void CalcNodeWeigthOnFrameEnd(uint64_t frameLength);
 
     RSB_EXPORT static uint32_t GetNodeDepth(const std::shared_ptr<RSRenderNode> node);
+
+    static void TypefaceMarshalling(std::stringstream& stream, uint32_t fileVersion);
+    static void TypefaceUnmarshalling(std::stringstream& stream, uint32_t fileVersion);
 
     // Network interface
     using Command = void (*)(const ArgList&);
@@ -351,7 +368,7 @@ private:
 
     static void PlaybackStart(const ArgList& args);
     static void PlaybackStop(const ArgList& args);
-    static void PlaybackUpdate();
+    static double PlaybackUpdate(const double deltaTime);
 
     static void PlaybackPrepare(const ArgList& args);
     static void PlaybackPrepareFirstFrame(const ArgList& args);

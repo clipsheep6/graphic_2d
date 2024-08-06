@@ -366,12 +366,6 @@ void RSRenderProperty<int>::Dump(std::string& out) const
     out += "[" + std::to_string(Get()) + "]";
 }
 
-void RSRenderProperty<int>::Dump(std::string& out) const
->>>>>>> master
-{
-    out += "[" + std::to_string(Get()) + "]";
-}
-
 template<>
 void RSRenderProperty<float>::Dump(std::string& out) const
 {

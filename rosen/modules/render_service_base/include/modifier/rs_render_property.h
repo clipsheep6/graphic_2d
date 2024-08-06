@@ -357,7 +357,6 @@ template<>
 RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
 
 template<>
-
 RSB_EXPORT void RSRenderProperty<bool>::Dump(std::string& out) const;
 template<>
 RSB_EXPORT void RSRenderProperty<int>::Dump(std::string& out) const;

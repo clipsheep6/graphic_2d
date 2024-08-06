@@ -334,7 +334,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (isUiFirstNode || !(surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow())) {
         curSurfaceDrawRegion = CalculateVisibleRegion(*uniParam, *surfaceParams, *this, isUiFirstNode);
     } else {
-        curSurfaceDrawRegion = GetCurSurfaceDrawRegion()
+        curSurfaceDrawRegion = GetCurSurfaceDrawRegion();
     }
 #else
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(*uniParam, *surfaceParams, *this, isUiFirstNode);
@@ -436,7 +436,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 
     OnGeneralProcess(*curCanvas_, *surfaceParams, isSelfDrawingSurface);
-	
+
 #ifdef SUBTREE_PARALLEL_DEBUG_ENABLE
     RSParallelManager::Singleton().DrawSubtreeParallelDfx(*rscanvas, *surfaceParams);
 #endif

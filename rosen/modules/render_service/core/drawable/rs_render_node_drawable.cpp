@@ -81,7 +81,6 @@ void RSRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 #ifdef SUBTREE_PARALLEL_ENABLE
     RSParallelManager::Singleton().OnDrawParallel(canvas, bounds, this);
 #else
-
     DrawAll(canvas, bounds);
 #endif
 }

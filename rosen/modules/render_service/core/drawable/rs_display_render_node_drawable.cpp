@@ -633,16 +633,16 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
             SetHighContrastIfEnabled(*curCanvas_);
 #ifdef SUBTREE_PARALLEL_ENABLE
-            curCanvas_->SetIsSubtreeParallel(true);
-			if (needOffscreen) {
-			    RSParallelManager::Singletion().SetSubtreeParallelDisabled();
-			}
-            if (RSParallelManager::Singleton().OnProcessChildren(this)!=0) {
-                curCanvas_->SetIsSubtreeParallel(false);
-                RSParallelManager::Singleton().ClearSubtreeParallelRes();
-                RSRenderNodeDrawable::OnDraw(*curCanvas_);
-            }
-            curCanvas_->SetIsSubtreeParallel(false);
+    curCanvas_->SetIsSubtreeParallel(true);
+    if (needOffscreen) {
+        RSParallelManager::Singletion().SetSubtreeParallelDisabled();
+    }
+    if (RSParallelManager::Singleton().OnProcessChildren(this)!=0) {
+        curCanvas_->SetIsSubtreeParallel(false);
+        RSParallelManager::Singleton().ClearSubtreeParallelRes();
+        RSRenderNodeDrawable::OnDraw(*curCanvas_);
+    }
+    curCanvas_->SetIsSubtreeParallel(false);
 #else
             RSRenderNodeDrawable::OnDraw(*curCanvas_);
 #endif

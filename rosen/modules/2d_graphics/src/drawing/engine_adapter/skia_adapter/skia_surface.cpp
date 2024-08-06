@@ -102,9 +102,11 @@ void SkiaSurface::PostSkSurfaceToTargetThread()
 
 SkiaSurface::~SkiaSurface()
 {
+#ifdef SUBTREE_PARALLEL_ENABLE
     if (onMigrateCallback(std::move(skSurface_))) {
         return;
     }
+#endif
     PostSkSurfaceToTargetThread();
 }
 

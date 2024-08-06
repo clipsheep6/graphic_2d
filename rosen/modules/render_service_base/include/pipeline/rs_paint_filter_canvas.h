@@ -28,23 +28,20 @@
 #include "screen_manager/screen_types.h"
 #include "surface_type.h"
 #include "utils/region.h"
-#ifdef SUBTREE_PARALLEL_ENABLE
-#include "foundation/graphic/graphic_2d_ext/subtree/resource/rs_parallel_recorder.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
 #ifdef SUBTREE_PARALLEL_ENABLE
 struct RSParallelCanvasStatus;
+class RSParallelRecorder;
 #endif
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
 #ifdef SUBTREE_PARALLEL_ENABLE
 public:
     void EnableParallelRecorder(bool flag);
-    void PlayBack(RSParallelRecorderPtr recorder);
-    RSParallelRecorderPtr GetParallelRecorder();
+    void PlayBack(std::shared_ptr<RSParallelRecorder> recorder);
+    std::shared_ptr<RSParallelRecorder> GetParallelRecorder();
     void RestoreToCount(uint32_t count);
-
 private:
     std::shared_ptr<RSParallelRecorder> recorder_;
 #endif

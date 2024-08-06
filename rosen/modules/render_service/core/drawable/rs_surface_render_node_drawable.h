@@ -274,8 +274,8 @@ public:
     Drawing::Region GetCurSurfaceDrawRegion()
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        ++getCurSurfaceDrawRegionCount_;
-        if (getCurSurfaceDrawRegionCount_ > 1) {
+        ++GetCurSurfaceDrawRegionCount_;
+        if (GetCurSurfaceDrawRegionCount_ > 1) {
             RS_LOGE("SurfaceDrawable Name %{public}s, GetCurSurfaceDrawRegionCount_ %{public}d",
                 GetName().c_str, GetCurSurfaceDrawRegionCount_.load());
         }
@@ -286,13 +286,13 @@ public:
 
     int GetCurSurfaceDrawRegionCount()
     {
-        return getCurSurfaceDrawRegionCount_.load();
+        return GetCurSurfaceDrawRegionCount_.load();
     }
 
     void SetCurSurfaceDrawRegion(Drawing::Region& region)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        getCurSurfaceDrawRegionCount_.store(0);
+        GetCurSurfaceDrawRegionCount_.store(0);
         curSurfaceDrawRegion_.Clone(region);
     }
     void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams& uniParam, Drawing::Region& region);
@@ -407,8 +407,8 @@ private:
     Occlusion::Region dirtyRegionBelowCurrentLayer_;
     bool dirtyRegionBelowCurrentLayerIsEmpty_ = false;
 #ifdef SUBTREE_PARALLEL_ENABLE
-   std::atomic<int> getCurSurfaceDrawRegionCount_ = 0;
-   Drawing::Region curSurfaceDrawRegion_ {};
+    std::atomic<int> GetCurSurfaceDrawRegionCount_ = 0;
+    Drawing::Region curSurfaceDrawRegion_ {};
 #endif
 };
 } // namespace DrawableV2

@@ -203,9 +203,6 @@ HWTEST_F(VulkanLoaderSystemTest, LoadInstanceFuncPtr, TestSize.Level1)
         fpGetPhysicalDeviceSurfacePresentModesKHR = reinterpret_cast<PFN_vkGetPhysicalDeviceSurfacePresentModesKHR>(
             vkGetInstanceProcAddr(instance_, "vkGetPhysicalDeviceSurfacePresentModesKHR"));
         EXPECT_NE(fpGetPhysicalDeviceSurfacePresentModesKHR, nullptr);
-        fpGetPhysicalDevicePresentRectanglesKHR = reinterpret_cast<PFN_vkGetPhysicalDevicePresentRectanglesKHR>(
-            vkGetInstanceProcAddr(instance_, "vkGetPhysicalDevicePresentRectanglesKHR"));
-        EXPECT_NE(fpGetPhysicalDevicePresentRectanglesKHR, nullptr);
         fpGetPhysicalDeviceSurfaceFormats2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceFormats2KHR>(
             vkGetInstanceProcAddr(instance_, "vkGetPhysicalDeviceSurfaceFormats2KHR"));
         EXPECT_NE(fpGetPhysicalDeviceSurfaceFormats2KHR, nullptr);
@@ -289,6 +286,7 @@ HWTEST_F(VulkanLoaderSystemTest, createDevice_Test, TestSize.Level1)
         std::vector<const char*> deviceExtensions;
         deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         deviceExtensions.push_back(VK_EXT_HDR_METADATA_EXTENSION_NAME);
+        deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         VkDeviceCreateInfo deviceCreateInfo = {};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -329,7 +327,10 @@ HWTEST_F(VulkanLoaderSystemTest, LoadDeviceFuncPtr, TestSize.Level1)
         EXPECT_NE(fpQueuePresentKHR, nullptr);
         fpSetHdrMetadataEXT = reinterpret_cast<PFN_vkSetHdrMetadataEXT>(
             vkGetDeviceProcAddr(device_, "vkSetHdrMetadataEXT"));
-        EXPECT_NE(fpAcquireNextImageKHR, nullptr);
+        EXPECT_NE(fpSetHdrMetadataEXT, nullptr);
+        fpGetPhysicalDevicePresentRectanglesKHR = reinterpret_cast<PFN_vkGetPhysicalDevicePresentRectanglesKHR>(
+            vkGetDeviceProcAddr(device_, "vkGetPhysicalDevicePresentRectanglesKHR"));
+        EXPECT_NE(fpGetPhysicalDevicePresentRectanglesKHR, nullptr);
     }
 }
 
@@ -461,6 +462,31 @@ HWTEST_F(VulkanLoaderSystemTest, getPhysicalDeviceSurfaceFormatsKHR_Test, TestSi
 }
 
 /**
+ * @tc.name: test vkGetPhysicalDeviceSurfaceFormatsKHR
+ * @tc.desc: test vkGetPhysicalDeviceSurfaceFormatsKHR
+ * @tc.type: FUNC
+ * @tc.require: issueI9IN5M
+ */
+HWTEST_F(VulkanLoaderSystemTest, getPhysicalDeviceSurfaceFormatsKHR2_Test, TestSize.Level1)
+{
+    if (isSupportedVulkan_) {
+        EXPECT_NE(physicalDevice_, nullptr);
+        EXPECT_NE(surface_, VK_NULL_HANDLE);
+        uint32_t formatCount = 0;
+        VkPhysicalDeviceSurfaceInfo2KHR surfaceInfo = {};
+        surfaceInfo.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR;
+        surfaceInfo.surface = surface_;
+        VkResult res = fpGetPhysicalDeviceSurfaceFormats2KHR(physicalDevice_, &surfaceInfo, &formatCount, nullptr);
+        EXPECT_EQ(res, VK_SUCCESS);
+        EXPECT_NE(formatCount, 0);
+        std::vector<VkSurfaceFormat2KHR> formats(formatCount);
+        res = fpGetPhysicalDeviceSurfaceFormats2KHR(physicalDevice_, &surfaceInfo, &formatCount, formats.data());
+        EXPECT_EQ(formatCount, formats.size());
+        EXPECT_EQ(res, VK_SUCCESS);
+    }
+}
+
+/**
  * @tc.name: test vkGetPhysicalDeviceSurfaceCapabilities2KHR
  * @tc.desc: test vkGetPhysicalDeviceSurfaceCapabilities2KHR
  * @tc.type: FUNC
@@ -479,6 +505,16 @@ HWTEST_F(VulkanLoaderSystemTest, getPhysicalDeviceSurfaceCapabilities2KHR_Test, 
         surfaceCapabilities.sType = VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR;
         surfaceCapabilities.pNext = nullptr;
 
+        fpGetPhysicalDeviceSurfaceCapabilities2KHR(physicalDevice_, &surfaceInfo, &surfaceCapabilities);
+
+        VkSurfaceCapabilities2KHR surfaceCapabilitiesNext = {};
+        surfaceCapabilitiesNext.sType = VK_STRUCTURE_TYPE_SHARED_PRESENT_SURFACE_CAPABILITIES_KHR;
+        surfaceCapabilitiesNext.pNext = nullptr;
+        surfaceCapabilities.pNext = &surfaceCapabilitiesNext;
+        fpGetPhysicalDeviceSurfaceCapabilities2KHR(physicalDevice_, &surfaceInfo, &surfaceCapabilities);
+
+        surfaceCapabilitiesNext.sType = VK_STRUCTURE_TYPE_SURFACE_PROTECTED_CAPABILITIES_KHR;
+        surfaceCapabilities.pNext = &surfaceCapabilitiesNext;
         fpGetPhysicalDeviceSurfaceCapabilities2KHR(physicalDevice_, &surfaceInfo, &surfaceCapabilities);
     }
 }

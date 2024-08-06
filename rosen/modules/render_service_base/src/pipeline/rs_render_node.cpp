@@ -1052,9 +1052,7 @@ RSRenderNode::~RSRenderNode()
     if (appPid_ != 0) {
         RSSingleFrameComposer::AddOrRemoveAppPidToMap(false, appPid_);
     }
-    if (fallbackAnimationOnDestroy_) {
-        FallbackAnimationsToRoot();
-    }
+    FallbackAnimationsToRoot();
     if (clearCacheSurfaceFunc_ && (cacheSurface_ || cacheCompletedSurface_)) {
         clearCacheSurfaceFunc_(std::move(cacheSurface_), std::move(cacheCompletedSurface_), cacheSurfaceThreadIndex_,
             completedSurfaceThreadIndex_);
@@ -1070,6 +1068,11 @@ RSRenderNode::~RSRenderNode()
 void RSRenderNode::FallbackAnimationsToRoot()
 {
     if (animationManager_.animations_.empty()) {
+        return;
+    }
+
+    if (!fallbackAnimationOnDestroy_) {
+        ROSEN_LOGI("node[%{public}" PRIu64 "] fallbackAnimationOnDestroy_ is fasle", GetId());
         return;
     }
 

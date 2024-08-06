@@ -161,11 +161,6 @@ bool SkiaStaticFactory::AsBlendMode(const Brush& brush)
     return SkiaPaint::AsBlendMode(brush);
 }
 
-FontStyleSet* SkiaStaticFactory::CreateEmptyFontStyleSet()
-{
-    return SkiaFontStyleSet::CreateEmpty();
-}
-
 void SkiaStaticFactory::PathOutlineDecompose(const Path& path, std::vector<Path>& paths)
 {
     SkiaHMSymbol::PathOutlineDecompose(path, paths);

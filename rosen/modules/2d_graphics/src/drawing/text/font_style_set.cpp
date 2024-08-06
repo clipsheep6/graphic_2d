@@ -57,7 +57,7 @@ int FontStyleSet::Count()
 
 FontStyleSet* FontStyleSet::CreateEmpty()
 {
-    return StaticFactory::CreateEmptyFontStyleSet();
+    return StaticFactory::CreateEmpty();
 }
 } // namespace Drawing
 } // namespace Rosen

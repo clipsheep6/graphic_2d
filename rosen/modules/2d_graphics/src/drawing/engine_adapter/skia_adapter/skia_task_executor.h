@@ -55,7 +55,7 @@ public:
     constexpr void Push(T&& t)
     {
         uint32_t newHead = (head_ + 1) % SIZE;
-        if(newHead == tail_) {
+        if (newHead == tail_) {
             return;
         }
         buffer_[head_] = std::move(t);
@@ -64,7 +64,7 @@ public:
 
     constexpr T Pop()
     {
-        if(tail_ == head_) {
+        if (tail_ == head_) {
             return nullptr;
         }
         uint32_t index = tail_;

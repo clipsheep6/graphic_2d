@@ -36,7 +36,7 @@ const sk_sp<SkVertices> SkiaVertices::GetVertices() const
     return skiaVertices_;
 }
 
-bool SkiaVertices::MakeCopy(VertexMode mode,int vertexCount,
+bool SkiaVertices::MakeCopy(VertexMode mode, int vertexCount,
     const Point positions[], const Point texs[], const ColorQuad colors[],
     int indexCount, const uint16_t indices[])
 {

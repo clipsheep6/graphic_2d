@@ -35,7 +35,7 @@ public:
         return AdapterType::SKIA_ADAPTER;
     }
 
-    bool MakeCopy(VertexMode mode,int vertexCount,
+    bool MakeCopy(VertexMode mode, int vertexCount,
         const Point positions[], const Point texs[], const ColorQuad colors[],
         int indexCount, const uint16_t indices[]) override;
 

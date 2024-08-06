@@ -3451,6 +3451,12 @@ void RSMainThread::RenderFrameStart(uint64_t timestamp)
 {
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().RenderStart(timestamp);
+#ifdef RS_ENABLE_VK
+        if (Drawing::SystemProperties::GetSystemGraphicGpuType() == GpuApiType::VULKAN ||
+            Drawing::SystemProperties::GetSystemGraphicGpuType() == GpuApiType::DDGR) {
+            RsFrameReport::GetInstance().RegisterSetFreqAdjustEnable(RsVulkanContext::SetFreqAdjustEnable);
+        }
+#endif
     }
     RenderFrameTrace::GetInstance().RenderStartFrameTrace(RS_INTERVAL_NAME);
     int hardwareTid = RSHardwareThread::Instance().GetHardwareTid();

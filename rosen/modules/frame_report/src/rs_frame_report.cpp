@@ -217,5 +217,18 @@ void RsFrameReport::SetFrameParam(int requestId, int load, int schedFrameNum, in
         LOGE("RsFrameReport:[SetFrameParam]load SetFrameParam function failed");
     }
 }
+
+void RsFrameReport::RegisterSetFreqAdjustEnable(SetFreqAdjustEnableFunc callback)
+{
+    if (registerSetFreqAdjustEnableFunc_ == nullptr) {
+        registerSetFreqAdjustEnableFunc_ = (RegisterSetFreqAdjustEnableFunc)LoadSymbol("RegisterSetFreqAdjustEnable");
+    }
+
+    if (registerSetFreqAdjustEnableFunc_ != nullptr) {
+        registerSetFreqAdjustEnableFunc_(callback);
+    } else {
+        LOGE("RsFrameReport:[RegisterSetFreqAdjustEnable]load RegisterSetFreqAdjustEnable function failed");
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

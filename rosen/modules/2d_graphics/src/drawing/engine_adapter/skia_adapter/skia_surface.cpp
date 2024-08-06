@@ -22,6 +22,7 @@
 
 #include "skia_bitmap.h"
 #include "skia_canvas.h"
+#include "skia_image_info.h"
 #ifdef ACE_ENABLE_GPU
 #include "skia_gpu_context.h"
 #endif

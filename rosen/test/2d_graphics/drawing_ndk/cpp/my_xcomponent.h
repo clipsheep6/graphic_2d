@@ -55,6 +55,7 @@ public:
     static napi_value NapiPerformanceCpu(napi_env env, napi_callback_info info);
     static napi_value NapiPerformanceGpu(napi_env env, napi_callback_info info);
     static napi_value NapiStabilityCpu(napi_env env, napi_callback_info info);
+    static napi_value NapiStabilityGpu(napi_env env, napi_callback_info info);
 
     // display to screen
     void RegisterCallback(OH_NativeXComponent *nativeXComponent);
@@ -72,6 +73,8 @@ public:
     void TestPerformanceGpu(napi_env env, std::string caseName);
     void TestStabilityCpu(napi_env env, std::string caseName);
     void TestStabilityCpuInner(std::string caseName);
+    void TestStabilityGpu(napi_env env, std::string caseName);
+    void TestStabilityGpuInner(std::string caseName);
     std::string id_;
 
 private:

@@ -612,6 +612,39 @@ HWTEST_F(RSSystemPropertiesTest, GetKawaseEnabled, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetBlurStretchEnabled
+ * @tc.desc: GetBlurStretchEnabled Test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSystemPropertiesTest, GetBlurStretchEnabled, TestSize.Level1)
+{
+    ASSERT_TRUE(RSSystemProperties::GetBlurStretchEnabled());
+}
+
+/**
+ * @tc.name: GetGreyBlurEnabled
+ * @tc.desc: GetGreyBlurEnabled Test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSystemPropertiesTest, GetGreyBlurEnabled, TestSize.Level1)
+{
+    ASSERT_TRUE(RSSystemProperties::GetGreyBlurEnabled());
+}
+
+/**
+ * @tc.name: GetMESAAllEnabled
+ * @tc.desc: GetMESAAllEnabled Test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSystemPropertiesTest, GetMESAAllEnabled, TestSize.Level1)
+{
+    ASSERT_FALSE(RSSystemProperties::GetMESAAllEnabled());
+}
+
+/**
  * @tc.name: SetForceHpsBlurDisabled
  * @tc.desc: SetForceHpsBlurDisabled Test
  * @tc.type:FUNC

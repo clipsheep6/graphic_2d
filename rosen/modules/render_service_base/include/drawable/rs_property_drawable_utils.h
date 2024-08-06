@@ -78,6 +78,7 @@ public:
     RSB_EXPORT static int GetAndResetBlurCnt();
     static bool GetGravityMatrix(const Gravity& gravity, const Drawing::Rect& rect, const float& w, const float& h,
         Drawing::Matrix& mat);
+    static void RSFilterSetPixelStretch(const RSProperties& property, const std::shared_ptr<RSFilter>& filter);
 
 private:
     static std::shared_ptr<Drawing::RuntimeEffect> binarizationShaderEffect_;

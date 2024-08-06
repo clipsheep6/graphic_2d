@@ -302,6 +302,21 @@ bool RSSystemProperties::GetHpsBlurEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetBlurStretchEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetMESAAllEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetGreyBlurEnabled()
+{
+    return false;
+}
+
 float RSSystemProperties::GetKawaseRandomColorFactor()
 {
     return 0.f;

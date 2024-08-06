@@ -581,6 +581,27 @@ bool RSSystemProperties::GetHpsBlurEnabled()
     return hpsBlurEnabled && !forceHpsBlurDisabled_;
 }
 
+bool RSSystemProperties::GetBlurStretchEnabled()
+{
+    static bool blurPixelStretchEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.blurStretchEnable", "1")).c_str()) != 0;
+    return blurPixelStretchEnabled;
+}
+
+bool RSSystemProperties::GetMESAAllEnabled()
+{
+    static bool mode =
+        std::atoi((system::GetParameter("persist.sys.graphic.MESAAllEnable", "0")).c_str()) != 0;
+    return mode;
+}
+
+bool RSSystemProperties::GetGreyBlurEnabled()
+{
+    static bool greyXEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.greyBlurEnable", "1")).c_str()) != 0;
+    return greyXEnabled;
+}
+
 float RSSystemProperties::GetKawaseRandomColorFactor()
 {
     static float randomFactor =

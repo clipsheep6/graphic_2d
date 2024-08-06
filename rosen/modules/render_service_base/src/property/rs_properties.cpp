@@ -34,6 +34,8 @@
 #include "render/rs_grey_shader_filter.h"
 #include "render/rs_hps_blur_shader_filter.h"
 #include "render/rs_kawase_blur_shader_filter.h"
+#include "render/rs_mesa_blur_shader_filter.h"
+#include "render/rs_material_filter.h"
 #include "render/rs_linear_gradient_blur_filter.h"
 #include "render/rs_linear_gradient_blur_shader_filter.h"
 #include "render/rs_magnifier_shader_filter.h"
@@ -2758,6 +2760,21 @@ void RSProperties::GenerateBackgroundBlurFilter()
         backgroundBlurRadiusX_, backgroundBlurRadiusY_, Drawing::TileMode::CLAMP, nullptr);
     uint32_t hash = SkOpts::hash(&backgroundBlurRadiusX_, sizeof(backgroundBlurRadiusX_), 0);
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
+
+    if (RSSystemProperties::GetMESAAllEnabled() || NeedBlurFuzed()) {
+        std::shared_ptr<RSMESABlurShaderFilter> mesaBlurShaderFilter;
+        if (greyCoef_.has_value()) {
+            mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(backgroundBlurRadiusX_,
+                greyCoef_->x_, greyCoef_->y_);
+        } else {
+            mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(backgroundBlurRadiusX_);
+        }
+        originalFilter = std::make_shared<RSDrawingFilter>(mesaBlurShaderFilter);
+        originalFilter->SetSkipFrame(RSDrawingFilter::CanSkipFrame(backgroundBlurRadiusX_));
+        backgroundFilter_ = originalFilter;
+        backgroundFilter_->SetFilterType(RSFilter::BLUR);
+        return;
+    }
     if (greyCoef_.has_value()) {
         std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
             std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
@@ -2802,6 +2819,11 @@ void RSProperties::GenerateBackgroundMaterialBlurFilter()
         Drawing::ImageFilter::CreateColorBlurImageFilter(*colorFilter, backgroundBlurRadius_, backgroundBlurRadius_);
 
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
+
+    if (RSSystemProperties::GetMESAAllEnabled() || NeedBlurFuzed()) {
+        GenerateBackgroundMaterialFuzedBlurFilter();
+        return;
+    }
     if (greyCoef_.has_value()) {
         std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
             std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
@@ -2843,6 +2865,20 @@ void RSProperties::GenerateForegroundBlurFilter()
         foregroundBlurRadiusX_, foregroundBlurRadiusY_, Drawing::TileMode::CLAMP, nullptr);
     uint32_t hash = SkOpts::hash(&foregroundBlurRadiusX_, sizeof(foregroundBlurRadiusX_), 0);
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
+    if (RSSystemProperties::GetMESAAllEnabled() || NeedBlurFuzed()) {
+        std::shared_ptr<RSMESABlurShaderFilter> mesaBlurShaderFilter;
+        if (greyCoef_.has_value()) {
+            mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(foregroundBlurRadiusX_,
+                greyCoef_->x_, greyCoef_->y_);
+        } else {
+            mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(foregroundBlurRadiusX_);
+        }
+        originalFilter = std::make_shared<RSDrawingFilter>(mesaBlurShaderFilter);
+        originalFilter->SetSkipFrame(RSDrawingFilter::CanSkipFrame(foregroundBlurRadiusX_));
+        filter_ = originalFilter;
+        filter_->SetFilterType(RSFilter::BLUR);
+        return;
+    }
     if (greyCoef_.has_value()) {
         std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
             std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
@@ -2888,6 +2924,10 @@ void RSProperties::GenerateForegroundMaterialBlurFilter()
 
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
 
+    if (RSSystemProperties::GetMESAAllEnabled() || NeedBlurFuzed()) {
+        GenerateForegroundMaterialFuzedBlurFilter();
+        return;
+    }
     if (greyCoef_.has_value()) {
         std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
             std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
@@ -2918,6 +2958,56 @@ void RSProperties::GenerateForegroundMaterialBlurFilter()
     originalFilter->SetSkipFrame(RSDrawingFilter::CanSkipFrame(foregroundBlurRadius_));
     originalFilter->SetSaturationForHPS(foregroundBlurSaturation_);
     originalFilter->SetBrightnessForHPS(foregroundBlurBrightness_);
+    filter_ = originalFilter;
+    maskColorShaderFilter->InitColorMod();
+    filter_->SetFilterType(RSFilter::MATERIAL);
+}
+
+void RSProperties::GenerateBackgroundMaterialFuzedBlurFilter()
+{
+    std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
+    std::shared_ptr<RSMESABlurShaderFilter> mesaBlurShaderFilter;
+    if (greyCoef_.has_value()) {
+        mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(backgroundBlurRadius_,
+            greyCoef_->x_, greyCoef_->y_);
+    } else {
+        mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(backgroundBlurRadius_);
+    }
+    originalFilter = std::make_shared<RSDrawingFilter>(mesaBlurShaderFilter);
+    uint32_t hash = SkOpts::hash(&backgroundBlurRadius_, sizeof(backgroundBlurRadius_), 0);
+    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(
+        backgroundBlurSaturation_, backgroundBlurBrightness_);
+    auto colorImageFilter = Drawing::ImageFilter::CreateColorFilterImageFilter(*colorFilter, nullptr);
+    originalFilter = originalFilter->Compose(colorImageFilter, hash);
+    std::shared_ptr<RSMaskColorShaderFilter> maskColorShaderFilter = std::make_shared<RSMaskColorShaderFilter>(
+        backgroundColorMode_, backgroundMaskColor_);
+    originalFilter = originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(maskColorShaderFilter));
+    originalFilter->SetSkipFrame(RSDrawingFilter::CanSkipFrame(backgroundBlurRadius_));
+    backgroundFilter_ = originalFilter;
+    maskColorShaderFilter->InitColorMod();
+    backgroundFilter_->SetFilterType(RSFilter::MATERIAL);
+}
+
+void RSProperties::GenerateForegroundMaterialFuzedBlurFilter()
+{
+    std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
+    std::shared_ptr<RSMESABlurShaderFilter> mesaBlurShaderFilter;
+    if (greyCoef_.has_value()) {
+        mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(foregroundBlurRadius_,
+            greyCoef_->x_, greyCoef_->y_);
+    } else {
+        mesaBlurShaderFilter = std::make_shared<RSMESABlurShaderFilter>(foregroundBlurRadius_);
+    }
+    originalFilter = std::make_shared<RSDrawingFilter>(mesaBlurShaderFilter);
+    uint32_t hash = SkOpts::hash(&foregroundBlurRadius_, sizeof(foregroundBlurRadius_), 0);
+    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(
+        foregroundBlurSaturation_, foregroundBlurBrightness_);
+    auto colorImageFilter = Drawing::ImageFilter::CreateColorFilterImageFilter(*colorFilter, nullptr);
+    originalFilter = originalFilter->Compose(colorImageFilter, hash);
+    std::shared_ptr<RSMaskColorShaderFilter> maskColorShaderFilter = std::make_shared<RSMaskColorShaderFilter>(
+        foregroundColorMode_, foregroundMaskColor_);
+    originalFilter = originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(maskColorShaderFilter));
+    originalFilter->SetSkipFrame(RSDrawingFilter::CanSkipFrame(foregroundBlurRadius_));
     filter_ = originalFilter;
     maskColorShaderFilter->InitColorMod();
     filter_->SetFilterType(RSFilter::MATERIAL);
@@ -4251,6 +4341,17 @@ void RSProperties::CalculatePixelStretch()
         return;
     }
     pixelStretch_ = std::nullopt;
+}
+
+bool RSProperties::NeedBlurFuzed()
+{
+    if (RSSystemProperties::GetGreyBlurEnabled() && greyCoef_.has_value()) {
+        return true;
+    }
+    if (RSSystemProperties::GetBlurStretchEnabled() && pixelStretch_.has_value()) {
+        return true;
+    }
+    return false;
 }
 
 void RSProperties::CalculateFrameOffset()

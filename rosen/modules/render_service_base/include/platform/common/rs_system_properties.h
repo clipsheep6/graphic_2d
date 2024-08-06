@@ -184,7 +184,10 @@ public:
     static bool GetDynamicBrightnessEnabled();
     static bool GetKawaseEnabled();
     static void SetForceHpsBlurDisabled(bool flag);
+    static bool GetBlurStretchEnabled();
     static bool GetHpsBlurEnabled();
+    static bool GetGreyBlurEnabled();
+    static bool GetMESAAllEnabled();
     static float GetKawaseRandomColorFactor();
     static bool GetRandomColorEnabled();
     static bool GetImageReleaseUsingPostTask();

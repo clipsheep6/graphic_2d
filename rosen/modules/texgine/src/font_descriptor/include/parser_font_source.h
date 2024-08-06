@@ -30,13 +30,23 @@ public:
     ParserFontSource();
     ~ParserFontSource();
     void ParserSystemFonts();
+    void ParserStylishFonts();
+    void ParserInstallFonts();
     void MatchFromFontDescriptor(FontDescriptorPtr desc, std::set<FontDescriptorPtr>& result);
     void ClearFontFileCache();
-    void Dump();
+	void Dump();
+    void GetFontDescriptorByName(const std::string& fullName, FontDescriptorPtr& result);
+    void GetSystemFontList(const int32_t& systemFontType, std::set<std::string>& fontList);
 
 private:
     void FontDescriptorScatter(FontDescriptorPtr desc);
-    bool HandleMapIntersection(std::set<FontDescriptorPtr>& finishRet, const std::string& name,
+    void HandleInstallFontFile(const std::string& path);
+    void CreateInstallFullNameMap(FontDescriptorPtr desc);
+    void CreateStylishFullNameMap(FontDescriptorPtr desc);
+    std::set<std::string> GetInstallFontList();
+    std::set<std::string> GetStylishFontList();
+    std::set<std::string> GetGenericFontList();
+	bool HandleMapIntersection(std::set<FontDescriptorPtr>& finishRet, const std::string& name,
         std::unordered_map<std::string, std::set<FontDescriptorPtr>>& map);
     bool FilterBoldCache(int weight, std::set<FontDescriptorPtr>& finishRet);
     bool FilterWidthCache(int width, std::set<FontDescriptorPtr>& finishRet);
@@ -49,8 +59,7 @@ private:
     TextEngine::FontParser parser_;
 
     struct FontDescriptorEqual {
-        bool operator()(const FontDescriptorPtr& lhs, const FontDescriptorPtr& rhs) const
-        {
+        bool operator()(const FontDescriptorPtr& lhs, const FontDescriptorPtr& rhs) const {
             if (lhs->fontFamily == rhs->fontFamily) {
                 return lhs->fullName < rhs->fullName;
             }
@@ -66,6 +75,9 @@ private:
     std::set<FontDescriptorPtr> italicCache_;
     std::set<FontDescriptorPtr> monoSpaceCache_;
     std::set<FontDescriptorPtr> symbolicCache_;
+
+    std::unordered_map<std::string, std::set<FontDescriptorPtr>> installFullNameMap_;
+    std::unordered_map<std::string, std::set<FontDescriptorPtr>> stylishFullNameMap_;
 };
 } // namespace OHOS::Rosen
 

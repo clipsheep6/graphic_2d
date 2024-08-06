@@ -43,6 +43,7 @@ public:
     static std::function<bool(std::shared_ptr<Typeface>)>& GetTypefaceRegisterCallBack();
     static std::function<bool(std::shared_ptr<Typeface>)>& GetTypefaceUnRegisterCallBack();
     static std::vector<std::shared_ptr<Typeface>> GetSystemFonts();
+    static int GetFontCollectionCount(const char path[]);
 
     /**
      * @brief   Get the familyName for this typeface.

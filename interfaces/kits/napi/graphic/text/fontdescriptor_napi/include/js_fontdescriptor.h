@@ -29,6 +29,10 @@ public:
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value MatchingFontDescriptorsAsync(napi_env env, napi_callback_info info);
     static napi_value CreateFontDescriptorArray(napi_env env, std::set<FontDescriptorPtr>& result);
+    static napi_value CreateFontDescriptor(napi_env env, FontDescriptorPtr& result);
+    static napi_value GetSystemFontList(napi_env env, napi_callback_info info);
+    static napi_value GetFontDescriptorByName(napi_env env, napi_callback_info info);
+    static napi_value CreateFontList(napi_env env, std::set<std::string>& fontList);
 
 private:
     template <typename T>

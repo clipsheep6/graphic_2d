@@ -62,6 +62,11 @@ std::vector<std::shared_ptr<Typeface>> SkiaStaticFactory::GetSystemFonts()
     return SkiaTypeface::GetSystemFonts();
 }
 
+int SkiaStaticFactory::GetFontCollectionCount(const char path[])
+{
+    return SkiaTypeface::GetFontCollectionCount(path);
+}
+
 std::shared_ptr<Typeface> SkiaStaticFactory::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)
 {
     return SkiaTypeface::MakeFromStream(std::move(memoryStream), index);

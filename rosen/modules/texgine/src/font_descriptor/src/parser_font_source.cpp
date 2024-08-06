@@ -23,6 +23,8 @@
 #include "log_wrapper.h"
 #include "font_config.h"
 
+#define INSTALL_FONT_CONFIG_FILE "/system/etc/install_fontconfig.json"
+
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t WEIGHT_400 = 400;
@@ -43,14 +45,67 @@ void ParserFontSource::ClearFontFileCache()
     italicCache_.clear();
     monoSpaceCache_.clear();
     symbolicCache_.clear();
+    installFullNameMap_.clear();
+    stylishFullNameMap_.clear();
 }
 
 void ParserFontSource::ParserSystemFonts()
 {
     for (auto& item : parser_.GetSystemFonts()) {
-        FontDescriptorScatter(item);
+        FontDescriptorScatter(item);    
+	}
+	Dump();
+}
+
+void ParserFontSource::ParserStylishFonts()
+{
+    std::vector<TextEngine::FontParser::FontDescriptor> descriptors = 
+        parser_.GetVisibilityFonts();
+    for(const auto& descriptor : descriptors)
+    {
+        auto descriptorPtr = std::make_shared<TextEngine::FontParser::FontDescriptor>(descriptor);
+        CreateStylishFullNameMap(descriptorPtr);
     }
-    Dump();
+}
+
+void ParserFontSource::ParserInstallFonts()
+{
+    std::vector<std::string> fontPathList;
+    TextEngine::FontConfigJson fontConfigJson;
+    fontConfigJson.ParseInstallConfig(INSTALL_FONT_CONFIG_FILE, fontPathList);
+    for(const auto& path : fontPathList) {
+        HandleInstallFontFile(path);
+    }
+}
+
+void ParserFontSource::HandleInstallFontFile(const std::string& path)
+{
+    auto ends_with = [&] (const std::string& str, const std::string& suffix) -> bool {
+        if (str.size() < suffix.size()) {
+            return false;
+        }
+        return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
+    };
+
+    if (ends_with(path, ".ttc")) {
+        std::vector<FontDescriptorPtr> descriptors;
+        if (!parser_.ParserFontDescriptorFromPath(path, descriptors)) {
+            TEXT_LOGE("%{public}s ParserFontDescriptorFromPath failed", path.c_str());
+            return;
+        }
+        for (auto& item : descriptors) {
+            CreateInstallFullNameMap(item);
+            i++;
+        }
+    } else {
+        TextEngine::FontParser::FontDescriptor desc;
+        if (!parser_.ParserFontDescriptorFromPath(path, desc)) {
+            TEXT_LOGE("%{public}s ParserFontDescriptorFromPath failed", path.c_str());
+            return;
+        }
+        CreateInstallFullNameMap(std::make_shared<TextEngine::FontParser::FontDescriptor>(desc));
+        i++;
+    }
 }
 
 void ParserFontSource::FontDescriptorScatter(FontDescriptorPtr desc)
@@ -85,6 +140,115 @@ void ParserFontSource::FontDescriptorScatter(FontDescriptorPtr desc)
 
     if (desc->symbolic) {
         symbolicCache_.emplace(desc);
+    }
+}
+
+void ParserFontSource::CreateInstallFullNameMap(FontDescriptorPtr desc)
+{
+    auto handleMapScatter = [&](auto& map, const auto& key) {
+            map[key].emplace(desc);
+    };
+
+    if(desc->fullName.size() > 0) {
+        handleMapScatter(installFullNameMap_, desc->fullName);
+    }
+}
+
+void ParserFontSource::CreateStylishFullNameMap(FontDescriptorPtr desc)
+{
+    auto handleMapScatter = [&](auto& map, const auto& key) {
+            map[key].emplace(desc);
+    };
+
+    if(desc->fullName.size() > 0) {
+        handleMapScatter(stylishFullNameMap_, desc->fullName);
+    }
+}
+
+std::set<std::string> ParserFontSource::GetInstallFontList()
+{
+    std::set<std::string> fullNameList;
+    installFullNameMap_.clear();
+    ParserInstallFonts();
+    for(const auto& temp : installFullNameMap_) {
+        fullNameList.emplace(temp.first);
+    }
+    return fullNameList;
+}
+
+std::set<std::string> ParserFontSource::GetStylishFontList()
+{
+    std::set<std::string> fullNameList;
+    for(const auto& temp : stylishFullNameMap_)
+    {
+        fullNameList.emplace(temp.first);
+    }
+    return fullNameList;
+}
+
+std::set<std::string> ParserFontSource::GetGenericFontList()
+{
+    std::set<std::string> fullNameList;
+    for(const auto& temp : allFontDescriptor_)
+    {
+        fullNameList.emplace(temp->fullName);
+    }
+    return fullNameList;
+}
+
+void ParserFontSource::GetSystemFontList(const int32_t& systemFontType, std::set<std::string>& fontList)
+{
+    auto flags = systemFontType;
+
+    if(systemFontType == TextEngine::FontParser::SystemFontType::ALL) {
+        flags = TextEngine::FontParser::SystemFontType::GENERIC | 
+            TextEngine::FontParser::SystemFontType::STYLISH |
+            TextEngine::FontParser::SystemFontType::INSTALLED;
+    }
+
+    if(flags & TextEngine::FontParser::SystemFontType::GENERIC) {
+        auto fullNameList = GetGenericFontList();
+        fontList.insert(fullNameList.begin(), fullNameList.end());
+    }
+
+    if(flags & TextEngine::FontParser::SystemFontType::STYLISH) {
+        auto fullNameList = GetStylishFontList();
+        fontList.insert(fullNameList.begin(), fullNameList.end());
+    }
+
+    if(flags & TextEngine::FontParser::SystemFontType::INSTALLED) {
+        auto fullNameList = GetInstallFontList();
+        fontList.insert(fullNameList.begin(), fullNameList.end());
+    }
+}
+
+void ParserFontSource::GetFontDescriptorByName(const std::string& fullName, FontDescriptorPtr& result)
+{
+    if (fullName.empty()) {
+        TEXT_LOGI("Empty fullName provided");
+        return;
+    }
+    installFullNameMap_.clear();
+    ParserInstallFonts();
+    for (const auto& fontDescriptor : allFontDescriptor_) {
+        if(fontDescriptor->fullName == fullName) {
+            result = fontDescriptor;
+            return;
+        }
+    }
+    auto stylishIt = stylishFullNameMap_.find(fullName);
+    if (stylishIt != stylishFullNameMap_.end()) {
+        result = *(stylishIt->second.begin());
+        return;
+    } 
+    auto installIt = installFullNameMap_.find(fullName);
+    if (installIt != installFullNameMap_.end()) {
+        result = *(installIt->second.begin());
+        return;
+    } else {
+        TEXT_LOGI("Font descriptor not found for this fullName");
+        result.reset();
+        return;
     }
 }
 

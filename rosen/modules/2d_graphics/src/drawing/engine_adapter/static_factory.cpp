@@ -83,6 +83,11 @@ std::vector<std::shared_ptr<Typeface>> StaticFactory::GetSystemFonts()
     return EngineStaticFactory::GetSystemFonts();
 }
 
+int StaticFactory::GetFontCollectionCount(const char path[])
+{
+    return EngineStaticFactory::GetFontCollectionCount(path);
+}
+
 std::shared_ptr<Typeface> StaticFactory::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE

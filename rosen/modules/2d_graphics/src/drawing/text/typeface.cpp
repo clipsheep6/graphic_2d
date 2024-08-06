@@ -33,6 +33,11 @@ std::shared_ptr<Typeface> Typeface::MakeFromFile(const char path[], int index)
     return StaticFactory::MakeFromFile(path, index);
 }
 
+int Typeface::GetFontCollectionCount(const char path[])
+{
+    return StaticFactory::GetFontCollectionCount(path);
+}
+
 std::vector<std::shared_ptr<Typeface>> Typeface::GetSystemFonts()
 {
     return StaticFactory::GetSystemFonts();

@@ -181,6 +181,14 @@ std::shared_ptr<Typeface> SkiaTypeface::MakeDefault()
     return std::make_shared<Typeface>(typefaceImpl);
 }
 
+int SkiaTypeface::GetFontCollectionCount(const char path[])
+{
+    auto stream = SkStream::MakeFromFile(path);
+    sk_sp<SkFontMgr> fontMgr = SkFontMgr::RefDefault();
+    sk_sp<SkTypeface> typeface = fontMgr->makeFromStream(std::move(stream));
+    return fontMgr->countFamilies();
+}
+
 std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[], int index)
 {
     sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromFile(path, index);

@@ -32,6 +32,8 @@ public:
 
     void ParserAllFontSource();
     void MatchingFontDescriptors(FontDescriptorPtr desc, std::set<FontDescriptorPtr>& descs);
+    void GetFontDescriptorByName(const std::string& fullName, FontDescriptorPtr& result);
+    void GetSystemFontList(const int32_t& systemFontType, std::set<std::string>& fontList);
     void ClearFontFileCache();
 
 private:

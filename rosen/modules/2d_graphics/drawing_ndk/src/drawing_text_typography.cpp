@@ -1386,6 +1386,64 @@ static bool CopyStrData(char** destination, const std::string& source,
     return true;
 }
 
+OH_Drawing_FontDescriptor* OH_Drawing_GetFontDescriptorByName(const char* fullName)
+{
+    OH_Drawing_FontDescriptor* descriptor = new (std::nothrow) OH_Drawing_FontDescriptor();
+    if (fullName == nullptr || descriptor == nullptr) {
+        return nullptr;
+    }
+    std::string fullNameStr(fullName);
+    std::shared_ptr<TextEngine::FontParser::FontDescriptor> result = 
+        std::make_shared<TextEngine::FontParser::FontDescriptor>();
+    if (result == nullptr) {
+        return descriptor;
+    }
+    FontDescriptorMgrIns->GetFontDescriptorByName(fullNameStr, result);
+
+    descriptor->path = strdup(result->path.c_str());
+    descriptor->postScriptName = strdup(result->postScriptName.c_str());
+    descriptor->fullName = strdup(result->fullName.c_str());
+    descriptor->fontFamily = strdup(result->fontFamily.c_str());
+    descriptor->fontSubfamily = strdup(result->fontSubfamily.c_str());
+    descriptor->weight = result->weight;
+    descriptor->width = result->width;
+    descriptor->italic = result->italic;
+    descriptor->monoSpace = result->monoSpace;
+    descriptor->symbolic = result->symbolic;
+    descriptor->size = result->size;
+    descriptor->typeStyle = result->typeStyle;
+
+    return descriptor;
+}
+
+char** OH_Drawing_GetSystemFontList(OH_Drawing_SystemFontType fontType, size_t* num)
+{
+    int32_t systemFontType = fontType;
+    std::set<std::string> fullNameList;
+    FontDescriptorMgrIns->GetSystemFontList(systemFontType, fullNameList);
+    char** fontList = new char* [fullNameList.size()];
+    if (fontList == nullptr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < fullNameList.size(); ++i) {
+        fontList[i] = nullptr;
+        auto it = fullNameList.begin();
+        std::advance(it, i);
+
+        bool res = CopyStrData(&fontList[i], *it);
+        if (!res) {
+            for (size_t j = i; j > 0; --j) { 
+                delete[] fontList[j-1];
+            }
+            delete[] fontList;
+            fontList = nullptr;
+            return nullptr;
+        }
+    }
+    *num = fullNameList.size();
+    return fontList;
+}
+
 char** OH_Drawing_FontParserGetSystemFontList(OH_Drawing_FontParser* fontParser, size_t* num)
 {
     if (fontParser == nullptr || num == nullptr) {

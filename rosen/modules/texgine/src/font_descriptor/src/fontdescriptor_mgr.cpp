@@ -44,6 +44,7 @@ FontDescriptorMgr::~FontDescriptorMgr() {}
 void FontDescriptorMgr::ParserAllFontSource()
 {
     parser_.ParserSystemFonts();
+    parser_.ParserStylishFonts();
 }
 
 void FontDescriptorMgr::ClearFontFileCache()
@@ -54,5 +55,15 @@ void FontDescriptorMgr::ClearFontFileCache()
 void FontDescriptorMgr::MatchingFontDescriptors(FontDescriptorPtr desc, std::set<FontDescriptorPtr>& descs)
 {
     parser_.MatchFromFontDescriptor(desc, descs);
+}
+
+void FontDescriptorMgr::GetFontDescriptorByName(const std::string& fullName, FontDescriptorPtr& result)
+{
+    parser_.GetFontDescriptorByName(fullName, result);
+}
+
+void FontDescriptorMgr::GetSystemFontList(const int32_t& systemFontType, std::set<std::string>& fontList)
+{
+    parser_.GetSystemFontList(systemFontType, fontList);
 }
 } // namespace OHOS::Rosen

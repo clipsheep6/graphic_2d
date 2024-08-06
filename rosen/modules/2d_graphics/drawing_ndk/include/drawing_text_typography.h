@@ -221,6 +221,23 @@ typedef struct OH_Drawing_FontDescriptor {
 } OH_Drawing_FontDescriptor;
 
 /**
+ * @brief An enumeration of system font types.
+ *
+ * @since 13
+ * @version 1.0
+ */
+typedef enum {
+    /** All font types */
+    ALL = 1 << 0,
+    /** System generic font type */
+    GENERIC = 1 << 1,
+    /** Stylish font type */
+    STYLISH = 1 << 2,
+    /** Installed font types */
+    INSTALLED = 1 << 3,
+} OH_Drawing_SystemFontType;
+
+/**
  * @brief The metrics of line.
  *
  * @since 12
@@ -1488,6 +1505,29 @@ OH_Drawing_FontParser* OH_Drawing_CreateFontParser(void);
  * @version 1.0
  */
 void OH_Drawing_DestroyFontParser(OH_Drawing_FontParser*);
+
+/**
+ * @brief Get font details according to the font full name.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param char* font full name.
+ * @return Indicates the pointer to a font descriptor object <b>OH_Drawing_FontDescriptor</b>.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_FontDescriptor* OH_Drawing_GetFontDescriptorByName(const char*);
+
+/**
+ * @brief Obtain the corresponding font list based on the font type.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_SystemFontType Indicates enumerates of system font type.
+ * @param size_t Returns the number of obtained full names.
+ * @return Returns an array of full name.
+ * @since 13
+ * @version 1.0
+ */
+char** OH_Drawing_GetSystemFontList(OH_Drawing_SystemFontType, size_t*);
 
 /**
  * @brief Gets a list of system font names.

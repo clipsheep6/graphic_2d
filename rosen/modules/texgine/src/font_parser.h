@@ -68,6 +68,21 @@ public:
         TRADEMARK = 7,
     };
 
+<<<<<<< HEAD
+=======
+    enum FontTypeStyle {
+        ITALIC = 1 << 0,
+        BOLD = 1 << 1,
+    };
+
+    enum SystemFontType : int32_t {
+        ALL = 1 << 0,
+        GENERIC = 1 << 1,
+        STYLISH = 1 << 2,
+        INSTALLED = 1 << 3,
+    };
+
+>>>>>>> 159889de80 (add getsystemfontlist and getfontdescriptorbyname code)
     struct FontDescriptor {
         FontDescriptor();
         std::string path;
@@ -91,6 +106,14 @@ public:
     FontParser();
     std::vector<FontDescriptor> GetVisibilityFonts(const std::string &locale = SIMPLIFIED_CHINESE);
     std::unique_ptr<FontDescriptor> GetVisibilityFontByName(const std::string& fontName,
+        const std::string locale = SIMPLIFIED_CHINESE);
+
+    std::vector<std::shared_ptr<FontDescriptor>> GetSystemFonts(const std::string locale = SIMPLIFIED_CHINESE);
+	bool ParserFontDescriptorFromPath(const std::string& path, FontDescriptor& desc,
+         const std::string locale = SIMPLIFIED_CHINESE);
+
+    bool ParserFontDescriptorFromPath(const std::string& path,
+        std::vector<std::shared_ptr<FontDescriptor>>& descriptors,
         const std::string locale = SIMPLIFIED_CHINESE);
 
 private:

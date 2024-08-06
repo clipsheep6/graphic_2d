@@ -127,6 +127,7 @@ enum class RSIRenderServiceConnectionInterfaceCode : CodeUnderlyingType {
     GET_HARDWARE_COMPOSE_DISABLED_REASON_INFO,
     REGISTER_UIEXTENSION_CALLBACK,
     SET_VIRTUAL_SCREEN_STATUS,
+    CREATE_DISPLAY_NODE,
 // Special invocation. Do not change it.
     NOTIFY_LIGHT_FACTOR_STATUS = 1000,
     NOTIFY_PACKAGE_EVENT = 1001,

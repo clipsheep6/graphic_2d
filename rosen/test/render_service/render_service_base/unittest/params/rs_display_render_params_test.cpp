@@ -196,6 +196,20 @@ HWTEST_F(RSDisplayRenderParamsTest, SetNeedOffscreen001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetIsPointWindowDirty
+ * @tc.desc:
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSDisplayRenderParamsTest, SetIsPointWindowDirty, TestSize.Level1)
+{
+    constexpr NodeId id = TestSrc::limitNumber::Uint64[3];
+    RSDisplayRenderParams params(id);
+    auto isPointWindowDirty = params.GetIsPointWindowDirty();
+    params.SetIsPointWindowDirty(isPointWindowDirty);
+}
+
+/**
  * @tc.name: IsSpecialLayerChanged001
  * @tc.desc: test result of IsSpecialLayerChanged
  * @tc.type: FUNC

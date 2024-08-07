@@ -60,6 +60,9 @@ ohos_shared_library("uieffect_napi") {
   external_deps = [
     "hilog:libhilog",
     "napi:ace_napi",
+    "ipc:ipc_core",
+    "ability_runtime:runtime",
+    "access_token:libtokenid_sdk",
   ]
 
   cflags_cc = [ "-std=c++17" ]

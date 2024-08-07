@@ -40,20 +40,20 @@ size_t RunImpl::GetGlyphCount() const
     return run_->GetGlyphCount();
 }
 
-std::vector<uint16_t> RunImpl::GetGlyphs() const
+std::vector<uint16_t> RunImpl::GetGlyphs(uint32_t start, uint32_t end) const
 {
     if (!run_) {
         return {};
     }
-    return run_->GetGlyphs();
+    return run_->GetGlyphs(start, end);
 }
 
-std::vector<Drawing::Point> RunImpl::GetPositions()
+std::vector<Drawing::Point> RunImpl::GetPositions(uint32_t start, uint32_t end)
 {
     if (!run_) {
         return {};
     }
-    return run_->GetPositions();
+    return run_->GetPositions(start, end);
 }
 
 std::vector<Drawing::Point> RunImpl::GetOffsets()
@@ -70,6 +70,47 @@ void RunImpl::Paint(Drawing::Canvas *canvas, double x, double y)
         return;
     }
     return run_->Paint(canvas, x, y);
+}
+
+void RunImpl::GetStringRange(uint32_t* location, uint32_t* length)
+{
+    if(location == nullptr || length == nullptr) {
+        return;
+    } else if (!run_) {
+        *location= 0;
+        *length = 0;
+        return;
+    }
+    run_->GetStringRange(location, length);
+}
+
+std::vector<uint32_t> RunImpl::GetStringIndices(uint32_t start, uint32_t end)
+{
+    if (!run_) {
+        return {};
+    }
+    return run_->GetStringIndices(start, end);
+}
+
+Drawing::Rect RunImpl::GetImageBounds()
+{
+    if (!run_) {
+        return {};
+    }
+    return run_->GetImageBounds();
+}
+
+float RunImpl::GetTypographicBounds(float* ascent, float* descent, float* leading)
+{
+    if (ascent == nullptr || descent == nullptr || leading == nullptr) {
+        return 0.0;
+    } else if (!run_) {
+        *ascent = 0.0;
+        *descent = 0.0;
+        *leading = 0.0;
+        return 0.0;
+    }
+    return run_->GetTypographicBounds(ascent, descent, leading);
 }
 } // namespace AdapterTxt
 } // namespace Rosen

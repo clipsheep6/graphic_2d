@@ -28,10 +28,14 @@ public:
 
     virtual Drawing::Font GetFont() const = 0;
     virtual size_t GetGlyphCount() const = 0;
-    virtual std::vector<uint16_t> GetGlyphs() const = 0;
-    virtual std::vector<Drawing::Point> GetPositions() = 0;
+    virtual std::vector<uint16_t> GetGlyphs(uint32_t start, uint32_t end) const = 0;
+    virtual std::vector<Drawing::Point> GetPositions(uint32_t start, uint32_t end) = 0;
     virtual std::vector<Drawing::Point> GetOffsets() = 0;
     virtual void Paint(Drawing::Canvas *canvas, double x, double y) = 0;
+    virtual void GetStringRange(uint32_t* location, uint32_t* length) = 0;
+    virtual std::vector<uint32_t> GetStringIndices(uint32_t start, uint32_t end) = 0;
+    virtual Drawing::Rect GetImageBounds() = 0;
+    virtual float GetTypographicBounds(float* ascent, float* descent, float* leading) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

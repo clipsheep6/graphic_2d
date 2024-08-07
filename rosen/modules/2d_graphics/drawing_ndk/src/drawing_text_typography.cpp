@@ -16,6 +16,8 @@
 
 #include "drawing_text_typography.h"
 #include "utils/log.h"
+#include "drawing_rect.h"
+#include "drawing_point.h"
 #include "utils/object_mgr.h"
 
 #ifndef USE_GRAPHIC_TEXT_GINE
@@ -3687,4 +3689,160 @@ void OH_Drawing_TextStyleAddFontVariation(OH_Drawing_TextStyle* style, const cha
     if (convertStyle) {
         convertStyle->fontVariations.SetAxisValue(axis, value);
     }
+}
+
+uint32_t OH_Drawing_GetRunGlyphCount(OH_Drawing_Run* run)
+{
+    if (run == nullptr) {
+        return 0;
+    }
+
+    return reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetGlyphCount();
+}
+
+void OH_Drawing_GetRunStringRange(OH_Drawing_Run* run, uint32_t* location, uint32_t* length)
+{
+    if (location == nullptr || length == nullptr) {
+        return;
+    } else if (run == nullptr) {
+        *location = 0;
+        *length = 0;
+        return;
+    }
+
+    reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetStringRange(location, length);
+}
+
+const uint32_t* OH_Drawing_GetRunStringIndices(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end)
+{
+    if (run == nullptr || size == nullptr) {
+        return nullptr;
+    }
+    
+    auto stringIndices = reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetStringIndices(start, end);
+    *size = stringIndices.size();
+    if (*size == 0) {
+        return nullptr;
+    }
+    uint32_t* stringIndicesArr = new (std::nothrow) uint32_t[*size];
+    if (stringIndicesArr == nullptr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < *size; ++i) {
+        stringIndicesArr[i] = stringIndices[i];
+    }
+    return stringIndicesArr;
+}
+
+void OH_Drawing_DestroyRunStringIndices(const uint32_t* stringIndices)
+{
+    if (stringIndices) {
+        delete[] stringIndices;
+        stringIndices = nullptr;
+    }
+}
+
+float OH_Drawing_GetRunTypographicBounds(OH_Drawing_Run* run, float* ascent, float* descent, float* leading)
+{
+    if (ascent == nullptr || descent == nullptr || leading == nullptr) {
+        return 0.0;
+    } else if (run == nullptr) {
+        *ascent = 0;
+        *descent = 0;
+        *leading = 0;
+        return 0.0;
+    }
+    return reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetTypographicBounds(ascent, descent, leading);
+}
+
+OH_Drawing_Rect* OH_Drawing_GetRunImageBounds(OH_Drawing_Run* run)
+{
+    if (run == nullptr) {
+        return nullptr;
+    }
+    
+    auto skRect = reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetImageBounds();
+    return OH_Drawing_RectCreate(skRect.GetLeft(), skRect.GetTop(), skRect.GetRight(), skRect.GetBottom());
+}
+
+void OH_Drawing_DestroyRunImageBounds(OH_Drawing_Rect* rect)
+{
+    if (rect) {
+        OH_Drawing_RectDestroy(rect);
+        rect = nullptr;
+    }
+}
+
+const uint16_t* OH_Drawing_GetRunGlyphs(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end)
+{
+    if (run == nullptr || size == nullptr) {
+        return nullptr;
+    }
+    auto glyphs = reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetGlyphs(start, end);
+    *size = glyphs.size();
+    if (*size == 0) {
+        return nullptr;
+    }
+    uint16_t* glyphsArr = new (std::nothrow) uint16_t[*size];
+    if (glyphsArr == nullptr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < *size; ++i) {
+        glyphsArr[i] = glyphs[i];
+    }
+    return glyphsArr;
+}
+
+void OH_Drawing_DestroyRunGlyphs(const uint16_t* glyphs)
+{
+    if (glyphs) {
+        delete[] glyphs;
+        glyphs = nullptr;
+    }
+}
+
+OH_Drawing_Point** OH_Drawing_GetRunPositions(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end)
+{
+    if (run == nullptr || size == nullptr) {
+        return nullptr;
+    }
+    auto positions = reinterpret_cast<AdapterTxt::RunImpl*>(run)->GetPositions(start, end);
+    *size = positions.size();
+    if (*size == 0) {
+        return nullptr;
+    }
+
+    OH_Drawing_Point** positionsArr = new (std::nothrow) OH_Drawing_Point*[*size];
+    if (positionsArr == nullptr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < *size; ++i) {
+        positionsArr[i] = OH_Drawing_PointCreate(positions[i].GetX(), positions[i].GetY());
+    }
+    return positionsArr;
+}
+
+void OH_Drawing_DestroyRunPositions(OH_Drawing_Point** positionsArr, size_t size)
+{
+    if (positionsArr == nullptr) {
+        return;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        if (positionsArr[i] != nullptr) {
+            OH_Drawing_PointDestroy(positionsArr[i]);
+            positionsArr[i] = nullptr;
+        }
+    }
+
+    delete[] positionsArr;
+    positionsArr = nullptr;
+}
+
+void OH_Drawing_RunPaint(OH_Drawing_Canvas* canvas, OH_Drawing_Run* run, double x, double y)
+{
+    if (canvas == nullptr || run == nullptr) {
+        return;
+    }
+    reinterpret_cast<AdapterTxt::RunImpl*>(run)->Paint(reinterpret_cast<OHOS::Rosen::Drawing::Canvas*>(canvas), x, y);
 }

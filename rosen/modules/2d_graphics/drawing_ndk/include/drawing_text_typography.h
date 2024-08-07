@@ -2699,6 +2699,154 @@ void OH_Drawing_TypographyDestroyTextBox(OH_Drawing_TextBox*);
 void OH_Drawing_SetTextShadow(OH_Drawing_TextShadow* shadow, uint32_t color, OH_Drawing_Point* offset,
     double blurRadius);
 
+/**
+ * @brief Gets the number of glyph.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @return The number of glyph.
+ * @since 13
+ * @version 1.0
+ */
+uint32_t OH_Drawing_GetRunGlyphCount(OH_Drawing_Run* run);
+
+/**
+ * @brief Gets the run glyph indices.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param size Run glyph indices size.
+ * @param start Run start position.
+ * @param end Run end position.
+ * @return Run of glyph indices.
+ * @since 13
+ * @version 1.0
+ */
+const uint32_t* OH_Drawing_GetRunStringIndices(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end);
+
+/**
+ * @brief Releases the memory run glyph indices.
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param stringIndices glyph indices the pointer.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyRunStringIndices(const uint32_t* stringIndices);
+
+/**
+ * @brief Gets the range run glyph location and length.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param location The run location.
+ * @param length The run length.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_GetRunStringRange(OH_Drawing_Run* run, uint32_t* location, uint32_t* length);
+
+/**
+ * @brief Gets the run typographic bound.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * 
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param ascent Run ascent.
+ * @param descent Run descent.
+ * @param leading Run leading.
+ * @return The run typographic width.
+ * @since 12
+ * @version 1.0
+ */
+float OH_Drawing_GetRunTypographicBounds(OH_Drawing_Run* run, float* ascent, float* descent, float* leading);
+
+/**
+ * @brief Paints text on the canvas.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * 
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param x Indicates the x coordinate.
+ * @param y Indicates the y coordinate.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_RunPaint(OH_Drawing_Canvas*, OH_Drawing_Run* run, double x, double y);
+
+/**
+ * @brief Gets the run image bound.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ *
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @return OH_Drawing_Rect The run image bounds.
+ * @since 13
+ * @version 1.0
+ */
+ OH_Drawing_Rect* OH_Drawing_GetRunImageBounds(OH_Drawing_Run* run);
+
+ /**
+ * @brief Releases the memory run image bounds pointer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ *
+ * @param OH_Drawing_Rect Run image bounds pointer.
+ * @return OH_Drawing_Rect The run image bounds.
+ * @since 13
+ * @version 1.0
+ */
+ void OH_Drawing_DestroyRunImageBounds(OH_Drawing_Rect* rect);
+
+/**
+ * @brief Gets the range glyph identifier for each character.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param size Run of glyphs size.
+ * @param start Run start position.
+ * @param end Run end position.
+ * @return Run of Glyphs pointer.
+ * @since 13
+ * @version 1.0
+ */
+const uint16_t* OH_Drawing_GetRunGlyphs(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end);
+
+/**
+ * @brief Releases the memory run glyphs pointer.
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param glyphs run glyphs pointer.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyRunGlyphs(const uint16_t* glyphs);
+
+/**
+ * @brief Gets the range glyph positions.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Run Indicates the pointer to an <b>OH_Drawing_Run</b> object.
+ * @param size Run of positions size.
+ * @param start Run start position.
+ * @param end Run end position.
+ * @return Run of positions pointer.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_Point** OH_Drawing_GetRunPositions(OH_Drawing_Run* run, size_t* size, uint32_t start, uint32_t end);
+
+/**
+ * @brief Releases the memory run pointer.
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param positionsArr OH_Drawing_Point pointer array.
+ * @param size Run of positions size.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyRunPositions(OH_Drawing_Point** positionsArr, size_t size);
 #ifdef __cplusplus
 }
 #endif

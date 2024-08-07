@@ -31,10 +31,14 @@ public:
 
     Drawing::Font GetFont() const override;
     size_t GetGlyphCount() const override;
-    std::vector<uint16_t> GetGlyphs() const override;
-    std::vector<Drawing::Point> GetPositions() override;
+    std::vector<uint16_t> GetGlyphs(uint32_t start, uint32_t end) const override;
+    std::vector<Drawing::Point> GetPositions(uint32_t start, uint32_t end) override;
     std::vector<Drawing::Point> GetOffsets() override;
     void Paint(Drawing::Canvas* canvas, double x, double y) override;
+    void GetStringRange(uint32_t* location, uint32_t* length) override;
+    std::vector<uint32_t> GetStringIndices(uint32_t start, uint32_t end) override;
+    Drawing::Rect GetImageBounds() override;
+    float GetTypographicBounds(float* ascent, float* descent, float* leading) override;
 
 private:
     std::unique_ptr<skia::textlayout::RunBase> runBase_;

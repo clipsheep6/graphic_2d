@@ -1070,5 +1070,14 @@ bool RSSystemProperties::GetSkipDisplayIfScreenOffEnabled()
     const char *num = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(num, 1) != 0;
 }
+
+bool RSSystemProperties::GetLayerDirtyRegionEnabled()
+{
+    // Determine whether the layer dirty region enabled. The default value is 1.
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.layer.dirty.region.enabled", "1");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 1) != 0;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -207,7 +207,13 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     std::vector<GraphicIRect> visibleRegions;
     visibleRegions.emplace_back(info.visibleRect);
     layer->SetVisibleRegions(visibleRegions);
-    layer->SetDirtyRegions(info.dirtyRects);
+    if (RSSystemProperties::GetLayerDirtyRegionEnabled()) {
+        layer->SetDirtyRegions(info.dirtyRects);
+    } else {
+        std::vector<GraphicIRect> dirtyRegions;
+        dirtyRegions.emplace_back(info.srcRect);
+        layer->SetDirtyRegions(dirtyRegions);
+    }
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
     layer->SetMatrix(info.matrix);

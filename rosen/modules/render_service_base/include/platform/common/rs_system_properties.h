@@ -268,6 +268,7 @@ public:
     }
 
     static int GetRSNodeLimit();
+    static bool GetLayerDirtyRegionEnabled();
 
 private:
     RSSystemProperties() = default;

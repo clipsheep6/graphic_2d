@@ -3358,6 +3358,30 @@ HWTEST_F(RSUniRenderVisitorTest, IsNotDirtyHardwareEnabledTopSurface, TestSize.L
 }
 
 /**
+ * @tc.name: UpdatePointerDirtyToGlobalDirty
+ * @tc.desc: Test UpdatePointerDirtyToGlobalDirty, SELF_DRAWING_WINDOW_NODE
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdatePointerDirtyToGlobalDirty, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    RSDisplayNodeConfig config;
+    auto rsContext = std::make_shared<RSContext>();
+    NodeId id = 1;
+    auto displayNode = std::make_shared<RSDisplayRenderNode>(id, config, rsContext->weak_from_this());
+    displayNode->InitRenderParams();
+    rsUniRenderVisitor->curDisplayNode_ = displayNode;
+    auto node = RSTestUtil::CreateSurfaceNode();
+    node->nodeType_ = RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+    node->name_ = "pointer window";
+    node->GetDirtyManager()->SetCurrentFrameDirtyRect(RectI{1, 1, 1, 1});
+    // run
+    rsUniRenderVisitor->IsNotDirtyHardwareEnabledTopSurface(node);
+}
+
+/**
  * @tc.name: CalcChildFilterNodeDirtyRegion001
  * @tc.desc: Test CalcChildFilterNodeDirtyRegion, with two nullptr
  * @tc.type: FUNC

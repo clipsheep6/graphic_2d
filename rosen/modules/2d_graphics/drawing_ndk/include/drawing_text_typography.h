@@ -2699,6 +2699,231 @@ void OH_Drawing_TypographyDestroyTextBox(OH_Drawing_TextBox*);
 void OH_Drawing_SetTextShadow(OH_Drawing_TextShadow* shadow, uint32_t color, OH_Drawing_Point* offset,
     double blurRadius);
 
+/**
+ * @brief Get text line information.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography Indicates the pointer to a typography object <b>OH_Drawing_Typography</b>.
+ * @param size Indicates the pointer to text lines size.
+ * @return Indicates the pointer to a text line object array <b>OH_Drawing_TextLine</b>.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_TextLine** OH_Drawing_TypographyGetTextLines(OH_Drawing_Typography* typography, size_t* size);
+
+/**
+ * @brief Releases the memory occupied by the text line object array <b>OH_Drawing_TextLine</b>.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param lines Indicates the pointer to the text line object array <b>OH_Drawing_TextLine</b>.
+ * @param size text lines array size.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyTextLines(OH_Drawing_TextLine** lines, size_t size);
+
+/**
+ * @brief Releases the memory occupied by the text line object <b>OH_Drawing_TextLine</b>.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to the text line object <b>OH_Drawing_TextLine</b>.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyTextLine(OH_Drawing_TextLine* line);
+
+/**
+ * @brief Get the count of glyphs.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @return Returns the count of glyphs.
+ * @since 13
+ * @version 1.0
+ */
+double OH_Drawing_TextLineGetGlyphCount(OH_Drawing_TextLine* line);
+
+/**
+ * @brief Get the range of text line.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param start Indicates the pointer to text line start position.
+ * @param end Indicates the pointer to text line end position.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_TextLineGetTextRange(OH_Drawing_TextLine* line, size_t* start, size_t* end);
+
+/**
+ * @brief Get the glyph runs of text line.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object array.
+ * @param size runs array size.
+ * @return Returns the glyph runs of text line.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_Run** OH_Drawing_TextLineGetGlyphRuns(OH_Drawing_TextLine* line, size_t* size);
+
+/**
+ * @brief Releases the memory occupied by the text line object array <b>OH_Drawing_TextLine</b>.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param runs Indicates the pointer to the run object array <b>OH_Drawing_TextLine</b>.
+ * @param size runs array size.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyRuns(OH_Drawing_Run** runs, size_t size);
+
+/**
+ * @brief Paint the range of text line.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param canvas Draw the text line on the canvas.
+ * @param x Represents the X-axis position on the canvas.
+ * @param y Represents the Y-axis position on the canvas.
+ * @return Returns the pointer to the <b>OH_Drawing_TextLine</b> object created.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_TextLinePaint(OH_Drawing_TextLine* line, OH_Drawing_Canvas* canvas, double x, double y);
+
+/**
+ * @brief Creates a truncated text line object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param width Indicates the text line width to set.
+ * @param mode Indicates the ellipsis model to set. For details, see the enum <b>OH_Drawing_EllipsisModal</b>.
+ * @param ellipsis Indicates the ellipsis string to set.
+ * @return Returns the pointer to the <b>OH_Drawing_TextLine</b> object created.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_TextLine* OH_Drawing_TextLineCreateTruncatedLine(OH_Drawing_TextLine* line, double width, int mode,
+    const char* ellipsis);
+
+/**
+ * @brief Creates a text line object that is aligned at both ends.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param justifiedFactor The coefficients that align the two ends.
+ * @param justifiedWidth The width of the two ends aligned.
+ * @return Returns the pointer to the <b>OH_Drawing_TextLine</b> object created.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_TextLine* OH_Drawing_TextLineCreateJustifiedLine(OH_Drawing_TextLine* line, double justifiedFactor,
+    double justifiedWidth);
+
+/**
+ * @brief Gets the text line typographic bounds.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param ascent Indicates the distance that the pointer points to remain above the baseline.
+ * @param descent Indicates the pointer to the distance that remains below the baseline.
+ * @param leading Indicates the pointer to the line Spacing.
+ * @return Returns The total width of the typesetting border.
+ * @since 13
+ * @version 1.0
+ */
+double OH_Drawing_TextLineGetTypographicBounds(OH_Drawing_TextLine* line, double* ascent, double* descent,
+    double* leading);
+
+/**
+ * @brief Gets the text line image bounds.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @return Returns the pointer to the <b>OH_Drawing_Rect</b> struct created.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_Rect* OH_Drawing_TextLineGetImageBounds(OH_Drawing_TextLine* line);
+
+/**
+ * @brief Gets the tail space width.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @return Returns the tail space width.
+ * @since 13
+ * @version 1.0
+ */
+double OH_Drawing_TextLineGetTrailingSpaceWidth(OH_Drawing_TextLine* line);
+
+/**
+ * @brief Gets the index of the given character position.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param point The given character position.
+ * @return Returns the character offset for a given index.
+ * @since 13
+ * @version 1.0
+ */
+int32_t OH_Drawing_TextLineGetIndexForCharacterPosition(OH_Drawing_TextLine* line, OH_Drawing_Point* point);
+
+/**
+ * @brief Gets the offset of the given character index.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param index The given character index.
+ * @return Returns the character offset for a given index.
+ * @since 13
+ * @version 1.0
+ */
+double OH_Drawing_TextLineGetOffsetForCharacterIndex(OH_Drawing_TextLine* line, int32_t index);
+
+/**
+ * @brief User-defined callback functions for using offsets and indexes.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param offset The resulting character offset is traversed as an argument to the callback function.
+ * @param index The resulting character index is traversed as an argument to the callback function.
+ * @param leadingEdge Whether the current offset is at the character front, as an argument to the callback function.
+ * @return The return value of the user-defined callback function.
+ *         If false is returned, the traversal continues.
+ *         If true is returned, the traversal stops.
+ * @since 13
+ * @version 1.0
+ */
+typedef bool (*CustomCallback)(double offset, int32_t index, bool leadingEdge);
+
+/**
+ * @brief traversal character offset and index in text lines.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param callback User-defined callback functions, see <b>CustomCallback</b>.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_TextLineTraversalCharacterOffsetAndIndex(OH_Drawing_TextLine* line, CustomCallback callback);
+
+/**
+ * @brief Gets the text offset based on the given alignment factor and alignment width.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param line Indicates the pointer to an <b>OH_Drawing_TextLine</b> object.
+ * @param alignmentFactor The coefficients that text needs to be aligned.
+ *                        Less than or equal to 0 is left justified, 0.5 is center justified,
+ *                        and greater than or equal to 1 is right justified.
+ * @param alignmentWidth The width of the text to be aligned.
+ *                       Returns 0 if it is less than the actual width of the text.
+ * @return Returns the offset of the aligned text.
+ * @since 13
+ * @version 1.0
+ */
+double OH_Drawing_TextLineGetAlignmentOffset(OH_Drawing_TextLine* line, double alignmentFactor, double alignmentWidth);
+
 #ifdef __cplusplus
 }
 #endif

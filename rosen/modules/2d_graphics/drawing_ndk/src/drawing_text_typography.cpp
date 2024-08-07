@@ -28,6 +28,10 @@
 #include "rosen_text/typography_create.h"
 #include "unicode/putil.h"
 #endif
+#include "drawing_rect.h"
+#include "skia_txt/run_impl.h"
+#include "skia_txt/text_line_base.h"
+#include "skia_txt/txt/paragraph.h"
 #include "font_config.h"
 #include "font_parser.h"
 #include <codecvt>
@@ -53,6 +57,8 @@ __attribute__((constructor)) void init()
 }
 } // namespace
 #endif
+
+typedef OHOS::Rosen::AdapterTxt::TextLineBaseImpl LineImpl;
 
 static std::shared_ptr<OHOS::Rosen::Drawing::ObjectMgr> objectMgr = OHOS::Rosen::Drawing::ObjectMgr::GetInstance();
 static std::map<void*, size_t> arrSizeMgr;
@@ -3687,4 +3693,235 @@ void OH_Drawing_TextStyleAddFontVariation(OH_Drawing_TextStyle* style, const cha
     if (convertStyle) {
         convertStyle->fontVariations.SetAxisValue(axis, value);
     }
+}
+
+OH_Drawing_TextLine** OH_Drawing_TypographyGetTextLines(OH_Drawing_Typography* typography, size_t* size)
+{
+    if (typography == nullptr || size == nullptr) {
+        return nullptr;
+    }
+
+    auto paragraph = ConvertToOriginalText<Typography>(typography)->GetParagraph();
+    auto textLines = reinterpret_cast<SPText::Paragraph*>(paragraph)->GetTextLines();
+    if (textLines.size() == 0) {
+        return nullptr;
+    }
+
+    LineImpl** textLinesArr = new (std::nothrow) LineImpl* [textLines.size()];
+    if (textLinesArr == nullptr) {
+        return nullptr;
+    }
+
+    *size = textLines.size();
+    for (size_t i = 0; i < textLines.size(); ++i) {
+        textLinesArr[i] = new (std::nothrow) LineImpl(std::move(textLines[i]));
+    }
+
+    return reinterpret_cast<OH_Drawing_TextLine**>(textLinesArr);
+}
+
+void OH_Drawing_DestroyTextLines(OH_Drawing_TextLine** lines, size_t size)
+{
+    if (lines == nullptr) {
+        return;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        OH_Drawing_DestroyTextLine(lines[i]);
+    }
+
+    delete[] lines;
+}
+
+void OH_Drawing_DestroyTextLine(OH_Drawing_TextLine* line)
+{
+    if (line != nullptr) {
+        delete reinterpret_cast<LineImpl*>(line);
+    }
+}
+
+double OH_Drawing_TextLineGetGlyphCount(OH_Drawing_TextLine* line)
+{
+    if (line == nullptr) {
+        return 0.0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetGlyphCount();
+}
+
+void OH_Drawing_TextLineGetTextRange(OH_Drawing_TextLine* line, size_t* start, size_t* end)
+{
+    if (line == nullptr || start == nullptr || end == nullptr) {
+        return;
+    }
+
+    Boundary range = ConvertToOriginalText<LineImpl>(line)->GetTextRange();
+    *start = range.leftIndex;
+    *end = range.rightIndex;
+}
+
+OH_Drawing_Run** OH_Drawing_TextLineGetGlyphRuns(OH_Drawing_TextLine* line, size_t* size)
+{
+    if (line == nullptr || size == nullptr) {
+        return nullptr;
+    }
+
+    auto spTextLines = ConvertToOriginalText<LineImpl>(line)->GetSpTextLineBase();
+    auto runs = ConvertToOriginalText<SPText::TextLineBase>(spTextLines)->GetGlyphRuns();
+    if (runs.size() == 0) {
+        return nullptr;
+    }
+
+    AdapterTxt::RunImpl** runsArr = new (std::nothrow) AdapterTxt::RunImpl* [runs.size()];
+    if (runsArr == nullptr) {
+        return nullptr;
+    }
+
+    *size = runs.size();
+    for (size_t i = 0; i < runs.size(); ++i) {
+        runsArr[i] = new (std::nothrow) AdapterTxt::RunImpl(std::move(runs[i]));
+    }
+
+    return reinterpret_cast<OH_Drawing_Run**>(runsArr);
+}
+
+void OH_Drawing_DestroyRuns(OH_Drawing_Run** runs, size_t size)
+{
+    if (runs == nullptr) {
+        return;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        if (runs[i] != nullptr) {
+            delete reinterpret_cast<AdapterTxt::RunImpl*>(runs[i]);
+            runs[i] = nullptr;
+        }
+    }
+
+    delete[] runs;
+}
+
+void OH_Drawing_TextLinePaint(OH_Drawing_TextLine* line, OH_Drawing_Canvas* canvas, double x, double y)
+{
+    if (line == nullptr || canvas == nullptr) {
+        return;
+    }
+
+    ConvertToOriginalText<LineImpl>(line)->Paint(
+        reinterpret_cast<OHOS::Rosen::Drawing::Canvas*>(canvas), x, y);
+}
+
+OH_Drawing_TextLine* OH_Drawing_TextLineCreateTruncatedLine(OH_Drawing_TextLine* line, double width, int mode,
+    const char* ellipsis)
+{
+    if (line == nullptr || ellipsis == nullptr) {
+        return nullptr;
+    }
+
+    std::string ellipsisStr(ellipsis);
+    auto spTextLines = ConvertToOriginalText<LineImpl>(line)->GetSpTextLineBase();
+    auto truncatedTextLine = ConvertToOriginalText<SPText::TextLineBase>(spTextLines)->CreateTruncatedLine(
+        width, static_cast<EllipsisModal>(mode), ellipsisStr);
+    auto textLine = new (std::nothrow) LineImpl(std::move(truncatedTextLine));
+    return ConvertToOriginalText<OH_Drawing_TextLine>(textLine);
+}
+
+
+OH_Drawing_TextLine* OH_Drawing_TextLineCreateJustifiedLine(OH_Drawing_TextLine* line, double JustifiedFactor,
+    double JustifiedWidth)
+{
+    if (line == nullptr) {
+        return nullptr;
+    }
+
+    auto spTextLines = ConvertToOriginalText<LineImpl>(line)->GetSpTextLineBase();
+    auto justifiedTextLine = ConvertToOriginalText<SPText::TextLineBase>(spTextLines)->CreateJustifiedLine(
+        JustifiedFactor, JustifiedWidth);
+    auto textLine = new (std::nothrow) LineImpl(std::move(justifiedTextLine));
+    return ConvertToOriginalText<OH_Drawing_TextLine>(textLine);
+}
+
+double OH_Drawing_TextLineGetTypographicBounds(OH_Drawing_TextLine* line, double* ascent, double* descent,
+    double* leading)
+{
+    if (line == nullptr || ascent == nullptr || descent == nullptr || leading == nullptr) {
+        return 0.0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetTypographicBounds(ascent, descent, leading);
+}
+
+OH_Drawing_Rect* OH_Drawing_TextLineGetImageBounds(OH_Drawing_TextLine* line)
+{
+    if (line == nullptr) {
+        return nullptr;
+    }
+
+    auto skRect = ConvertToOriginalText<LineImpl>(line)->GetImageBounds();
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(skRect.x(), skRect.y(), skRect.right(), skRect.bottom());
+    return rect;
+}
+
+double OH_Drawing_TextLineGetTrailingSpaceWidth(OH_Drawing_TextLine* line)
+{
+    if (line == nullptr) {
+        return 0.0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetTrailingSpaceWidth();
+}
+
+int32_t OH_Drawing_TextLineGetIndexForCharacterPosition(OH_Drawing_TextLine* line, OH_Drawing_Point* point)
+{
+    if (line == nullptr || point == nullptr) {
+        return 0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetIndexForCharacterPosition(
+        *reinterpret_cast<SkPoint*>(point));
+}
+
+double OH_Drawing_TextLineGetOffsetForCharacterIndex(OH_Drawing_TextLine* line, int32_t index)
+{
+    if (line == nullptr) {
+        return 0.0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetOffsetForCharacterIndex(index);
+}
+
+void OH_Drawing_TextLineTraversalCharacterOffsetAndIndex(OH_Drawing_TextLine* line, CustomCallback callback)
+{
+    if (line == nullptr || callback == nullptr) {
+        return;
+    }
+
+    bool isHardBreak = false;
+    std::map<int32_t, double> offsetMap = ConvertToOriginalText<LineImpl>(line)->GetIndexAndOffsets(isHardBreak);
+    double leftOffset = 0.0;
+    const size_t twoNum = 2;
+    for (auto it = offsetMap.begin(); it != offsetMap.end(); ++it) {
+        for (size_t i = 0; i < twoNum; i++) {
+            double offset = (i == 0) ? leftOffset: it->second;
+            bool leadingEdge = (i == 0) ? true : false;
+            if (callback(offset, it->first, leadingEdge)) {
+                return;
+            }
+        }
+        leftOffset = it->second;
+    }
+    if (isHardBreak && offsetMap.size() > 0) {
+        if (!callback(leftOffset, offsetMap.rbegin()->first + 1, true)) {
+            callback(leftOffset, offsetMap.rbegin()->first + 1, false);
+        }
+    }
+}
+
+double OH_Drawing_TextLineGetAlignmentOffset(OH_Drawing_TextLine* line, double alignmentFactor, double alignmentWidth)
+{
+    if (line == nullptr) {
+        return 0.0;
+    }
+
+    return ConvertToOriginalText<LineImpl>(line)->GetAlignmentOffset(alignmentFactor, alignmentWidth);
 }

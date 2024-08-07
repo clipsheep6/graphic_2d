@@ -608,6 +608,13 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
                                " GetIsTextureExportNode is %d properties is %s",
         node.GetId(), node.GetIsTextureExportNode(), node.GetRenderProperties().Dump().c_str());
 #endif
+    if (DEBUG_CLIENT && node.GetIsTextureExportNode()) {
+        std::string opDes;
+        node.DumpDrawCmdModifiers(opDes);
+        ROSEN_LOGI_IF(DEBUG_CLIENT, "RSRenderThreadVisitor::ProcessCanvasRenderNode nodeId is %" PRIu64 "opSize is %s",
+            node.GetId(), opDes.c_str());
+    }
+
     if (!node.ShouldPaint()) {
         return;
     }

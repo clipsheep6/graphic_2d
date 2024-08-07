@@ -616,10 +616,14 @@ VsyncError VSyncGenerator::SetExpectNextVsyncTimeInternal(int64_t expectNextVsyn
     return VSYNC_ERROR_OK;
 }
 
-VsyncError VSyncGenerator::ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
-                                                           const ListenerPhaseOffsetData &listenerPhaseOffset,
-                                                           uint32_t generatorRefreshRate, int64_t expectNextVsyncTime)
+int64_t VSyncGenerator::ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
+                                                        const ListenerPhaseOffsetData &listenerPhaseOffset,
+                                                        uint32_t generatorRefreshRate, int64_t expectNextVsyncTime)
 {
+    int64_t vsyncCount = 0;
+    if (rsVSyncDistributor_ != nullptr) {
+        vsyncCount = rsVSyncDistributor_->GetVsyncCount();
+    }
     std::string refreshrateStr = "refreshRates[";
     for (std::pair<uint64_t, uint32_t> rateVec : listenerRefreshRates.refreshRates) {
         uint64_t linkerId = rateVec.first;
@@ -632,20 +636,20 @@ VsyncError VSyncGenerator::ChangeGeneratorRefreshRateModel(const ListenerRefresh
     std::lock_guard<std::mutex> locker(mutex_);
     if ((vsyncMode_ != VSYNC_MODE_LTPO) && (pendingVsyncMode_ != VSYNC_MODE_LTPO)) {
         ScopedBytrace trace("it's not ltpo mode.");
-        return VSYNC_ERROR_NOT_SUPPORT;
+        return vsyncCount;
     }
     if (pulse_ == 0) {
         ScopedBytrace trace("pulse is not ready!!!");
         VLOGE("pulse is not ready!!!");
-        return VSYNC_ERROR_API_FAILED;
+        return vsyncCount;
     }
 
-    VsyncError ret = SetExpectNextVsyncTimeInternal(expectNextVsyncTime);
+    SetExpectNextVsyncTimeInternal(expectNextVsyncTime);
 
     if ((generatorRefreshRate <= 0 || (VSYNC_MAX_REFRESHRATE % generatorRefreshRate != 0))) {
         RS_TRACE_NAME_FMT("Not support this refresh rate: %u", generatorRefreshRate);
         VLOGE("Not support this refresh rate: %{public}u", generatorRefreshRate);
-        return VSYNC_ERROR_NOT_SUPPORT;
+        return vsyncCount;
     }
 
     if (changingRefreshRates_.cb == nullptr) {
@@ -667,7 +671,7 @@ VsyncError VSyncGenerator::ChangeGeneratorRefreshRateModel(const ListenerRefresh
     }
 
     waitForTimeoutCon_.notify_all();
-    return ret;
+    return vsyncCount;
 }
 
 void VSyncGenerator::UpdateChangeRefreshRatesLocked(const ListenerRefreshRateData &listenerRefreshRates)

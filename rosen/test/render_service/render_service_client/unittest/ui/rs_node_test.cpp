@@ -4191,6 +4191,21 @@ HWTEST_F(RSNodeTest, SetandGetSetAttractionEffectDstPoint001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetandGetSetAttractionEffect001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, SetandGetSetAttractionEffect001, TestSize.Level1)
+{
+    auto rsNode = RSCanvasNode::Create();
+    float attractionFraction = 0.5f;
+    Vector2f attractionDstPoint = { 100.0, 100.0 };
+    rsNode->SetAttractionEffect(attractionFraction, attractionDstPoint);
+    EXPECT_EQ(rsNode->GetStagingProperties().GetAttractionDstPointValue(), attractionDstPoint);
+    EXPECT_EQ(rsNode->GetStagingProperties().GetAttractionFractionValue(), attractionFraction);
+}
+
+/**
  * @tc.name: SetandGetLightUpEffectDegree001
  * @tc.desc:
  * @tc.type:FUNC

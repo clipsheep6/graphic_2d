@@ -241,4 +241,58 @@ HWTEST_F(RSHardwareThreadTest, ClearFrameBuffers002, TestSize.Level1)
         ASSERT_EQ(ret, GSERROR_OK);
     }
 }
+
+/**
+ * @tc.name: Redraw001
+ * @tc.desc: Test RSHardwareThreadTest.Redraw
+ * @tc.type: FUNC
+ * @tc.require: issueI6R49K
+ */
+HWTEST_F(RSHardwareThreadTest, Redraw001, TestSize.Level2)
+{
+    auto& hardwareThread = RSHardwareThread::Instance();
+    auto fbSurface = composerAdapter_->output_->GetFrameBufferSurface();
+    auto surfaceNode1 = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto surfaceNode2 = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto surfaceNode3 = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    RectI dstRect{0, 0, 400, 600};
+    surfaceNode1->SetSrcRect(dstRect);
+    surfaceNode1->SetDstRect(dstRect);
+    surfaceNode2->SetSrcRect(dstRect);
+    surfaceNode2->SetDstRect(dstRect);
+    surfaceNode3->SetSrcRect(dstRect);
+    surfaceNode3->SetDstRect(dstRect);
+    auto layer1 = composerAdapter_->CreateLayer(*surfaceNode1);
+    ASSERT_NE(layer1, nullptr);
+    auto layer2 = composerAdapter_->CreateLayer(*surfaceNode2);
+    ASSERT_NE(layer2, nullptr);
+    auto layer3 = composerAdapter_->CreateLayer(*surfaceNode3);
+    ASSERT_NE(layer3, nullptr);
+
+    std::vector<LayerInfoPtr> layers;
+    layers.emplace_back(layer1);
+    layers.emplace_back(layer2);
+    layers.emplace_back(layer3);
+    hardwareThread.Redraw(fbSurface, layers, screenId_);
+}
+
+/**
+ * @tc.name: Redraw002
+ * @tc.desc: Test RSHardwareThreadTest.Redraw
+ * @tc.type: FUNC
+ * @tc.require: issueI6R49K
+ */
+HWTEST_F(RSHardwareThreadTest, Redraw002, TestSize.Level2)
+{
+    auto& hardwareThread = RSHardwareThread::Instance();
+    auto fbSurface = composerAdapter_->output_->GetFrameBufferSurface();
+    auto surfaceNode1 = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    RectI dstRect{0, 0, 400, 600};
+    surfaceNode1->SetSrcRect(dstRect);
+    auto layer1 = composerAdapter_->CreateLayer(*surfaceNode1);
+    ASSERT_NE(layer1, nullptr);
+    std::vector<LayerInfoPtr> layers;
+    layers.emplace_back(layer1);
+    hardwareThread.Redraw(nullptr, layers, screenId_);
+}
 } // namespace OHOS::Rosen

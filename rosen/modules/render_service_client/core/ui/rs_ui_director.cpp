@@ -387,11 +387,13 @@ void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)
     }
     auto msgId = ++messageId;
     RS_TRACE_NAME_FMT("RSUIDirector::ProcessMessages messageId [%lu]", msgId);
+    ROSEN_LOGI("RSUIDirector::ProcessMessages messageId [%{public}d]", msgId);
     auto counter = std::make_shared<std::atomic_size_t>(m.size());
     for (auto &[instanceId, commands] : m) {
         PostTask(
             [cmds = std::make_shared<std::vector<std::unique_ptr<RSCommand>>>(std::move(commands)), counter, msgId] {
                 RS_TRACE_NAME_FMT("RSUIDirector::ProcessMessages PostTask messageId [%lu]", msgId);
+                ROSEN_LOGI("RSUIDirector::ProcessMessages PostTask messageId [%{public}d]", msgId);
                 for (auto &cmd : *cmds) {
                     RSContext context; // RSCommand->process() needs it
                     cmd->Process(context);

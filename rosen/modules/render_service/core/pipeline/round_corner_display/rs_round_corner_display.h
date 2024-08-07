@@ -82,16 +82,19 @@ public:
         return supportHardware_;
     }
 
-    void RunHardwareTask(const std::function<void()>& task)
+    void RunHardwareTask(const std::function<bool()>& task)
     {
         std::lock_guard<std::mutex> lock(resourceMut_);
         if (!supportHardware_) {
             return;
         }
         UpdateParameter(updateFlag_);
-        task(); // do task
+        // do task
+        if (!task()) {
+            resourceChanged_ = true;
+        }
     }
-    
+
     rs_rcd::RoundCornerHardware GetHardwareInfo() const
     {
         return hardInfo_;
@@ -141,7 +144,7 @@ private:
     bool supportTopSurface_ = false;
     bool supportBottomSurface_ = false;
     bool supportHardware_ = false;
-    bool resourceChanged = false;
+    bool resourceChanged_ = false;
 
     bool isRcdEnable_ = false;
 

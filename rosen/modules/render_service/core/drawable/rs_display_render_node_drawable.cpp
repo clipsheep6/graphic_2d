@@ -178,7 +178,7 @@ void DoScreenRcdTask(std::shared_ptr<RSProcessor>& processor, std::unique_ptr<Rc
                 auto hardInfo = RSSingleton<RoundCornerDisplay>::GetInstance().GetHardwareInfo();
                 rcdInfo->processInfo = {processor, hardInfo.topLayer, hardInfo.bottomLayer,
                     hardInfo.resourceChanged};
-                RSRcdRenderManager::GetInstance().DoProcessRenderTask(rcdInfo->processInfo);
+                return RSRcdRenderManager::GetInstance().DoProcessRenderTask(rcdInfo->processInfo);
             }
         );
     }
@@ -1473,7 +1473,7 @@ void RSDisplayRenderNodeDrawable::PrepareOffscreenRender(const RSDisplayRenderNo
     } else {
         offscreenSurface_ = curCanvas_->GetSurface()->MakeSurface(offscreenWidth, offscreenHeight);
     }
-    
+
     if (offscreenSurface_ == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::PrepareOffscreenRender, offscreenSurface is nullptr");
         curCanvas_->ClipRect(Drawing::Rect(0, 0, offscreenWidth, offscreenHeight), Drawing::ClipOp::INTERSECT, false);

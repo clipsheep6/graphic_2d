@@ -57,8 +57,8 @@ public:
     }
 
     void DoPrepareRenderTask(const RcdPrepareInfo& info);
-    void DoProcessRenderTask(const RcdProcessInfo& info);
-    void DoProcessRenderMainThreadTask(const RcdProcessInfo& info);
+    bool DoProcessRenderTask(const RcdProcessInfo& info);
+    bool DoProcessRenderMainThreadTask(const RcdProcessInfo& info);
     static bool IsRcdProcessInfoValid(const RcdProcessInfo& info);
 
     RSRcdRenderManager() = default;

@@ -244,6 +244,10 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
                 return false;
             }
             RS_PROFILER_PATCH_COMMAND(parcel, command);
+            auto newNodeId = command->GetNodeId();
+            auto extractPid = ExtractPid(newNodeId);
+            SetExtractPid(extractPid);
+
             payloadLock.lock();
             payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
             payloadLock.unlock();

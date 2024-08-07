@@ -170,6 +170,15 @@ public:
         return parentPid_;
     }
 
+    void SetExtractPid(pid_t pid)
+    {
+        extractPid_ = pid;
+    }
+
+    pid_t GetExtractPid() const
+    {
+        return extractPid_;
+    }
 private:
     void AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
     void AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType);
@@ -189,6 +198,7 @@ private:
     uint64_t syncId_ { 0 };
     static std::function<void(uint64_t, int, int)> alarmLogFunc;
     mutable std::mutex commandMutex_;
+    pid_t extractPid_ = 0;
 
     friend class RSTransactionProxy;
     friend class RSMessageProcessor;

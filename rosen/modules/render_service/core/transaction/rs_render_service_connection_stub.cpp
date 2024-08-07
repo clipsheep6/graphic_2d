@@ -27,6 +27,7 @@
 #include "pipeline/rs_unmarshal_thread.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_ashmem_helper.h"
+#include "transaction/rs_transaction_data.h"
 #include "rs_trace.h"
 #include "rs_profiler.h"
 
@@ -251,6 +252,12 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                     // no need to copy or copy failed, use original parcel
                     // execute Unmarshalling immediately
                     auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+                    if (transactionData->GetExtractPid() != callingPid) {
+                        RS_LOGE("RSRenderServiceConnectionStub::COMMIT_TRANSACTION failed, different pid! "
+                                "callingPid:%{public}d extractPid:%{public}d",
+                            callingPid, transactionData->GetExtractPid());
+                        return 0;
+                    }
                     CommitTransaction(transactionData);
                     break;
                 }
@@ -269,6 +276,12 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             } else {
                 // execute Unmarshalling immediately
                 auto transactionData = RSBaseRenderUtil::ParseTransactionData(*parsedParcel);
+                if (transactionData->GetExtractPid() != callingPid) {
+                    RS_LOGE("RSRenderServiceConnectionStub::COMMIT_TRANSACTION failed, different pid! "
+                            "callingPid:%{public}d extractPid:%{public}d",
+                        callingPid, transactionData->GetExtractPid());
+                    return 0;
+                }
                 CommitTransaction(transactionData);
             }
             break;
@@ -280,6 +293,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_NODE): {
             auto nodeId = data.ReadUint64();
             RS_PROFILER_PATCH_NODE_ID(data, nodeId);
+            auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+            if (transactionData->GetExtractPid() != callingPid) {
+                RS_LOGE("RSRenderServiceConnectionStub::CREATE_NODE failed, different pid! "
+                        "callingPid:%{public}d extractPid:%{public}d",
+                    callingPid, transactionData->GetExtractPid());
+                return 0;
+            }
             auto surfaceName = data.ReadString();
             auto bundleName = data.ReadString();
             RSSurfaceRenderNodeConfig config = {.id = nodeId, .name = surfaceName, .bundleName = bundleName};
@@ -529,6 +549,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             pid_t pid = data.ReadInt32();
+            auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+            if (transactionData->GetExtractPid() != callingPid) {
+                RS_LOGE("RSRenderServiceConnectionStub::CREATE_NODE failed, different pid! "
+                        "callingPid:%{public}d extractPid:%{public}d",
+                    callingPid, transactionData->GetExtractPid());
+                return 0;
+            }
             std::string refreshInfo = GetRefreshInfo(pid);
             reply.WriteString(refreshInfo);
             break;
@@ -624,6 +651,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_MEMORY_GRAPHIC): {
             auto pid = data.ReadInt32();
+            auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+            if (transactionData->GetExtractPid() != pid) {
+                RS_LOGE("RSRenderServiceConnectionStub::GET_MEMORY_GRAPHIC failed, different pid! "
+                        "pid:%{public}d extractPid:%{public}d",
+                    pid, transactionData->GetExtractPid());
+                return 0;
+            }
             RS_PROFILER_PATCH_PID(data, pid);
             MemoryGraphic memoryGraphic = GetMemoryGraphic(pid);
             reply.WriteParcelable(&memoryGraphic);
@@ -700,6 +734,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_BUFFER_CLEAR_LISTENER): {
             NodeId id = data.ReadUint64();
             RS_PROFILER_PATCH_NODE_ID(data, id);
+            auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+            if (transactionData->GetExtractPid() != callingPid) {
+                RS_LOGE("RSRenderServiceConnectionStub::SET_BUFFER_CLEAR_LISTENER failed, different pid! "
+                        "callingPid:%{public}d extractPid:%{public}d",
+                    callingPid, transactionData->GetExtractPid());
+                return 0;
+            }
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {
                 ret = ERR_NULL_OBJECT;
@@ -1034,6 +1075,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case static_cast<uint32_t>(
             RSIRenderServiceConnectionInterfaceCode::REGISTER_SURFACE_OCCLUSION_CHANGE_CALLBACK): {
             NodeId id = data.ReadUint64();
+            auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+            if (transactionData->GetExtractPid() != callingPid) {
+                RS_LOGE("RSRenderServiceConnectionStub::SET_BUFFER_CLEAR_LISTENER failed, different pid! "
+                        "callingPid:%{public}d extractPid:%{public}d",
+                    callingPid, transactionData->GetExtractPid());
+                return 0;
+            }
             RS_PROFILER_PATCH_NODE_ID(data, id);
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {

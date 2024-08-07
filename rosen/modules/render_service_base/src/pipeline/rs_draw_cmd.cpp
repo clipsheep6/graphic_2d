@@ -547,10 +547,12 @@ void DrawPixelMapWithParmOpItem::SetNodeId(NodeId id)
 void DrawPixelMapWithParmOpItem::Dump(std::string& out)
 {
     DrawWithPaintOpItem::Dump(out);
+    out += "sampling";
     sampling_.Dump(out);
     if (!objectHandle_) {
-        out += " [objectHandle:nullptr]";
+        out += " objectHandle:nullptr";
     }
+    out += "]";
 }
 
 /* DrawPixelMapRectOpItem */
@@ -606,10 +608,12 @@ void DrawPixelMapRectOpItem::SetNodeId(NodeId id)
 void DrawPixelMapRectOpItem::Dump(std::string& out)
 {
     DrawWithPaintOpItem::Dump(out);
+    out += "sampling";
     sampling_.Dump(out);
     if (!objectHandle_) {
-        out += " [objectHandle:nullptr]";
+        out += " objectHandle:nullptr";
     }
+    out += "]";
 }
 
 /* DrawFuncOpItem */
@@ -856,10 +860,11 @@ bool DrawSurfaceBufferOpItem::CreateEglTextureId()
 void DrawSurfaceBufferOpItem::Dump(std::string& out)
 {
     DrawWithPaintOpItem::Dump(out);
-    out += "[Width:" + std::to_string(surfaceBufferInfo_.width_);
-    out += " Height:" + std::to_string(surfaceBufferInfo_.height_);
+    out += "surfaceBufferInfo[width:" + std::to_string(surfaceBufferInfo_.width_);
+    out += " height:" + std::to_string(surfaceBufferInfo_.height_);
     out += " offSetX:" + std::to_string(surfaceBufferInfo_.offSetX_);
     out += " offSetY:" + std::to_string(surfaceBufferInfo_.offSetY_);
+    out += "]";
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (!nativeWindowBuffer_) {
         out += " nativeWindowBuffer:nullptr";

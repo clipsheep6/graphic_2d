@@ -452,11 +452,7 @@ inline std::string RectF::ToString() const
 
 inline void RectF::Dump(std::string& out)
 {
-    out += "[valid:" + std::to_string(IsValid());
-    out += " empty:" + std::to_string(IsEmpty());
-    out += " width:" + std::to_string(GetWidth());
-    out += " height:" + std::to_string(GetHeight());
-    out += " left:" + std::to_string(left_);
+    out += "[left:" + std::to_string(left_);
     out += " top:" + std::to_string(top_);
     out += " right:" + std::to_string(right_);
     out += " bottom:" + std::to_string(bottom_) + "]";

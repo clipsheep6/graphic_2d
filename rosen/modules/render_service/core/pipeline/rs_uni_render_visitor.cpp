@@ -1238,7 +1238,7 @@ void RSUniRenderVisitor::ResetDisplayDirtyRegion()
     }
     bool ret = CheckScreenPowerChange() || CheckColorFilterChange() ||
         CheckCurtainScreenUsingStatusChange() || IsFirstFrameOfPartialRender() ||
-        IsWatermarkFlagChanged() || IsDisplayZoomIn();
+        IsWatermarkFlagChanged() || IsDisplayZoomIn() || CheckLuminanceStatusChange();
     if (ret) {
         curDisplayDirtyManager_->ResetDirtyAsSurfaceSize();
         RS_LOGD("RSUniRenderVisitor::ResetDisplayDirtyRegion on");
@@ -1261,6 +1261,11 @@ bool RSUniRenderVisitor::CheckCurtainScreenUsingStatusChange() const
     }
     RS_LOGD("RSUniRenderVisitor::CheckCurtainScreenUsingStatusChange changed");
     return true;
+}
+
+bool RSUniRenderVisitor::CheckLuminanceStatusChange() const
+{
+    return RSMainThread::Instance()->IsLuminanceChanged();
 }
 
 bool RSUniRenderVisitor::IsFirstFrameOfPartialRender() const
@@ -2923,7 +2928,7 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
     if (RS_PROFILER_SHOULD_BLOCK_HWCNODE()) {
         return;
     }
-    
+
     if (!curSurfaceNode_) {
         return;
     }

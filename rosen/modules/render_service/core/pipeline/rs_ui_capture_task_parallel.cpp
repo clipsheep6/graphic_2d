@@ -229,6 +229,8 @@ std::shared_ptr<Drawing::Surface> RSUiCaptureTaskParallel::CreateSurface(
     Drawing::ImageInfo info = Drawing::ImageInfo{pixelmap->GetWidth(), pixelmap->GetHeight(),
         Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL};
 
+    RS_LOGD("RSUiCaptureTaskParallel::create surface GpuApiType:%{public}d address:%{public}s",
+        RSSystemProperties::GetGpuApiType(), address.c_str());
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
         auto renderContext = RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext();

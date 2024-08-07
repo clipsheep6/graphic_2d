@@ -52,6 +52,8 @@
 #define RS_PROFILER_ON_PARALLEL_RENDER_BEGIN() RSProfiler::OnParallelRenderBegin()
 #define RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber) RSProfiler::OnParallelRenderEnd(renderFrameNumber)
 #define RS_PROFILER_SHOULD_BLOCK_HWCNODE() RSProfiler::ShouldBlockHWCNode()
+#define RS_PROFILER_ANIME_SET_START_TIME(id, time) RSProfiler::AnimeSetStartTime(id, time)
+#define RS_PROFILER_REPLAY_FIX_TRINDEX(curIndex, lastIndex) RSProfiler::ReplayFixTrIndex(curIndex, lastIndex)
 #else
 #define RS_PROFILER_INIT(renderSevice)
 #define RS_PROFILER_ON_FRAME_BEGIN()
@@ -79,6 +81,8 @@
 #define RS_PROFILER_ON_PARALLEL_RENDER_BEGIN()
 #define RS_PROFILER_ON_PARALLEL_RENDER_END(renderFrameNumber)
 #define RS_PROFILER_SHOULD_BLOCK_HWCNODE() false
+#define RS_PROFILER_ANIME_SET_START_TIME(id, time) time
+#define RS_PROFILER_REPLAY_FIX_TRINDEX(curIndex, lastIndex)
 #endif
 
 #ifdef RS_PROFILER_ENABLED
@@ -168,6 +172,11 @@ public:
 
     RSB_EXPORT static uint32_t GetFrameNumber();
     RSB_EXPORT static bool ShouldBlockHWCNode();
+    RSB_EXPORT static std::unordered_map<AnimationId, std::vector<int64_t>> &AnimeGetStartTimes();
+    RSB_EXPORT static int64_t AnimeSetStartTime(AnimationId id, int64_t nanoTime);
+    RSB_EXPORT static std::string GendMessageBase();
+    RSB_EXPORT static void SendMessageBase(const std::string msg);
+    RSB_EXPORT static void ReplayFixTrIndex(uint64_t curIndex, uint64_t& lastIndex);
 
 public:
     RSB_EXPORT static bool IsParcelMock(const Parcel& parcel);
@@ -351,7 +360,7 @@ private:
 
     static void PlaybackStart(const ArgList& args);
     static void PlaybackStop(const ArgList& args);
-    static void PlaybackUpdate();
+    static double PlaybackUpdate(const double deltaTime);
 
     static void PlaybackPrepare(const ArgList& args);
     static void PlaybackPrepareFirstFrame(const ArgList& args);

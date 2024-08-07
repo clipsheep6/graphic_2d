@@ -55,6 +55,7 @@ ohos_shared_library("uieffect_napi") {
   deps = [
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
+    "$graphic_2d_root/rosen/modules/render_service_client:render_service_client_src",
   ]
 
   external_deps = [

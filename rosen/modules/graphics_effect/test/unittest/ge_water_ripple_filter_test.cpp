@@ -64,7 +64,7 @@ void GEWaterRippleFilterTest::TearDown() {}
  */
 HWTEST_F(GEWaterRippleFilterTest, ProcessImage001, TestSize.Level1)
 {
-    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2.0f, 0.5f, 0.7f, 1.0f };
+    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2, 0.5f, 0.7f, 1 };
     auto geWaterRippleFilter = std::make_shared<GEWaterRippleFilter>(geWaterRippleFilterParams);
     EXPECT_NE(geWaterRippleFilter->ProcessImage(canvas_, image_, src_, dst_), image_);
 }
@@ -76,7 +76,7 @@ HWTEST_F(GEWaterRippleFilterTest, ProcessImage001, TestSize.Level1)
  */
 HWTEST_F(GEWaterRippleFilterTest, ProcessImage002, TestSize.Level1)
 {
-    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2.0f, 0.5f, 0.7f, 1.0f };
+    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2, 0.5f, 0.7f, 1 };
     auto geWaterRippleFilter = std::make_shared<GEWaterRippleFilter>(geWaterRippleFilterParams);
     EXPECT_EQ(geWaterRippleFilter->ProcessImage(canvas_, nullptr, src_, dst_), nullptr);
 }
@@ -88,7 +88,7 @@ HWTEST_F(GEWaterRippleFilterTest, ProcessImage002, TestSize.Level1)
  */
 HWTEST_F(GEWaterRippleFilterTest, ProcessImage003, TestSize.Level1)
 {
-    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2.0f, 0.5f, 0.0f, 2.0f };
+    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2, 0.5f, 0.0f, 2 };
     auto geWaterRippleFilter = std::make_shared<GEWaterRippleFilter>(geWaterRippleFilterParams);
     EXPECT_NE(geWaterRippleFilter->ProcessImage(canvas_, image_, src_, dst_), image_);
 }
@@ -100,7 +100,7 @@ HWTEST_F(GEWaterRippleFilterTest, ProcessImage003, TestSize.Level1)
  */
 HWTEST_F(GEWaterRippleFilterTest, ProcessImage004, TestSize.Level1)
 {
-    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2.0f, 0.5f, 0.0f, 0.0f };
+    Drawing::GEWaterRippleFilterParams geWaterRippleFilterParams { 0.5f, 2, 0.5f, 0.0f, 0 };
     auto geWaterRippleFilter = std::make_shared<GEWaterRippleFilter>(geWaterRippleFilterParams);
     EXPECT_NE(geWaterRippleFilter->ProcessImage(canvas_, image_, src_, dst_), image_);
 }

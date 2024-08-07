@@ -12,27 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UIEFFECT_FILTER_FLY_OUT_PARA_H
-#define UIEFFECT_FILTER_FLY_OUT_PARA_H
-#include <iostream>
-#include "filter_para.h"
-#include "common/rs_vector2.h"
+
+#include "ui_effect/filter/include/filter_fly_out_para.h"
  
 namespace OHOS {
 namespace Rosen {
-class FlyOutPara : public FilterPara {
-public:
-    FlyOutPara();
-    ~FlyOutPara() override;
-    void SetDegree(float degree);
-    float GetDegree() const;
-    void SetFlyMode(uint32_t flyMode);
-    uint32_t GetFlyMode () const;
 
-private:
-    float degree_ = 0.0f;
-    uint32_t flyMode_ = 0;
-};
+    FlyOutPara::FlyOutPara()
+    {
+        this->type_ = FilterPara::ParaType::FLY_OUT;
+    }
+    FlyOutPara::~FlyOutPara() = default;
+    
+    void FlyOutPara::SetDegree(float degree)
+    {
+        degree_ = degree;
+    }
+ 
+    float FlyOutPara::GetDegree() const
+    {
+        return degree_;
+    }
+ 
+    void FlyOutPara::SetFlyMode(uint32_t flyMode)
+    {
+        flyMode_ = flyMode;
+    }
+
+    uint32_t FlyOutPara::GetFlyMode() const
+    {
+        return flyMode_;
+    }
+
 } // namespace Rosen
 } // namespace OHOS
-#endif // UIEFFECT_FILTER_FLY_OUT_PARA_H

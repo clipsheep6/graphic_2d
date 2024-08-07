@@ -16,67 +16,25 @@
 #define UIEFFECT_FILTER_WATER_RIPPPLE_PARA_H
 #include <iostream>
 #include "filter_para.h"
-#include "common/rs_vector2.h"
  
 namespace OHOS {
 namespace Rosen {
 class WaterRipplePara : public FilterPara {
 public:
-    WaterRipplePara()
-    {
-        this->type_ = FilterPara::ParaType::WATER_RIPPLE;
-    }
-    ~WaterRipplePara() override = default;
-    
-    void SetProgress(float progress)
-    {
-        progress_ = progress;
-    }
- 
-    float GetProgress() const
-    {
-        return progress_;
-    }
- 
-    void SetWaveCount(uint32_t waveCount)
-    {
-        waveCount_ = waveCount;
-    }
- 
-    uint32_t GetWaveCount () const
-    {
-        return waveCount_;
-    }
- 
-    void SetRippleCenterX(float rippleCenterX)
-    {
-        rippleCenterX_ = rippleCenterX;
-    }
- 
-    float GetRippleCenterX() const
-    {
-        return rippleCenterX_;
-    }
+    WaterRipplePara();
 
-    void SetRippleCenterY(float rippleCenterY)
-    {
-        rippleCenterY_ = rippleCenterY;
-    }
- 
-    float GetRippleCenterY() const
-    {
-        return rippleCenterY_;
-    }
+    ~WaterRipplePara() override;
 
-    void SetRippleMode(uint32_t rippleMode)
-    {
-        rippleMode_ = rippleMode;
-    }
-
-    uint32_t GetRippleMode() const
-    {
-        return rippleMode_;
-    }
+    void SetProgress(float progress);
+    float GetProgress() const;
+    void SetWaveCount(uint32_t waveCount);
+    uint32_t GetWaveCount () const;
+    void SetRippleCenterX(float rippleCenterX);
+    float GetRippleCenterX() const;
+    void SetRippleCenterY(float rippleCenterY);
+    float GetRippleCenterY() const;
+    void SetRippleMode(uint32_t rippleMode);
+    uint32_t GetRippleMode() const;
 
 private:
     float rippleCenterX_ = 0.0f;

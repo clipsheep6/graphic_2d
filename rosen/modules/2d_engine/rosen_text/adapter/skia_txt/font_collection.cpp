@@ -81,6 +81,10 @@ std::shared_ptr<Drawing::FontMgr> FontCollection::GetFontMgr()
 bool FontCollection::RegisterTypeface(std::shared_ptr<Drawing::Typeface> typeface)
 {
     if (!typeface || !Drawing::Typeface::GetTypefaceRegisterCallBack()) {
+        for(const auto& [id, typeface] : typefaces_) {
+            Drawing::Typeface::GetTypefaceUnRegisterCallBack()(typeface);
+        }
+        typefaces_.clear();
         return false;
     }
 
@@ -119,17 +123,17 @@ static std::shared_ptr<Drawing::Typeface> CreateTypeFace(const uint8_t *data, si
 std::shared_ptr<Drawing::Typeface> FontCollection::LoadThemeFont(
     const std::string &familyName, const uint8_t *data, size_t datalen)
 {
-    std::shared_ptr<Drawing::Typeface> face = CreateTypeFace(data, datalen);
-    if (face != nullptr) {
-        std::string name = face->GetFamilyName();
-        for (auto item : typefaces_) {
-            if (name == item.second->GetFamilyName()) {
-                dfmanager_->LoadThemeFont(OHOS_THEME_FONT, item.second);
-                fontCollection_->ClearFontFamilyCache();
-                return item.second;
-            }
-        }
-    }
+    // std::shared_ptr<Drawing::Typeface> face = CreateTypeFace(data, datalen);
+    // if (face != nullptr) {
+    //     std::string name = face->GetFamilyName();
+    //     for (auto item : typefaces_) {
+    //         if (name == item.second->GetFamilyName()) {
+    //             dfmanager_->LoadThemeFont(OHOS_THEME_FONT, item.second);
+    //             fontCollection_->ClearFontFamilyCache();
+    //             return item.second;
+    //         }
+    //     }
+    // }
 
     std::shared_ptr<Drawing::Typeface> typeface(dfmanager_->LoadThemeFont(familyName, OHOS_THEME_FONT, data, datalen));
     if (!RegisterTypeface(typeface)) {

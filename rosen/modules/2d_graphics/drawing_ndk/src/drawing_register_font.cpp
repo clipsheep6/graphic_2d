@@ -77,6 +77,8 @@ static uint32_t LoadFromFontCollection(OH_Drawing_FontCollection* fontCollection
         return ERROR_FILE_CORRUPTION;
     }
 #else
+    fc->LoadThemeFont(familyName, data, dataLength);
+
     auto face = fc->LoadFont(familyName, data, dataLength);
     if (face == nullptr) {
         return ERROR_FILE_CORRUPTION;
@@ -146,13 +148,13 @@ uint32_t OH_Drawing_RegisterFont(OH_Drawing_FontCollection* fontCollection, cons
 uint32_t OH_Drawing_RegisterFontBuffer(OH_Drawing_FontCollection* fontCollection, const char* fontFamily,
     uint8_t* fontBuffer, size_t length)
 {
-    if (fontBuffer == nullptr) {
-        return ERROR_NULL_FONT_BUFFER;
-    }
+    // if (fontBuffer == nullptr) {
+    //     return ERROR_NULL_FONT_BUFFER;
+    // }
 
-    if (length == 0) {
-        return ERROR_BUFFER_SIZE_ZERO;
-    }
+    // if (length == 0) {
+    //     return ERROR_BUFFER_SIZE_ZERO;
+    // }
 
     const std::string familyName = fontFamily;
     return LoadFromFontCollection(fontCollection, familyName, fontBuffer, length);

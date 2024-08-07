@@ -15,6 +15,7 @@
 
 #include <fstream>
 #include "js_fontcollection.h"
+#include "ability.h"
 #include "log_wrapper.h"
 #include "napi_async_work.h"
 
@@ -22,8 +23,6 @@ namespace OHOS::Rosen {
 namespace {
 constexpr size_t FILE_HEAD_LENGTH = 7; // 7 is the size of "file://"
 const std::string CLASS_NAME = "FontCollection";
-const std::string LOCAL_BIND_PATH = "/data/storage/el1/bundle/";
-const std::string HAP_POSTFIX = ".hap";
 const int32_t GLOBAL_ERROR = 10000;
 struct FontArgumentsConcreteContext : public ContextBase {
     std::string familyName;
@@ -171,17 +170,6 @@ bool JsFontCollection::SpiltAbsoluteFontPath(std::string& absolutePath)
     return false;
 }
 
-std::unique_ptr<Global::Resource::ResourceManager> JsFontCollection::GetResourManager(const std::string& moudleName)
-{
-    auto hapPath = LOCAL_BIND_PATH + moudleName + HAP_POSTFIX;
-    auto resManager = Global::Resource::CreateResourceManager();
-    if (!resManager) {
-        return nullptr;
-    }
-    resManager->AddResource(hapPath.c_str());
-    return std::unique_ptr<Global::Resource::ResourceManager>(resManager);
-}
-
 bool JsFontCollection::GetResourcePartData(napi_env env, ResourceInfo& info, napi_value paramsNApi,
     napi_value bundleNameNApi, napi_value moduleNameNApi)
 {
@@ -271,12 +259,22 @@ bool JsFontCollection::ParseResourceType(napi_env env, napi_value value, Resourc
     return true;
 }
 
+std::shared_ptr<Global::Resource::ResourceManager> JsFontCollection::GetResourManager() const
+{
+    std::shared_ptr<AbilityRuntime::ApplicationContext> context =
+        AbilityRuntime::ApplicationContext::GetApplicationContext();
+    TEXT_ERROR_CHECK(context != nullptr, return nullptr, "GetResourManager Failed to get application context");
+    auto resourceManager = context->GetResourceManager();
+    TEXT_ERROR_CHECK(resourceManager != nullptr, return nullptr, "GetResourManager Failed to get resource manager");
+    return resourceManager;
+}
+
 bool JsFontCollection::ParseResourcePath(const std::string familyName, ResourceInfo& info)
 {
     int32_t state = 0;
-
-    auto reSourceManager = GetResourManager(info.moduleName);
+    auto reSourceManager = GetResourManager();
     if (reSourceManager == nullptr) {
+        TEXT_LOGE("GetResourManager reSourceManager is nullptr");
         return false;
     }
     if (info.type == static_cast<int32_t>(ResourceType::STRING)) {

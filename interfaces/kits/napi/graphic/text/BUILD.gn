@@ -100,6 +100,8 @@ ohos_shared_library("text_napi_impl") {
     "hilog:libhilog",
     "napi:ace_napi",
     "resource_management:global_resmgr",
+     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
   ]
 
   if (current_os == "ohos" || current_os == "ohos_ng") {

@@ -499,6 +499,32 @@ typedef struct {
  */
 float OH_Drawing_FontGetMetrics(OH_Drawing_Font*, OH_Drawing_Font_Metrics*);
 
+/**
+ * @brief Retrieves the bound for each glyph in glyphs.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Font Indicates the pointer to an <b>OH_Drawing_Font</b> object.
+ * @param glyphs Indicates the array of glyph indices to be measured.
+ * @param count Indicates the number of glyphs.
+ * @param bounds Indicates the bound for each glyph returned to the caller.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_FontGetBounds(const OH_Drawing_Font*, const uint16_t* glyphs, int count, OH_Drawing_Rect* bounds);
+
+/**
+ * @brief create a path object of specified Glyph.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Font Indicates the pointer to an <b>OH_Drawing_Font</b> object.
+ * @param glyph glyph index to be measured.
+ * @return Returns an <b>OH_Drawing_Path</b> object, must be release by OH_Drawing_PathDestroy
+ * Returns nullptr if OH_Drawing_Font is nullptr.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_Path* OH_Drawing_FontCreatePathForGlyph(OH_Drawing_Font*, uint16_t glyph);
+
 #ifdef __cplusplus
 }
 #endif

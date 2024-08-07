@@ -179,3 +179,24 @@ void OH_Drawing_RectDestroy(OH_Drawing_Rect* cRect)
 {
     delete CastToRect(cRect);
 }
+
+OH_Drawing_Rect* OH_Drawing_RectCreateArray(uint16_t size)
+{
+    if (size == 0) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+
+    return (OH_Drawing_Rect*)new Rect[size];
+}
+
+OH_Drawing_Rect* OH_Drawing_RectGetArrayElement(OH_Drawing_Rect* cRect, uint16_t index)
+{
+    Rect* rect = CastToRect(cRect);
+    return (OH_Drawing_Rect*)&(rect[index]);
+}
+
+void OH_Drawing_RectDestroyArray(OH_Drawing_Rect* cRect)
+{
+    delete[] CastToRect(cRect);
+}

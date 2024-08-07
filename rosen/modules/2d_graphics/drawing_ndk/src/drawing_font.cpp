@@ -14,6 +14,7 @@
  */
 
 #include "drawing_font.h"
+#include "drawing_path.h"
 
 #include "src/utils/SkUTF.h"
 
@@ -379,5 +380,28 @@ float OH_Drawing_FontGetMetrics(OH_Drawing_Font* cFont, OH_Drawing_Font_Metrics*
     cFontMetrics->descent = metrics.fDescent;
     cFontMetrics->leading = metrics.fLeading;
     cFontMetrics->bottom = metrics.fBottom;
+    return ret;
+}
+
+void OH_Drawing_FontGetBounds(const OH_Drawing_Font* cFont, const uint16_t* glyphs, int count, OH_Drawing_Rect* bounds)
+{
+    if (cFont == nullptr || glyphs == nullptr || bounds == nullptr || count <= 0) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    CastToFont(*cFont).GetWidths(glyphs, count, nullptr, reinterpret_cast<Drawing::Rect*>(bounds));
+}
+
+OH_Drawing_Path* OH_Drawing_FontCreatePathForGlyph(OH_Drawing_Font* cFont, uint16_t glyph)
+{
+    Font* font = CastToFont(cFont);
+    if (font == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return nullptr;
+    }
+
+    OH_Drawing_Path* ret = OH_Drawing_PathCreate();
+    auto path = reinterpret_cast<Path*>(ret);
+    font->GetPathForGlyph(*path, glyph);
     return ret;
 }

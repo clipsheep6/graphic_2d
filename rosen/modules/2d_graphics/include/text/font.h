@@ -249,6 +249,7 @@ public:
 
     int CountText(const void* text, size_t byteLength, TextEncoding encoding) const;
 
+    void GetPathForGlyph(Path& path, uint16_t glyph) const;
     template<typename T>
     T* GetImpl() const
     {

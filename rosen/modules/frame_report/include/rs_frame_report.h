@@ -30,6 +30,7 @@ using RenderEndFunc = void(*)();
 using SendCommandsStartFunc = void(*)();
 using ParallelRenderEndFunc = void(*)();
 using SetFrameParamFunc = void(*)(int, int, int, int);
+using SetCheckPointFunc = void(*)(int);
 class RsFrameReport final {
 public:
     static RsFrameReport& GetInstance();
@@ -44,6 +45,7 @@ public:
     void RSRenderEnd();
     void SendCommandsStart();
     void SetFrameParam(int requestId, int load, int schedFrameNum, int value);
+    void SetCheckPoint(int checkpointId);
 
 private:
     RsFrameReport();
@@ -64,6 +66,7 @@ private:
     ParallelRenderEndFunc parallelRenderEndFunc_ = nullptr;
     SendCommandsStartFunc sendCommandsStartFunc_ = nullptr;
     SetFrameParamFunc setFrameParamFunc_ = nullptr;
+    SetCheckPointFunc setCheckPointFunc_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

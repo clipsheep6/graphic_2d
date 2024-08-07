@@ -217,5 +217,18 @@ void RsFrameReport::SetFrameParam(int requestId, int load, int schedFrameNum, in
         LOGE("RsFrameReport:[SetFrameParam]load SetFrameParam function failed");
     }
 }
+
+void RsFrameReport::SetCheckPoint(int checkpointId)
+{
+    if (setCheckPointFunc_ == nullptr) {
+        setCheckPointFunc_ = (SetCheckPointFunc)LoadSymbol("SetCheckPoint");
+    }
+
+    if (setCheckPointFunc_ != nullptr) {
+        setCheckPointFunc_(checkpointId);
+    } else {
+        LOGE("RsFrameReport:[SetCheckPoint]load SetCheckPoint function failed");
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

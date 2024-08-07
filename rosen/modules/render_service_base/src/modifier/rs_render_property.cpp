@@ -506,6 +506,54 @@ void RSRenderProperty<SkMatrix>::Dump(std::string& out) const
 }
 
 template<>
+void RSRenderProperty<std::shared_ptr<RSLinearGradientBlurPara>>::Dump(std::string& out) const
+{
+    out += "[";
+    Get()->Dump(out);
+    out += "]";
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<MotionBlurParam>>::Dump(std::string& out) const
+{
+    out += "[";
+    Get()->Dump(out);
+    out += "]";
+}
+
+template<>
+void RSRenderProperty<std::vector<std::shared_ptr<EmitterUpdater>>>::Dump(std::string& out) const
+{
+    auto property = Get();
+    out += "[";
+    for (auto& eu : property) {
+        out += "emitterUpdater[";
+        eu->Dump(out);
+        out += "] ";
+    }
+    if (property.size() > 0) {
+        out.pop_back();
+    }
+    out += "]";
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<ParticleNoiseFields>>::Dump(std::string& out) const
+{
+    out += "[";
+    Get()->Dump(out);
+    out += "]";
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSMask>>::Dump(std::string& out) const
+{
+    out += "[";
+    Get()->Dump(out);
+    out += "]";
+}
+
+template<>
 bool RSRenderAnimatableProperty<float>::IsNearEqual(
     const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
 {
@@ -680,6 +728,11 @@ template class RSRenderProperty<RRect>;
 template class RSRenderProperty<Drawing::DrawCmdListPtr>;
 template class RSRenderProperty<ForegroundColorStrategyType>;
 template class RSRenderProperty<SkMatrix>;
+template class RSRenderProperty<std::shared_ptr<RSLinearGradientBlurPara>>;
+template class RSRenderProperty<std::shared_ptr<MotionBlurParam>>;
+template class RSRenderProperty<std::vector<std::shared_ptr<EmitterUpdater>>>;
+template class RSRenderProperty<std::shared_ptr<ParticleNoiseFields>>;
+template class RSRenderProperty<std::shared_ptr<RSMask>>;
 
 template class RSRenderAnimatableProperty<float>;
 template class RSRenderAnimatableProperty<Vector4f>;

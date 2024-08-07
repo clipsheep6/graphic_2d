@@ -81,4 +81,54 @@ ohos_prebuilt_etc("vulkan_swapchain_layer_json") {
   subsystem_name = "graphic"
   module_install_dir = "etc/vulkan/swapchain/vulkan/implicit_layer.d"
 }
+
 ## Build VkLayer_swapchain.json }}}
+
+## Build libVkLayer_RrTraceCaptureLoader.so {{{
+config("VkLayer_RrTraceCaptureLoader_config") {
+  defines = [ "RRTRACE_LOADER_OHOS" ]
+
+  cflags_cc = [ "-std=c++17" ]
+}
+
+ohos_shared_library("VkLayer_RrTraceCaptureLoader") {
+  sources = [
+    "rrtrace/loader/rrtrace_loader.cpp",
+    "rrtrace/loader/rrtrace_loader_helper.cpp",
+    "rrtrace/loader/rrtrace_loader_layer.cpp",
+    "rrtrace/loader/rrtrace_loader_shm.cpp",
+  ]
+
+  configs = [ ":VkLayer_RrTraceCaptureLoader_config" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "napi:ace_napi",
+    "vulkan-headers:vulkan_headers",
+  ]
+
+  output_name = "VkLayer_RrTraceCaptureLoader"
+  output_extension = "so"
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Build libVkLayer_RrTraceCaptureLoader.so  }}}
+
+## Build VkLayer_RrTraceCaptureLoader.json {{{
+ohos_prebuilt_etc("VkLayer_RrTraceCaptureLoader_json") {
+  source = "rrtrace/loader/VkLayer_RrTraceCaptureLoader.json"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+  module_install_dir = "etc/vulkan/implicit_layer.d"
+}
+## Build VkLayer_RrTraceCaptureLoader.json }}}

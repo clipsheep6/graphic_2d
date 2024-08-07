@@ -695,6 +695,8 @@ void DrawShadowStyleOpItem::Playback(Canvas* canvas, const Rect* rect)
         *path_, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_, isLimitElevation_);
 }
 
+void DrawShadowStyleOpItem::Dump(std::string& out) {}
+
 /* DrawShadowOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawShadow, DrawOpItem::SHADOW_OPITEM, DrawShadowOpItem::Unmarshalling);
 
@@ -727,6 +729,8 @@ void DrawShadowOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->DrawShadow(*path_, planeParams_, devLightPos_, lightRadius_,
                        ambientColor_, spotColor_, flag_);
 }
+
+void DrawShadowOpItem::Dump(std::string& out) {}
 
 /* DrawRegionOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawRegion, DrawOpItem::REGION_OPITEM, DrawRegionOpItem::Unmarshalling);
@@ -813,6 +817,8 @@ void DrawColorOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->DrawColor(color_, mode_);
 }
 
+void DrawColorOpItem::Dump(std::string& out) {}
+
 /* DrawImageNineOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawImageNine, DrawOpItem::IMAGE_NINE_OPITEM, DrawImageNineOpItem::Unmarshalling);
 
@@ -855,6 +861,8 @@ void DrawImageNineOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->DrawImageNine(image_.get(), center_, dst_, filter_, brushPtr);
 }
 
+void DrawImageNineOpItem::Dump(std::string& out) {}
+
 /* DrawImageLatticeOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawImageLattice, DrawOpItem::IMAGE_LATTICE_OPITEM, DrawImageLatticeOpItem::Unmarshalling);
 
@@ -894,6 +902,8 @@ void DrawImageLatticeOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->AttachPaint(paint_);
     canvas->DrawImageLattice(image_.get(), lattice_, dst_, filter_);
 }
+
+void DrawImageLatticeOpItem::Dump(std::string& out) {}
 
 /* DrawAtlasOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawAtlas, DrawOpItem::ATLAS_OPITEM, DrawAtlasOpItem::Unmarshalling);
@@ -1506,6 +1516,8 @@ void ClipRectOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->ClipRect(rect_, clipOp_, doAntiAlias_);
 }
 
+void ClipRectOpItem::Dump(std::string& out) {}
+
 /* ClipIRectOpItem */
 REGISTER_UNMARSHALLING_FUNC(ClipIRect, DrawOpItem::CLIP_IRECT_OPITEM, ClipIRectOpItem::Unmarshalling);
 
@@ -1526,6 +1538,8 @@ void ClipIRectOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->ClipIRect(rect_, clipOp_);
 }
+
+void ClipIRectOpItem::Dump(std::string& out) {}
 
 /* ClipRoundRectOpItem */
 REGISTER_UNMARSHALLING_FUNC(ClipRoundRect, DrawOpItem::CLIP_ROUND_RECT_OPITEM, ClipRoundRectOpItem::Unmarshalling);
@@ -1548,6 +1562,8 @@ void ClipRoundRectOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->ClipRoundRect(rrect_, clipOp_, doAntiAlias_);
 }
+
+void ClipRoundRectOpItem::Dump(std::string& out) {}
 
 /* ClipPathOpItem */
 REGISTER_UNMARSHALLING_FUNC(ClipPath, DrawOpItem::CLIP_PATH_OPITEM, ClipPathOpItem::Unmarshalling);
@@ -1607,6 +1623,8 @@ void ClipRegionOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->ClipRegion(*region_, clipOp_);
 }
 
+void ClipRegionOpItem::Dump(std::string& out) {}
+
 /* SetMatrixOpItem */
 REGISTER_UNMARSHALLING_FUNC(SetMatrix, DrawOpItem::SET_MATRIX_OPITEM, SetMatrixOpItem::Unmarshalling);
 
@@ -1652,6 +1670,8 @@ void ResetMatrixOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->ResetMatrix();
 }
 
+void SetMatrixOpItem::Dump(std::string& out) {}
+
 /* ConcatMatrixOpItem */
 REGISTER_UNMARSHALLING_FUNC(ConcatMatrix, DrawOpItem::CONCAT_MATRIX_OPITEM, ConcatMatrixOpItem::Unmarshalling);
 
@@ -1677,6 +1697,8 @@ void ConcatMatrixOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->ConcatMatrix(matrix_);
 }
 
+void ConcatMatrixOpItem::Dump(std::string& out) {}
+
 /* TranslateOpItem */
 REGISTER_UNMARSHALLING_FUNC(Translate, DrawOpItem::TRANSLATE_OPITEM, TranslateOpItem::Unmarshalling);
 
@@ -1697,6 +1719,8 @@ void TranslateOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->Translate(dx_, dy_);
 }
+
+void TranslateOpItem::Dump(std::string& out) {}
 
 /* ScaleOpItem */
 REGISTER_UNMARSHALLING_FUNC(Scale, DrawOpItem::SCALE_OPITEM, ScaleOpItem::Unmarshalling);
@@ -1719,6 +1743,8 @@ void ScaleOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->Scale(sx_, sy_);
 }
 
+void ScaleOpItem::Dump(std::string& out) {}
+
 /* RotateOpItem */
 REGISTER_UNMARSHALLING_FUNC(Rotate, DrawOpItem::ROTATE_OPITEM, RotateOpItem::Unmarshalling);
 
@@ -1740,6 +1766,8 @@ void RotateOpItem::Playback(Canvas* canvas, const Rect* rect)
     canvas->Rotate(deg_, sx_, sy_);
 }
 
+void RotateOpItem::Dump(std::string& out) {}
+
 /* ShearOpItem */
 REGISTER_UNMARSHALLING_FUNC(Shear, DrawOpItem::SHEAR_OPITEM, ShearOpItem::Unmarshalling);
 
@@ -1760,6 +1788,8 @@ void ShearOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->Shear(sx_, sy_);
 }
+
+void ShearOpItem::Dump(std::string& out) {}
 
 /* FlushOpItem */
 REGISTER_UNMARSHALLING_FUNC(Flush, DrawOpItem::FLUSH_OPITEM, FlushOpItem::Unmarshalling);
@@ -1801,6 +1831,8 @@ void ClearOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->Clear(color_);
 }
+
+void ClearOpItem::Dump(std::string& out) {}
 
 /* SaveOpItem */
 REGISTER_UNMARSHALLING_FUNC(Save, DrawOpItem::SAVE_OPITEM, SaveOpItem::Unmarshalling);
@@ -1858,6 +1890,8 @@ void SaveLayerOpItem::Playback(Canvas* canvas, const Rect* rect)
     SaveLayerOps slo(rectPtr, brushPtr, saveLayerFlags_);
     canvas->SaveLayer(slo);
 }
+
+void SaveLayerOpItem::Dump(std::string& out) {}
 
 /* RestoreOpItem */
 REGISTER_UNMARSHALLING_FUNC(Restore, DrawOpItem::RESTORE_OPITEM, RestoreOpItem::Unmarshalling);
@@ -1926,6 +1960,8 @@ void ClipAdaptiveRoundRectOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->ClipRoundRect(*rect, radiusData_, true);
 }
+
+void ClipAdaptiveRoundRectOpItem::Dump(std::string& out) {}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

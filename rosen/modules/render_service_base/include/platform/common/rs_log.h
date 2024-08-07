@@ -71,7 +71,7 @@ enum RSLogFlag {
     FLAG_DEBUG_DRAWING = 0x00000200,
 };
 
-class RSLogManager {
+class RSLogManager final {
 public:
     RSLogManager();
     ~RSLogManager() = default;
@@ -198,8 +198,6 @@ private:
 #define DEBUG_NODE RS_LOG_ENABLE(FLAG_DEBUG_NODE)
 
 #define DEBUG_MODIFIER RS_LOG_ENABLE(FLAG_DEBUG_MODIFIER)
-
-#define DEBUG_BUFFER RS_LOG_ENABLE(FLAG_DEBUG_BUFFER)
 
 #define DEBUG_LAYER RS_LOG_ENABLE(FLAG_DEBUG_LAYER)
 

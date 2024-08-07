@@ -14,6 +14,9 @@
  */
 
 #include "platform/common/rs_log.h"
+#ifdef NOT_BUILD_FOR_OHOS_SDK
+#include "buffer_log.h"
+#endif
 
 #include <cstdarg>
 #include <cstdio>
@@ -66,6 +69,7 @@ RSLogManager::RSLogManager()
     std::string flag = OHOS::system::GetParameter(DEBUG_GRAPHIC_LOG_FLAG, "0X0");
     if (IsFlagValid(flag)) {
         logFlag_ = static_cast<uint32_t>(std::stoul(flag.substr(INPUT_FLAG_MIN_LENGTH), nullptr, NUMERICAL_BASE));
+        SurfaceLogManager::GetInstance().SetSurfaceLogEnabled(logFlag_ & FLAG_DEBUG_BUFFER);
         RS_LOGI("RSLogManager init log flag: 0x%{public}X(%{public}u)", logFlag_, logFlag_);
     }
 #endif
@@ -84,6 +88,9 @@ bool RSLogManager::SetRSLogFlag(std::string& flag)
         OHOS::system::SetParameter(DEBUG_GRAPHIC_LOG_FLAG, flag);
 #endif
         logFlag_ = static_cast<uint32_t>(std::stoul(flag.substr(INPUT_FLAG_MIN_LENGTH), nullptr, NUMERICAL_BASE));
+#ifdef NOT_BUILD_FOR_OHOS_SDK
+        SurfaceLogManager::GetInstance().SetSurfaceLogEnabled(logFlag_ & FLAG_DEBUG_BUFFER);
+#endif
         RS_LOGI("RSLogManager set log flag: 0x%{public}X(%{public}u)", logFlag_, logFlag_);
         return true;
     }

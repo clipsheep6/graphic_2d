@@ -1971,14 +1971,16 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
 void RSRenderNode::MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
     RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync)
 {
-    if (IsForceClearOrUseFilterCache(filterDrawable)) {
+    if (filterDrawable->IsForceUseFilterCache()) {
         return;
     }
 
-    RS_OPTIONAL_TRACE_NAME_FMT("MarkFilterCacheFlags:node[%llu], NeedPendingPurge:%d, forceClearWithoutNextVsync:%d",
-        GetId(), filterDrawable->NeedPendingPurge(), (!needRequestNextVsync && filterDrawable->IsSkippingFrame()));
-    // force update if last frame use cache because skip-frame and current frame background is not dirty
-    if (filterDrawable->NeedPendingPurge()) {
+    RS_OPTIONAL_TRACE_NAME_FMT("MarkFilterCacheFlags:node[%llu], forceClearCache: %d, NeedPendingPurge:%d, "
+        "forceClearWithoutNextVsync:%d", GetId(), filterDrawable->IsForceClearFilterCache(),
+        filterDrawable->NeedPendingPurge(), (!needRequestNextVsync && filterDrawable->IsSkippingFrame()));
+    // force update if force clear cache or last frame use cache because skip-frame
+    // and current frame background is not dirty
+    if (filterDrawable->IsForceClearFilterCache() || filterDrawable->NeedPendingPurge()) {
         dirtyManager.MergeDirtyRect(filterRegion_);
         isDirtyRegionUpdated_ = true;
         return;

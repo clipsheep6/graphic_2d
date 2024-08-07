@@ -215,6 +215,15 @@ public:
     VkSemaphore RequireSemaphore();
     void SendSemaphoreWithFd(VkSemaphore semaphore, int fenceFd);
 
+    enum SupportFeatures {
+        NONE_FEATURE     = 0x0,
+        OVERDRAW_FEATURE = 0x1,
+    };
+
+    uint32_t SupportFeatures() const
+    {
+        return deviceSupportFeatures_;
+    }
 friend class RsVulkanContext;
 private:
     std::mutex vkMutex_;
@@ -254,6 +263,7 @@ private:
         const VkInstance& instance) const;
     PFN_vkVoidFunction AcquireProc(const char* proc_name, const VkDevice& device) const;
     std::shared_ptr<Drawing::GPUContext> CreateNewDrawingContext(bool isProtected = false);
+    void CheckDeviceSupportFeatures(const VkPhysicalDeviceProperties& properties);
     std::shared_ptr<MemoryHandler> memHandler_;
 
     struct semaphoreFence {
@@ -262,6 +272,7 @@ private:
     };
     std::list<semaphoreFence> usedSemaphoreFenceList_;
     std::mutex semaphoreLock_;
+    uint32_t deviceSupportFeatures_;
 };
 
 class RsVulkanContext {

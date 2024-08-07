@@ -204,6 +204,7 @@ bool RsVulkanInterface::SelectPhysicalDevice(bool isProtected)
         physDevProps.pNext = &protMemProps;
     }
     vkGetPhysicalDeviceProperties2(physicalDevice_, &physDevProps);
+    CheckDeviceSupportFeatures(physDevProps.properties);
     return true;
 }
 
@@ -522,6 +523,17 @@ std::shared_ptr<Drawing::GPUContext> RsVulkanInterface::CreateNewDrawingContext(
     }
     hcontext_ = drawingContext;
     return drawingContext;
+}
+
+void RsVulkanInterface::CheckDeviceSupportFeatures(const VkPhysicalDeviceProperties& properties)
+{
+    const uint32_t GPU_VENDOR_HISI = 6629;
+    // gpu device id that supportsthe overdraw feature. if a new device supports, add it here.
+    const std::vector<uint32_t> OVERDRAW_DEVICE_IDS { 0x20001000 };
+    if (properties.vendorID == GPU_VENDOR_HISI && std::find(OVERDRAW_DEVICE_IDS.begin(),
+        OVERDRAW_DEVICE_IDS.begin(), properties.deviceID) != OVERDRAW_DEVICE_IDS.end()) {
+        deviceSupportFeatures_ |= OVERDRAW_FEATURE;
+    }
 }
 
 RsVulkanContext::RsVulkanContext()

@@ -1411,7 +1411,8 @@ void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node
     // Update whether leash window's visible region is empty after prepare children
     UpdateLeashWindowVisibleRegionEmpty(node);
 
-    if (node.IsLeashWindow() && RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()) {
+    if (node.IsLeashWindow() && RSUniRenderUtil::IsDeviceSupportGpuOverDraw() &&
+        RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()) {
         CheckIsGpuOverDrawBufferOptimizeNode(node);
     }
     PostPrepare(node, !isSubTreeNeedPrepare);
@@ -5657,10 +5658,10 @@ void RSUniRenderVisitor::CheckIsGpuOverDrawBufferOptimizeNode(RSSurfaceRenderNod
         }
         const auto& surfaceProperties = node.GetRenderProperties();
         const auto& canvasProperties = canvasNode->GetRenderProperties();
-        if (canvasProperties.GetAlpha() >= 1
-            && canvasProperties.GetBackgroundColor().GetAlpha() >= MAX_ALPHA
-            && canvasProperties.GetFrameWidth() == surfaceProperties.GetFrameWidth()
-            && canvasProperties.GetFrameHeight() == surfaceProperties.GetFrameHeight()) {
+        if (canvasProperties.GetAlpha() >= 1 &&
+            canvasProperties.GetBackgroundColor().GetAlpha() >= MAX_ALPHA &&
+            canvasProperties.GetFrameWidth() == surfaceProperties.GetFrameWidth() &&
+            canvasProperties.GetFrameHeight() == surfaceProperties.GetFrameHeight()) {
             node.SetGpuOverDrawBufferOptimizeNode(true);
             node.SetOverDrawBufferNodeCornerRadius(curCornerRadius_);
             return;

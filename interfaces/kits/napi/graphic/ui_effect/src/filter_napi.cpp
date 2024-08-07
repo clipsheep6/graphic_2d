@@ -255,6 +255,12 @@ static bool GetStretchPercent(napi_env env, napi_value param, std::shared_ptr<Pi
 
 napi_value FilterNapi::SetPixelStretch(napi_env env, napi_callback_info info)
 {
+    if (!UIEffectNapiUtils::IsSystemApp()) {
+        FILTER_LOG_E("SetPixelStretch failed");
+        napi_throw(env, AbilityRuntime::CreateJsError(env, ERR_NOT_SYSTEM_APP,
+            "FilterNapi SetPixelStretch failed, is not system app"));
+        return nullptr;
+    }
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_status status;
@@ -308,6 +314,12 @@ uint32_t FilterNapi::GetSpecialIntValue(napi_env env, napi_value argValue)
 
 napi_value FilterNapi::SetWaterRipple(napi_env env, napi_callback_info info)
 {
+    if (!UIEffectNapiUtils::IsSystemApp()) {
+        FILTER_LOG_E("SetWaterRipple failed");
+        napi_throw(env, AbilityRuntime::CreateJsError(env, ERR_NOT_SYSTEM_APP,
+            "FilterNapi SetWaterRipple failed, is not system app"));
+        return nullptr;
+    }
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_status status;

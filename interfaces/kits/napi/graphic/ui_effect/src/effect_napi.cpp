@@ -174,6 +174,12 @@ bool CheckCreateBrightnessBlender(napi_env env, napi_value jsObject)
 
 napi_value EffectNapi::CreateBrightnessBlender(napi_env env, napi_callback_info info)
 {
+    if (!UIEffectNapiUtils::IsSystemApp()) {
+        UIEFFECT_LOG_E("CreateBrightnessBlender failed");
+        napi_throw(env, AbilityRuntime::CreateJsError(env, ERR_NOT_SYSTEM_APP,
+            "EffectNapi CreateBrightnessBlender failed, is not system app"));
+        return nullptr;
+    }
     BrightnessBlender* blender = new(std::nothrow) BrightnessBlender();
     if (blender == nullptr) {
         UIEFFECT_LOG_E("CreateBrightnessBlender blender is nullptr");
@@ -348,6 +354,12 @@ bool EffectNapi::ParseBrightnessBlender(
  
 napi_value EffectNapi::SetbackgroundColorBlender(napi_env env, napi_callback_info info)
 {
+    if (!UIEffectNapiUtils::IsSystemApp()) {
+        UIEFFECT_LOG_E("SetbackgroundColorBlender failed");
+        napi_throw(env, AbilityRuntime::CreateJsError(env, ERR_NOT_SYSTEM_APP,
+            "EffectNapi SetbackgroundColorBlender failed, is not system app"));
+        return nullptr;
+    }
     napi_status status;
     napi_value thisVar = nullptr;
     napi_value argValue[NUM_1] = {0};

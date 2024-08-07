@@ -1165,14 +1165,17 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable(bool isTextureExportNode)
 
 void RSSurfaceRenderNode::NotifyUIBufferAvailable()
 {
-    if (isNotifyUIBufferAvailable_) {
+    RS_TRACE_NAME_FMT("RSSurfaceRenderNode::NotifyUIBufferAvailable bufferAvailable:%d, waitUifirst:%d",
+        IsNotifyUIBufferAvailable(), isWaitUifirstFirstFrame_);
+    if (isNotifyUIBufferAvailable_ || isWaitUifirstFirstFrame_) {
         return;
     }
     isNotifyUIBufferAvailable_ = true;
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
+            RS_TRACE_NAME_FMT("NotifyUIBufferAvailable done. id %llu", GetId());
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
 #ifdef OHOS_PLATFORM
             if (IsAppWindow()) {

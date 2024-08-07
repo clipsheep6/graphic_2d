@@ -35,6 +35,12 @@ std::shared_ptr<FontMgrImpl> SkiaFontMgr::CreateDefaultFontMgr()
     return std::make_shared<SkiaFontMgr>(SkFontMgr::RefDefault());
 }
 
+std::shared_ptr<FontMgrImpl> SkiaFontMgr::CreateInstallFontMgr()
+{
+    sk_sp<txt::InstallFontManager> installFontManager = sk_make_sp<txt::InstallFontManager>();
+    return std::make_shared<SkiaFontMgr>(installFontManager);
+}
+
 #ifndef USE_TEXGINE
 std::shared_ptr<FontMgrImpl> SkiaFontMgr::CreateDynamicFontMgr()
 {
@@ -166,6 +172,21 @@ FontStyleSet* SkiaFontMgr::CreateStyleSet(int index) const
     return new FontStyleSet(fontStyleSetImpl);
 }
 
+int SkiaFontMgr::CheckFontValidity(const char* fontPath, std::vector<std::string>& fullnameVec) const
+{
+    if (skFontMgr_ == nullptr || fontPath == nullptr) {
+        return ERROR_TYPE_OTHER;
+    }
+    return skFontMgr_->CheckFontValidity(fontPath, fullnameVec);
+}
+
+int SkiaFontMgr::ParseInstallFontConfig(const std::string& configPath, std::vector<std::string>& fontPathVec) const
+{
+    if (skFontMgr_ == nullptr) {
+        return ERROR_TYPE_OTHER;
+    }
+    return skFontMgr_->ParseInstallFontConfig(configPath, fontPathVec);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -37,6 +37,7 @@ public:
     }
 
     static std::shared_ptr<FontMgrImpl> CreateDefaultFontMgr();
+    static std::shared_ptr<FontMgrImpl> CreateInstallFontMgr();
 #ifndef USE_TEXGINE
     static std::shared_ptr<FontMgrImpl> CreateDynamicFontMgr();
     Typeface* LoadDynamicFont(const std::string& familyName, const uint8_t* data, size_t dataLength) override;
@@ -54,6 +55,8 @@ public:
     int CountFamilies() const override;
     void GetFamilyName(int index, std::string& str) const override;
     FontStyleSet* CreateStyleSet(int index) const override;
+    int CheckFontValidity(const char* fontPath, std::vector<std::string>& fullnameVec) const override;
+    int ParseInstallFontConfig(const std::string& configPath, std::vector<std::string>& fontPathVec) const override;
 private:
     sk_sp<SkFontMgr> skFontMgr_;
 };

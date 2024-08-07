@@ -28,6 +28,11 @@ std::shared_ptr<FontMgr> FontMgr::CreateDefaultFontMgr()
     return std::make_shared<FontMgr>(ImplFactory::CreateDefaultFontMgrImpl());
 }
 
+std::shared_ptr<FontMgr> FontMgr::CreateInstallFontMgr()
+{
+    return std::make_shared<FontMgr>(ImplFactory::CreateInstallFontMgrImpl());
+}
+
 #ifndef USE_TEXGINE
 std::shared_ptr<FontMgr> FontMgr::CreateDynamicFontMgr()
 {
@@ -110,6 +115,21 @@ FontStyleSet* FontMgr::CreateStyleSet(int index) const
     return fontMgrImpl_->CreateStyleSet(index);
 }
 
+int FontMgr::CheckFontValidity(const char* fontPath, std::vector<std::string>& fullnameVec) const
+{
+    if (fontMgrImpl_ == nullptr || fontPath == nullptr) {
+        return ERROR_TYPE_OTHER;
+    }
+    return fontMgrImpl_->CheckFontValidity(fontPath, fullnameVec);
+};
+
+int FontMgr::ParseInstallFontConfig(const std::string& configPath, std::vector<std::string>& fontPathVec) const
+{
+    if (fontMgrImpl_ == nullptr) {
+        return ERROR_TYPE_OTHER;
+    }
+    return fontMgrImpl_->ParseInstallFontConfig(configPath, fontPathVec);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

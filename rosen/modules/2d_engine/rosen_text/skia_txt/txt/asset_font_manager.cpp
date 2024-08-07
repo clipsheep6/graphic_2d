@@ -19,6 +19,7 @@
 
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
+#include "font_config.h"
 
 namespace txt {
 AssetFontManager::AssetFontManager(std::unique_ptr<FontAssetProvider> fontProvider)
@@ -111,5 +112,18 @@ SkFontStyleSet* TestFontManager::onMatchFamily(const char familyName[]) const
         }
     }
     return AssetFontManager::onMatchFamily(sanitizedName.c_str());
+}
+
+InstallFontManager::~InstallFontManager() = default;
+
+int InstallFontManager::ParseInstallFontConfig(const std::string& configPath,
+    std::vector<std::string>& fontPathVec) const
+{
+    OHOS::Rosen::TextEngine::FontConfigJson fontConfigJson;
+    int ret = fontConfigJson.ParseInstallConfig(configPath.c_str(), fontPathVec);
+    if (ret != SUCCESSED) {
+        return ERROR_TYPE_OTHER;
+    }
+    return SUCCESSED;
 }
 } // namespace txt

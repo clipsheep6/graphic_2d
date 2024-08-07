@@ -24,6 +24,17 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+
+enum FontCheckCode {
+    SUCCESSED              = 0,  // no error
+    ERROR_FILE_NOT_EXISTS  = 1,  // the file does not exist
+    ERROR_OPEN_FILE_FAILED = 2,  // the file failed to open
+    ERROR_READ_FILE_FAILED = 3,  // file read failed
+    ERROR_SEEK_FAILED      = 4,  // seek failed
+    ERROR_GET_SIZE_FAILED  = 5,  // get size failed
+    ERROR_TYPE_OTHER       = 10, // other reasons, such as empty input parameters or other internal reasons
+};
+
 class FontMgrImpl : public BaseImpl {
 public:
     ~FontMgrImpl() override = default;
@@ -44,6 +55,9 @@ public:
     virtual int CountFamilies() const = 0;
     virtual void GetFamilyName(int index, std::string& str) const = 0;
     virtual FontStyleSet* CreateStyleSet(int index) const = 0;
+    virtual int CheckFontValidity(const char* fontPath, std::vector<std::string>& fullnameVec) const = 0;
+    virtual int ParseInstallFontConfig(const std::string& configPath,
+        std::vector<std::string>& fontPathVec) const = 0;
 protected:
     FontMgrImpl() noexcept = default;
 };

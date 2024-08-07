@@ -35,6 +35,7 @@ declare_args() {
   graphic_2d_feature_enable_filter_cache = true
   graphic_2d_feature_parallel_upload_enable = true
   enable_text_gine = true
+  use_ohos_support = true
   use_texgine = false
   use_skia_txt = true
   use_video_processing_engine = false

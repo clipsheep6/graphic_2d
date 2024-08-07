@@ -18,7 +18,14 @@ import image from '@ohos.multimedia.image';
 import {MyNodeController} from './myxnode';
 import {Global} from './global';
 import componentSnapshot from '@ohos.arkui.componentSnapshot';
+import taskpool from '@ohos.taskpool'
 const TAG = '[DrawingTest]';
+
+@Concurrent
+async function WaitOneSec() {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  taskpool.Task.sendData();
+}
 
 @Entry
 @Component
@@ -28,18 +35,20 @@ struct Index {
   @State drawingType: string = 'cpu-xcomponent';
   @State caseNameStr: string  = 'aarectmodes';
   @State information: string = '';
+  @State countingFlag: boolean = false;
   imagePackerApi: image.ImagePacker = image.createImagePacker();
   caseNameStrBefore: string  = '';
   scroller: Scroller = new Scroller();
   caseCountStr: string = '1000';
   testAll: boolean = false;
   isXnode: boolean = true;
+  lastTime: number = -1;
   myNodeController = new MyNodeController();
 
   build() {
     Column() {
-      if (this.drawingType == 'gpu-xnode') {
-        Row() {
+      Row() {
+        if (this.drawingType == 'gpu-xnode') {
           NodeContainer(this.myNodeController)
             .width('100%')
             .height('100%')
@@ -48,16 +57,15 @@ struct Index {
               console.warn(TAG, 'MyNodeController onAppear');
             })
             .id('myNodeController')
-        }.height('65%')
-      } else {
-        Row() {
+        } else {
           XComponent({ id: 'xcomponentId', type: 'surface', libraryname: 'entry' })
             .onLoad((xComponentContext) => {
               this.xComponentContext = xComponentContext as XComponentContext;
             }).width('100%') // Multiples of 64
+            .height(this.countingFlag ? '99%' : '100%')
             .id('myXcomponent').backgroundColor(Color.White)
-        }.height('65%')
-      }
+        }
+      }.height('65%')
 
       Row() {
         Select([
@@ -79,6 +87,7 @@ struct Index {
         if (this.testType == 'stability'){
           Select([
             { value: 'cpu-xcomponent' },
+            { value: 'gpu-xcomponent' },
           ])
             .id('drawingType')
             .selected(0)
@@ -86,6 +95,10 @@ struct Index {
             .padding({left:5})
             .border({width:1})
             .width('40%')
+            .onSelect((index: number, value: string)=>{
+              this.drawingType = value;
+              console.log(TAG, "select: " + this.drawingType);
+            })
         } else {
           Select([
             { value: 'cpu-xcomponent' },
@@ -264,7 +277,11 @@ struct Index {
       }
     }
     if (this.testType == 'stability') {
-      return this.TestStabilityCpu(this.caseNameStr);
+      if (this.drawingType == 'cpu-xcomponent') {
+        return this.TestStabilityCpu(this.caseNameStr);
+      } else {
+        return this.TestStabilityGpu(this.caseNameStr);
+      }
     }
   }
 
@@ -344,8 +361,38 @@ struct Index {
     if (this.xComponentContext) {
       let testCount = Number.parseInt(this.caseCountStr, 10);
       this.xComponentContext.setTestCount(testCount);
+      this.lastTime = this.xComponentContext.getTime();
       this.xComponentContext.testStabilityCpu(str);
+      this.getTimeInLoop(testCount, 0);
     }
+    console.log(TAG, 'TestStabilityCpu end');
+  }
+
+  async TestStabilityGpu(str: string) {
+    console.log(TAG, 'TestStabilityGpu start');
+    if (this.xComponentContext) {
+      let testCount = Number.parseInt(this.caseCountStr, 10);
+      this.xComponentContext.setTestCount(testCount);
+      this.lastTime = this.xComponentContext.getTime();
+      this.xComponentContext.testStabilityGpu(str);
+      this.getTimeInLoop(testCount, 0);
+    }
+    console.log(TAG, 'TestStabilityGpu end');
+  }
+
+  getTimeInLoop(testCount: number, loopCount: number) {
+    this.LogMsg('Wating for testcase ending:' + loopCount.toString());
+    let task = new taskpool.Task(WaitOneSec)
+    task.onReceiveData(async () => {
+      let time = this.xComponentContext.getTime();
+      if (time == this.lastTime) {
+        this.getTimeInLoop(testCount, loopCount + 1);
+      } else {
+        this.LogMsg('Count: ' + testCount + ', used: ' + time.toString() + 'ns');
+        this.countingFlag = !this.countingFlag;
+      }
+    })
+    taskpool.execute(task);
   }
 
   async TestFunctionalGpu(str: string) {

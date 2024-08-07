@@ -373,7 +373,7 @@ void RSRenderParams::SetCanvasDrawingSurfaceChanged(bool changeFlag)
     canvasDrawingNodeSurfaceChanged_ = changeFlag;
 }
 
-RSRenderParams::SurfaceParam RSRenderParams::GetCanvasDrawingSurfaceParams()
+const RSRenderParams::SurfaceParam& RSRenderParams::GetCanvasDrawingSurfaceParams() const
 {
     return surfaceParams_;
 }

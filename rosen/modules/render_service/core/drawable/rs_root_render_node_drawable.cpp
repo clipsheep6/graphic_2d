@@ -39,7 +39,6 @@ void RSRootRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 void RSRootRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 {
     RS_LOGD("RSRootRenderNodeDrawable::OnCapture node: %{public}" PRIu64, nodeId_);
-
     RSCanvasRenderNodeDrawable::OnCapture(canvas);
 }
 } // namespace OHOS::Rosen::DrawableV2

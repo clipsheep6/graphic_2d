@@ -112,13 +112,37 @@ public:
     }
 
     // dfx
+    static void InitDfxForCacheInfo();
     static void DrawDfxForCacheInfo(RSPaintFilterCanvas& canvas);
     void DumpDrawableTree(std::string& out) const override;
 
 protected:
     explicit RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::RS_NODE, OnGenerate>;
+
+    // used for render group cache
+    void SetCacheType(DrawableCacheType cacheType);
+    DrawableCacheType GetCacheType() const;
+    void UpdateCacheInfoForDfx(Drawing::Canvas& canvas, const Drawing::Rect& rect, NodeId id);
+
+    std::shared_ptr<Drawing::Surface> GetCachedSurface(pid_t threadId) const;
+    void InitCachedSurface(Drawing::GPUContext* gpuContext, const Vector2f& cacheSize, pid_t threadId);
+    bool NeedInitCachedSurface(const Vector2f& newSize);
+    std::shared_ptr<Drawing::Image> GetCachedImage(RSPaintFilterCanvas& canvas);
+    void DrawCachedImage(RSPaintFilterCanvas& canvas, const Vector2f& boundSize,
+    const std::shared_ptr<RSFilter>& rsFilter = nullptr);
+    void ClearCachedSurface();
+
+    bool CheckIfNeedUpdateCache(RSRenderParams& params, int32_t& updateTimes);
+    void UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params);
+    void TraverseSubTreeAndDrawFilterWithClip(Drawing::Canvas& canvas, const RSRenderParams& params);
+
+    static int GetProcessedNodeCount();
+    static void ProcessedNodeCountInc();
+    static void ClearProcessedNodeCount();
+
     static Registrar instance_;
+    static thread_local bool drawBlurForCache_;
 
     // Only use in RSRenderNode::DrawCacheSurface to calculate scale factor
     float boundsWidth_ = 0.0f;
@@ -141,29 +165,16 @@ protected:
     thread_local static inline bool isOpincDropNodeExt_ = true;
     thread_local static inline int opincRootTotalCount_ = 0;
 
-    // used for render group cache
-    void SetCacheType(DrawableCacheType cacheType);
-    DrawableCacheType GetCacheType() const;
-    void UpdateCacheInfoForDfx(Drawing::Canvas& canvas, const Drawing::Rect& rect, NodeId id);
-
-    std::shared_ptr<Drawing::Surface> GetCachedSurface(pid_t threadId) const;
-    void InitCachedSurface(Drawing::GPUContext* gpuContext, const Vector2f& cacheSize, pid_t threadId);
-    bool NeedInitCachedSurface(const Vector2f& newSize);
-    std::shared_ptr<Drawing::Image> GetCachedImage(RSPaintFilterCanvas& canvas);
-    void DrawCachedImage(RSPaintFilterCanvas& canvas, const Vector2f& boundSize,
-    const std::shared_ptr<RSFilter>& rsFilter = nullptr);
-    void ClearCachedSurface();
-
-    bool CheckIfNeedUpdateCache(RSRenderParams& params, int32_t& updateTimes);
-    void UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params);
-    void TraverseSubTreeAndDrawFilterWithClip(Drawing::Canvas& canvas, const RSRenderParams& params);
-
-    static int GetProcessedNodeCount();
-    static void ProcessedNodeCountInc();
-    static void ClearProcessedNodeCount();
-    static thread_local bool drawBlurForCache_;
-
 private:
+    // opinc cache state
+    void NodeCacheStateDisable();
+    bool BeforeDrawCacheProcessChildNode(NodeStrategyType& cacheStragy, RSRenderParams& params);
+    void BeforeDrawCacheFindRootNode(Drawing::Canvas& canvas, const RSRenderParams& params, bool& isOpincDropNodeExt);
+    bool OpincGetCachedMark() const
+    {
+        return isOpincMarkCached_;
+    }
+
     DrawableCacheType cacheType_ = DrawableCacheType::NONE;
     mutable std::recursive_mutex cacheMutex_;
     std::shared_ptr<Drawing::Surface> cachedSurface_ = nullptr;
@@ -183,12 +194,6 @@ private:
     static thread_local bool isOpDropped_;
     static inline std::atomic<int> totalProcessedNodeCount_ = 0;
     static inline std::atomic<int> processedNodeCount_ = 0;
-    // used foe render group cache
-
-    // opinc cache state
-    void NodeCacheStateDisable();
-    bool BeforeDrawCacheProcessChildNode(NodeStrategyType& cacheStragy, RSRenderParams& params);
-    void BeforeDrawCacheFindRootNode(Drawing::Canvas& canvas, const RSRenderParams& params, bool& isOpincDropNodeExt);
     NodeRecordState recordState_ = NodeRecordState::RECORD_NONE;
     NodeStrategyType rootNodeStragyType_ = NodeStrategyType::CACHE_NONE;
     NodeStrategyType temNodeStragyType_ = NodeStrategyType::CACHE_NONE;
@@ -200,10 +205,6 @@ private:
     bool isOpincDropNodeExtTemp_ = true;
     bool isOpincCaculateStart_ = false;
     bool isOpincMarkCached_ = false;
-    bool OpincGetCachedMark() const
-    {
-        return isOpincMarkCached_;
-    }
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

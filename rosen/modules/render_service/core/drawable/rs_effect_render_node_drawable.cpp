@@ -52,8 +52,8 @@ void RSEffectRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         QuickReject(canvas, effectParams->GetLocalDrawRect())) {
         return;
     }
-    Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
 
+    Drawing::Rect bounds = effectParams->GetFrameRect();
     if (drawCmdIndex_.backgroundFilterIndex_ == -1 || !RSSystemProperties::GetEffectMergeEnabled() ||
         !effectParams->GetHasEffectChildren()) {
         // case 1: no blur or no need to blur, do nothing
@@ -87,8 +87,10 @@ void RSEffectRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RSRenderNodeDrawableAdapter::DrawImpl(*offscreenCanvas, bounds, drawCmdIndex_.backgroundFilterIndex_);
         // copy effect data from offscreen canvas to current canvas, aligned with current rect
         auto effectData = offscreenCanvas->GetEffectData();
-        effectData->cachedRect_.Offset(currentRect.GetLeft(), currentRect.GetTop());
-        paintFilterCanvas->SetEffectData(effectData);
+        if (effectData) {
+            effectData->cachedRect_.Offset(currentRect.GetLeft(), currentRect.GetTop());
+            paintFilterCanvas->SetEffectData(effectData);
+        }
     }
 
     RSRenderNodeDrawableAdapter::DrawImpl(canvas, bounds, drawCmdIndex_.childrenIndex_);

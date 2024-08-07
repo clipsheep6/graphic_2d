@@ -22,7 +22,11 @@ drawing_ndk_src_dir = "$rosen_root/modules/2d_graphics/drawing_ndk/src"
 drawing_utils_root = "$rosen_root/modules/2d_graphics/drawing_ndk/drawing_utils"
 
 config("export_config") {
-  include_dirs = [ "$drawing_ndk_include_dir" ]
+  include_dirs = [
+    "$drawing_ndk_include_dir",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/text/utils",
+    "$graphic_2d_root/rosen/modules/texgine/src/font_descriptor/include",
+  ]
 }
 
 if (enable_text_gine) {
@@ -92,7 +96,10 @@ template("drawing_ndk_source_set") {
       "$drawing_ndk_src_dir/drawing_typeface.cpp",
       "$drawing_utils_root/drawing_canvas_utils.cpp",
       "$drawing_utils_root/native_pixel_map_manager.cpp",
+      "$graphic_2d_root/rosen/modules/texgine/src/font_descriptor/src/fontdescriptor_mgr.cpp",
+      "$graphic_2d_root/rosen/modules/texgine/src/font_descriptor/src/parser_font_source.cpp",
     ]
+    defines += [ "TEXT_OHOS_ENABLED" ]
 
     if (is_arkui_x) {
       defines += [ "CROSS_PLATFORM" ]

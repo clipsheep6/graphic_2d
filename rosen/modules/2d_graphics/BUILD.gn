@@ -144,6 +144,7 @@ template("graphics2d_source_set") {
       "$drawing_core_src_dir/recording/cmd_list.cpp",
       "$drawing_core_src_dir/recording/cmd_list_helper.cpp",
       "$drawing_core_src_dir/recording/draw_cmd.cpp",
+      "$drawing_core_src_dir/recording/draw_cmd_dump_utils.cpp",
       "$drawing_core_src_dir/recording/draw_cmd_list.cpp",
       "$drawing_core_src_dir/recording/mask_cmd_list.cpp",
       "$drawing_core_src_dir/recording/mem_allocator.cpp",

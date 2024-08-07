@@ -19,6 +19,12 @@
 #include "draw/core_canvas.h"
 #include "skia_adapter/skia_canvas_autocache.h"
 #include "skia_adapter/skia_oplist_handle.h"
+#include "draw/sdf_shaper_base.h"
+#include "property/rs_properties_painter.h"
+#include "render/rs_foreground_effect_filter.h"
+#include "render/rs_shadow.h"
+#include "render/rs_skia_filter.h"
+#include "skia_adapter/skia_surface.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1068,6 +1074,85 @@ HWTEST_F(SkiaCanvasTest, GetOpsPercentTest001, TestSize.Level1)
     ASSERT_EQ(tmp->GetOpsPercent(), 0);
 }
 
+class SDFShapeBaseTest : public Drawing::SDFShapeBase {
+public:
+    std::string Getshader() const override
+    {
+        return "";
+    };
+    float GetSize() const override
+    {
+        return 0.0f;
+    };
+    void SetSize(float size) override
+    {
+        return;
+    };
+
+    int GetParaNum() const override
+    {
+        return 0;
+    };
+    int GetFillType() const override
+    {
+        return 0;
+    };
+    std::vector<float> GetPara() const override
+    {
+        return {};
+    };
+    std::vector<float> GetTransPara() const override
+    {
+        return {};
+    };
+    std::vector<float> GetColorPara() const override
+    {
+        return {};
+    };
+
+    void UpdateTime(float time) override
+    {
+        return;
+    };
+    void BuildShader() override
+    {
+        return;
+    };
+    void SetColor(std::string fillColor, std::string strokeColor, float alpha) override
+    {
+        return;
+    };
+};
+
+/**
+ * @tc.name: DrawSdfTest001
+ * @tc.desc: Test DrawSdf
+ * @tc.type: FUNC
+ * @tc.require: I9B0X4
+ */
+HWTEST_F(SkiaCanvasTest, DrawSdfTest001, TestSize.Level1)
+{
+    SkiaCanvas skiaCanvas;
+    Matrix matrix;
+    skiaCanvas.OpCalculateBefore(matrix);
+    SDFShapeBaseTest shape;
+    skiaCanvas.DrawSdf(shape);
+}
+
+/**
+ * @tc.name: DrawSVGDOMTest001
+ * @tc.desc: Test DrawSVGDOM
+ * @tc.type: FUNC
+ * @tc.require: I9B0X4
+ */
+HWTEST_F(SkiaCanvasTest, DrawSVGDOMTest001, TestSize.Level1)
+{
+    SkiaCanvas skiaCanvas;
+    Matrix matrix;
+    skiaCanvas.OpCalculateBefore(matrix);
+    sk_sp<SkSVGDOM> svgDom;
+    skiaCanvas.DrawSVGDOM(svgDom);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

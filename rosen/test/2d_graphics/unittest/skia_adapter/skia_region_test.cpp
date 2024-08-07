@@ -121,6 +121,35 @@ HWTEST_F(SkiaRegionTest, Contains001, TestSize.Level1)
     ret = skiaRegion->Contains(50, 150); // 50, 100 is point
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.name: IsRegionContained001
+ * @tc.desc: Test IsRegionContained
+ * @tc.type: FUNC
+ * @tc.require: I8VQSW
+ */
+HWTEST_F(SkiaRegionTest, IsRegionContained001, TestSize.Level1)
+{
+    Region region;
+    RectI rect2(10, 110, 90, 180);
+    region.SetRect(rect2);
+    auto ret = region.IsRegionContained(region);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: QuickReject001
+ * @tc.desc: Test QuickReject
+ * @tc.type: FUNC
+ * @tc.require: I8VQSW
+ */
+HWTEST_F(SkiaRegionTest, QuickReject001, TestSize.Level1)
+{
+    std::shared_ptr<SkiaRegion> skiaRegion = std::make_shared<SkiaRegion>();
+    RectI rect(0, 100, 100, 200);
+    auto ret = skiaRegion->QuickReject(rect);
+    EXPECT_TRUE(ret);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

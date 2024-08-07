@@ -73,7 +73,9 @@ HWTEST_F(SkiaFontMgrTest, LoadThemeFont001, TestSize.Level1)
 {
     std::shared_ptr<FontMgrImpl> skiaFontMgr = SkiaFontMgr::CreateDynamicFontMgr();
     ASSERT_TRUE(skiaFontMgr != nullptr);
+    uint8_t str[4] = "abc";
     skiaFontMgr->LoadThemeFont("0", "none", nullptr, 0);
+    skiaFontMgr->LoadThemeFont("abc", "none", str, 0);
 }
 #endif
 

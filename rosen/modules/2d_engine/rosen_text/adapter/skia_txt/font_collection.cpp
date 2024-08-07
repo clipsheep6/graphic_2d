@@ -18,6 +18,7 @@
 #include "convert.h"
 #include "text/typeface.h"
 #include "utils/log.h"
+#include "trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -88,7 +89,9 @@ bool FontCollection::RegisterTypeface(std::shared_ptr<Drawing::Typeface> typefac
     if (typefaces_.find(typeface->GetUniqueID()) != typefaces_.end()) {
         return true;
     }
+    TXT_TRACE_METER_FMT("FontCollection::RegisterTypeface rs typeface register");
     if (!Drawing::Typeface::GetTypefaceRegisterCallBack()(typeface)) {
+        LOGE("rs register typeface failed.");
         return false;
     }
 
@@ -99,6 +102,7 @@ bool FontCollection::RegisterTypeface(std::shared_ptr<Drawing::Typeface> typefac
 std::shared_ptr<Drawing::Typeface> FontCollection::LoadFont(
     const std::string &familyName, const uint8_t *data, size_t datalen)
 {
+    TXT_TRACE_METER_FMT("FontCollection::LoadFont");
     std::shared_ptr<Drawing::Typeface> typeface(dfmanager_->LoadDynamicFont(familyName, data, datalen));
     if (!RegisterTypeface(typeface)) {
         LOGE("register typeface failed.");
@@ -119,6 +123,7 @@ static std::shared_ptr<Drawing::Typeface> CreateTypeFace(const uint8_t *data, si
 std::shared_ptr<Drawing::Typeface> FontCollection::LoadThemeFont(
     const std::string &familyName, const uint8_t *data, size_t datalen)
 {
+    TXT_TRACE_METER_FMT("FontCollection::LoadThemeFont");
     std::shared_ptr<Drawing::Typeface> face = CreateTypeFace(data, datalen);
     if (face != nullptr) {
         std::string name = face->GetFamilyName();

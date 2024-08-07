@@ -208,6 +208,7 @@ if (enable_text_gine) {
 
     if (!is_cross_platform) {
       external_deps += [ "hitrace:hitrace_meter" ]
+      defines += [ "TXT_TRACE_ENABLE" ]
     }
 
     part_name = "graphic_2d"

@@ -37,9 +37,9 @@ public:
         curThreadInfo_ = threadInfo;
         threadId_ = threadId;
     }
-    bool InitSurface(int width, int height, RSPaintFilterCanvas& canvas);
-    bool InitSurfaceForVK(int width, int height, RSPaintFilterCanvas& canvas);
-    bool InitSurfaceForGL(int width, int height, RSPaintFilterCanvas& canvas);
+    bool InitSurface(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas = nullptr);
+    bool InitSurfaceForVK(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
+    bool InitSurfaceForGL(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
     std::shared_ptr<RSPaintFilterCanvas> GetCanvas();
     void Flush(float width, float height, std::shared_ptr<RSContext> context,
         NodeId nodeId, RSPaintFilterCanvas& rscanvas);
@@ -62,23 +62,45 @@ public:
     {
         drawCmdListsVisited_ = flag;
     }
+    bool CheckAndSetIsDrawCmdListsVisited() override
+    {
+        bool expected = true;
+        bool success = drawCmdListsVisited_.compare_exchange_weak(expected, false);
+        return expected && success;
+    }
 
+    virtual bool IsNeedProcess() const override
+    {
+        return needProcess_;
+    }
+    virtual void SetNeedProcess(bool flag) override
+    {
+        needProcess_ = flag;
+    }
 private:
     explicit RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::CANVAS_DRAWING_NODE, OnGenerate>;
     void ProcessCPURenderInBackgroundThread(std::shared_ptr<Drawing::DrawCmdList> cmds,
         std::shared_ptr<RSContext> ctx, NodeId nodeId);
     void DrawRenderContent(Drawing::Canvas& canvas, const Drawing::Rect& rect);
-    bool ResetSurfaceForGL(int width, int height, RSPaintFilterCanvas& canvas);
-    bool ResetSurfaceForVK(int width, int height, RSPaintFilterCanvas& canvas);
+    bool ResetSurfaceForGL(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
+    bool ResetSurfaceForVK(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
+#ifdef RS_ENABLE_VK
+    bool ResetSurfaceForVKContextNotEmpty() const;
+#endif
     bool IsNeedResetSurface() const;
     void FlushForGL(float width, float height, std::shared_ptr<RSContext> context,
         NodeId nodeId, RSPaintFilterCanvas& rscanvas);
     void FlushForVK(float width, float height, std::shared_ptr<RSContext> context,
         NodeId nodeId, RSPaintFilterCanvas& rscanvas);
+
+    void ClearBackendTexture();
+    bool GetCurrentContext(std::shared_ptr<Drawing::GPUContext>& grContext);
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    bool ResetSurfaceWithTexture(int width, int height, RSPaintFilterCanvas& canvas);
-    bool ReuseBackendTexture(int width, int height, RSPaintFilterCanvas& canvas);
+    bool CheckBackendTexture(int width, int height, std::shared_ptr<Drawing::Surface> preSurface,
+        std::shared_ptr<RSPaintFilterCanvas> canvas);
+    bool ResetSurfaceWithTexture(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
+    bool ReuseBackendTexture(int width, int height, std::shared_ptr<RSPaintFilterCanvas> canvas);
     void ClearPreSurface(std::shared_ptr<Drawing::Surface>& surface);
     bool GetCurrentContextAndImage(std::shared_ptr<Drawing::GPUContext>& grContext,
         std::shared_ptr<Drawing::Image>& image, const uint64_t tid);
@@ -102,6 +124,7 @@ private:
 
     // setted in render thread, used and resetted in main thread
     std::atomic<bool> drawCmdListsVisited_ = false;
+    std::atomic<bool> needProcess_ = false;
 };
 
 } // namespace OHOS::Rosen::DrawableV2

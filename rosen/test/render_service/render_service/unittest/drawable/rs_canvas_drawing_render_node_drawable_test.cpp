@@ -149,7 +149,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, InitSurfaceTest, TestSize.Level1
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     drawable->surface_ = nullptr;
@@ -173,7 +173,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, InitSurfaceForVKTest, TestSize.L
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     drawable->surface_ = std::make_shared<Drawing::Surface>();
@@ -453,17 +453,48 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceTest002, TestSize.Le
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
-    canvas.recordingState_ = true;
+    canvas->recordingState_ = true;
     auto result = drawable->ResetSurfaceForGL(width, height, canvas);
     EXPECT_EQ(result, true);
 
-    canvas.recordingState_ = false;
+    canvas->recordingState_ = false;
     drawable->image_ = std::make_shared<Drawing::Image>();
     result = drawable->ResetSurfaceForGL(width, height, canvas);
     EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: ResetSurfaceForVK
+ * @tc.desc: Test If ResetSurfaceForVK Can Run
+ * @tc.type: FUNC
+ * @tc.require: issueIAFX7M
+ */
+HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceForVKTest, TestSize.Level1)
+{
+    auto node = std::make_shared<RSRenderNode>(0);
+    auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
+    Drawing::Canvas drawingCanvas;
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
+    int width = 1;
+    int height = 1;
+    canvas->recordingState_ = true;
+    bool result = drawable->ResetSurfaceForVK(width, height, canvas);
+    ASSERT_TRUE(result);
+#ifdef RS_ENABLE_VK
+    canvas->recordingState_ = false;
+    auto drawCanvas = std::make_shared<Drawing::Canvas>();
+    canvas->canvas_ = drawCanvas.get();
+    result = drawable->ResetSurfaceForVK(width, height, canvas);
+    ASSERT_TRUE(result);
+    canvas->canvas_->gpuContext_ = std::make_shared<Drawing::GPUContext>();
+    ASSERT_TRUE(canvas->GetGPUContext());
+    drawable->backendTexture_.isValid_ = true;
+    result = drawable->ResetSurfaceForVK(width, height, canvas);
+    ASSERT_TRUE(result);
+#endif
 }
 
 /**
@@ -477,20 +508,20 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceForGLTest, TestSize.
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
-    canvas.recordingState_ = true;
+    canvas->recordingState_ = true;
     bool result = drawable->ResetSurfaceForGL(width, height, canvas);
     ASSERT_TRUE(result);
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    canvas.recordingState_ = false;
+    canvas->recordingState_ = false;
     auto drawCanvas = std::make_shared<Drawing::Canvas>();
-    canvas.canvas_ = drawCanvas.get();
+    canvas->canvas_ = drawCanvas.get();
     result = drawable->ResetSurfaceForGL(width, height, canvas);
     ASSERT_TRUE(result);
-    canvas.canvas_->gpuContext_ = std::make_shared<Drawing::GPUContext>();
-    ASSERT_TRUE(canvas.GetGPUContext());
+    canvas->canvas_->gpuContext_ = std::make_shared<Drawing::GPUContext>();
+    ASSERT_TRUE(canvas->GetGPUContext());
     drawable->backendTexture_.isValid_ = true;
     result = drawable->ResetSurfaceForGL(width, height, canvas);
     ASSERT_TRUE(result);
@@ -509,7 +540,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ReuseBackendTextureTest, TestSiz
     auto node = std::make_shared<RSRenderNode>(0);
     auto drawable = std::make_shared<RSCanvasDrawingRenderNodeDrawable>(std::move(node));
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     auto drawCanvas = std::make_shared<Drawing::Canvas>();
@@ -554,7 +585,7 @@ HWTEST_F(RSCanvasDrawingRenderNodeDrawableTest, ResetSurfaceWithTextureTest, Tes
 {
     auto drawable = RSCanvasDrawingRenderNodeDrawableTest::CreateDrawable();
     Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas canvas(&drawingCanvas);
+    auto canvas = std::make_shared<RSPaintFilterCanvas>(&drawingCanvas);
     int width = 1;
     int height = 1;
     auto drawCanvas = std::make_shared<Drawing::Canvas>();

@@ -190,21 +190,21 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
 
 bool RSCanvasDrawingRenderNode::IsNeedProcess() const
 {
-    if (!renderDrawable_ || !(renderDrawable_->GetRenderParams())) {
+    if (!renderDrawable_) {
         return false;
     }
-    return renderDrawable_->GetRenderParams()->IsNeedProcess();
+    return renderDrawable_->IsNeedProcess();
 }
 
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
 {
-    auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
-    if (stagingCanvasDrawingParams) {
-        stagingCanvasDrawingParams->SetNeedProcess(needProcess);
-        if (stagingRenderParams_->NeedSync()) {
-            AddToPendingSyncList();
-        }
+    if (!renderDrawable_ || !stagingRenderParams_) {
+        return;
     }
+
+    renderDrawable_->SetNeedProcess(needProcess);
+    stagingRenderParams_->SetNeedSync(true);
+    AddToPendingSyncList();
     isNeedProcess_ = needProcess;
 }
 
@@ -536,10 +536,9 @@ const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& RSCanvasDraw
 
 void RSCanvasDrawingRenderNode::ClearResource()
 {
-    if (renderDrawable_ && renderDrawable_->IsDrawCmdListsVisited()) {
+    if (renderDrawable_ && renderDrawable_->CheckAndSetIsDrawCmdListsVisited()) {
         std::lock_guard<std::mutex> lock(drawCmdListsMutex_);
         drawCmdLists_.clear();
-        renderDrawable_->SetDrawCmdListsVisited(false);
     }
 }
 

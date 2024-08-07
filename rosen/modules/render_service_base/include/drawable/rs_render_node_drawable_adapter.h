@@ -123,6 +123,16 @@ public:
         return true;
     }
     virtual void SetDrawCmdListsVisited(bool flag) {}
+    virtual bool CheckAndSetIsDrawCmdListsVisited()
+    {
+        return false;
+    }
+
+    virtual bool IsNeedProcess() const
+    {
+        return false;
+    }
+    virtual void SetNeedProcess(bool flag) {}
     void SetSkip(SkipType type) { skipType_ = type; }
     SkipType GetSkipType() { return skipType_; }
 protected:

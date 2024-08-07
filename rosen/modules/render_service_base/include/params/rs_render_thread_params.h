@@ -46,6 +46,7 @@ struct CaptureParam {
 class RSB_EXPORT RSRenderThreadParams {
 public:
     RSRenderThreadParams() = default;
+    RSRenderThreadParams(std::unique_ptr<RSRenderThreadParams>& renderThreadParams);
     virtual ~RSRenderThreadParams() = default;
 
     bool IsPartialRenderEnabled() const
@@ -277,25 +278,25 @@ public:
 
     void SetBlackList(std::unordered_set<NodeId> blackList)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        // std::lock_guard<std::mutex> lock(mutex_);
         blackList_ = blackList;
     }
 
     const std::unordered_set<NodeId> GetBlackList() const
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        // std::lock_guard<std::mutex> lock(mutex_);
         return blackList_;
     }
 
     void SetWhiteList(const std::unordered_set<NodeId>& whiteList)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        // std::lock_guard<std::mutex> lock(mutex_);
         whiteList_ = whiteList;
     }
 
     const std::unordered_set<NodeId> GetWhiteList() const
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        // std::lock_guard<std::mutex> lock(mutex_);
         return whiteList_;
     }
 
@@ -367,7 +368,7 @@ public:
     }
 
 private:
-    mutable std::mutex mutex_;
+    // mutable std::mutex mutex_;
     bool startVisit_ = false;     // To be deleted after captureWindow being deleted
     bool hasCaptureImg_ = false;  // To be deleted after captureWindow being deleted
     std::unordered_set<NodeId> blackList_ = {};

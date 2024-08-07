@@ -17,4 +17,14 @@
 
 namespace OHOS::Rosen {
 
+RSRenderThreadParams::RSRenderThreadParams(std::unique_ptr<RSRenderThreadParams>& renderThreadParams)
+{
+    if (!renderThreadParams) {
+        return;
+    }
+
+    isOpDropped_ = renderThreadParams->isOpDropped_;
+    isUIFirstDebugEnable_ = renderThreadParams->isOpDropped_;
+}
+
 } // namespace OHOS::Rosen

@@ -156,6 +156,7 @@ public:
     ~DrawWithPaintOpItem() override = default;
     void Marshalling(DrawCmdList& cmdList) override {}
     void Playback(Canvas* canvas, const Rect* rect) override {}
+    void Dump(std::string& out) override;
 protected:
     Paint paint_;
 };
@@ -838,6 +839,7 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
+    void Dump(std::string& out) override;
 
     std::shared_ptr<DrawImageRectOpItem> GenerateCachedOpItem(Canvas* canvas);
 protected:
@@ -869,6 +871,7 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
+    void Dump(std::string& out) override;
 
 private:
     static void MergeDrawingPath(

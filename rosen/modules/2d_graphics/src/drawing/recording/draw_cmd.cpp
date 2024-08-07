@@ -344,6 +344,15 @@ DrawWithPaintOpItem::DrawWithPaintOpItem(const DrawCmdList& cmdList, const Paint
     GeneratePaintFromHandle(paintHandle, cmdList, paint_);
 }
 
+void DrawWithPaintOpItem::Dump(std::string& out)
+{
+    DrawOpItem::Dump(out);
+    out += "[";
+    out += "paint";
+    paint_.Dump(out);
+    out += " ";
+}
+
 /* DrawPointOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawPoint, DrawOpItem::POINT_OPITEM, DrawPointOpItem::Unmarshalling);
 
@@ -1396,6 +1405,26 @@ std::shared_ptr<DrawImageRectOpItem> DrawTextBlobOpItem::GenerateCachedOpItem(Ca
         SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT, fakePaint);
 }
 
+void DrawTextBlobOpItem::Dump(std::string& out)
+{
+    DrawWithPaintOpItem::Dump(out);
+    out += "scalarX:" + std::to_string(x_) + " scalarY:" + std::to_string(y_);
+    if (textBlob_) {
+        out += " TextBlob[";
+        out += "UniqueID:" + std::to_string(textBlob_->UniqueID());
+        auto bounds = textBlob_->Bounds();
+        if (bounds) {
+            out += " Bounds";
+            bounds->Dump(out);
+            out += " isEmoji:" + std::to_string(textBlob_->IsEmoji());
+        } else {
+            out += " Bounds:nullptr";
+        }
+        out += "]";
+    }
+    out += "]";
+}
+
 /* DrawSymbolOpItem */
 REGISTER_UNMARSHALLING_FUNC(DrawSymbol, DrawOpItem::SYMBOL_OPITEM, DrawSymbolOpItem::Unmarshalling);
 
@@ -1483,6 +1512,21 @@ void DrawSymbolOpItem::MergeDrawingPath(
         }
         multPath.AddPath(pathTemp);
     }
+}
+
+void DrawSymbolOpItem::Dump(std::string& out)
+{
+    DrawWithPaintOpItem::Dump(out);
+    out += "symbol[symbolId:" + std::to_string(symbol_.symbolId);
+    out += " DrawingType:" + std::to_string((int)symbol_.path_.GetDrawingType());
+    auto rect = symbol_.path_.GetBounds();
+    out += " path";
+    rect.Dump(out);
+    out += " symbolGlyphId:" + std::to_string(symbol_.symbolInfo_.symbolGlyphId);
+    out += "]";
+    out += " locate";
+    locate_.Dump(out);
+    out += "]";
 }
 
 /* ClipRectOpItem */

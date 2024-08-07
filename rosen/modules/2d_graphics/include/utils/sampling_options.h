@@ -18,6 +18,8 @@
 
 #include "utils/drawing_macros.h"
 
+#include <string>
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -63,6 +65,7 @@ public:
     friend inline bool operator==(const SamplingOptions& a, const SamplingOptions& b);
     friend inline bool operator!=(const SamplingOptions& a, const SamplingOptions& b);
 
+    inline void Dump(std::string& out);
 private:
     bool useCubic;
     CubicResampler cubic;
@@ -117,6 +120,16 @@ inline bool operator!=(const SamplingOptions& a, const SamplingOptions& b)
 {
     return !(a == b);
 }
+
+inline void SamplingOptions::Dump(std::string& out)
+{
+    out += "[useCubic:" + std::to_string(GetUseCubic());
+    out += " CubicCoffB:" + std::to_string(GetCubicCoffB());
+    out += " CubicCoffC:" + std::to_string(GetCubicCoffC());
+    out += " FilterMode:" + std::to_string((int)GetFilterMode());
+    out += " MipmapMode:" + std::to_string((int)GetMipmapMode()) + "]";
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

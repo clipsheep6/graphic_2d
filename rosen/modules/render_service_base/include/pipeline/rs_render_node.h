@@ -486,7 +486,7 @@ public:
     virtual void OnFilterCacheStateChanged() {};
 
     // for blur filter cache
-    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false,
+    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false, bool hdrChanged = false,
         bool rotationStatusChanged = false);
     void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,

@@ -184,6 +184,7 @@ void RSFilterDrawable::OnSync()
     filterRegionChanged_ = false;
     filterInteractWithDirty_ = false;
     rotationChanged_ = false;
+    rotationChangedClear_ = false;
     forceClearCache_ = false;
     forceUseCache_ = false;
     isOccluded_ = false;
@@ -251,6 +252,11 @@ void RSFilterDrawable::MarkFilterForceClearCache()
 void RSFilterDrawable::MarkRotationChanged()
 {
     rotationChanged_ = true;
+}
+
+void RSFilterDrawable::MarkRotationChangedClear(bool rotationClear)
+{
+    rotationChangedClear_ = rotationClear;
 }
 
 void RSFilterDrawable::MarkNodeIsOccluded(bool isOccluded)
@@ -332,6 +338,11 @@ bool RSFilterDrawable::IsForceClearFilterCache() const
 bool RSFilterDrawable::IsForceUseFilterCache() const
 {
     return forceUseCache_;
+}
+
+bool RSFilterDrawable::IsRotationChangedClear() const
+{
+    return rotationChangedClear_;
 }
 
 bool RSFilterDrawable::NeedPendingPurge() const

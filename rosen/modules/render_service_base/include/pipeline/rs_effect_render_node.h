@@ -44,7 +44,7 @@ public:
     void QuickPrepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
-    void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false,
+    void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false, bool hdrChanged = false,
         bool rotationStatusChanged = false) override;
     std::optional<Drawing::RectI> InitializeEffectRegion() const { return Drawing::RectI(); }
     void SetEffectRegion(const std::optional<Drawing::RectI>& effectRegion);

@@ -158,12 +158,12 @@ HWTEST_F(RSEffectRenderNodeTest, CheckBlurFilterCacheNeedForceClearOrSaveTest, T
 {
     NodeId nodeId = 0;
     RSEffectRenderNode rsEffectRenderNode(nodeId);
-    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, false);
-    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true);
+    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true, false);
+    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true, true);
     auto backgroundFilter = RSFilter::CreateBlurFilter(1.f, 1.f);
     rsEffectRenderNode.renderContent_->renderProperties_.SetBackgroundFilter(backgroundFilter);
-    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, false);
-    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true);
+    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true, false);
+    rsEffectRenderNode.CheckBlurFilterCacheNeedForceClearOrSave(false, true, true);
     EXPECT_EQ(rsEffectRenderNode.GetFilterDrawable(false), nullptr);
 }
 

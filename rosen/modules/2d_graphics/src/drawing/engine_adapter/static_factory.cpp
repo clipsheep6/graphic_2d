@@ -78,6 +78,11 @@ std::shared_ptr<Typeface> StaticFactory::MakeFromFile(const char path[], int ind
     return EngineStaticFactory::MakeFromFile(path, index);
 }
 
+std::vector<std::shared_ptr<Typeface>> StaticFactory::GetSystemFonts()
+{
+    return EngineStaticFactory::GetSystemFonts();
+}
+
 std::shared_ptr<Typeface> StaticFactory::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE

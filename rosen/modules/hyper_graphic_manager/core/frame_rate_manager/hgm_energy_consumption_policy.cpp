@@ -148,10 +148,12 @@ void HgmEnergyConsumptionPolicy::GetAnimationIdleFps(FrameRateRange& rsRange)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!isAnimationEnergyAssuranceEnable_ || !isAnimationEnergyConsumptionAssuranceMode_) {
+        PrintLog(rsRange, false);
         return;
     }
     if (lastAnimationTimestamp_ > firstAnimationTimestamp_ &&
         (lastAnimationTimestamp_ - firstAnimationTimestamp_) < static_cast<uint64_t>(animationIdleDuration_)) {
+        PrintLog(rsRange, false);
         return;
     }
     SetEnergyConsumptionRateRange(rsRange, animationIdleFps_);
@@ -161,6 +163,7 @@ void HgmEnergyConsumptionPolicy::GetUiIdleFps(FrameRateRange& rsRange)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!isUiEnergyConsumptionAssuranceMode_) {
+        PrintLog(rsRange, false);
         return;
     }
     auto it = uiEnergyAssuranceMap_.find(rsRange.type_);
@@ -172,6 +175,8 @@ void HgmEnergyConsumptionPolicy::GetUiIdleFps(FrameRateRange& rsRange)
     int idleFps = it->second.second;
     if (isEnergyAssuranceEnable) {
         SetEnergyConsumptionRateRange(rsRange, idleFps);
+    } else {
+        PrintLog(rsRange, false);
     }
 }
 
@@ -181,5 +186,22 @@ void HgmEnergyConsumptionPolicy::SetEnergyConsumptionRateRange(FrameRateRange& r
     rsRange.max_ = std::min(rsRange.max_, idleFps);
     rsRange.min_ = std::min(rsRange.min_, idleFps);
     rsRange.preferred_ = std::min(rsRange.preferred_, idleFps);
+    PrintLog(rsRange, true);
+}
+
+void HgmEnergyConsumptionPolicy::PrintLog(FrameRateRange& rsRange, bool state)
+{
+    const auto& it = energyAssuranceLogState_.find(rsRange.type_);
+    if ((it == energyAssuranceLogState_.end() || !it->second) && state) {
+        energyAssuranceLogState_[rsRange.type_] = state;
+        HGM_LOGI("SetEnergyConsumptionRateRange enter the energy consumption assurance mode, rateType:%{public}s, "
+            "maxFps:%{public}d", rsRange.GetExtInfo().c_str(), sRange.max_);
+        return;
+    }
+    if (it != energyAssuranceLogState_.end() && it->second && !state) {
+        energyAssuranceLogState_[rsRange.type_] = state;
+        HGM_LOGI("SetEnergyConsumptionRateRange exit the energy consumption assurance mode, rateType:%{public}s",
+            rsRange.GetExtInfo().c_str());
+    }
 }
 } // namespace OHOS::Rosen

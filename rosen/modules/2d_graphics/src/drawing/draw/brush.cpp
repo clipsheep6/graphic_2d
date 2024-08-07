@@ -224,7 +224,6 @@ void Brush::Dump(std::string& out)
     out += " forceBrightnessDisable:" + std::to_string(forceBrightnessDisable_);
     out += " isHDR:" + std::to_string(isHdr_);
 }
-
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

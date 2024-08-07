@@ -444,6 +444,7 @@ public:
     // using for recording, should to remove after using shared memory
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
+    void Dump(std::string& out);
 
 private:
     std::shared_ptr<ImageImpl> imageImplPtr;

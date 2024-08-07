@@ -240,8 +240,13 @@ void RSMask::Dump(std::string& out)
         out += " drawingType:" + std::to_string(static_cast<int>(maskPath_->GetDrawingType())) + "]";
     }
     if (pixelMap_ != nullptr) {
-        out += " width:" + std::to_string(pixelMap_->GetWidth()) + " height:" + std::to_string(pixelMap_->GetHeight());
-        out += " byteCount:" + std::to_string(pixelMap_->GetByteCount());
+        out += " pixelMap[width:" + std::to_string(pixelMap_->GetWidth()) + " height:" + std::to_string(pixelMap_->GetHeight());
+        out += " byteCount:" + std::to_string(pixelMap_->GetByteCount()) + "]";
+    }
+    if (image_ != nullptr) {
+        out += " image[";
+        image_->Dump(out);
+        out += "]";
     }
 }
 

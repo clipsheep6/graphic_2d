@@ -166,7 +166,6 @@ void Color::Dump(std::string& out)
     ss << "ARGB-0x" << std::hex << std::setfill('0') << std::setw(colorStrWidth) << std::uppercase << CastToColorQuad();
     out += ss.str();
 }
-
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

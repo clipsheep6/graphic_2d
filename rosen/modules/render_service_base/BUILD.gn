@@ -593,7 +593,10 @@ config("render_service_base_link_config") {
     ]
 
     if (graphic_2d_feature_enable_pgo && enable_enhanced_opt) {
-      ldflags += [ "-Wl,--aarch64-inline-plt" ]
+      ldflags += [
+        "-Wl,--aarch64-inline-plt",
+        "-Wl,-mllvm,-force-sched-model=${graphic_2d_feature_sched_model}",
+      ]
     }
   }
 }

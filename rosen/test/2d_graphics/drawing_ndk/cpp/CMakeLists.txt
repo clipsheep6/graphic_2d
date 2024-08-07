@@ -60,7 +60,8 @@ add_library(entry SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    testcase/canvas_draw_performance.cpp
 )
 
 add_library(myxnode SHARED
@@ -114,7 +115,8 @@ add_library(myxnode SHARED
     interface/font_test.cpp
     interface/memory_stream_test.cpp
     interface/sample_option_test.cpp
-    interface/surface_test.cpp    
+    interface/surface_test.cpp
+    testcase/canvas_draw_performance.cpp
 )
 
 find_library(

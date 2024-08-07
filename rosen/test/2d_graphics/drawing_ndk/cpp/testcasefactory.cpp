@@ -62,6 +62,7 @@
 #include "interface/surface_test.h"
 #include "interface/text_blob_test.h"
 #include "interface/typeface_test.h"
+#include "testcase/canvas_draw_performance.h"
 
 #include "common/log_common.h"
 
@@ -523,6 +524,54 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // brush
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_points_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPointsPerformance>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_points_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPointsPerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_points_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPointsPerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_broken_line_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBrokenLinePerformance>(TestBase::DRAW_STYLE_COMPLEX); } },// 200段绘制1000次
+    { "canvas_draw_broken_line_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBrokenLinePerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_broken_line_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBrokenLinePerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_curve_line_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawCurveLinePerformance>(TestBase::DRAW_STYLE_COMPLEX); } },//20段绘制20次
+    { "canvas_draw_curve_line_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawCurveLinePerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_curve_line_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawCurveLinePerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_region_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRegionPerformance>(TestBase::DRAW_STYLE_COMPLEX); } },//1000个矩形绘制1000次
+    { "canvas_draw_region_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRegionPerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_region_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRegionPerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_bit_map_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapPerformance>(TestBase::DRAW_STYLE_COMPLEX); } },//10次绘制
+    { "canvas_draw_bit_map_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapPerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_bit_map_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapPerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_bit_map_rect_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapRectPerformance>(TestBase::DRAW_STYLE_COMPLEX); } },
+     {"canvas_draw_bit_map_rect_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapRectPerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+     {"canvas_draw_bit_map_rect_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawBitMapRectPerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_image_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImagePerformance>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_image_performance_pen",
+            []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImagePerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_image_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawImagePerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_piexl_map_performance",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPiexlMapPerformance>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_piexl_map_performance_pen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPiexlMapPerformancePen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "canvas_draw_piexl_map_performance_brush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawPiexlMapPerformanceBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> StabilityCpuMap = {

@@ -66,6 +66,90 @@ void TextLineImpl::Paint(Drawing::Canvas* canvas, double x, double y)
     RSCanvasParagraphPainter painter(canvas, paints_);
     textLineBase_->paint(&painter, x, y);
 }
+
+std::unique_ptr<TextLineBase> TextLineImpl::CreateTruncatedLine(double width, EllipsisModal ellipsisMode,
+    const std::string& ellipsisStr) const
+{
+    if (!textLineBase_) {
+        return nullptr;
+    }
+
+    std::unique_ptr<skt::TextLineBase> textLine = textLineBase_->createTruncatedLine(width,
+        static_cast<skt::EllipsisModal>(ellipsisMode), ellipsisStr);
+    return std::make_unique<SPText::TextLineImpl>(std::move(textLine), paints_);
+}
+
+std::unique_ptr<TextLineBase> TextLineImpl::CreateJustifiedLine(double factor, double width) const
+{
+    if (!textLineBase_) {
+        return nullptr;
+    }
+
+    std::unique_ptr<skt::TextLineBase> textLine = textLineBase_->createJustifiedLine(factor, width);
+    return std::make_unique<SPText::TextLineImpl>(std::move(textLine), paints_);
+}
+
+double TextLineImpl::GetTypographicBounds(double* ascent, double* descent, double* leading) const
+{
+    if (!textLineBase_) {
+        return 0.0;
+    }
+
+    return textLineBase_->getTypographicBounds(ascent, descent, leading);
+}
+
+SkRect TextLineImpl::GetImageBounds() const
+{
+    if (!textLineBase_) {
+        return {};
+    }
+
+    return textLineBase_->getImageBounds();
+}
+
+double TextLineImpl::GetTrailingSpaceWidth() const
+{
+    if (!textLineBase_) {
+        return 0.0;
+    }
+
+    return textLineBase_->getTrailingSpaceWidth();
+}
+
+int32_t TextLineImpl::GetIndexForCharacterPosition(SkPoint point) const
+{
+    if (!textLineBase_) {
+        return 0;
+    }
+    return textLineBase_->getIndexForCharacterPosition(point);
+}
+
+double TextLineImpl::GetOffsetForCharacterIndex(int32_t index) const
+{
+    if (!textLineBase_) {
+        return 0.0;
+    }
+
+    return textLineBase_->getOffsetForCharacterIndex(index);
+}
+
+std::map<int32_t, double> TextLineImpl::GetIndexAndOffsets(bool& isHardBreak) const
+{
+    if (!textLineBase_) {
+        return {};
+    }
+
+    return textLineBase_->getIndexAndOffsets(isHardBreak);
+}
+
+double TextLineImpl::GetAlignmentOffset(double alignmentFactor, double alignmentWidth) const
+{
+    if (!textLineBase_) {
+        return 0.0;
+    }
+
+    return textLineBase_->getAlignmentOffset(alignmentFactor, alignmentWidth);
+}
 } // namespace SPText
 } // namespace Rosen
 } // namespace OHOS

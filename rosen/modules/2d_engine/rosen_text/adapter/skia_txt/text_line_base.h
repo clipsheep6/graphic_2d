@@ -34,6 +34,17 @@ public:
     Boundary GetTextRange() const override;
     void Paint(Drawing::Canvas *canvas, double x, double y) override;
 
+    std::unique_ptr<TextLineBase> CreateTruncatedLine(double width, EllipsisModal ellipsisMode,
+        const std::string& ellipsisStr) const override;
+    std::unique_ptr<TextLineBase> CreateJustifiedLine(double factor, double width) const override;
+    double GetTypographicBounds(double* ascent, double* descent, double* leading) const override;
+    SkRect GetImageBounds() const override;
+    double GetTrailingSpaceWidth() const override;
+    int32_t GetIndexForCharacterPosition(SkPoint point) const override;
+    double GetOffsetForCharacterIndex(int32_t index) const override;
+    std::map<int32_t, double> GetIndexAndOffsets(bool& isHardBreak) const override;
+    double GetAlignmentOffset(double alignmentFactor, double alignmentWidth) const override;
+
 private:
     std::unique_ptr<SPText::TextLineBase> textlinebase_ = nullptr;
 };

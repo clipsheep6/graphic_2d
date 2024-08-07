@@ -21,6 +21,7 @@
 #include <native_engine/native_value.h>
 #include "typography_create.h"
 #include "typography_style.h"
+#include "font_parser.h"
 
 namespace OHOS::Rosen {
 class JsEnum {

@@ -18,6 +18,7 @@
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkFontStyle.h"
+#include "include/core/SkFontMgr.h"
 
 #include "skia_adapter/skia_convert_utils.h"
 #include "skia_adapter/skia_data.h"
@@ -45,6 +46,19 @@ std::string SkiaTypeface::GetFamilyName() const
     skTypeface_->getFamilyName(&skName);
     SkiaConvertUtils::SkStringCastToStdString(skName, name);
     return name;
+}
+
+std::string SkiaTypeface::GetFontPath() const
+{
+    std::string path;
+    if (!skTypeface_) {
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        return path;
+    }
+    SkString skName;
+    skTypeface_->getFontPath(&skName);
+    SkiaConvertUtils::SkStringCastToStdString(skName, path);
+    return path;
 }
 
 FontStyle SkiaTypeface::GetFontStyle() const
@@ -167,6 +181,14 @@ std::shared_ptr<Typeface> SkiaTypeface::MakeDefault()
     return std::make_shared<Typeface>(typefaceImpl);
 }
 
+int SkiaTypeface::GetFontCollectionCount(const char path[])
+{
+    auto stream = SkStream::MakeFromFile(path);
+    sk_sp<SkFontMgr> fontMgr = SkFontMgr::RefDefault();
+    sk_sp<SkTypeface> typeface = fontMgr->makeFromStream(std::move(stream));
+    return fontMgr->countFamilies();
+}
+
 std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[], int index)
 {
     sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromFile(path, index);
@@ -177,6 +199,22 @@ std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[], int inde
     skTypeface->setIsCustomTypeface(true);
     std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
     return std::make_shared<Typeface>(typefaceImpl);
+}
+
+std::vector<std::shared_ptr<Typeface>> SkiaTypeface::GetSystemFonts()
+{
+    std::vector<sk_sp<SkTypeface>> skTypefaces = SkTypeface::GetSystemFonts();
+    if (skTypefaces.empty()) {
+        return {};
+    }
+    std::vector<std::shared_ptr<Typeface>> typefaces;
+    typefaces.reserve(skTypefaces.size());
+    for (auto& item : skTypefaces) {
+        item->setIsCustomTypeface(true);
+        std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(item);
+        typefaces.emplace_back(std::make_shared<Typeface>(typefaceImpl));
+    }
+    return typefaces;
 }
 
 std::shared_ptr<Typeface> SkiaTypeface::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)

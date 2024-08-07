@@ -192,6 +192,19 @@ typedef struct {
 } OH_Drawing_PlaceholderSpan;
 
 /**
+ * @brief Type style flag.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum {
+    /** Italic font */
+    ITALIC = 1 << 0,
+    /** Bold font */
+    BOLD = 1 << 1,
+} OH_Drawing_FontTypeStyle;
+
+/**
  * @brief Describes the font information.
  *
  * @since 12
@@ -199,26 +212,47 @@ typedef struct {
  */
 typedef struct OH_Drawing_FontDescriptor {
     /** The file path of System font */
-    char* path;
+    char* path = NULL;
     /** A name that uniquely identifies the font */
-    char* postScriptName;
+    char* postScriptName = NULL;
     /** The name of System font */
-    char* fullName;
+    char* fullName = NULL;
     /** The family of System font */
-    char* fontFamily;
+    char* fontFamily = NULL;
     /** The subfont family of the system font */
-    char* fontSubfamily;
+    char* fontSubfamily = NULL;
     /** The weight of System font */
-    int weight;
+    int weight = 0;
     /** The width of System font */
-    int width;
+    int width = 0;
     /** Whether the system font is tilted */
-    int italic;
+    int italic = 0;
     /** Whether the system font is compact */
-    bool monoSpace;
+    bool monoSpace = false;
     /** whether symbolic fonts are supported */
-    bool symbolic;
+    bool symbolic = false;
+    /** Font size */
+    size_t size = 0;
+    /** Font style flag, from OH_Drawing_FontTypeStyle */
+    int typeStyle = 0;
 } OH_Drawing_FontDescriptor;
+
+/**
+ * @brief An enumeration of system font types.
+ *
+ * @since 13
+ * @version 1.0
+ */
+typedef enum {
+    /** All font types */
+    ALL = 1 << 0,
+    /** System generic font type */
+    GENERIC = 1 << 1,
+    /** Stylish font type */
+    STYLISH = 1 << 2,
+    /** Installed font types */
+    INSTALLED = 1 << 3,
+} OH_Drawing_SystemFontType;
 
 /**
  * @brief The metrics of line.
@@ -1470,6 +1504,31 @@ OH_Drawing_FontDescriptor* OH_Drawing_CreateFontDescriptor(void);
 void OH_Drawing_DestroyFontDescriptor(OH_Drawing_FontDescriptor*);
 
 /**
+ * @brief Obtain all <b>OH_Drawing_FontDescriptor</b> matching the specified <b>OH_Drawing_FontDescriptor</b>,
+ * where the 'path' and 'size' fields are not considered as valid matching values. If all fields are default values,
+ * get all <b>OH_Drawing_FontDescriptor</b>.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param desc The pointer to the <b>OH_Drawing_FontDescriptor</b> object.
+ * @param num Indicates the count of obtained <b>OH_Drawing_FontDescriptor</b>.
+ * @return Returns an array of <b>OH_Drawing_FontDescriptor</b>.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_FontDescriptor* OH_Drawing_MatchingFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t* num);
+
+/**
+ * @brief Releases the <b>OH_Drawing_FontDescriptor</b> array.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param desc Pointer to <b>OH_Drawing_FontDescriptor</b> array.
+ * @param num Represents the number of members of the OH_Drawing_FontDescriptor array.
+ * @since 13
+ * @version 1.0
+ */
+void OH_Drawing_DestroyFontDescriptors(OH_Drawing_FontDescriptor* desc, size_t num);
+
+/**
  * @brief Creates an <b>OH_Drawing_FontParser</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -1488,6 +1547,29 @@ OH_Drawing_FontParser* OH_Drawing_CreateFontParser(void);
  * @version 1.0
  */
 void OH_Drawing_DestroyFontParser(OH_Drawing_FontParser*);
+
+/**
+ * @brief Get font details according to the font full name.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param char* font full name.
+ * @return Indicates the pointer to a font descriptor object <b>OH_Drawing_FontDescriptor</b>.
+ * @since 13
+ * @version 1.0
+ */
+OH_Drawing_FontDescriptor* OH_Drawing_GetFontDescriptorByName(const char*);
+
+/**
+ * @brief Obtain the corresponding font list based on the font type.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_SystemFontType Indicates enumerates of system font type.
+ * @param size_t Returns the number of obtained full names.
+ * @return Returns an array of full name.
+ * @since 13
+ * @version 1.0
+ */
+char** OH_Drawing_GetSystemFontList(OH_Drawing_SystemFontType, size_t*);
 
 /**
  * @brief Gets a list of system font names.

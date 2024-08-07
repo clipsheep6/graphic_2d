@@ -77,12 +77,14 @@ ohos_source_set("libtexgine_source") {
     ]
 
     configs = [
-      ":libtexgine_config",
       "//build/config/compiler:exceptions",
       "//build/config/compiler:rtti",
     ]
 
-    public_configs = [ ":libtexgine_public_config" ]
+    public_configs = [
+      ":libtexgine_public_config",
+      ":libtexgine_config",
+    ]
 
     platform = current_os
     if (platform == "mingw") {

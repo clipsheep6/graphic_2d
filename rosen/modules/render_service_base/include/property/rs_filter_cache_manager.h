@@ -58,16 +58,11 @@ public:
     const RectI& GetCachedImageRegion() const;
     FilterCacheType GetCachedType() const;
 
-    struct DrawFilterParams {
-        bool needSnapshotOutset;
-        bool shouldClearFilteredCache;
-    };
-
     // Call this function during the process phase to apply the filter. Depending on the cache state, it may either
     // regenerate the cache or reuse the existing cache.
     // Note: If srcRect or dstRect is empty, we'll use the DeviceClipRect as the corresponding rect.
     void DrawFilter(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
-        const DrawFilterParams params = { true, false}, const std::optional<Drawing::RectI>& srcRect = std::nullopt,
+        bool shouldClearFilteredCache = false, const std::optional<Drawing::RectI>& srcRect = std::nullopt,
         const std::optional<Drawing::RectI>& dstRect = std::nullopt);
 
     // This function is similar to DrawFilter(), but instead of drawing anything on the canvas, it simply returns the
@@ -107,8 +102,15 @@ private:
         const Drawing::RectI& srcRect);
     void GenerateFilteredSnapshot(
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
-    bool DrawFilterWithoutSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
-        const Drawing::RectI& src, const Drawing::RectI& dst, bool shouldClearFilteredCache);
+    bool DrawFilterForCachedImage(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        const Drawing::RectI& src, const Drawing::RectI& dst, bool shouldClearFilteredCache = true);
+    void DrawFilterOnScreen(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        bool shouldClearFilteredCache, const Drawing::RectI& src, const Drawing::RectI& dst);
+    void DrawFilterInCanvas(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        const Drawing::RectI& src, const Drawing::RectI& dst);
+    void TakeSnapshotFiltered(RSPaintFilterCanvas& canvas, const Drawing::RectI& src, const Drawing::RectI& dst);
+    void DrawFilterForImage(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        const std::shared_ptr<Drawing::Image>& image, const Drawing::RectI& src, const Drawing::RectI& dst);
     void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect) const;
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<Drawing::RectI, Drawing::RectI> ValidateParams(RSPaintFilterCanvas& canvas,

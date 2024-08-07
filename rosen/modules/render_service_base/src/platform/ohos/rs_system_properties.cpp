@@ -878,9 +878,16 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
 
 bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
 {
-    static bool drawFilterWithoutSnahpshotEnabled =
-        (std::atoi(system::GetParameter("persist.sys.graphic.drawFilterWithoutSnahpshot", "0").c_str()) != 0);
-        return drawFilterWithoutSnahpshotEnabled;
+    static bool drawFilterWithoutSnapshotEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.drawFilterWithoutSnapshot", "0").c_str()) != 0);
+    return drawFilterWithoutSnapshotEnabled;
+}
+
+bool RSSystemProperties::GetDrawFilterOnScreenEnabled()
+{
+    static bool drawFilterOnScreenEnabled =
+        (std::atoi(system::GetParameter("persist.sys.graphic.drawFilterOnScreen", "0").c_str()) != 0);
+    return drawFilterOnScreenEnabled;
 }
 
 bool RSSystemProperties::GetBlurExtraFilterEnabled()

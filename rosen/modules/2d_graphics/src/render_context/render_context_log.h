@@ -30,7 +30,7 @@ namespace Rosen {
 #define LOG_DOMAIN 0xD001406
 
 #undef LOG_TAG
-#define LOG_TAG "OHOS::RS"
+#define LOG_TAG "2DGraphics"
 
 #ifndef LOGD
 #ifdef OHOS_PLATFORM

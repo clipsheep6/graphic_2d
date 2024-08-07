@@ -468,7 +468,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         frameBufferSurfaceOhos_ = CreateFrameBufferSurfaceOhos(surface);
     }
     FrameContextConfig frameContextConfig = {isProtected, false};
-    if (RSSystemProperties::GetVkQueueDividedEnable()) {
+    if (RSSystemProperties::GetVkQueueSubmitPriorityEnable()) {
         frameContextConfig.independentContext = true;
     }
     auto renderFrame = uniRenderEngine_->RequestFrame(frameBufferSurfaceOhos_, renderFrameConfig,

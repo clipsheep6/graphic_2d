@@ -369,6 +369,12 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
         SetStrutStyleFromJS(env, strutStyleValue, pographyStyle);
     }
 
+    napi_get_named_property(env, argValue, "tab", &tempValue);
+    TextTab textTab;
+    if (tempValue != nullptr && GetTextTabFromJS(env, tempValue, textTab)) {
+        pographyStyle.tab = textTab;
+    }
+
     pographyStyle.ellipsis = textStyle.ellipsis;
     pographyStyle.ellipsisModal = textStyle.ellipsisModal;
 
@@ -693,6 +699,44 @@ napi_value GetFontMetricsAndConvertToJsValue(napi_env env, Drawing::FontMetrics*
             metrics->fStrikeoutPosition));
     }
     return objValue;
+}
+
+bool GetTextTabFromJS(napi_env env, napi_value argValue, TextTab& tab)
+{
+    if (argValue == nullptr) {
+        return false;
+    }
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, argValue, "align", &tempValue);
+    uint32_t align = 0;
+    if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &align) == napi_ok) {
+        TextAlign textAlign;
+        switch (TextAlign(align)) {
+            case TextAlign::LEFT: {
+                textAlign = TextAlign::LEFT;
+                break;
+            }
+            case TextAlign::RIGHT: {
+                textAlign = TextAlign::RIGHT;
+                break;
+            }
+            case TextAlign::CENTER: {
+                textAlign = TextAlign::CENTER;
+                break;
+            }
+            default: {
+                textAlign = TextAlign::LEFT;
+            }
+        }
+        tab.alignment_ = textAlign;
+    }
+
+    double location = 0;
+    napi_get_named_property(env, argValue, "location", &tempValue);
+    if (tempValue != nullptr && napi_get_value_double(env, tempValue, &location) == napi_ok) {
+        tab.location_ = location;
+    }
+    return true;
 }
 
 } // namespace OHOS::Rosen

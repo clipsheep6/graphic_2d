@@ -3688,3 +3688,45 @@ void OH_Drawing_TextStyleAddFontVariation(OH_Drawing_TextStyle* style, const cha
         convertStyle->fontVariations.SetAxisValue(axis, value);
     }
 }
+
+OH_Drawing_TextTab* OH_Drawing_CreateTextTab(OH_Drawing_TextAlign alignment, float location)
+{
+    TextAlign textAlign;
+    switch (alignment) {
+        case TEXT_ALIGN_LEFT: {
+            textAlign = TextAlign::LEFT;
+            break;
+        }
+        case TEXT_ALIGN_RIGHT: {
+            textAlign = TextAlign::RIGHT;
+            break;
+        }
+        case TEXT_ALIGN_CENTER: {
+            textAlign = TextAlign::CENTER;
+            break;
+        }
+        default: {
+            textAlign = TextAlign::LEFT;
+        }
+    }
+    return (OH_Drawing_TextTab*)new TextTab(textAlign, location);
+}
+
+void OH_Drawing_SetTypographyTextTab(OH_Drawing_TypographyStyle* style, OH_Drawing_TextTab* tab)
+{
+    if (!style || !tab) {
+        return;
+    }
+    auto rosenTextTab = ConvertToOriginalText<OHOS::Rosen::TextTab>(tab);
+    ConvertToOriginalText<TypographyStyle>(style)->tab = *rosenTextTab;
+}
+
+OH_Drawing_TextAlign OH_Drawing_GetTextTabAlign(OH_Drawing_TextTab* tab)
+{
+    return static_cast<OH_Drawing_TextAlign>(ConvertToOriginalText<TextTab>(tab)->alignment_);
+}
+
+float OH_Drawing_GetTextTabLocation(OH_Drawing_TextTab* tab)
+{
+    return ConvertToOriginalText<TextTab>(tab)->location_;
+}

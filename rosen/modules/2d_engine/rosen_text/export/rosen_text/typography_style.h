@@ -25,6 +25,13 @@
 
 namespace OHOS {
 namespace Rosen {
+struct TextTab {
+    TextTab() = default;
+    TextTab(TextAlign alignment, float location) : alignment_(alignment), location_(location) {};
+    TextTab& operator=(const TextTab&) = default;
+    TextAlign alignment_;
+    float location_;
+};
 struct TypographyStyle {
     const static inline std::u16string ELLIPSIS = u"\u2026";
 
@@ -106,6 +113,7 @@ struct TypographyStyle {
     bool customTextStyle = false;
     TextHeightBehavior textHeightBehavior = TextHeightBehavior::ALL;
     bool hintingIsOn = false;
+    TextTab tab;
 };
 } // namespace Rosen
 } // namespace OHOS

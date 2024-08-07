@@ -122,6 +122,14 @@ typedef struct OH_Drawing_FontParser OH_Drawing_FontParser;
  */
 typedef struct OH_Drawing_TextShadow OH_Drawing_TextShadow;
 
+/**
+ * @brief Defines an <b>OH_Drawing_TextTab</b>, which is used to create an <b>OH_Drawing_TextTab</b> object.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_TextTab OH_Drawing_TextTab;
+
 #ifdef __cplusplus
 }
 #endif

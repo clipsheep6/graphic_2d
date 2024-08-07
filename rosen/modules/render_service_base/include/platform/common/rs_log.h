@@ -78,6 +78,7 @@ public:
 
     static RSLogManager& GetInstance();
     bool SetRSLogFlag(std::string& flag);
+    bool CloseRSLogFlag();
     inline bool IsRSLogFlagEnabled(RSLogFlag flag)
     {
         return logFlag_ & flag;

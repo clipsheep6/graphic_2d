@@ -51,6 +51,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 5000000;
+constexpr int64_t RS_LOG_FLAG_CLOSE_TIME = 20000;
 const std::string BOOTEVENT_RENDER_SERVICE_READY = "bootevent.renderservice.ready";
 }
 RSRenderService::RSRenderService() {}
@@ -529,6 +530,16 @@ void RSRenderService::DumpJankStatsRs(std::string& dumpString) const
     dumpString.append("flush done\n");
 }
 
+void RSRenderService::DumpRSLogFlagClose() const
+{
+    std::string betaName = OHOS::system::GetParameter("const.logsystem.versiontype", "");
+    if (betaName.find("beta") != std::string::npos) {
+        mainThread_->ScheduleTask(
+            [this]() { RSLogManager::GetInstance().CloseRSLogFlag(); },
+            "CLEAR_LOG_FLAG", RS_LOG_FLAG_CLOSE_TIME);
+    }
+}
+
 void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::string& dumpString) const
 {
     std::u16string arg1(u"screen");
@@ -610,10 +621,11 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     if (auto iter = argSets.find(arg18) != argSets.end()) {
         argSets.erase(arg18);
         if (!argSets.empty()) {
-            std::string logFlag = std::wstring_convert<
-                std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(*argSets.begin());
+            std::string logFlag =
+                std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(*argSets.begin());
             if (RSLogManager::GetInstance().SetRSLogFlag(logFlag)) {
                 dumpString.append("Successed to set flag: " + logFlag + "\n");
+                DumpRSLogFlagClose();
             } else {
                 dumpString.append("Failed to set flag: " + logFlag + "\n");
             }

@@ -121,6 +121,14 @@ public:
         return std::move(taskFuture);
     }
 
+    template<typename Task, typename Return = std::invoke_result_t<Task>>
+    std::future<Return> ScheduleTask(Task&& task, const std::string& name, int64_t delayTime)
+    {
+        auto [scheduledTask, taskFuture] = Detail::ScheduledTask<Task>::Create(std::forward<Task&&>(task));
+        PostTask([t(std::move(scheduledTask))]() { t->Run(); }, name, delayTime);
+        return std::move(taskFuture);
+    }
+
     const std::shared_ptr<RSBaseRenderEngine> GetRenderEngine() const
     {
         RS_LOGD("You'd better to call GetRenderEngine from RSUniRenderThread directly");

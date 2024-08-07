@@ -74,6 +74,7 @@ private:
     std::map<uint64_t, uint8_t> nodeTaskState_;
     std::vector<std::shared_ptr<RSSubThread>> threadList_;
     std::unordered_map<pid_t, uint32_t> threadIndexMap_;
+    // std::unordered_map<pid_t, std::unique_ptr<RSRenderThreadParams>> uniPramsMap_;
     std::unordered_map<uint32_t, pid_t> reThreadIndexMap_;
     std::shared_ptr<RSFilterSubThread> colorPickerThread_ = nullptr;
     bool needResetContext_ = false;

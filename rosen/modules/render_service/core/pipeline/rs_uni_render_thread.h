@@ -111,6 +111,11 @@ public:
         return renderThreadParams_;
     }
 
+    void SetRSRenderThreadParams(std::unique_ptr<RSRenderThreadParams>& renderThreadParams)
+    {
+        renderThreadParams_ = std::move(renderThreadParams);
+    }
+
     void RenderServiceTreeDump(std::string& dumpString) const;
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
@@ -164,7 +169,7 @@ private:
     std::shared_ptr<RSContext> context_;
     std::shared_ptr<DrawableV2::RSRenderNodeDrawable> rootNodeDrawable_;
     std::vector<NodeId> curDrawStatusVec_;
-    std::unique_ptr<RSRenderThreadParams> renderThreadParams_ = nullptr; // sync from main thread
+    static inline thread_local std::unique_ptr<RSRenderThreadParams> renderThreadParams_ = nullptr; // sync from main thread
 #ifdef RES_SCHED_ENABLE
     void SubScribeSystemAbility();
     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;

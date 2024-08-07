@@ -1199,6 +1199,15 @@ public:
     }
     void SetRootIdOfCaptureWindow(NodeId rootIdOfCaptureWindow);
 
+    bool GetUIFirstUsedSkipRender()
+    {
+        return UIFirstUsedSkipRender_;
+    }
+
+    void SetUIFirstUsedSkipRender(bool isSkip)
+    {
+        UIFirstUsedSkipRender_ = isSkip;
+    }
 protected:
     void OnSync() override;
     void OnSkipSync() override;
@@ -1431,6 +1440,7 @@ private:
 #endif
     bool isForeground_ = false;
     bool UIFirstIsPurge_ = false;
+    bool UIFirstUsedSkipRender_ = false;
 
     TreeStateChangeCallback treeStateChangeCallback_;
     RSBaseRenderNode::WeakPtr ancestorDisplayNode_;

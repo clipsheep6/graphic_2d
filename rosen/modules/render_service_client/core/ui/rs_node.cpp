@@ -1336,13 +1336,13 @@ void RSNode::SetOutlineStyle(const Vector4<BorderStyle>& style)
 
 void RSNode::SetOutlineDashWidth(const Vector4f& dashWidth)
 {
-    SetProperty<RSOutlineDashWidthModifier, RSAnimatableProperty<Vector4f>>(
+    SetProperty<RSOutlineDashWidthModifier, RSProperty<Vector4f>>(
         RSModifierType::OUTLINE_DASH_WIDTH, dashWidth);
 }
 
 void RSNode::SetOutlineDashGap(const Vector4f& dashGap)
 {
-    SetProperty<RSOutlineDashGapModifier, RSAnimatableProperty<Vector4f>>(
+    SetProperty<RSOutlineDashGapModifier, RSProperty<Vector4f>>(
         RSModifierType::OUTLINE_DASH_GAP, dashGap);
 }
 

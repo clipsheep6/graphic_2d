@@ -135,6 +135,10 @@ template("render_service_client_source_set") {
       "core/ui/rs_ui_director.cpp",
       "core/ui/rs_ui_display_soloist.cpp",
       "core/ui/rs_ui_share_context.cpp",
+
+      #ui_effect
+      "core/ui_effect/filter/src/filter_fly_out_para.cpp",
+      "core/ui_effect/filter/src/filter_water_ripple_para.cpp",
     ]
 
     if (is_cross_platform) {

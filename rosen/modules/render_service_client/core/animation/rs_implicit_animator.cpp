@@ -606,6 +606,13 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
         startValue->GetRenderProperty(), endValue->GetRenderProperty(), animation->GetStartDelay(),
         animation->GetDuration(), protocol.GetRepeatCount());
 
+    if (protocol.GetRepeatCount() == -1) {
+        ROSEN_LOGI("Create an Infinite implicitAnimation,where the node [%{public}" PRIu64 "] name[%s] "
+                   "curve [%{public}d] property[%{public}d] duration[%{public}d] tag[%s]",
+            target->GetId(), target->GetNodeName().c_str(), static_cast<int>(params->GetType()),
+            static_cast<int>(property->type_), animation->GetDuration(), target->GetFrameNodeTag().c_str());
+    }
+
     if (params->GetType() == ImplicitAnimationParamType::TRANSITION ||
         params->GetType() == ImplicitAnimationParamType::KEYFRAME) {
         // for transition this will create custom transition animation, there is no need to add it to target.
@@ -690,6 +697,13 @@ void RSImplicitAnimator::CreateImplicitAnimationWithInitialVelocity(const std::s
         animation->GetId(), static_cast<int>(params->GetType()), static_cast<int>(property->type_),
         startValue->GetRenderProperty(), endValue->GetRenderProperty(), animation->GetStartDelay(),
         animation->GetDuration(), protocol.GetRepeatCount());
+
+    if (protocol.GetRepeatCount() == -1) {
+        ROSEN_LOGI("Create an Infinite implicitAnimation,where the node [%{public}" PRIu64 "] name[%s] "
+                   "curve [%{public}d] property[%{public}d] duration[%{public}d] tag[%s]",
+            target->GetId(), target->GetNodeName().c_str(), static_cast<int>(params->GetType()),
+            static_cast<int>(property->type_), animation->GetDuration(), target->GetFrameNodeTag().c_str());
+    }
 
     target->AddAnimation(animation);
     implicitAnimations_.top().emplace_back(animation, target->GetId());

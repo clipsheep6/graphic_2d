@@ -30,6 +30,8 @@ using RenderEndFunc = void(*)();
 using SendCommandsStartFunc = void(*)();
 using ParallelRenderEndFunc = void(*)();
 using SetFrameParamFunc = void(*)(int, int, int, int);
+using SetFreqAdjustEnableFunc = void(*)(bool);
+using RegisterSetFreqAdjustEnableFunc = void(*)(SetFreqAdjustEnableFunc);
 class RsFrameReport final {
 public:
     static RsFrameReport& GetInstance();
@@ -44,6 +46,7 @@ public:
     void RSRenderEnd();
     void SendCommandsStart();
     void SetFrameParam(int requestId, int load, int schedFrameNum, int value);
+    void RegisterSetFreqAdjustEnable(SetFreqAdjustEnableFunc callback);
 
 private:
     RsFrameReport();
@@ -64,6 +67,7 @@ private:
     ParallelRenderEndFunc parallelRenderEndFunc_ = nullptr;
     SendCommandsStartFunc sendCommandsStartFunc_ = nullptr;
     SetFrameParamFunc setFrameParamFunc_ = nullptr;
+    RegisterSetFreqAdjustEnableFunc registerSetFreqAdjustEnableFunc_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

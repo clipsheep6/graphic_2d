@@ -325,6 +325,8 @@ public:
     std::shared_ptr<Drawing::GPUContext> GetDrawingContext();
 
     void ClearGrContext(bool isProtected = false);
+    
+    static void SetFreqAdjustEnable(bool enable);
 
     static VKAPI_ATTR VkResult HookedVkQueueSubmit(VkQueue queue, uint32_t submitCount,
         VkSubmitInfo* pSubmits, VkFence fence);

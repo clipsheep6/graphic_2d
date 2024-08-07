@@ -624,5 +624,12 @@ void RsVulkanContext::ClearGrContext(bool isProtected)
     isProtected_ = isProtected;
     GetDrawingContext()->ResetContext();
 }
+
+void RsVulkanContext::SetFreqAdjustEnable(bool enable)
+{
+    if (GetSingleton().GetRsVulkanInterface().vkSetFreqAdjustEnable != nullptr) {
+        GetSingleton().GetRsVulkanInterface().vkSetFreqAdjustEnable(enable);
+    }
+}
 }
 }

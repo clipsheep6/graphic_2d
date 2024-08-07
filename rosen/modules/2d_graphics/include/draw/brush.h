@@ -54,7 +54,7 @@ public:
     /**
      * @brief Sets alpha and RGB used when stroking and filling. The color is a 32-bit value,
      *        unpremultiplied, packing 8-bit components for alpha, red, blue, and green.
-     * @param c    unsigned 32-bit value as ARGB
+     * @param color    unpremultiplied ARGB
      */
     void SetColor(uint32_t c);
 
@@ -264,8 +264,8 @@ public:
     bool IsForceBrightnessDisable() const { return forceBrightnessDisable_; }
 
     /**
-     * @brief Sets all Brush contents to their initial values. This is equivalent to replacing
-     *        Brush with the result of Brush().
+     * @brief Queries Whether the current blender can be represented as a BlendMode enum or not.
+     * @return true if can be represented, otherwise false.
      */
     void Reset();
 

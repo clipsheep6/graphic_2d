@@ -286,9 +286,6 @@ public:
     void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
     void RefreshEntireDisplay();
     bool IsCurtainScreenOn() const;
-    void NotifySurfaceCapProcFinish();
-    void WaitUntilSurfaceCapProcFinished();
-    void SetSurfaceCapProcFinished(bool flag);
 
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
@@ -342,8 +339,15 @@ public:
         return isFirstFrameOfPartialRender_;
     }
 
-    bool IsHardwareEnabledNodesNeedSync();
-    bool IsOcclusionNodesNeedSync(NodeId id);
+    bool IsDoDirectComposition() const
+    {
+        return doDirectComposition_;
+    }
+
+    const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetHardwareEnabledNodes() const
+    {
+        return hardwareEnabledNodes_;
+    }
 
     void CallbackDrawContextStatusToWMS(bool isUniRender = false);
     void SetHardwareTaskNum(uint32_t num);
@@ -515,10 +519,6 @@ private:
     int32_t unmarshalFinishedCount_ = 0;
     bool needWaitUnmarshalFinished_ = true;
     sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
-
-    std::condition_variable surfaceCapProcTaskCond_;
-    std::mutex surfaceCapProcMutex_;
-    bool surfaceCapProcFinished_ = true;
 
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     RSTaskMessage::RSTask uploadTextureBarrierTask_;

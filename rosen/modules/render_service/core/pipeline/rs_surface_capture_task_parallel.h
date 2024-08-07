@@ -68,6 +68,10 @@ private:
 
     std::unique_ptr<Media::PixelMap> CreatePixelMapByDisplayNode(std::shared_ptr<RSDisplayRenderNode> node);
 
+    bool IsHardwareEnabledNodesNeedSync();
+
+    bool IsOcclusionNodesNeedSync(NodeId id);
+
     void SetupGpuContext();
 
     int32_t CalPixelMapRotation();

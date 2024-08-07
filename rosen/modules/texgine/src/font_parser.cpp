@@ -396,6 +396,77 @@ private:
     std::shared_ptr<std::vector<std::string>> systemFontSet_;
 };
 
+std::vector<std::shared_ptr<FontParser::FontDescriptor>> FontParser::GetSystemFonts(const std::string locale)
+{
+    std::vector<std::shared_ptr<Drawing::Typeface>> typefaces = Drawing::Typeface::GetSystemFonts();
+    if (typefaces.empty()) {
+        return {};
+    }
+
+    std::vector<std::shared_ptr<FontDescriptor>> descriptors;
+    descriptors.reserve(typefaces.size());
+    for (auto& item : typefaces) {
+        FontDescriptor desc;
+        desc.requestedLid = GetLanguageId(locale);
+        desc.path = item->GetFontPath();
+        auto fontStyle = item->GetFontStyle();
+        desc.weight = fontStyle.GetWeight();
+        desc.width = fontStyle.GetWidth();
+        if (ParseTable(item, desc) !=  SUCCESSED) {
+            continue;
+        }
+        descriptors.emplace_back(std::make_shared<FontDescriptor>(desc));
+    }
+    return descriptors;
+}
+
+bool FontParser::ParserFontDescriptorFromPath(const std::string& path, FontDescriptor& desc,
+    const std::string locale)
+{
+    desc.requestedLid = GetLanguageId(locale);
+    desc.path = path;
+    auto typeface = Drawing::Typeface::MakeFromFile(path.c_str());
+    if (typeface == nullptr) {
+        return false;
+    }
+    auto fontStyle = typeface->GetFontStyle();
+    desc.weight = fontStyle.GetWeight();
+    desc.width = fontStyle.GetWidth();
+    if (ParseTable(typeface, desc) !=  SUCCESSED) {
+        return false;
+    }
+    return true;
+}
+
+bool FontParser::ParserFontDescriptorFromPath(const std::string& path,
+    std::vector<std::shared_ptr<FontDescriptor>>& descriptors,
+    const std::string locale)
+{
+    int count = Drawing::Typeface::GetFontCollectionCount(path.c_str());
+    if (count == 0) {
+        return false;
+    }
+    descriptors.reserve(count);
+    for (int i = 0; i < count; ++i) {
+        FontDescriptor desc;
+        desc.requestedLid = GetLanguageId(locale);
+        desc.path = path;
+
+        auto typeface = Drawing::Typeface::MakeFromFile(path.c_str(), i);
+        if (typeface == nullptr) {
+            return false;
+        }
+        auto fontStyle = typeface->GetFontStyle();
+        desc.weight = fontStyle.GetWeight();
+        desc.width = fontStyle.GetWidth();
+        if (ParseTable(typeface, desc) !=  SUCCESSED) {
+            return false;
+        }
+        descriptors.emplace_back(std::make_shared<FontDescriptor>(desc));
+    }
+    return true;
+}
+
 std::unique_ptr<FontParser::FontDescriptor> FontParser::ParseFontDescriptor(const std::string& fontName,
     const unsigned int languageId)
 {

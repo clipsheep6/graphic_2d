@@ -142,6 +142,18 @@ static const std::vector<struct JsEnumInt> g_textHeightBehavior = {
     { "DISABLE_ALL", static_cast<size_t>(TextHeightBehavior::DISABLE_ALL) },
 };
 
+static const std::vector<struct JsEnumInt> g_fontTypeStyle = {
+    { "ITALIC", static_cast<size_t>(FontTypeStyle::ITALIC) },
+    { "BOLD", static_cast<size_t>(FontTypeStyle::BOLD) },
+};
+
+static const std::vector<struct JsEnumInt> g_systemFontType = {
+    { "ALL", static_cast<size_t>(TextEngine::FontParser::SystemFontType::ALL) },
+    { "GENERIC", static_cast<size_t>(TextEngine::FontParser::SystemFontType::GENERIC) },
+    { "STYLISH", static_cast<size_t>(TextEngine::FontParser::SystemFontType::STYLISH) },
+    { "INSTALLED", static_cast<size_t>(TextEngine::FontParser::SystemFontType::INSTALLED) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "TextAlign", g_textAlign },
     { "TextDecorationStyle", g_textDecorationStyle },
@@ -159,6 +171,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "Affinity", g_affinity },
     { "FontWidth", g_fontWidth },
     { "TextHeightBehavior", g_textHeightBehavior },
+    { "FontTypeStyle", g_fontTypeStyle },
+    { "SystemFontType", g_systemFontType },
 };
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)

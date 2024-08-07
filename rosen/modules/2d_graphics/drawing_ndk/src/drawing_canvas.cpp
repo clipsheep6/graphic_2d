@@ -24,6 +24,7 @@
 #include "pixelmap_native_impl.h"
 #include "recording/recording_canvas.h"
 #include "utils/log.h"
+#include "drawing_helper.h"
 
 using namespace OHOS;
 using namespace Rosen;
@@ -863,4 +864,21 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint
 
     canvas->DrawColor(color, static_cast<BlendMode>(cBlendMode));
     return OH_DRAWING_SUCCESS;
+}
+
+void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RecordCmd* cRecordCmd,
+    const OH_Drawing_Matrix* matrix, const OH_Drawing_Brush* brush)
+{
+    if (cCanvas == nullptr || cRecordCmd == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    auto recordCmdHandle = Helper::CastTo<const OH_Drawing_RecordCmd*, const NativeHandle<RecordCmd>*>(cRecordCmd);
+    if (recordCmdHandle->value == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
+    canvas->DrawRecordCmd(recordCmdHandle->value, reinterpret_cast<const Matrix*>(matrix),
+        reinterpret_cast<const Brush*>(brush));
 }

@@ -30,7 +30,7 @@ struct NativeHandle {
 class Helper {
 public:
     template<typename T1, typename T2>
-    static T2 CastTo(T1 type) { return reinterpret_cast<T2>(type); }
+    static const T2 CastTo(const T1 type) { return reinterpret_cast<const T2>(type); }
 };
 } // namespace Drawing
 } // namespace Rosen

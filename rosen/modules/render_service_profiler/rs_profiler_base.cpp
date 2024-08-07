@@ -55,6 +55,9 @@ static std::atomic<uint32_t> g_commandExecuteCount = 0; // EXECUTE RSCOMMAND COU
 constexpr uint32_t COMMAND_PARSE_LIST_COUNT = 1024;
 constexpr uint32_t COMMAND_PARSE_LIST_SIZE = COMMAND_PARSE_LIST_COUNT * 2 + 5;
 
+static std::mutex g_msgBaseMutex;
+static std::queue<std::string> g_msgBaseList;
+
 #pragma pack(push, 1)
 struct PacketParsedCommandList {
     double packetTime;
@@ -73,8 +76,11 @@ static std::atomic<uint32_t> g_commandLoopIndexEnd = 0;
 static uint64_t g_pauseAfterTime = 0;
 static uint64_t g_pauseCumulativeTime = 0;
 static int64_t g_transactionTimeCorrection = 0;
+static int64_t g_replayStartTimeNano = 0.0;
 
 static const size_t PARCEL_MAX_CAPACITY = 234 * 1024 * 1024;
+
+static std::unordered_map<AnimationId, std::vector<int64_t>> g_animeStartMap;
 
 bool RSProfiler::testing_ = false;
 
@@ -156,6 +162,22 @@ NodeId RSProfiler::PatchPlainNodeId(const Parcel& parcel, NodeId id)
     }
 
     return Utils::PatchNodeId(id);
+}
+
+void RSProfiler::PatchTypefaceId(const Parcel& parcel, std::shared_ptr<Drawing::DrawCmdList>& val)
+{
+    if (!IsEnabled()) {
+        return;
+    }
+
+    if (g_mode == Mode::READ_EMUL) {
+        val->PatchTypefaceIds();
+    }
+    else if (g_mode == Mode::READ) {
+        if (IsParcelMock(parcel)) {
+            val->PatchTypefaceIds();
+        }
+    }
 }
 
 pid_t RSProfiler::PatchPlainPid(const Parcel& parcel, pid_t pid)
@@ -407,7 +429,7 @@ NodeId RSProfiler::GetRandomSurfaceNode(const RSContext& context)
     return 0;
 }
 
-void RSProfiler::MarshalNodes(const RSContext& context, std::stringstream& data)
+void RSProfiler::MarshalNodes(const RSContext& context, std::stringstream& data, uint32_t fileVersion)
 {
     const auto& map = const_cast<RSContext&>(context).GetMutableNodeMap();
     const uint32_t count = map.renderNodeMap_.size();
@@ -417,7 +439,7 @@ void RSProfiler::MarshalNodes(const RSContext& context, std::stringstream& data)
     nodes.emplace_back(context.GetGlobalRootRenderNode());
 
     for (const auto& item : map.renderNodeMap_) {
-        MarshalNode(item.second.get(), data);
+        MarshalNode(item.second.get(), data, fileVersion);
         std::shared_ptr<RSRenderNode> parent = item.second->GetParent().lock();
         if (!parent && (item.second != context.GetGlobalRootRenderNode())) {
             nodes.emplace_back(item.second);
@@ -427,11 +449,11 @@ void RSProfiler::MarshalNodes(const RSContext& context, std::stringstream& data)
     const uint32_t nodeCount = nodes.size();
     data.write(reinterpret_cast<const char*>(&nodeCount), sizeof(nodeCount));
     for (const auto& node : nodes) {
-        MarshalTree(node.get(), data);
+        MarshalTree(node.get(), data, fileVersion);
     }
 }
 
-void RSProfiler::MarshalTree(const RSRenderNode* node, std::stringstream& data)
+void RSProfiler::MarshalTree(const RSRenderNode* node, std::stringstream& data, uint32_t fileVersion)
 {
     const NodeId nodeId = node->GetId();
     data.write(reinterpret_cast<const char*>(&nodeId), sizeof(nodeId));
@@ -443,11 +465,11 @@ void RSProfiler::MarshalTree(const RSRenderNode* node, std::stringstream& data)
         RSRenderNode* node = child.lock().get();
         const NodeId nodeId = node->GetId();
         data.write(reinterpret_cast<const char*>(&nodeId), sizeof(nodeId));
-        MarshalTree(node, data);
+        MarshalTree(node, data, fileVersion);
     }
 }
 
-void RSProfiler::MarshalNode(const RSRenderNode* node, std::stringstream& data)
+void RSProfiler::MarshalNode(const RSRenderNode* node, std::stringstream& data, uint32_t fileVersion)
 {
     const RSRenderNodeType nodeType = node->GetType();
     data.write(reinterpret_cast<const char*>(&nodeType), sizeof(nodeType));
@@ -492,10 +514,12 @@ void RSProfiler::MarshalNode(const RSRenderNode* node, std::stringstream& data)
     const bool isOnTree = node->IsOnTheTree();
     data.write(reinterpret_cast<const char*>(&isOnTree), sizeof(isOnTree));
 
-    const uint8_t nodeGroupType = node->nodeGroupType_;
-    data.write(reinterpret_cast<const char*>(&nodeGroupType), sizeof(nodeGroupType));
+    if (fileVersion >= RSFILE_VERSION_RENDER_METRICS_ADDED) {
+        const uint8_t nodeGroupType = node->nodeGroupType_;
+        data.write(reinterpret_cast<const char*>(&nodeGroupType), sizeof(nodeGroupType));
+    }
 
-    MarshalNode(*node, data);
+    MarshalNodeLo(*node, data, fileVersion);
 }
 
 static void MarshalRenderModifier(const RSRenderModifier& modifier, std::stringstream& data)
@@ -529,7 +553,7 @@ static void MarshalRenderModifier(const RSRenderModifier& modifier, std::strings
     }
 }
 
-void RSProfiler::MarshalNode(const RSRenderNode& node, std::stringstream& data)
+void RSProfiler::MarshalNodeLo(const RSRenderNode& node, std::stringstream& data, uint32_t fileVersion)
 {
     data.write(reinterpret_cast<const char*>(&node.instanceRootNodeId_), sizeof(node.instanceRootNodeId_));
     data.write(reinterpret_cast<const char*>(&node.firstLevelNodeId_), sizeof(node.firstLevelNodeId_));
@@ -676,7 +700,7 @@ void RSProfiler::UnmarshalNode(RSContext& context, std::stringstream& data, Node
         node->SetPriority(priority);
         node->SetIsOnTheTree(isOnTree);
         node->nodeGroupType_ = nodeGroupType;
-        UnmarshalNode(*node, data, fileVersion);
+        UnmarshalNodeLo(*node, data, fileVersion);
     }
 }
 
@@ -697,7 +721,7 @@ static RSRenderModifier* UnmarshalRenderModifier(std::stringstream& data)
     return RSRenderModifier::Unmarshalling(*parcel);
 }
 
-void RSProfiler::UnmarshalNode(RSRenderNode& node, std::stringstream& data, uint32_t fileVersion)
+void RSProfiler::UnmarshalNodeLo(RSRenderNode& node, std::stringstream& data, uint32_t fileVersion)
 {
     data.read(reinterpret_cast<char*>(&node.instanceRootNodeId_), sizeof(node.instanceRootNodeId_));
     node.instanceRootNodeId_ = Utils::PatchNodeId(node.instanceRootNodeId_);
@@ -823,6 +847,7 @@ void RSProfiler::FilterAnimationForPlayback(RSAnimationManager& manager)
 void RSProfiler::SetTransactionTimeCorrection(double replayStartTime, double recordStartTime)
 {
     g_transactionTimeCorrection = static_cast<int64_t>((replayStartTime - recordStartTime) * NS_TO_S);
+    g_replayStartTimeNano = replayStartTime * NS_TO_S;
 }
 
 std::string RSProfiler::GetCommandParcelList(double recordStartTime)
@@ -1028,6 +1053,74 @@ uint32_t RSProfiler::GetNodeDepth(const std::shared_ptr<RSRenderNode> node)
         curNode = curNode ? curNode->GetParent().lock() : nullptr;
     }
     return depth;
+}
+
+std::string RSProfiler::GendMessageBase()
+{
+    const std::lock_guard<std::mutex> guard(g_msgBaseMutex);
+    if (g_msgBaseList.empty()) {
+        return "";
+    }
+    std::string value = g_msgBaseList.front();
+    g_msgBaseList.pop();
+    return value;
+}
+
+void RSProfiler::SendMessageBase(const std::string msg)
+{
+    const std::lock_guard<std::mutex> guard(g_msgBaseMutex);
+    g_msgBaseList.push(msg);
+}
+
+std::unordered_map<AnimationId, std::vector<int64_t>> &RSProfiler::AnimeGetStartTimes()
+{
+    return g_animeStartMap;
+}
+
+void RSProfiler::ReplayFixTrIndex(uint64_t curIndex, uint64_t& lastIndex)
+{
+    if (!IsEnabled()) {
+        return;
+    }
+    if (g_mode == Mode::READ) {
+        if (lastIndex == 0) {
+            lastIndex = curIndex - 1;
+        }
+    }
+}
+
+int64_t RSProfiler::AnimeSetStartTime(AnimationId id, int64_t nanoTime)
+{
+    if (!IsEnabled()) {
+        return nanoTime;
+    }
+
+    if (g_mode == Mode::READ) {
+        if (!g_animeStartMap.count(id)) {
+            return nanoTime;
+        }
+        int64_t minDt = INT64_MAX, minTime = nanoTime;
+        for(const auto recordedTime : g_animeStartMap[id]) {
+            int64_t dt = abs(recordedTime - (nanoTime - g_replayStartTimeNano));
+            if (dt < minDt) {
+                minDt = dt;
+                minTime = recordedTime;
+            }
+        }
+        return minTime + g_replayStartTimeNano;
+    }
+    else if (g_mode == Mode::WRITE) {
+        if (g_animeStartMap.count(id)) {
+            g_animeStartMap[id].push_back(nanoTime);
+        }
+        else {
+            std::vector<int64_t> list;
+            list.push_back(nanoTime);
+            g_animeStartMap.insert({ id, list });
+        }
+    }
+
+    return nanoTime;
 }
 
 } // namespace OHOS::Rosen

@@ -42,6 +42,10 @@ public:
     void AddDelayDestroyQueue(uint64_t globalUniqueId);
     void HandleDelayDestroyQueue();
 
+    void ReplayClear();
+    void ReplaySerialize(std::stringstream& ss);
+    void ReplayDeserialize(std::stringstream& ss);
+
     RSTypefaceCache() = default;
     ~RSTypefaceCache() = default;
 

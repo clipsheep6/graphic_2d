@@ -31,8 +31,20 @@
 
 namespace OHOS {
 namespace Rosen {
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+struct RSParallelCanvasStatus;
+class RSParallelRecorder;
+#endif
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
+#ifdef SUBTREE_PARALLEL_ENABLE
+public:
+    void EnableParallelRecorder(bool flag);
+    void PlayBack(std::shared_ptr<RSParallelRecorder> recorder);
+    std::shared_ptr<RSParallelRecorder> GetParallelRecorder();
+    void RestoreToCount(uint32_t count);
+private:
+    std::shared_ptr<RSParallelRecorder> recorder_;
+#endif
 public:
     RSPaintFilterCanvasBase(Drawing::Canvas* canvas);
     ~RSPaintFilterCanvasBase() override = default;
@@ -296,6 +308,10 @@ public:
     template <typename T>
     void PaintFilter(T& paint);
     void CopyHDRConfiguration(const RSPaintFilterCanvas& other);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    virtual void SetIsSubtreeParallel(bool canSharedDraw) {};
+    void CopyParallelConfiguration(const RSPaintFilterCanvas& other);
+#endif
 
 protected:
     using Env = struct {

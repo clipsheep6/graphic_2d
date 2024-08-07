@@ -28,7 +28,9 @@
 #include "rs_frame_report.h"
 
 #include "rs_profiler.h"
-
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 namespace OHOS {
 namespace Rosen {
 RSDrawFrame::RSDrawFrame()
@@ -163,6 +165,9 @@ void RSDrawFrame::Sync()
     pendingSyncNodes.clear();
 
     unirenderInstance_.Sync(stagingRenderThreadParams_);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    RSParallelManager::Singleton().Sync();
+#endif
 }
 
 void RSDrawFrame::UnblockMainThread()

@@ -264,10 +264,42 @@ public:
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE && GetName() == "pointer window";
     }
 
-    inline bool CheckCacheSurface()
+      inline bool CheckCacheSurface()
     {
         return cacheSurface_ ? true : false;
     }
+
+#ifdef SUBTREE_PARALLEL_ENABLE
+    std::mutex mutex_;
+    Drawing::Region GetCurSurfaceDrawRegion()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        ++GetCurSurfaceDrawRegionCount_;
+        if (GetCurSurfaceDrawRegionCount_ > 1) {
+            RS_LOGE("SurfaceDrawable Name %{public}s, GetCurSurfaceDrawRegionCount_ %{public}d",
+                GetName().c_str, GetCurSurfaceDrawRegionCount_.load());
+        }
+        Drawing::Region region;
+        region.Clone(curSurfaceDrawRegion_);
+        return region;
+    }
+
+    int GetCurSurfaceDrawRegionCount()
+    {
+        return GetCurSurfaceDrawRegionCount_.load();
+    }
+
+    void SetCurSurfaceDrawRegion(Drawing::Region& region)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        GetCurSurfaceDrawRegionCount_.store(0);
+        curSurfaceDrawRegion_.Clone(region);
+    }
+    void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams& uniParam, Drawing::Region& region);
+    Drawing::Region CalculateVisibleRegion(RSRenderThreadParams& uniParam, RSSurfaceRenderParams& surfaceParams,
+        RSSurfaceRenderNodeDrawable& surfaceDrawable, bool isOffscreen) const;
+#endif
+
 private:
     explicit RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node);
     void CacheImgForCapture(RSPaintFilterCanvas& canvas, RSDisplayRenderNodeDrawable& curDisplayNode);
@@ -275,10 +307,11 @@ private:
         RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams, RSRenderThreadParams& uniParams);
     void OnGeneralProcess(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams, bool isSelfDrawingSurface);
     void CaptureSurface(RSPaintFilterCanvas& canvas, RSSurfaceRenderParams& surfaceParams);
-
+#ifndef SUBTREE_PARALLEL_ENABLE
     void MergeDirtyRegionBelowCurSurface(RSRenderThreadParams& uniParam, Drawing::Region& region);
     Drawing::Region CalculateVisibleRegion(RSRenderThreadParams& uniParam, RSSurfaceRenderParams& surfaceParams,
         RSSurfaceRenderNodeDrawable& surfaceDrawable, bool isOffscreen) const;
+#endif
     bool HasCornerRadius(const RSSurfaceRenderParams& surfaceParams) const;
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::SURFACE_NODE, OnGenerate>;
     static Registrar instance_;
@@ -373,6 +406,10 @@ private:
     // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
     Occlusion::Region dirtyRegionBelowCurrentLayer_;
     bool dirtyRegionBelowCurrentLayerIsEmpty_ = false;
+#ifdef SUBTREE_PARALLEL_ENABLE
+    std::atomic<int> GetCurSurfaceDrawRegionCount_ = 0;
+    Drawing::Region curSurfaceDrawRegion_ {};
+#endif
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

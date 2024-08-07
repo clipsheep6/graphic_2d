@@ -23,6 +23,9 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
+#ifdef SUBTREE_PARALLEL_ENABLE
+#include "rs_parallel_manager.h"
+#endif
 
 namespace OHOS::Rosen::DrawableV2 {
 #ifdef RS_ENABLE_VK
@@ -75,7 +78,11 @@ void RSRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     RSRenderNodeDrawable::TotalProcessedNodeCountInc();
     Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
 
+#ifdef SUBTREE_PARALLEL_ENABLE
+    RSParallelManager::Singleton().OnDrawParallel(canvas, bounds, this);
+#else
     DrawAll(canvas, bounds);
+#endif
 }
 
 /*
@@ -579,7 +586,11 @@ bool RSRenderNodeDrawable::CheckIfNeedUpdateCache(RSRenderParams& params, int32_
 void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSRenderParams& params)
 {
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+#ifdef SUBTREE_PARALLEL_ENABLE
+    pid_t threadId = RSUniRenderUtil::GetThreadId(curCanvas);
+#else
     pid_t threadId = gettid();
+#endif
     auto cacheSurface = GetCachedSurface(threadId);
     if (cacheSurface == nullptr) {
         RS_TRACE_NAME_FMT("InitCachedSurface size:[%.2f, %.2f]", params.GetCacheSize().x_, params.GetCacheSize().y_);

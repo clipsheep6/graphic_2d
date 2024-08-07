@@ -24,6 +24,7 @@
 #include "utils/log.h"
 #include "skia_trace_memory_dump.h"
 #include "utils/system_properties.h"
+#include "src/gpu/GrGpuResource.h"
 
 namespace OHOS {
 namespace Rosen {

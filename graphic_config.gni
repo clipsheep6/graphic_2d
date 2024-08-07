@@ -48,6 +48,7 @@ declare_args() {
   graphic_2d_feature_use_aps_igameservice_func = false
   graphic_2d_feature_enable_chipset_vsync = false
   graphic_2d_feature_enable_rspipeline = true
+  graphic_2d_feature_subtree_parallel_enable = false
 
   if (defined(is_arkui_x) && is_arkui_x) {
     use_new_render_context = false
@@ -71,6 +72,10 @@ if (graphic_2d_feature_product == "phone" ||
   graphic_2d_feature_enable_stack_culling = true
 }
 
+if (graphic_2d_feature_product == "phone") {
+  graphic_2d_feature_subtree_parallel_enable = true
+}
+
 if (graphic_2d_feature_product == "phone" ||
     graphic_2d_feature_product == "tablet" ||
     graphic_2d_feature_product == "wearable") {
@@ -79,6 +84,15 @@ if (graphic_2d_feature_product == "phone" ||
 
 gpu_defines = []
 accessibility_defines = []
+
+if (graphic_2d_feature_subtree_parallel_enable) {
+  gpu_defines += [
+    "SUBTREE_PARALLEL_ENABLE",
+    "SUBTREE_PARALLEL_DEBUG_ENABLE",
+    "RS_ENABLE_FFRT",
+  ]
+}
+
 if (enable_text_gine) {
   gpu_defines += [ "USE_GRAPHIC_TEXT_GINE" ]
 }
@@ -313,6 +327,7 @@ ace_root = "//foundation/arkui/ace_engine"
 bundlefwk_path = "//foundation/bundlemanager/bundle_framework"
 bundlefwk_inner_api_path = "${bundlefwk_path}/interfaces/inner_api"
 mindspore_root = "//third_party/mindspore"
+ffrt_path = "//foundation/resourceschedule/ffrt"
 
 accessibility_enable = false
 if (defined(global_parts_info) &&

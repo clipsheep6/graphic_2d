@@ -665,6 +665,20 @@ bool RSSystemProperties::GetProxyNodeDebugEnabled()
     static bool proxyNodeDebugEnabled = system::GetParameter("persist.sys.graphic.proxyNodeDebugEnabled", "0") != "0";
     return proxyNodeDebugEnabled;
 }
+#ifdef SUBTREE_PARALLEL_ENABLE
+bool RSSystemProperties::GetSubtreeParallelEnable()
+{
+    static const bool subtreeParallelEnable = std::atoi((system::GetParameter(
+        "persist.sys.graphic.subtreeParallelEnable", "1")).c_str()) != 0;
+    return subtreeParallelEnable;
+}
+
+bool RSSystemProperties::GetSubtreeParallelDebugEnabled()
+{
+    static bool debugEnable = system::GetIntParameter("persist.sys.graphic.subtreeParallelDebugEnabled", 0) != 0;
+    return debugEnable;
+}
+#endif
 
 bool RSSystemProperties::GetUIFirstEnabled()
 {

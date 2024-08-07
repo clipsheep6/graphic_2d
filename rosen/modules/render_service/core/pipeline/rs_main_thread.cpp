@@ -366,6 +366,20 @@ void RSMainThread::Init()
         ConsumeAndUpdateAllNodes();
         WaitUntilUnmarshallingTaskFinished();
         ProcessCommand();
+        int frameArbar = GetContext().GetArbarLongOrShortFrame();
+        int frameMaterial = GetContext().GetMaterialLongOrShortFrame();
+        if (frameMaterial == MATERIAL_LONG_FRAME)  {
+            RS_TRACE_NAME_FMT("msf long frame");
+        } else if (frameMaterial == MATERIAL_UILONG_FRAME) {
+            RS_TRACE_NAME_FMT("msf UI long frame");
+        } else if (frameArbar == AIBAR_LONG_FRAME) {
+            RS_TRACE_NAME_FMT("msf middle frame");
+        } else if (frameMaterial == MATERIAL_SHORT_FRAME || frameArbar == AIBAR_SHORT_FRAME) {
+            RS_TRACE_NAME_FMT("msf short frame");
+        } else {
+            RS_TRACE_NAME_FMT("msf invalid frame");
+        }
+        GetContext().ClearFilter();
         Animate(timestamp_);
         DvsyncCheckRequestNextVsync();
         CollectInfoForHardwareComposer();
@@ -657,6 +671,9 @@ void RSMainThread::SetFocusAppInfo(
     int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName, uint64_t focusNodeId)
 {
     focusAppPid_ = pid;
+    if (bundleName.find("SCBDesktop") != std::string::npos) {
+        GetContext().SetSceneBoardPid(pid);
+    }
     focusAppUid_ = uid;
     focusAppBundleName_ = bundleName;
     focusAppAbilityName_ = abilityName;

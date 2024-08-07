@@ -602,6 +602,7 @@ RSDrawable::Ptr RSBackgroundFilterDrawable::OnGenerate(const RSRenderNode& node)
 bool RSBackgroundFilterDrawable::OnUpdate(const RSRenderNode& node)
 {
     nodeId_ = node.GetId();
+    node_ = node.GetRenderProperties().GetNodePtr();
     auto& rsFilter = node.GetRenderProperties().GetBackgroundFilter();
     if (rsFilter == nullptr) {
         return false;
@@ -615,6 +616,7 @@ bool RSBackgroundFilterDrawable::OnUpdate(const RSRenderNode& node)
 bool RSBackgroundEffectDrawable::OnUpdate(const RSRenderNode& node)
 {
     nodeId_ = node.GetId();
+    node_ = node.GetRenderProperties().GetNodePtr();
     auto& rsFilter = node.GetRenderProperties().GetBackgroundFilter();
     if (rsFilter == nullptr) {
         return false;

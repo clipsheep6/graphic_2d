@@ -17,6 +17,7 @@
 
 #include "rs_trace.h"
 
+#include "pipeline/rs_context.h"
 #include "common/rs_optional_trace.h"
 #include "drawable/rs_property_drawable_utils.h"
 #include "pipeline/rs_recording_canvas.h"
@@ -201,6 +202,18 @@ Drawing::RecordingCanvas::DrawFunc RSFilterDrawable::CreateDrawFunc() const
 {
     auto ptr = std::static_pointer_cast<const RSFilterDrawable>(shared_from_this());
     return [ptr](Drawing::Canvas* canvas, const Drawing::Rect* rect) {
+        auto node = ptr->node_.lock();
+        if (node) {
+            auto rsContext = node->GetContext().lock();
+            if (rsContext) {
+                int sceneBoardPid = rsContext->GetSceneBoardPid();
+                rsContext->AddFilter(sceneBoardPid, ptr->filter_);
+                RS_TRACE_NAME_FMT("msf rsContext->AddFilter sceneBoardPid = %d filterInterval = %d filterType = %d",
+                    sceneBoardPid,
+                    ptr->filter_->GetFilterType() == RSFilter::MATERIAL ? g_Material_Interval : g_Arbar_Interval,
+                    ptr->filter_->GetFilterType());
+            }
+        }
         if (canvas && ptr && ptr->filter_) {
             RS_TRACE_NAME_FMT("RSFilterDrawable::CreateDrawFunc node[%llu] ", ptr->nodeId_);
             if (ptr->filter_->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR && rect != nullptr) {
@@ -280,6 +293,18 @@ void RSFilterDrawable::ClearCacheIfNeeded()
     // if do not request NextVsync, close skip
     if (forceClearCacheForLastFrame_) {
         cacheUpdateInterval_ = 0;
+        if (filter_) {
+            if (filterType_ == RSFilter::AIBAR) {
+                g_Arbar_Interval = cacheUpdateInterval_;
+                RS_TRACE_NAME_FMT("msf forceClearCacheForLastFrame_ g_Arbar_Interval: %d; filterType_: %d",
+                    g_Arbar_Interval, filterType_);
+            }
+            if (filterType_ == RSFilter::MATERIAL) {
+                g_Material_Interval = cacheUpdateInterval_;
+                RS_TRACE_NAME_FMT("msf forceClearCacheForLastFrame_ g_Material_Interval: %d; filterType_: %d",
+                    g_Material_Interval, filterType_)
+            }
+        }
     }
 
     isSkipFrame_ = isLargeArea_ && canSkipFrame_ && !filterRegionChanged_;
@@ -405,6 +430,16 @@ void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)
             (filterType_ == RSFilter::AIBAR ? AIBAR_CACHE_UPDATE_INTERVAL :
             (isLargeArea_ && canSkipFrame_ ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0));
         pendingPurge_ = false;
+        if (filter_) {
+            if (filterType_ == RSFilter::AIBAR) {
+                g_Arbar_Interval = cacheUpdateInterval_;
+                RS_TRACE_NAME_FMT("msf UpdateFlags g_Arbar_Interval: %d; filterType_: %d", g_Arbar_Interval, filterType_);
+            }
+            if (filterType_ == RSFilter::MATERIAL) {
+                g_Material_Interval = cacheUpdateInterval_;
+                RS_TRACE_NAME_FMT("msf UpdateFlags g_Material_Interval: %d; filterType_: %d", g_Material_Interval, filterType_);
+            }
+        }
         return;
     }
     if (isAIBarInteractWithHWC_) {
@@ -416,6 +451,16 @@ void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)
         if ((filterInteractWithDirty_ || rotationChanged_) && cacheUpdateInterval_ > 0) {
             cacheUpdateInterval_--;
             pendingPurge_ = true;
+        }
+    }
+    if (filter_) {
+        if (filterType_ == RSFilter::AIBAR) {
+            g_Arbar_Interval = cacheUpdateInterval_;
+            RS_TRACE_NAME_FMT("msf UpdateFlags g_Arbar_Interval: %d; filterType_: %d", g_Arbar_Interval, filterType_);
+        }
+        if (filterType_ == RSFilter::MATERIAL) {
+            g_Material_Interval = cacheUpdateInterval_;
+            RS_TRACE_NAME_FMT("msf UpdateFlags g_Material_Interval: %d; filterType_: %d", g_Material_Interval, filterType_);
         }
     }
     isAIBarInteractWithHWC_ = false;

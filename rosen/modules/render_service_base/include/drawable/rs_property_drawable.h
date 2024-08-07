@@ -187,6 +187,7 @@ protected:
 
     std::unique_ptr<RSFilterCacheManager> cacheManager_;
     NodeId nodeId_ = INVALID_NODEID;
+    std::weak_ptr<RSRenderNode> node_;
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

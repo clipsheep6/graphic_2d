@@ -488,14 +488,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
                 WiredScreenProjection(*params, processor);
                 return;
             }
-            castScreenEnableSkipWindow_ = screenManager->GetCastScreenEnableSkipWindow(paramScreenId);
-            if (castScreenEnableSkipWindow_) {
-                RS_LOGD("RSDisplayRenderNodeDrawable::OnDraw, Enable CastScreen SkipWindow.");
-                screenManager->GetCastScreenBlackList(currentBlackList_);
-            } else {
-                RS_LOGD("RSDisplayRenderNodeDrawable::OnDraw, Enable RecordScreen SkipWindow.");
-                currentBlackList_ = screenManager->GetVirtualScreenBlackList(paramScreenId);
-            }
+            currentBlackList_ = screenManager->GetVirtualScreenBlackList(paramScreenId);
             uniParam->SetBlackList(currentBlackList_);
             uniParam->SetWhiteList(screenInfo.whiteList);
             RS_LOGD("RSDisplayRenderNodeDrawable::OnDraw Mirror screen.");

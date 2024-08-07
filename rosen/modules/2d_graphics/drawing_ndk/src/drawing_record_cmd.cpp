@@ -37,18 +37,22 @@ OH_Drawing_RecordCmdUtils* OH_Drawing_RecordCmdUtilsCreate()
 
 void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils* recordCmdUtils)
 {
+    if (recordCmdUtils == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
     delete reinterpret_cast<RSRecordCmdUtils*>(recordCmdUtils);
 }
 
 OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils* cRecordCmdUtils,
-    OH_Drawing_Rect* cBounds)
+    const OH_Drawing_Rect* cBounds)
 {
     if (cRecordCmdUtils == nullptr || cBounds == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return nullptr;
     }
     RSRecordCmdUtils* recordCmdUtils = CastToCmdUtils(cRecordCmdUtils);
-    Drawing::Rect* bounds = reinterpret_cast<Drawing::Rect*>(cBounds);
+    const Drawing::Rect* bounds = reinterpret_cast<const Drawing::Rect*>(cBounds);
     Drawing::Canvas* canvasPtr = recordCmdUtils->BeginRecording(*bounds);
     return (OH_Drawing_Canvas*) (canvasPtr);
 }
@@ -74,5 +78,9 @@ OH_Drawing_RecordCmd* OH_Drawing_RecordCmdUtilsFinishingRecording(OH_Drawing_Rec
 
 void OH_Drawing_RecordCmdDestroy(OH_Drawing_RecordCmd* recordCmd)
 {
+    if (recordCmd == nullptr) {
+        g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
+        return;
+    }
     delete reinterpret_cast<RecordCmd*>(recordCmd);
 }

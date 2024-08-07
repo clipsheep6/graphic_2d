@@ -836,8 +836,8 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasGetImageInfo(OH_Drawing_Canvas* canvas, OH
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas*, OH_Drawing_RecordCmd*,
-    OH_Drawing_Matrix*, OH_Drawing_Brush*);
+void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas*, const OH_Drawing_RecordCmd*,
+    const OH_Drawing_Matrix*, const OH_Drawing_Brush*);
 #ifdef __cplusplus
 }
 #endif

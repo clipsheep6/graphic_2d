@@ -58,7 +58,7 @@ OH_Drawing_RecordCmdUtils* OH_Drawing_RecordCmdUtilsCreate(void);
  * @brief Destroy an <b>OH_Drawing_RecordCmdUtils</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_RecordCmd Indicates the pointer to an <b>OH_Drawing_RecordCmdUtils</b> object.
+ * @param OH_Drawing_RecordCmdUtils Indicates the pointer to an <b>OH_Drawing_RecordCmdUtils</b> object.
  * @since 12
  * @version 1.0
  */
@@ -74,7 +74,7 @@ void OH_Drawing_RecordCmdUtilsDestroy(OH_Drawing_RecordCmdUtils*);
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils*, OH_Drawing_Rect*);
+OH_Drawing_Canvas* OH_Drawing_RecordCmdUtilsBeginRecording(OH_Drawing_RecordCmdUtils*, const OH_Drawing_Rect*);
 
 /**
  * @brief Finish the recording process of the drawing recorder and obtain the recorded drawing object.

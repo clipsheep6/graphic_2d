@@ -859,15 +859,15 @@ OH_Drawing_ErrorCode OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint
     return OH_DRAWING_SUCCESS;
 }
 
-void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas* cCanvas, OH_Drawing_RecordCmd* cRecordCmd,
-    OH_Drawing_Matrix* matrix, OH_Drawing_Brush* brush)
+void OH_Drawing_Drawing_CanvasDrawRecordCmd(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RecordCmd* cRecordCmd,
+    const OH_Drawing_Matrix* matrix, const OH_Drawing_Brush* brush)
 {
     if (cCanvas == nullptr || cRecordCmd == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;
     }
     Canvas* canvas = CastToCanvas(cCanvas);
-    auto recordCmdHandle = Helper::CastTo<OH_Drawing_RecordCmd*, NativeHandle<RecordCmd>*>(cRecordCmd);
+    auto recordCmdHandle = Helper::CastTo<const OH_Drawing_RecordCmd*, const NativeHandle<RecordCmd>*>(cRecordCmd);
     if (recordCmdHandle->value == nullptr) {
         g_drawingErrorCode = OH_DRAWING_ERROR_INVALID_PARAMETER;
         return;

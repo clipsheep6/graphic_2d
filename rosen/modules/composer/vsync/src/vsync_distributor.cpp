@@ -428,6 +428,17 @@ void VSyncDistributor::WaitForVsyncOrTimeOut(std::unique_lock<std::mutex> &locke
     }
 }
 
+#if defined(RS_ENABLE_DVSYNC)
+void ClearRSDVSyncConnect(int64_t timeStamp)
+{
+    if (isRs_) {
+        bool waitForVSync = false;
+        std::vector<sptr<VSyncConnection>> conns;
+        CollectConns(waitForVSync, timestamp, conns, false);
+    }
+}
+#endif
+
 void VSyncDistributor::ThreadMain()
 {
     // set thread priorty
@@ -819,6 +830,7 @@ void VSyncDistributor::PostVSyncEvent(const std::vector<sptr<VSyncConnection>> &
     if (isDvsyncThread) {
         std::unique_lock<std::mutex> locker(mutex_);
         dvsync_->RecordPostEvent(conns, timestamp);
+        ClearRSDVSyncConnect(timeStamp);
         hasVsync_.store(false);
     }
 #endif

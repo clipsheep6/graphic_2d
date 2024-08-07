@@ -425,23 +425,19 @@ HWTEST_F(RSJankStatsTest, RecordAnimationDynamicFrameRateTest005, TestSize.Level
     jankFrames.lastTotalFrames_ = 1;
     rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, true);
 
-    jankFrames.startTimeSteady_ = 1;
+    jankFrames.totalFrameTimeSteadyForHTR_ = 0;
     rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, false);
+    jankFrames.lastTotalFrameTimeSteadyForHTR_ = 0;
     rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, true);
 
-    jankFrames.endTimeSteady_ = 1;
-    rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, false);
-    jankFrames.lastEndTimeSteady_ = 1;
-    rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, true);
-
-    jankFrames.endTimeSteady_ = 2;
+    jankFrames.totalFrameTimeSteadyForHTR_ = 1;
     jankFrames.isFrameRateRecorded_ = false;
     rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, false);
-    EXPECT_FALSE(jankFrames.isFrameRateRecorded_);
-    jankFrames.lastEndTimeSteady_ = 2;
+    EXPECT_TRUE(jankFrames.isFrameRateRecorded_);
+    jankFrames.lastTotalFrameTimeSteadyForHTR_ = 1;
     jankFrames.isFrameRateRecorded_ = false;
     rsJankStats->RecordAnimationDynamicFrameRate(jankFrames, true);
-    EXPECT_FALSE(jankFrames.isFrameRateRecorded_);
+    EXPECT_TRUE(jankFrames.isFrameRateRecorded_);
 }
 
 /**

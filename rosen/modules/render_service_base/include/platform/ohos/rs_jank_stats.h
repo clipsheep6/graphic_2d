@@ -52,10 +52,9 @@ struct JankFrames {
     bool isDisplayAnimator_ = false;
     int64_t setTimeSteady_ = TIMESTAMP_INITIAL;
     int64_t startTime_ = TIMESTAMP_INITIAL;
-    int64_t startTimeSteady_ = TIMESTAMP_INITIAL;
-    int64_t endTimeSteady_ = TIMESTAMP_INITIAL;
-    int64_t lastEndTimeSteady_ = TIMESTAMP_INITIAL;
+    int64_t traceCreateTime_ = TIMESTAMP_INITIAL;
     int64_t traceCreateTimeSteady_ = TIMESTAMP_INITIAL;
+    int64_t traceTerminateTime_ = TIMESTAMP_INITIAL;
     int64_t traceTerminateTimeSteady_ = TIMESTAMP_INITIAL;
     int64_t maxFrameOccurenceTimeSteady_ = TIMESTAMP_INITIAL;
     int64_t lastMaxFrameOccurenceTimeSteady_ = TIMESTAMP_INITIAL;
@@ -75,10 +74,10 @@ struct JankFrames {
     int32_t traceId_ = TRACE_ID_INITIAL;
     int64_t totalFrameTimeSteadyForHTR_ = 0;
     int64_t lastTotalFrameTimeSteadyForHTR_ = 0;
-    float totalHitchTimeSteady_ = 0;
-    float lastTotalHitchTimeSteady_ = 0;
-    float maxHitchTime_ = 0;
-    float lastMaxHitchTime_ = 0;
+    float totalHitchTimeSteady_ = 0.f;
+    float lastTotalHitchTimeSteady_ = 0.f;
+    float maxHitchTimeSteady_ = 0.f;
+    float lastMaxHitchTimeSteady_ = 0.f;
     Rosen::DataBaseRs info_;
 };
 

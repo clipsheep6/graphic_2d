@@ -340,9 +340,7 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(
     RS_LOGD("DisplayNode skip");
     RS_TRACE_NAME("DisplayNode skip");
     GpuDirtyRegionCollection::GetInstance().AddSkipProcessFramesNumberForDFX();
-#ifdef OHOS_PLATFORM
-    RSUniRenderThread::Instance().SetSkipJankAnimatorFrame(true);
-#endif
+
     auto pendingDrawables = RSUifirstManager::Instance().GetPendingPostDrawables();
     auto disPlayRenderParams = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
     bool isMouseDirty = disPlayRenderParams->GetIsMouseDirty();
@@ -354,8 +352,13 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(
 
     if (!processor->InitForRenderThread(*this, INVALID_SCREEN_ID, RSUniRenderThread::Instance().GetRenderEngine())) {
         RS_LOGE("RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip processor init failed");
+        RS_TRACE_NAME("RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip processor init failed");
         return false;
     }
+
+#ifdef OHOS_PLATFORM
+    RSUniRenderThread::Instance().SetSkipJankAnimatorFrame(true);
+#endif
 
     auto& hardwareDrawables =
         RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeDrawables();

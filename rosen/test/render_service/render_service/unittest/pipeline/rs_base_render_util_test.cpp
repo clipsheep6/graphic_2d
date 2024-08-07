@@ -622,6 +622,74 @@ HWTEST_F(RSBaseRenderUtilTest, DealWithSurfaceRotationAndGravity_001, TestSize.L
 }
 
 /*
+ * @tc.name: DealWithSurfaceRotationAndGravity_002
+ * @tc.desc: Test DealWithSurfaceRotationAndGravity
+ * @tc.type: FUNC
+ * @tc.require: issueIACHI5
+ */
+HWTEST_F(RSBaseRenderUtilTest, DealWithSurfaceRotationAndGravity_002, TestSize.Level2)
+{
+    RectF localBounds;
+    BufferDrawParam params;
+    RSSurfaceRenderNodeConfig config;
+    std::shared_ptr<RSSurfaceRenderNode> surfaceNode = std::make_shared<RSSurfaceRenderNode>(config);
+
+    sptr<SurfaceBuffer> buffer = new SurfaceBufferImpl();
+    ASSERT_EQ(buffer->GetBufferHandle(), nullptr);
+    BufferRequestConfig requestConfig = {
+        .width = 0x100,
+        .height = 0x100,
+        .strideAlignment = 0x8,
+        .format = GRAPHIC_PIXEL_FMT_RGBA_8888,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+        .colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB,
+        .transform = GraphicTransformType::GRAPHIC_ROTATE_90,
+    };
+    GSError ret = buffer->Alloc(requestConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    params.buffer = buffer;
+
+    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(
+        buffer->GetSurfaceBufferTransform(), surfaceNode->GetRenderProperties().GetFrameGravity(), localBounds, params);
+    ASSERT_EQ(buffer->GetSurfaceBufferWidth(), params.matrix.Get(Drawing::Matrix::Index::TRANS_Y));
+}
+
+/*
+ * @tc.name: DealWithSurfaceRotationAndGravity_003
+ * @tc.desc: Test DealWithSurfaceRotationAndGravity
+ * @tc.type: FUNC
+ * @tc.require: issueIACHI5
+ */
+HWTEST_F(RSBaseRenderUtilTest, DealWithSurfaceRotationAndGravity_003, TestSize.Level2)
+{
+    RectF localBounds;
+    BufferDrawParam params;
+    RSSurfaceRenderNodeConfig config;
+    std::shared_ptr<RSSurfaceRenderNode> surfaceNode = std::make_shared<RSSurfaceRenderNode>(config);
+
+    sptr<SurfaceBuffer> buffer = new SurfaceBufferImpl();
+    ASSERT_EQ(buffer->GetBufferHandle(), nullptr);
+    BufferRequestConfig requestConfig = {
+        .width = 0x100,
+        .height = 0x100,
+        .strideAlignment = 0x8,
+        .format = GRAPHIC_PIXEL_FMT_RGBA_8888,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+        .colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB,
+        .transform = GraphicTransformType::GRAPHIC_ROTATE_270,
+    };
+    GSError ret = buffer->Alloc(requestConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    params.buffer = buffer;
+
+    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(
+        buffer->GetSurfaceBufferTransform(), surfaceNode->GetRenderProperties().GetFrameGravity(), localBounds, params);
+    ASSERT_EQ(buffer->GetSurfaceBufferHeight(), params.matrix.Get(Drawing::Matrix::Index::TRANS_X));
+}
+
+/*
  * @tc.name: SetPropertiesForCanvas_001
  * @tc.desc: Test SetPropertiesForCanvas
  * @tc.type: FUNC

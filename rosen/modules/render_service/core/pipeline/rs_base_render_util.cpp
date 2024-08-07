@@ -1178,7 +1178,17 @@ void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType tr
     }
     rotationTransform = static_cast<GraphicTransformType>(
         (rotationTransform + extraRotation / RS_ROTATION_90 + SCREEN_ROTATION_NUM) % SCREEN_ROTATION_NUM);
-    params.matrix.PreConcat(RSBaseRenderUtil::GetSurfaceTransformMatrix(rotationTransform, localBounds));
+    if (params.buffer != nullptr && gravity == Gravity::TOP_LEFT) {
+        RectF localFrame = { 0.0f, 0.0f, params.buffer->GetSurfaceBufferWidth(),
+            params.buffer->GetSurfaceBufferHeight() };
+        if (rotationTransform == GraphicTransformType::GRAPHIC_ROTATE_90 ||
+            rotationTransform == GraphicTransformType::GRAPHIC_ROTATE_270) {
+            std::swap(localFrame.width_, localFrame.height_);
+        }
+        params.matrix.PreConcat(RSBaseRenderUtil::GetSurfaceTransformMatrix(rotationTransform, localFrame));
+    } else {
+        params.matrix.PreConcat(RSBaseRenderUtil::GetSurfaceTransformMatrix(rotationTransform, localBounds));
+    }
     if (rotationTransform == GraphicTransformType::GRAPHIC_ROTATE_90 ||
         rotationTransform == GraphicTransformType::GRAPHIC_ROTATE_270) {
         // after rotate, we should swap dstRect and bound's width and height.

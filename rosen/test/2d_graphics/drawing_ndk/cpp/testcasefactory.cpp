@@ -64,6 +64,8 @@
 #include "interface/typeface_test.h"
 
 #include "common/log_common.h"
+#include "performance/sub_basic_graphics_special_performance_c_ops_witch.h"
+#include "performance/sub_basic_graphics_special_performance_c_property.h"
 
 namespace {
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
@@ -515,7 +517,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<SurfaceCreateFromGpuContext>(TestBase::DRAW_STYLE_COMPLEX, false);
         } }, // 只能用gpu来画，用cpu会闪退
-
     // font
     { "fontcounttext",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<FontCountText>(TestBase::DRAW_STYLE_COMPLEX); } },
@@ -523,6 +524,87 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     // brush
     { "brushrest",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<BrushReset>(TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为10次
+    { "opsWitchTest",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<SubBasicGraphicsSpecialPerformanceCOpsWitch>(
+            TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为10次
+    { "opsWitchTestPen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<SubBasicGraphicsSpecialPerformanceCOpsWitchPen>(
+            TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为10次
+     { "opsWitchTestBrush",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<SubBasicGraphicsSpecialPerformanceCOpsWitchBrush>(
+            TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为100次
+     { "opsWitchLineAndPath",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<SubBasicGraphicsSpecialPerformanceCLineAndPath>(
+            TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为100次
+    { "opsWitchLineAndPathPen",
+        []() -> std::shared_ptr<TestBase> { return std::make_shared<SubBasicGraphicsSpecialPerformanceCLineAndPathPen>(
+            TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为100次
+    { "opsWitchLineAndPathBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<SubBasicGraphicsSpecialPerformanceCLineAndPathBrush>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    // 测试次数为10次
+    { "opsWitchDrawVerticesBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasDrawVerticesBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixels>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixelsPen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixelsPen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixelsBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixelsBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixelsToBitmap",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixelsToBitmap>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixelsToBitmapPen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixelsToBitmapPen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchReadPixelsToBitmapBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasReadPixelsToBitmapBrush>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRectWithSrc",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRectWithSrc>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRectWithSrcPen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRectWithSrcPen>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRectWithSrcBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRectWithSrcBrush>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRect",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRect>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRectPen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRectPen>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadDrawImageRectBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadDrawImageRectBrush>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadReadPixels",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadReadPixels>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadReadPixelsPen",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadReadPixelsPen>(TestBase::DRAW_STYLE_COMPLEX); } },
+    { "opsWitchLargeImageLoadReadPixelsBrush",
+        []() -> std::shared_ptr<TestBase> {
+            return std::make_shared<PerformanceCCanvasLargeImageLoadReadPixelsBrush>(
+                TestBase::DRAW_STYLE_COMPLEX); } },
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> StabilityCpuMap = {

@@ -395,6 +395,11 @@ ohos_source_set("render_service_base_src") {
     "-DIMAGE_COLORSPACE_FLAG",
   ]
 
+  cflags_cc = [
+    "-std=c++17",
+    "-fvisibility-inlines-hidden",
+  ]
+
   if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
     if (!use_libfuzzer) {
       cflags += [ "-flto=thin" ]
@@ -413,17 +418,26 @@ ohos_source_set("render_service_base_src") {
           "-Wno-profile-instr-out-of-date",
           "-Wno-profile-instr-unprofiled",
         ]
+        cflags_cc += [
+          "-flto=full",
+          "-march=armv8-a+sve",
+          "-g1",
+          "-fdebug-info-for-profiling",
+          "-mllvm",
+          "-cachemiss-profile-l1d=" + rebase_path(
+                  "${graphic_2d_feature_pgo_path}/afdo/librender_service_base_l1d.afdo",
+                  root_build_dir),
+          "-mllvm",
+          "-cachemiss-profile-l2d=" + rebase_path(
+                  "${graphic_2d_feature_pgo_path}/afdo/librender_service_base_l2d.afdo",
+                  root_build_dir),
+        ]
       }
       if (graphic_2d_feature_product == "pc" && target_cpu == "arm64") {
         cflags += [ "-moutline-atomics" ]
       }
     }
   }
-
-  cflags_cc = [
-    "-std=c++17",
-    "-fvisibility-inlines-hidden",
-  ]
 
   public_configs = [ ":export_config" ]
   public_deps = [ "src/platform:platform" ]
@@ -593,7 +607,23 @@ config("render_service_base_link_config") {
     ]
 
     if (graphic_2d_feature_enable_pgo && enable_enhanced_opt) {
-      ldflags += [ "-Wl,--aarch64-inline-plt" ]
+      ldflags += [
+        "-Wl,--aarch64-inline-plt",
+        "-flto=full",
+        "-Wl,-mllvm,--enable-ipop",
+        "-Wl,-mllvm,--ipop-l1-max-distance=400",
+        "-Wl,-mllvm,--ipop-l1-min-distance=10",
+        "-Wl,-mllvm,--ipop-l2-max-distance=800",
+        "-Wl,-mllvm,--ipop-l2-min-distance=20",
+        "-Wl,-mllvm,--ipop-miss-ratio=99.99",
+        "-Wl,-mllvm,--ipop-min-misses=10",
+        "-Wl,-mllvm,--cachemiss-profile-l1d=" + rebase_path(
+                "${graphic_2d_feature_pgo_path}/afdo/librender_service_l1d.afdo",
+                root_build_dir),
+        "-Wl,-mllvm,--cachemiss-profile-l2d=" + rebase_path(
+                "${graphic_2d_feature_pgo_path}/afdo/librender_service_l2d.afdo",
+                root_build_dir),
+      ]
     }
   }
 }

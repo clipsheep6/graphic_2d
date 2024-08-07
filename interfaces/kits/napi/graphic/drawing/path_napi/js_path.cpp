@@ -774,21 +774,17 @@ napi_value JsPath::OnGetPositionAndTangent(napi_env env, napi_callback_info info
     double distance = 0.0;
     GET_DOUBLE_PARAM(ARGC_ONE, distance);
 
-    Drawing::Point position;
-    double startPoint[ARGC_TWO] = {0};
-    if (!ConvertFromJsPoint(env, argv[ARGC_TWO], startPoint, ARGC_TWO)) {
+    Point position;
+    if (!ConvertFromJsPoint2d(env, argv[ARGC_TWO], position)) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-            "Incorrect parameter2 type. The type of x, y be number.");
+            "Incorrect parameter type. The type of x, y should be a number.");
     }
-    position = Drawing::Point(startPoint[ARGC_ZERO], startPoint[ARGC_ONE]);
 
-    Drawing::Point tangent;
-    double endPoint[ARGC_TWO] = {0};
-    if (!ConvertFromJsPoint(env, argv[ARGC_THREE], endPoint, ARGC_TWO)) {
+    Point tangent;
+    if (!ConvertFromJsPoint2d(env, argv[ARGC_THREE], tangent)) {
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,
-            "Incorrect parameter3 type. The type of x, y be number.");
+            "Incorrect parameter type. The type of x, y should be a number.");
     }
-    tangent = Drawing::Point(endPoint[ARGC_ZERO], endPoint[ARGC_ONE]);
 
     bool result = m_path->GetPositionAndTangent(distance, position, tangent, forceClosed);
     if (napi_set_named_property(env, argv[ARGC_TWO], "x", CreateJsNumber(env, position.GetX())) != napi_ok ||

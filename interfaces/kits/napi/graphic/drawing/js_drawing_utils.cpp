@@ -146,6 +146,32 @@ bool ConvertFromJsShadowFlag(napi_env env, napi_value src, ShadowFlags& shadowFl
     return true;
 }
 
+bool ConvertFromJsPoint2d(napi_env env, napi_value src, Point& point)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    napi_value tempValue = nullptr;
+    double x = 0.0;
+    double y = 0.0;
+    if (napi_get_named_property(env, src, "x", &tempValue) != napi_ok) {
+        return false;
+    }
+
+    bool isXOk = ConvertFromJsValue(env, tempValue, x);
+    if (napi_get_named_property(env, src, "y", &tempValue) != napi_ok) {
+        return false;
+    }
+    bool isYOk = ConvertFromJsValue(env, tempValue, y);
+
+    if (!(isXOk && isYOk)) {
+        return false;
+    }
+
+    point = Point(x, y);
+    return true;
+}
+
 bool ConvertFromJsPoint3d(napi_env env, napi_value src, Point3& point3d)
 {
     if (src == nullptr) {

@@ -34,6 +34,7 @@ public:
     Boundary GetTextRange() const override;
     void Paint(Drawing::Canvas *canvas, double x, double y) override;
 
+    void* GetSpTextLineBase() { return reinterpret_cast<void*>(textlinebase_.get()); }
 private:
     std::unique_ptr<SPText::TextLineBase> textlinebase_ = nullptr;
 };

@@ -356,9 +356,6 @@ void RSMainThread::Init()
             renderThreadParams_ = std::make_unique<RSRenderThreadParams>();
         }
         RenderFrameStart(timestamp_);
-#if defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilSurfaceCapProcFinished();
-#endif
         PerfMultiWindow();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition: " + std::to_string(curTime_));
@@ -1676,36 +1673,6 @@ void RSMainThread::OnHideNotchStatusCallback(const char *key, const char *value,
         return;
     }
     RSMainThread::Instance()->RequestNextVSync();
-}
-
-void RSMainThread::NotifySurfaceCapProcFinish()
-{
-    RS_TRACE_NAME("RSMainThread::NotifySurfaceCapProcFinish");
-    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
-    surfaceCapProcFinished_ = true;
-    surfaceCapProcTaskCond_.notify_one();
-}
-
-void RSMainThread::WaitUntilSurfaceCapProcFinished()
-{
-    if (GetDeviceType() != DeviceType::PHONE) {
-        return;
-    }
-    std::unique_lock<std::mutex> lock(surfaceCapProcMutex_);
-    if (surfaceCapProcFinished_) {
-        return;
-    }
-    RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilSurfaceCapProcFinished");
-    surfaceCapProcTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
-        std::chrono::milliseconds(WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT),
-        [this]() { return surfaceCapProcFinished_; });
-    RS_OPTIONAL_TRACE_END();
-}
-
-void RSMainThread::SetSurfaceCapProcFinished(bool flag)
-{
-    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
-    surfaceCapProcFinished_ = flag;
 }
 
 bool RSMainThread::IsRequestedNextVSync()
@@ -3582,52 +3549,6 @@ void RSMainThread::ResetHardwareEnabledState(bool isUniRender)
         hardwareEnabledDrwawables_.clear();
         selfDrawingNodes_.clear();
     }
-}
-
-bool RSMainThread::IsHardwareEnabledNodesNeedSync()
-{
-    if (!doDirectComposition_) {
-        return false;
-    }
-
-    bool needSync = false;
-    for (const auto& node : hardwareEnabledNodes_) {
-        if (node == nullptr || node->IsHardwareForcedDisabled()) {
-            continue;
-        }
-        needSync = true;
-    }
-    RS_TRACE_NAME_FMT("%s %u", __func__, needSync);
-    RS_LOGD("%{public}s %{public}u", __func__, needSync);
-
-    return needSync;
-}
-
-bool RSMainThread::IsOcclusionNodesNeedSync(NodeId id)
-{
-    auto nodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(
-        GetContext().GetNodeMap().GetRenderNode(id));
-    if (nodePtr == nullptr) {
-        return false;
-    }
-
-    bool needSync = false;
-    if (nodePtr->IsLeashWindow()) {
-        auto children = nodePtr->GetSortedChildren();
-        for (auto child : *children) {
-            auto childSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
-            if (childSurfaceNode && childSurfaceNode->IsMainWindowType() &&
-                childSurfaceNode->GetVisibleRegion().IsEmpty()) {
-                childSurfaceNode->PrepareSelfNodeForApplyModifiers();
-                needSync = true;
-            }
-        }
-    } else if (nodePtr->IsMainWindowType() && nodePtr->GetVisibleRegion().IsEmpty()) {
-        nodePtr->PrepareSelfNodeForApplyModifiers();
-        needSync = true;
-    }
-
-    return needSync;
 }
 
 void RSMainThread::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool flag)

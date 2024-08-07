@@ -61,6 +61,57 @@ static inline void DrawCapturedImg(Drawing::Image& image,
     surface.FlushAndSubmit(true);
 }
 
+bool RSSurfaceCaptureTaskParallel::IsHardwareEnabledNodesNeedSync()
+{
+    if (RSMainThread::Instance()->IsDoDirectComposition() == false) {
+        return false;
+    }
+
+    bool needSync = false;
+    for (const auto& node : RSMainThread::Instance()->GetHardwareEnabledNodes()) {
+        if (node == nullptr || node->IsHardwareForcedDisabled()) {
+            continue;
+        }
+        needSync = true;
+    }
+    RS_TRACE_NAME_FMT("%s %u", __func__, needSync);
+    RS_LOGD("%{public}s %{public}u", __func__, needSync);
+
+    return needSync;
+}
+
+bool RSSurfaceCaptureTaskParallel::IsOcclusionNodesNeedSync(NodeId id)
+{
+    auto nodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(
+        RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id));
+    if (nodePtr == nullptr) {
+        return false;
+    }
+
+    bool needSync = false;
+    if (nodePtr->IsLeashWindow()) {
+        auto children = nodePtr->GetSortedChildren();
+        for (auto child : *children) {
+            auto childSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (childSurfaceNode && childSurfaceNode->IsMainWindowType() &&
+                childSurfaceNode->GetVisibleRegion().IsEmpty()) {
+                childSurfaceNode->PrepareSelfNodeForApplyModifiers();
+                needSync = true;
+            }
+        }
+    } else if (nodePtr->IsMainWindowType() && nodePtr->GetVisibleRegion().IsEmpty()) {
+        auto curNode = nodePtr;
+        auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodePtr->GetParent().lock());
+        if (parentNode && parentNode->IsLeashWindow()) {
+            curNode = parentNode;
+        }
+        nodePtr->PrepareSelfNodeForApplyModifiers();
+        needSync = true;
+    }
+
+    return needSync;
+}
+
 void RSSurfaceCaptureTaskParallel::CheckModifiers(NodeId id)
 {
     RS_TRACE_NAME("RSSurfaceCaptureTaskParallel::CheckModifiers");
@@ -113,7 +164,8 @@ bool RSSurfaceCaptureTaskParallel::CreateResources()
 {
     RS_LOGD("RSSurfaceCaptureTaskParallel capture nodeId:[%{public}" PRIu64 "]", nodeId_);
     if (ROSEN_EQ(captureConfig_.scaleX, 0.f) || ROSEN_EQ(captureConfig_.scaleY, 0.f) ||
-        captureConfig_.scaleX < 0.f || captureConfig_.scaleY < 0.f) {
+        captureConfig_.scaleX < 0.f || captureConfig_.scaleY < 0.f ||
+        captureConfig_.scaleX > 1.f || captureConfig_.scaleY > 1.f) {
         RS_LOGE("RSSurfaceCaptureTaskParallel::CreateResources: SurfaceCapture scale is invalid.");
         return false;
     }

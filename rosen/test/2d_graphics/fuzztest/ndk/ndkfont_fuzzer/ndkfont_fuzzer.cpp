@@ -240,6 +240,35 @@ void NativeDrawingFontTest006(const uint8_t* data, size_t size)
     OH_Drawing_FontDestroy(font);
 }
 
+void NativeDrawingFontTest007(const uint8_t* data, size_t size)
+{
+    if (data == nullptr || size < DATA_MIN_SIZE) {
+        return;
+    }
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+    OH_Drawing_Font* font = OH_Drawing_FontCreate();
+    float textWidth = 0.f;
+    uint32_t count = GetObject<uint32_t>() % MAX_ARRAY_SIZE + 1;
+    char* strOne = new char[count];
+    for (size_t i = 0; i < count; i++) {
+        strOne[i] = GetObject<char>();
+    }
+    strOne[count - 1] = '\0';
+    OH_Drawing_FontMeasureSingleCharacter(nullptr, strOne, &textWidth);
+    OH_Drawing_FontMeasureSingleCharacter(font, nullptr, &textWidth);
+    OH_Drawing_FontMeasureSingleCharacter(font, strOne, nullptr);
+    const char* strTwo = "";
+    OH_Drawing_FontMeasureSingleCharacter(font, strTwo, &textWidth);
+    OH_Drawing_FontMeasureSingleCharacter(font, strOne, &textWidth);
+    if (strOne != nullptr) {
+        delete [] strOne;
+        strOne = nullptr;
+    }
+    OH_Drawing_FontDestroy(font);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
@@ -254,5 +283,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Rosen::Drawing::NativeDrawingFontTest004(data, size);
     OHOS::Rosen::Drawing::NativeDrawingFontTest005(data, size);
     OHOS::Rosen::Drawing::NativeDrawingFontTest006(data, size);
+    OHOS::Rosen::Drawing::NativeDrawingFontTest007(data, size);
     return 0;
 }

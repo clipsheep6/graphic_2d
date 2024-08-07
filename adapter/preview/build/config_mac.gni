@@ -11,10 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# mac platform defines and configs
-
-import("preview_common.gni")
-
+# windows platform defines and configs
 defines = [
   "MAC_PLATFORM",
   "SK_BUILD_FONT_MGR_FOR_PREVIEW_MAC",

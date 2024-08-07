@@ -58,10 +58,10 @@ public:
     virtual VsyncError RemoveListener(const sptr<Callback>& cb) = 0;
     virtual VsyncError ChangePhaseOffset(const sptr<Callback>& cb, int64_t offset) = 0;
     virtual bool IsEnable() = 0;
-    virtual VsyncError ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
-                                                       const ListenerPhaseOffsetData &listenerPhaseOffset,
-                                                       uint32_t generatorRefreshRate,
-                                                       int64_t expectNextVsyncTime = 0) = 0;
+    virtual int64_t ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
+                                                    const ListenerPhaseOffsetData &listenerPhaseOffset,
+                                                    uint32_t generatorRefreshRate,
+                                                    int64_t expectNextVsyncTime = 0) = 0;
     virtual int64_t GetVSyncPulse() = 0;
     virtual VsyncError SetVSyncMode(VSyncMode vsyncMode) = 0;
     virtual VSyncMode GetVSyncMode() = 0;
@@ -95,10 +95,10 @@ public:
     VsyncError RemoveListener(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb) override;
     VsyncError ChangePhaseOffset(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb, int64_t offset) override;
     bool IsEnable() override;
-    VsyncError ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
-                                               const ListenerPhaseOffsetData &listenerPhaseOffset,
-                                               uint32_t generatorRefreshRate,
-                                               int64_t expectNextVsyncTime = 0) override;
+    int64_t ChangeGeneratorRefreshRateModel(const ListenerRefreshRateData &listenerRefreshRates,
+                                            const ListenerPhaseOffsetData &listenerPhaseOffset,
+                                            uint32_t generatorRefreshRate,
+                                            int64_t expectNextVsyncTime = 0) override;
     int64_t GetVSyncPulse() override;
     VsyncError SetVSyncMode(VSyncMode vsyncMode) override;
     VSyncMode GetVSyncMode() override;

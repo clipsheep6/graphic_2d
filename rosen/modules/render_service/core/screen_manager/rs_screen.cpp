@@ -158,12 +158,12 @@ void RSScreen::PhysicalScreenInit() noexcept
     if (hdiScreen_->GetScreenPowerStatus(powerStatus_) < 0) {
         powerStatus_ = static_cast<GraphicDispPowerStatus>(INVALID_POWER_STATUS);
     }
+    ScreenCapabilityInit();
     if (capability_.type == GraphicInterfaceType::GRAPHIC_DISP_INTF_MIPI) {
         screenType_ = RSScreenType::BUILT_IN_TYPE_SCREEN;
     } else {
         screenType_ = RSScreenType::EXTERNAL_TYPE_SCREEN;
     }
-    ScreenCapabilityInit();
 
     std::vector<GraphicColorGamut> supportedColorGamuts;
     if (hdiScreen_->GetScreenSupportedColorGamuts(supportedColorGamuts) != GRAPHIC_DISPLAY_SUCCESS) {

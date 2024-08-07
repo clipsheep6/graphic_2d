@@ -206,6 +206,7 @@ Color RSEnvForegroundColorStrategyRenderModifier::GetInvertBackgroundColor(RSMod
         RS_LOGI("RSRenderModifier::GetInvertBackgroundColor imageSnapshot null");
         return Color(0);
     }
+    imageSnapshot = RSPropertiesPainter::GpuScaleImage(context.canvas_->GetGPUContext(), imageSnapshot);
     auto colorPicker = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
     return CalculateInvertColor(Color(
         Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),

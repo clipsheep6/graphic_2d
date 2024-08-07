@@ -62,22 +62,23 @@ HWTEST_F(RSMaskColorShaderFilterTest, InitColorModTest, TestSize.Level1)
 HWTEST_F(RSMaskColorShaderFilterTest, CaclMaskColorTest, TestSize.Level1)
 {
     RSColor color;
+    Drawing::Canvas canvas;
     auto rsMaskColorShaderFilter = std::make_shared<RSMaskColorShaderFilter>(1, color);
     auto rsMaskColorShaderFilterSecond = std::make_shared<RSMaskColorShaderFilter>(2, color);
     std::shared_ptr<Drawing::Image> image = nullptr;
-    rsMaskColorShaderFilter->CaclMaskColor(image);
-    rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+    rsMaskColorShaderFilter->CaclMaskColor(canvas, image);
+    rsMaskColorShaderFilterSecond->CaclMaskColor(canvas, image);
     image = std::make_shared<Drawing::Image>();
     rsMaskColorShaderFilterSecond->InitColorMod();
-    rsMaskColorShaderFilter->CaclMaskColor(image);
-    rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+    rsMaskColorShaderFilter->CaclMaskColor(canvas, image);
+    rsMaskColorShaderFilterSecond->CaclMaskColor(canvas, image);
     if (rsMaskColorShaderFilterSecond->colorPickerTask_ != nullptr) {
         rsMaskColorShaderFilterSecond->colorPickerTask_->waitRelease_->store(true);
-        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+        rsMaskColorShaderFilterSecond->CaclMaskColor(canvas, image);
         rsMaskColorShaderFilterSecond->colorPickerTask_->valid_ = true;
-        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+        rsMaskColorShaderFilterSecond->CaclMaskColor(canvas, image);
         rsMaskColorShaderFilterSecond->colorPickerTask_->firstGetColorFinished_ = true;
-        rsMaskColorShaderFilterSecond->CaclMaskColor(image);
+        rsMaskColorShaderFilterSecond->CaclMaskColor(canvas, image);
     }
     EXPECT_EQ(rsMaskColorShaderFilter->colorMode_, 1);
 }

@@ -47,6 +47,7 @@ public:
     Drawing::Brush GetBrush() const;
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image> image,
         const Drawing::Rect& src, const Drawing::Rect& dst);
+    void DrawImageRectMaskColor(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image> image);
     std::vector<std::shared_ptr<RSShaderFilter>> GetShaderFilters() const;
     void InsertShaderFilter(std::shared_ptr<RSShaderFilter> shaderFilter);
     std::shared_ptr<Drawing::ImageFilter> GetImageFilter() const;

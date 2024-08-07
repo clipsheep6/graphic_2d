@@ -291,6 +291,9 @@ void RSDrawingFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_p
             continue;
         }
         filter->GenerateGEVisualEffect(visualEffectContainer);
+        if (filter->GetShaderFilterType() == RSShaderFilter::MASK_COLOR) {
+            DrawImageRectMaskColor(canvas, image);
+        }
     }
     auto geRender = std::make_shared<GraphicsEffectEngine::GERender>();
     if (geRender == nullptr) {
@@ -329,6 +332,15 @@ void RSDrawingFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_p
     canvas.AttachBrush(brush);
     canvas.DrawImageRect(*outImage, src, dst, Drawing::SamplingOptions());
     canvas.DetachBrush();
+}
+
+void RSDrawingFilter::DrawImageRectMaskColor(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image> image)
+{
+    std::shared_ptr<RSShaderFilter> tmpShaderFilter = GetShaderFilterWithType(RSShaderFilter::MASK_COLOR);
+    if (tmpShaderFilter != nullptr) {
+        auto tmpFilter = std::static_pointer_cast<RSMaskColorShaderFilter>(tmpShaderFilter);
+        tmpFilter->CaclMaskColor(canvas, image);
+    }
 }
 
 void RSDrawingFilter::PreProcess(std::shared_ptr<Drawing::Image>& image)

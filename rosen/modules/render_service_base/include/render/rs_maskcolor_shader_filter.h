@@ -34,7 +34,7 @@ public:
     int GetColorMode() const;
     RSColor GetMaskColor() const;
     void InitColorMod();
-    void CaclMaskColor(std::shared_ptr<Drawing::Image>& image);
+    void CaclMaskColor(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image);
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;
     virtual void PreProcess(std::shared_ptr<Drawing::Image>& image) override;
     virtual void PostProcess(Drawing::Canvas& canvas) override;

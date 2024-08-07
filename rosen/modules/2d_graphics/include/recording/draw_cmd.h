@@ -513,6 +513,7 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
+    void Dump(std::string& out) override;
 private:
     Point3 planeParams_;
     Point3 devLightPos_;
@@ -563,7 +564,6 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
-    void Dump(std::string& out) override;
 private:
     BlendMode mode_;
     std::shared_ptr<Vertices> vertices_;
@@ -586,6 +586,7 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
+    void Dump(std::string& out) override;
 private:
     ColorQuad color_;
     BlendMode mode_;
@@ -622,6 +623,7 @@ public:
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
     void Marshalling(DrawCmdList& cmdList) override;
     void Playback(Canvas* canvas, const Rect* rect) override;
+    void Dump(std::string& out) override;
 private:
     RectI center_;
     Rect dst_;

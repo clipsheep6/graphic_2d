@@ -88,24 +88,15 @@ public:
     }
     void SetPivotX(float x)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->pivotX_ = x;
+        trans_.pivotX_ = x;
     }
     void SetPivotY(float y)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->pivotY_ = y;
+        trans_.pivotY_ = y;
     }
     void SetPivotZ(float z)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->pivotZ_ = z;
+        trans_.pivotZ_ = z;
     }
     void SetPivot(float x, float y)
     {
@@ -114,17 +105,11 @@ public:
     }
     void SetScaleX(float x)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->scaleX_ = x;
+        trans_.scaleX_ = x;
     }
     void SetScaleY(float y)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->scaleY_ = y;
+        trans_.scaleY_ = y;
     }
     void SetScale(float x, float y)
     {
@@ -133,17 +118,11 @@ public:
     }
     void SetSkewX(float x)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->skewX_ = x;
+        trans_.skewX_ = x;
     }
     void SetSkewY(float y)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->skewY_ = y;
+        trans_.skewY_ = y;
     }
     void SetSkew(float x, float y)
     {
@@ -152,17 +131,11 @@ public:
     }
     void SetPerspX(float x)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->perspX_ = x;
+        trans_.perspX_ = x;
     }
     void SetPerspY(float y)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->perspY_ = y;
+        trans_.perspY_ = y;
     }
     void SetPersp(float x, float y)
     {
@@ -171,61 +144,37 @@ public:
     }
     void SetRotation(float rotation)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->rotation_ = rotation;
+        trans_.rotation_ = rotation;
     }
     void SetRotationX(float rotationX)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->rotationX_ = rotationX;
+        trans_.rotationX_ = rotationX;
     }
     void SetRotationY(float rotationY)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->rotationY_ = rotationY;
+        trans_.rotationY_ = rotationY;
     }
     void SetTranslateX(float translateX)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->translateX_ = translateX;
+        trans_.translateX_ = translateX;
     }
     void SetTranslateY(float translateY)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->translateY_ = translateY;
+        trans_.translateY_ = translateY;
     }
     void SetTranslateZ(float translateZ)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        if (!ROSEN_EQ(trans_->translateZ_, translateZ)) {
-            trans_->translateZ_ = translateZ;
+        if (!ROSEN_EQ_Float(trans_.translateZ_, translateZ)) {
+            trans_.translateZ_ = translateZ;
         }
     }
     void SetCameraDistance(float cameraDistance)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->cameraDistance_ = cameraDistance;
+        trans_.cameraDistance_ = cameraDistance;
     }
     void SetQuaternion(const Quaternion& quaternion)
     {
-        if (!trans_) {
-            trans_ = std::make_optional<RSTransform>();
-        }
-        trans_->quaternion_ = quaternion;
+        trans_.quaternion_ = quaternion;
     }
 
     float GetX() const
@@ -250,71 +199,71 @@ public:
     }
     float GetPivotX() const
     {
-        return trans_ ? trans_->pivotX_ : 0.5f;
+        return trans_.pivotX_;
     }
     float GetPivotY() const
     {
-        return trans_ ? trans_->pivotY_ : 0.5f;
+        return trans_.pivotY_;
     }
     float GetPivotZ() const
     {
-        return trans_ ? trans_->pivotZ_ : 0.f;
+        return trans_.pivotZ_;
     }
     float GetScaleX() const
     {
-        return trans_ ? trans_->scaleX_ : 1.f;
+        return trans_.scaleX_;
     }
     float GetScaleY() const
     {
-        return trans_ ? trans_->scaleY_ : 1.f;
+        return trans_.scaleY_;
     }
     float GetSkewX() const
     {
-        return trans_ ? trans_->skewX_ : 0.f;
+        return trans_.skewX_;
     }
     float GetSkewY() const
     {
-        return trans_ ? trans_->skewY_ : 0.f;
+        return trans_.skewY_;
     }
     float GetPerspX() const
     {
-        return trans_ ? trans_->perspX_ : 0.f;
+        return trans_.perspX_;
     }
     float GetPerspY() const
     {
-        return trans_ ? trans_->perspY_ : 0.f;
+        return trans_.perspY_;
     }
     float GetRotation() const
     {
-        return trans_ ? trans_->rotation_ : 0.f;
+        return trans_.rotation_;
     }
     float GetRotationX() const
     {
-        return trans_ ? trans_->rotationX_ : 0.f;
+        return trans_.rotationX_;
     }
     float GetRotationY() const
     {
-        return trans_ ? trans_->rotationY_ : 0.f;
+        return trans_.rotationY_;
     }
     float GetTranslateX() const
     {
-        return trans_ ? trans_->translateX_ : 0.f;
+        return trans_.translateX_;
     }
     float GetTranslateY() const
     {
-        return trans_ ? trans_->translateY_ : 0.f;
+        return trans_.translateY_;
     }
     float GetTranslateZ() const
     {
-        return trans_ ? trans_->translateZ_ : 0.f;
+        return trans_.translateZ_;
     }
     float GetCameraDistance() const
     {
-        return trans_ ? trans_->cameraDistance_ : 0.f;
+        return trans_.cameraDistance_;
     }
     Quaternion GetQuaternion() const
     {
-        return trans_ ? trans_->quaternion_ : Quaternion();
+        return trans_.quaternion_;
     }
     bool IsEmpty() const
     {
@@ -341,7 +290,7 @@ protected:
     float z_;
     float width_;
     float height_;
-    std::optional<RSTransform> trans_;
+    RSTransform trans_;
 };
 } // namespace Rosen
 } // namespace OHOS

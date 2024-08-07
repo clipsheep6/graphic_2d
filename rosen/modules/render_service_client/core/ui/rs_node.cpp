@@ -1284,14 +1284,14 @@ void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
 // set dash width for border
 void RSNode::SetBorderDashWidth(const Vector4f& dashWidth)
 {
-    SetProperty<RSBorderDashWidthModifier, RSProperty<Vector4f>>(
+    SetProperty<RSBorderDashWidthModifier, RSAnimatableProperty<Vector4f>>(
         RSModifierType::BORDER_DASH_WIDTH, dashWidth);
 }
 
 // set dash gap for border
 void RSNode::SetBorderDashGap(const Vector4f& dashGap)
 {
-    SetProperty<RSBorderDashGapModifier, RSProperty<Vector4f>>(
+    SetProperty<RSBorderDashGapModifier, RSAnimatableProperty<Vector4f>>(
         RSModifierType::BORDER_DASH_GAP, dashGap);
 }
 
